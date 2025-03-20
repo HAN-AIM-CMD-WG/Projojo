@@ -68,3 +68,4 @@ projojo_backend/.pytest_cache/
 # Backend Logs
 projojo_backend/*.log
 node_modules
+.arena_temp
