@@ -38,7 +38,7 @@ sleep 5
 
 # Open the browser to the frontend URL
 echo "Opening browser..."
-open http://localhost:5173
+python -m webbrowser -t "http://localhost:5173"
 
 # Function to handle script termination
 cleanup() {
