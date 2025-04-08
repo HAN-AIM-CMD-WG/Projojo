@@ -17,15 +17,10 @@ else
     sleep 5  # Give TypeDB time to initialize
 fi
 
-
 # Start the backend server in the background
 echo "Starting backend server..."
 cd projojo_backend && python3 main.py &
 BACKEND_PID=$!
-
-# Return to the root directory
-cd ..
-echo '#######' $(pwd)
 
 # Start the frontend development server in the background
 echo "Starting frontend server..."
