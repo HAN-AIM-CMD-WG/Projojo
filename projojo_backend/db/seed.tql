@@ -1,13 +1,34 @@
 insert
 
-    $u1 isa user,
-        has name "KwikDuck",
-        has email "e@typedb.com";
+    $u1 isa teacher,
+        has fullName "Wouter Noordsiek",
+        has imagePath "a",
+        has schoolAccountName "Wouter.Noordsiek",
+        has email "W.Noordsiek@han.nl";
 
-    $u2 isa user,
-        has name "KwekDuck",
-        has email "awek.duck@typedb.com";
+    $u2 isa student,
+        has fullName "Stijn Apeldoorn",
+        has imagePath "b",
+        has email "S.Apeldoorn@student.han.com",
+        has schoolAccountName "Stijn.Apeldoorn";
 
-    $u3 isa user,
-        has name "KwakDuck",
-        has email "kwak.duck@typedb.com";
+    $u3 isa supervisor,
+        has fullName "Dikke Deur",
+        has imagePath "c",
+        has email "d.d@bedrijf.com";
+
+    $u4 isa supervisor,
+        has fullName "Elon Musk",
+        has imagePath "d",
+        has email "em@doge.gov";
+
+    $ip2 isa identityProvider,
+        has name "Microsoft";
+
+    $auth1 isa authentication (user: $u3, identityProvider: $ip2),
+        has username "dikkiedik",
+        has id "23454623";
+
+    $auth2 isa authentication (user: $u4, identityProvider: $ip2),
+        has username "elonmusk",
+        has id "23454624";

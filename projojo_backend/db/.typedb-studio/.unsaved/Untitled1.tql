@@ -1,3 +1,6 @@
-insert 
-   $q isa a user,
-       has name "Robert";
+match
+  $y isa user;
+
+
+fetch { $y };
+

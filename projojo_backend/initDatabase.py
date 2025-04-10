@@ -36,7 +36,11 @@ class Db:
 
 print( f"Using database: {Db.name}")
 
-def main():
+def init_database():
+    createDB()    
+    return Db
+
+def createDB():
     if Db.reset and Db.db is not None:
         Db.db.delete()    
         Db.db = None
@@ -49,27 +53,35 @@ def main():
             schema_query = file.read()
             Db.schema_transact(schema_query)
             print("OK")
-            print(schema_query)
         with open(Db.seed_path, 'r') as file:
             print("Installing seed data", end="... ")
             seed_query = file.read()
             Db.write_transact(seed_query)
             print("OK")
     # Perform operations with the database
-    print(f"Connected to database: {Db.name}")
+
+
+def main():
+    createDB()
 
     # Example: Run a query
-    print("Running a sample query", end="... ")
+    print()
+    print("Running a sample query")
     read_query = """
-        match $u isa user; 
-
-        fetch { 'name': $u.name, 'email': $u.email};
+        match 
+            $s isa supervisor; 
+            $ip isa identityProvider;
+            authentication( $s, $ip );
+        fetch { 
+            'name': $s.fullName, 
+            'email': $s.email, 
+            'provider': $ip.name
+        };
     """
     result = Db.read_transact(read_query)
-    print("users:")
     # print(result)
     for user in result:
-        print(f"User: {user['name']}, Email: {user['email']}")
+        print(user)
     Db.driver.close()
 
 

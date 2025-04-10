@@ -1,8 +1,39 @@
 define
 
-entity user
-    owns name,
-    owns email;    
+entity user @abstract,
+    owns email @key,
+    owns imagePath @card(1) @unique,
+    owns fullName @card(1);
 
+entity supervisor sub user,
+    plays authentication:user @card(1..10);
+
+entity student sub user,
+    owns schoolAccountName @card(1);
+
+entity teacher sub user,
+    owns schoolAccountName @card(1);
+
+entity identityProvider,
+    owns name @card(0..1),
+    plays authentication:identityProvider;
+
+relation authentication,
+    relates user,
+    relates identityProvider,
+    owns username @card(1),
+    owns id @key;
+
+attribute email value string;
 attribute name value string;
-attribute email value string @regex("^.*@\w+\.\w+$");
+attribute fullName value string;
+attribute imagePath value string;
+attribute schoolAccountName value string;
+attribute username value string;
+attribute id value string;
+
+
+
+
+
+attribute email value string;
