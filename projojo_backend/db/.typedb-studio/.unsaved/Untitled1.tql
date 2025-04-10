@@ -1,0 +1,3 @@
+insert 
+   $q isa a user,
+       has name "Robert";

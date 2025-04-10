@@ -8,24 +8,25 @@ To make this work, you need:
 
 ## Setting up the TypeDB Database
 
-Use `./create_typedb.sh` to download the latest TypeDB as a container and set it up:
+Use `./create_typedb.sh` to download the latest TypeDB as a container and set it up with a Docker volume called 'typedb-data':
+
 
 ```bash
 # Basic setup - creates and configures the TypeDB container
 ./create_typedb.sh
 
-# Reset data - removes any existing data and creates a fresh container
-./create_typedb.sh reset-data
+# Reset volume - removes any existing data and creates a fresh volume in addition to a new container
+./create_typedb.sh reset-volume
 ```
 
 The script will:
-1. Create a Docker volume for TypeDB data persistence
+1. Create a Docker volume for TypeDB data persistence (if needed or requested)
 2. Pull the latest TypeDB Docker image
 3. Create a TypeDB container with port 1729 exposed
 4. Mount the data volume to maintain data between container restarts
 
-The script is also useful to upgrade TypeDB.
-Use the `reset-data` option when you need to clear all existing TypeDB data and start fresh.
+The script is also useful to upgrade TypeDB to a higher version.
+Use the `reset-volume` option when you need to clear all existing TypeDB data and start fresh.
 
 ## Running the project
 

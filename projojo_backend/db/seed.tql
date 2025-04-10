@@ -1,0 +1,13 @@
+insert
+
+    $u1 isa user,
+        has name "KwikDuck",
+        has email "e@typedb.com";
+
+    $u2 isa user,
+        has name "KwekDuck",
+        has email "awek.duck@typedb.com";
+
+    $u3 isa user,
+        has name "KwakDuck",
+        has email "kwak.duck@typedb.com";

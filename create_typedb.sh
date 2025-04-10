@@ -5,8 +5,8 @@ docker stop typedb || true
 docker rm typedb --force || true
 docker rmi typedb/typedb:latest --force || true
 
-# Handle reset-data argument
-if [[ "$*" == *reset-data* ]]; then
+# Handle reset-volume argument
+if [[ "$*" == *reset-volume* ]]; then
     docker volume rm typedb-data --force || true
 fi
 

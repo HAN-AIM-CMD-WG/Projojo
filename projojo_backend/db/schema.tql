@@ -1,0 +1,8 @@
+define
+
+entity user
+    owns name,
+    owns email;    
+
+attribute name value string;
+attribute email value string @regex("^.*@\w+\.\w+$");
