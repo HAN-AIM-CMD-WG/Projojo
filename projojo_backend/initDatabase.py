@@ -14,14 +14,14 @@ class Db:
     reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False
     schema_path = "db/schema.tql"
     seed_path = "db/seed.tql"
-    driver = TypeDB.core_driver( address, Credentials( username, password), DriverOptions(False, None))    
+    driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))    
     db = driver.databases.get(name) if driver.databases.contains(name) else None
     
     @staticmethod
     def schema_transact(query):
         with Db.driver.transaction(Db.name, TransactionType.SCHEMA) as tx:
             tx.query(query).resolve()
-            tx.commit
+            tx.commit()
     
     @staticmethod
     def read_transact(query):
@@ -32,7 +32,7 @@ class Db:
     def write_transact(query):
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
-            tx.commit
+            tx.commit()
 
 print( f"Using database: {Db.name}")
 
@@ -63,11 +63,13 @@ def main():
     read_query = """
         match $u isa user; 
 
-        fetch { 'phone': $u.phone, 'email': $u.email};
+        fetch { 'name': $u.name, 'email': $u.email};
     """
-    result = Db.read_transact(read_query).resolve()
-    print(f"{len(result)} users:")
-    print(result)
+    result = Db.read_transact(read_query)
+    print("users:")
+    # print(result)
+    for user in result:
+        print(f"User: {user['name']}, Email: {user['email']}")
     Db.driver.close()
 
 
