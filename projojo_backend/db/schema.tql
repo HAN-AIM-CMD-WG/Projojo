@@ -6,7 +6,8 @@ entity user @abstract,
     owns fullName @card(1);
 
 entity supervisor sub user,
-    plays authentication:user @card(1..10);
+    plays authentication:user @card(1..10),
+    plays businessAssociation:supervisor;
 
 entity student sub user,
     owns schoolAccountName @card(1);
@@ -18,11 +19,22 @@ entity identityProvider,
     owns name @card(0..1),
     plays authentication:identityProvider;
 
+entity business,
+    owns name @key, 
+    owns description @card(1),
+    owns imagePath @card(1),
+    owns location @card(1..),
+    plays businessAssociation:business;
+
 relation authentication,
     relates user,
     relates identityProvider,
     owns username @card(1),
     owns id @key;
+    
+relation businessAssociation,
+    relates supervisor,
+    relates business;
 
 attribute email value string;
 attribute name value string;
@@ -31,9 +43,5 @@ attribute imagePath value string;
 attribute schoolAccountName value string;
 attribute username value string;
 attribute id value string;
-
-
-
-
-
-attribute email value string;
+attribute description value string;
+attribute location value string;
