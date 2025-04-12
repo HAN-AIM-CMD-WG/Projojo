@@ -32,3 +32,21 @@ insert
     $auth2 isa authentication (user: $u4, identityProvider: $ip2),
         has username "elonmusk",
         has id "23454624";
+
+    $b1 isa business,
+        has name "Circus Arnhem",
+        has description "Iedere zaterdagmiddag een show.",
+        has imagePath "e",
+        has location "Ergens in Arnhem";
+
+    $b2 isa business,
+        has name "Tesla",
+        has description "Wij verkopen auto's.",
+        has imagePath "f",
+        has location "Amsterdam",
+        has location "Nijmegen",
+        has location "Utrecht";
+
+    $ba1 isa businessAssociation (business: $b1, supervisor: $u3);
+    $ba2 isa businessAssociation (business: $b2, supervisor: $u4);
+
