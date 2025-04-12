@@ -22,6 +22,11 @@ insert
         has imagePath "d",
         has email "em@doge.gov";
 
+    $u5 isa supervisor,
+        has fullName "Pipo",
+        has imagePath "e",
+        has email "p@bedrijf.com";   
+
     $ip2 isa identityProvider,
         has name "Microsoft";
 
@@ -33,20 +38,25 @@ insert
         has username "elonmusk",
         has id "23454624";
 
+    $auth3 isa authentication (user: $u5, identityProvider: $ip2),
+        has username "pipoclown",
+        has id "23454625";
+
     $b1 isa business,
         has name "Circus Arnhem",
         has description "Iedere zaterdagmiddag een show.",
-        has imagePath "e",
+        has imagePath "f",
         has location "Ergens in Arnhem";
 
     $b2 isa business,
         has name "Tesla",
         has description "Wij verkopen auto's.",
-        has imagePath "f",
+        has imagePath "g",
         has location "Amsterdam",
         has location "Nijmegen",
         has location "Utrecht";
 
     $ba1 isa businessAssociation (business: $b1, supervisor: $u3);
     $ba2 isa businessAssociation (business: $b2, supervisor: $u4);
+    $ba3 isa businessAssociation (business: $b1, supervisor: $u5);
 

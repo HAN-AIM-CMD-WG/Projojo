@@ -7,7 +7,7 @@ entity user @abstract,
 
 entity supervisor sub user,
     plays authentication:user @card(1..10),
-    plays businessAssociation:supervisor;
+    plays businessAssociation:supervisor @card(1);
 
 entity student sub user,
     owns schoolAccountName @card(1);
@@ -24,7 +24,7 @@ entity business,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
-    plays businessAssociation:business;
+    plays businessAssociation:business @card(1..);
 
 relation authentication,
     relates user,
@@ -33,8 +33,8 @@ relation authentication,
     owns id @key;
     
 relation businessAssociation,
-    relates supervisor,
-    relates business;
+    relates supervisor @card(1),
+    relates business @card(1);
 
 attribute email value string;
 attribute name value string;
