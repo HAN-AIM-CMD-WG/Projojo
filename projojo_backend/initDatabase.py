@@ -86,6 +86,24 @@ def main():
     # print(result)
     for user in result:
         print(user)
+
+    # Example 2: Run a second query
+    print()
+    print("Running a sample query for skills")
+    skill_query = """
+        match 
+            $sk isa skill;
+        fetch { 
+            'name': $sk.name,	
+            'isPending': $sk.isPending,
+            'createdAt': $sk.createdAt,
+        };
+    """
+    skill_result = Db.read_transact(skill_query)
+    # print(result)
+    for skill in skill_result:
+        print(skill)
+
     Db.driver.close()
 
 
