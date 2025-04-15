@@ -60,3 +60,8 @@ insert
     $ba2 isa businessAssociation (business: $b2, supervisor: $u4);
     $ba3 isa businessAssociation (business: $b1, supervisor: $u5);
 
+    $sk1 isa skill,
+        has name "PHP",
+        has isPending true,
+        has createdAt 2025-04-13T17:10;
+
