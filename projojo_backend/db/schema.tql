@@ -26,6 +26,11 @@ entity business,
     owns location @card(1..),
     plays businessAssociation:business @card(1..);
 
+entity skill,
+    owns name @key,
+    owns isPending @card(1),
+    owns createdAt @card(1);
+
 relation authentication,
     relates user,
     relates identityProvider,
@@ -45,3 +50,5 @@ attribute username value string;
 attribute id value string;
 attribute description value string;
 attribute location value string;
+attribute isPending value boolean;
+attribute createdAt value datetime;
