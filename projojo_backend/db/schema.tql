@@ -24,7 +24,15 @@ entity business,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
-    plays businessAssociation:business @card(1..);
+    plays businessAssociation:business @card(1..),
+    plays businessProject:business @card(0..1);
+
+entity project,
+    owns name @card(1),
+    owns description @card(1),
+    owns imagePath @card(1),
+    owns createdAt @card(1),
+    plays businessProject:project @card(1);
 
 entity skill,
     owns name @key,
@@ -40,6 +48,10 @@ relation authentication,
 relation businessAssociation,
     relates supervisor @card(1),
     relates business @card(1);
+
+relation businessProject,
+    relates business @card(1),
+    relates project @card(1..);
 
 attribute email value string;
 attribute name value string;
