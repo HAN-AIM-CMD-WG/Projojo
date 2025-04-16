@@ -144,6 +144,24 @@ def main():
     for task in task_query:
         print(task)
 
+    # Example 5: Run a fifth query
+    print()
+    print("Running a sample query for task skills")
+    task_query = """
+        match 
+            $t isa task;
+            $sk isa skill;
+            taskSkill( $t, $sk );
+        fetch { 	
+            'taskName': $t.name,	
+            'skillName': $sk.name,
+        };
+    """
+    task_query = Db.read_transact(task_query)
+    # print(result)
+    for task in task_query:
+        print(task)    
+
     Db.driver.close()
 
 
