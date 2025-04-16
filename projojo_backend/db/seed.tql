@@ -83,4 +83,34 @@ insert
         has imagePath "j",
         has createdAt 2025-04-13T10:18;
 
-    $bp isa businessProject (business: $b1, project: $p1, project: $p2, project: $p3);
+    $bp isa businessProjects (business: $b1, project: $p1, project: $p2, project: $p3);
+
+    $t1 isa task,
+        has name "Designer",
+        has description "Ontwerp maken voor de poster",
+        has totalNeeded 1,
+        has createdAt 2025-04-13T10:18;
+
+    $t2 isa task,
+        has name "Grafisch designer",
+        has description "Ontwerp uitwerken",
+        has totalNeeded 3,
+        has createdAt 2025-04-14T10:18;
+
+    $t3 isa task,
+        has name "Kleding designer",
+        has description "Ontwerp maken",
+        has totalNeeded 3,
+        has createdAt 2025-04-14T10:18;
+
+    $t4 isa task,
+        has name "Designer",
+        has description "Plan maken voor tentversiering",
+        has totalNeeded 5,
+        has createdAt 2025-04-14T10:18;
+
+    $pt1 isa projectTask (project: $p1, task: $t1);
+    $pt2 isa projectTask (project: $p1, task: $t2);
+    $pt3 isa projectTask (project: $p2, task: $t3);
+    $pt4 isa projectTask (project: $p3, task: $t4);
+
