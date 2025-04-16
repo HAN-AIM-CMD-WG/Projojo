@@ -65,3 +65,22 @@ insert
         has isPending true,
         has createdAt 2025-04-13T17:10;
 
+    $p1 isa project,
+        has name "Poster ontwerpen",
+        has description "Wij willen graag een unieke en moderne poster voor onze nieuwe circusshow",
+        has imagePath "h",
+        has createdAt 2025-04-16T21:18;
+
+    $p2 isa project,
+        has name "Show outfit ontwerpen",
+        has description "Wij willen graag een nieuw pak voor onze clown",
+        has imagePath "i",
+        has createdAt 2025-04-15T20:18;
+
+    $p3 isa project,
+        has name "Circustent versieren",
+        has description "Wij willen graag een nieuwe look voor onze tent",
+        has imagePath "j",
+        has createdAt 2025-04-13T10:18;
+
+    $bp isa businessProject (business: $b1, project: $p1, project: $p2, project: $p3);
