@@ -111,7 +111,7 @@ def main():
         match 
             $b isa business;
             $p isa project;
-            businessProject( $b, $p );
+            businessProjects( $b, $p );
         fetch { 
             'businessName': $b.name,
             'projectName': $p.name,	
@@ -121,6 +121,28 @@ def main():
     # print(result)
     for project in project_query:
         print(project)
+
+    # Example 4: Run a fourth query
+    print()
+    print("Running a sample query for tasks")
+    task_query = """
+        match 
+            $b isa business;
+            $p isa project;
+            $t isa task;
+            businessProjects( $b, $p );
+            projectTask( $p, $t );
+        fetch { 
+            'businessName': $b.name,
+            'projectName': $p.name,	
+            'taskName': $t.name,	
+            'totalNeeded': $t.totalNeeded,
+        };
+    """
+    task_query = Db.read_transact(task_query)
+    # print(result)
+    for task in task_query:
+        print(task)
 
     Db.driver.close()
 
