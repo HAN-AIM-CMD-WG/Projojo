@@ -65,6 +65,11 @@ insert
         has isPending true,
         has createdAt 2025-04-13T17:10;
 
+    $sk2 isa skill,
+        has name "Ontwerpen",
+        has isPending true,
+        has createdAt 2025-04-13T17:10;
+
     $p1 isa project,
         has name "Poster ontwerpen",
         has description "Wij willen graag een unieke en moderne poster voor onze nieuwe circusshow",
@@ -113,4 +118,9 @@ insert
     $pt2 isa projectTask (project: $p1, task: $t2);
     $pt3 isa projectTask (project: $p2, task: $t3);
     $pt4 isa projectTask (project: $p3, task: $t4);
+
+    $ts1 isa taskSkill (task: $t1, skill: $sk2);
+    $ts2 isa taskSkill (task: $t1, skill: $sk1);
+    $ts3 isa taskSkill (task: $t2, skill: $sk2);
+
 
