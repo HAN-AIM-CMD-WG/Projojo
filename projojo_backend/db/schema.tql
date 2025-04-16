@@ -25,14 +25,22 @@ entity business,
     owns imagePath @card(1),
     owns location @card(1..),
     plays businessAssociation:business @card(1..),
-    plays businessProject:business @card(0..1);
+    plays businessProjects:business @card(0..1);
 
 entity project,
     owns name @card(1),
     owns description @card(1),
     owns imagePath @card(1),
     owns createdAt @card(1),
-    plays businessProject:project @card(1);
+    plays businessProjects:project @card(1),
+    plays projectTask:project @card(0..);
+
+entity task,
+    owns name @card(1),
+    owns description @card(1),
+    owns totalNeeded @card(1),
+    owns createdAt @card(1),
+    plays projectTask:task @card(1);
 
 entity skill,
     owns name @key,
@@ -49,9 +57,13 @@ relation businessAssociation,
     relates supervisor @card(1),
     relates business @card(1);
 
-relation businessProject,
+relation businessProjects,
     relates business @card(1),
     relates project @card(1..);
+
+relation projectTask,
+    relates project @card(1),
+    relates task @card(1);
 
 attribute email value string;
 attribute name value string;
@@ -64,3 +76,4 @@ attribute description value string;
 attribute location value string;
 attribute isPending value boolean;
 attribute createdAt value datetime;
+attribute totalNeeded value integer;
