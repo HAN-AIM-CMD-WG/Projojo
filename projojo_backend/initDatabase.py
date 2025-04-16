@@ -104,6 +104,24 @@ def main():
     for skill in skill_result:
         print(skill)
 
+    # Example 3: Run a third query
+    print()
+    print("Running a sample query for projects")
+    project_query = """
+        match 
+            $b isa business;
+            $p isa project;
+            businessProject( $b, $p );
+        fetch { 
+            'businessName': $b.name,
+            'projectName': $p.name,	
+        };
+    """
+    project_query = Db.read_transact(project_query)
+    # print(result)
+    for project in project_query:
+        print(project)
+
     Db.driver.close()
 
 
