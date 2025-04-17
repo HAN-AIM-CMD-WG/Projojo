@@ -2,7 +2,7 @@ define
 
 entity user @abstract,
     owns email @key,
-    owns imagePath @card(1) @unique,
+    owns imagePath @card(1),
     owns fullName @card(1);
 
 entity supervisor sub user,
@@ -57,7 +57,8 @@ relation authentication,
     
 relation businessAssociation,
     relates supervisor @card(1),
-    relates business @card(1);
+    relates business @card(1),
+    owns location @card(1..);
 
 relation businessProjects,
     relates business @card(1),
