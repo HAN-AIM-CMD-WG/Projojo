@@ -56,9 +56,12 @@ insert
         has location "Nijmegen",
         has location "Utrecht";
 
-    $ba1 isa businessAssociation (business: $b1, supervisor: $u3);
-    $ba2 isa businessAssociation (business: $b2, supervisor: $u4);
-    $ba3 isa businessAssociation (business: $b1, supervisor: $u5);
+    $ba1 isa businessAssociation (business: $b1, supervisor: $u3),
+        has location "Arnhem";
+    $ba2 isa businessAssociation (business: $b2, supervisor: $u4),
+        has location "Amsterdam";
+    $ba3 isa businessAssociation (business: $b1, supervisor: $u5),
+        has location "Utrecht";
 
     $sk1 isa skill,
         has name "PHP",

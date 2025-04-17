@@ -73,13 +73,14 @@ def main():
             $ip isa identityProvider;
             $b isa business;
             authentication( $s, $ip );
-            businessAssociation( $b, $s );
+            $ba isa businessAssociation( $b, $s );
         fetch { 
             'name': $s.fullName, 
             'email': $s.email, 
             'provider': $ip.name,
             'business': $b.name,
             'location': [$b.location],
+            'supervisorLocation': [$ba.location],
         };
     """
     result = Db.read_transact(read_query)
