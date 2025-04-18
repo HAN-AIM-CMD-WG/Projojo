@@ -141,6 +141,15 @@ insert
     $stsk3 isa studentSkill (student: $u6, skill: $sk1),
         has description "Ik hou van PHP";
 
+    $tr1 isa taskRegistration (student: $u2, task: $t1),
+        has description "Ik wil mij graag aanmelden voor deze taak, want ik vind ontwerpen leuk",
+        has createdAt 2025-04-18T10:18;
+
+    $tr2 isa taskRegistration (student: $u2, task: $t2),
+        has description "Ik wil mij graag aanmelden voor deze taak, want ik vind tekenen leuk",
+        has createdAt 2025-04-18T10:25,
+        has isAccepted false,
+        has response "We hebben al genoeg aanmeldingen voor deze taak, bedankt voor je interesse";
 
 
 

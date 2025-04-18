@@ -11,7 +11,8 @@ entity supervisor sub user,
 
 entity student sub user,
     owns schoolAccountName @card(1),
-    plays studentSkill:student @card(0..);
+    plays studentSkill:student @card(0..),
+    plays taskRegistration:student @card(0..);
 
 entity teacher sub user,
     owns schoolAccountName @card(1);
@@ -42,7 +43,8 @@ entity task,
     owns totalNeeded @card(1),
     owns createdAt @card(1),
     plays projectTask:task @card(1),
-    plays taskSkill:task @card(0..);
+    plays taskSkill:task @card(0..),
+    plays taskRegistration:task @card(0..);
 
 entity skill,
     owns name @key,
@@ -79,6 +81,15 @@ relation studentSkill,
     relates skill @card(1),
     owns description @card(1);
 
+
+relation taskRegistration,
+    relates student @card(1),
+    relates task @card(1),
+    owns description @card(1),
+    owns isAccepted @card(0..1),
+    owns response @card(0..1),
+    owns createdAt @card(1);
+    
 attribute email value string;
 attribute name value string;
 attribute fullName value string;
@@ -91,3 +102,5 @@ attribute location value string;
 attribute isPending value boolean;
 attribute createdAt value datetime;
 attribute totalNeeded value integer;
+attribute isAccepted value boolean;
+attribute response value string;

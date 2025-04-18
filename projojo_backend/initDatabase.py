@@ -182,6 +182,27 @@ def main():
     for student in student_query:
         print(student)    
 
+    # Example 7: Run a seventh query
+    print()
+    print("Running a sample query for task registrations")
+    registration_query = """
+        match 
+            $s isa student;
+            $t isa task;
+            $tr isa taskRegistration( $s, $t );
+        fetch { 	
+            'studentName': $s.fullName,	
+            'taskName': $t.name,
+            'description': $tr.description,
+            'isAccepted': $tr.isAccepted,
+            'response': $tr.response,
+        };
+    """
+    registration_query = Db.read_transact(registration_query)
+    # print(result)
+    for registration in registration_query:
+        print(registration) 
+
     Db.driver.close()
 
 
