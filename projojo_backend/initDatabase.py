@@ -163,6 +163,25 @@ def main():
     for task in task_query:
         print(task)    
 
+    # Example 6: Run a sixth query
+    print()
+    print("Running a sample query for student skills")
+    student_query = """
+        match 
+            $s isa student;
+            $sk isa skill;
+            $stsk isa studentSkill( $s, $sk );
+        fetch { 	
+            'studentName': $s.fullName,	
+            'skillName': $sk.name,
+            'description': $stsk.description,
+        };
+    """
+    student_query = Db.read_transact(student_query)
+    # print(result)
+    for student in student_query:
+        print(student)    
+
     Db.driver.close()
 
 

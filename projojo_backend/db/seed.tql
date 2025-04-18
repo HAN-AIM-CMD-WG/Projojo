@@ -27,6 +27,12 @@ insert
         has imagePath "e",
         has email "p@bedrijf.com";   
 
+    $u6 isa student,
+        has fullName "Logboek Stijn Pedro",
+        has imagePath "k",
+        has email "logboek_sp@student.han.com",
+        has schoolAccountName "Logboek.stijn.pedro";
+
     $ip2 isa identityProvider,
         has name "Microsoft";
 
@@ -125,5 +131,16 @@ insert
     $ts1 isa taskSkill (task: $t1, skill: $sk2);
     $ts2 isa taskSkill (task: $t1, skill: $sk1);
     $ts3 isa taskSkill (task: $t2, skill: $sk2);
+
+    $stsk1 isa studentSkill (student: $u2, skill: $sk1),
+        has description "Geleerd tijdens stage";
+
+    $stsk2 isa studentSkill (student: $u2, skill: $sk2),
+        has description "Ik kan goed tekenen";
+
+    $stsk3 isa studentSkill (student: $u6, skill: $sk1),
+        has description "Ik hou van PHP";
+
+
 
 
