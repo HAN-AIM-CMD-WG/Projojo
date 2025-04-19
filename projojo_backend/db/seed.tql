@@ -137,8 +137,6 @@ insert
     $pc3 isa projectCreation (supervisor: $u6, project: $p3),
         has createdAt 2025-04-12T16:30:00;
 
-    (dummyRel: $u6, projectRole: $p3) isa accessPermission;
-
     # Business projects relations - one relation per business with its projects
     $bp1 isa businessProjects (business: $b1, project: $p1, project: $p2, project: $p3);
     $bp2 isa businessProjects (business: $b2, project: $p4);
