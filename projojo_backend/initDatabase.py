@@ -14,7 +14,7 @@ class Db:
     reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False
     schema_path = "db/schema.tql"
     seed_path = "db/seed.tql"
-    driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))    
+    driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))
     db = driver.databases.get(name) if driver.databases.contains(name) else None
     
     @staticmethod
@@ -202,9 +202,31 @@ def main():
     for registration in registration_results:
         print(registration)
 
+
+    print()
+    print("Running a sample query for project creations")
+    projectcreations_query = """
+        match 
+            $s isa supervisor;
+            $b isa business;
+            $p isa project;
+            $ba isa businessAssociation($s, $b);
+            businessProjects($b, $p);
+        fetch { 
+            'supervisorName': $s.fullName,
+            'supervisorEmail': $s.email,
+            'business': $b.name,
+            'project': $p.name,
+            'projectDescription': $p.description,
+            'createdAt': $p.createdAt,
+            'locations': [$ba.location]
+        };
+    """
+    projectcreations_query_results = Db.read_transact(projectcreations_query)
+    for projects in projectcreations_query_results:
+        print(projects)
+
     Db.driver.close()
-
-
 
 if __name__ == "__main__":
     main()
