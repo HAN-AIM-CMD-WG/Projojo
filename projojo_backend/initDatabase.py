@@ -48,7 +48,7 @@ def init_database():
 
 def createDB():
     if Db.reset and Db.db is not None:
-        Db.db.delete()    
+        Db.db.delete()
         Db.db = None
     if Db.db is None:
         print(f"Creating a new database: {Db.name}")
@@ -212,13 +212,14 @@ def main():
             $p isa project;
             $ba isa businessAssociation($s, $b);
             businessProjects($b, $p);
+            $pc isa projectCreation($s, $p);
         fetch { 
             'supervisorName': $s.fullName,
             'supervisorEmail': $s.email,
             'business': $b.name,
             'project': $p.name,
             'projectDescription': $p.description,
-            'createdAt': $p.createdAt,
+            'createdAt': $pc.createdAt,
             'locations': [$ba.location]
         };
     """
