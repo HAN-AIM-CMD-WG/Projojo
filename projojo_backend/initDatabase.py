@@ -22,12 +22,18 @@ class Db:
         with Db.driver.transaction(Db.name, TransactionType.SCHEMA) as tx:
             tx.query(query).resolve()
             tx.commit()
-    
+
     @staticmethod
-    def read_transact(query):
+    def read_transact(query, sort_results=True):
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
-            return tx.query(query).resolve()
-        
+            results = list(tx.query(query).resolve())
+
+            # Sort dictionaries by key for consistent output order if requested
+            if sort_results:
+                results = [dict(sorted(item.items())) for item in results]
+
+            return results
+
     @staticmethod
     def write_transact(query):
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
@@ -83,8 +89,7 @@ def main():
             'supervisorLocation': [$ba.location],
         };
     """
-    # Consume the entire result set before moving on to next query
-    result = list(Db.read_transact(read_query))
+    result = Db.read_transact(read_query)
     for user in result:
         print(user)
 
@@ -100,8 +105,7 @@ def main():
             'createdAt': $sk.createdAt,
         };
     """
-    # Consume the entire result set before moving on to next query
-    skill_result = list(Db.read_transact(skill_query))
+    skill_result = Db.read_transact(skill_query)
     for skill in skill_result:
         print(skill)
 
@@ -118,8 +122,7 @@ def main():
             'projectName': $p.name,	
         };
     """
-    # Consume the entire result set before moving on to next query
-    project_results = list(Db.read_transact(project_query))
+    project_results = Db.read_transact(project_query)
     for project in project_results:
         print(project)
 
@@ -140,8 +143,7 @@ def main():
             'totalNeeded': $t.totalNeeded,
         };
     """
-    # Consume the entire result set before moving on to next query
-    task_results = list(Db.read_transact(task_query))
+    task_results = Db.read_transact(task_query)
     for task in task_results:
         print(task)
 
@@ -158,10 +160,9 @@ def main():
             'skillName': $sk.name,
         };
     """
-    # Consume the entire result set before moving on to next query
-    task_skill_results = list(Db.read_transact(task_skill_query))
+    task_skill_results = Db.read_transact(task_skill_query)
     for task in task_skill_results:
-        print(task)    
+        print(task)
 
     # Example 6: Run a sixth query
     print()
@@ -177,10 +178,9 @@ def main():
             'description': $stsk.description,
         };
     """
-    # Consume the entire result set before moving on to next query
-    student_results = list(Db.read_transact(student_query))
+    student_results = Db.read_transact(student_query)
     for student in student_results:
-        print(student)    
+        print(student)
 
     # Example 7: Run a seventh query
     print()
@@ -198,10 +198,9 @@ def main():
             'response': $tr.response,
         };
     """
-    # Consume the entire result set before moving on to next query
-    registration_results = list(Db.read_transact(registration_query))
+    registration_results = Db.read_transact(registration_query)
     for registration in registration_results:
-        print(registration) 
+        print(registration)
 
     Db.driver.close()
 
