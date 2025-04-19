@@ -83,8 +83,8 @@ def main():
             'supervisorLocation': [$ba.location],
         };
     """
-    result = Db.read_transact(read_query)
-    # print(result)
+    # Consume the entire result set before moving on to next query
+    result = list(Db.read_transact(read_query))
     for user in result:
         print(user)
 
@@ -100,8 +100,8 @@ def main():
             'createdAt': $sk.createdAt,
         };
     """
-    skill_result = Db.read_transact(skill_query)
-    # print(result)
+    # Consume the entire result set before moving on to next query
+    skill_result = list(Db.read_transact(skill_query))
     for skill in skill_result:
         print(skill)
 
@@ -118,9 +118,9 @@ def main():
             'projectName': $p.name,	
         };
     """
-    project_query = Db.read_transact(project_query)
-    # print(result)
-    for project in project_query:
+    # Consume the entire result set before moving on to next query
+    project_results = list(Db.read_transact(project_query))
+    for project in project_results:
         print(project)
 
     # Example 4: Run a fourth query
@@ -140,15 +140,15 @@ def main():
             'totalNeeded': $t.totalNeeded,
         };
     """
-    task_query = Db.read_transact(task_query)
-    # print(result)
-    for task in task_query:
+    # Consume the entire result set before moving on to next query
+    task_results = list(Db.read_transact(task_query))
+    for task in task_results:
         print(task)
 
     # Example 5: Run a fifth query
     print()
     print("Running a sample query for task skills")
-    task_query = """
+    task_skill_query = """
         match 
             $t isa task;
             $sk isa skill;
@@ -158,9 +158,9 @@ def main():
             'skillName': $sk.name,
         };
     """
-    task_query = Db.read_transact(task_query)
-    # print(result)
-    for task in task_query:
+    # Consume the entire result set before moving on to next query
+    task_skill_results = list(Db.read_transact(task_skill_query))
+    for task in task_skill_results:
         print(task)    
 
     # Example 6: Run a sixth query
@@ -177,9 +177,9 @@ def main():
             'description': $stsk.description,
         };
     """
-    student_query = Db.read_transact(student_query)
-    # print(result)
-    for student in student_query:
+    # Consume the entire result set before moving on to next query
+    student_results = list(Db.read_transact(student_query))
+    for student in student_results:
         print(student)    
 
     # Example 7: Run a seventh query
@@ -198,9 +198,9 @@ def main():
             'response': $tr.response,
         };
     """
-    registration_query = Db.read_transact(registration_query)
-    # print(result)
-    for registration in registration_query:
+    # Consume the entire result set before moving on to next query
+    registration_results = list(Db.read_transact(registration_query))
+    for registration in registration_results:
         print(registration) 
 
     Db.driver.close()
