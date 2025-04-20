@@ -40,13 +40,18 @@ class Db:
             tx.query(query).resolve()
             tx.commit()
 
+    @staticmethod
+    def close():
+        Db.driver.close()
+        
+
 print( f"Using database: {Db.name}")
 
-def init_database():
-    createDB()    
+def get_database():
+    create_database_if_needed()    
     return Db
 
-def createDB():
+def create_database_if_needed():
     if Db.reset and Db.db is not None:
         Db.db.delete()
         Db.db = None
@@ -64,11 +69,11 @@ def createDB():
             seed_query = file.read()
             Db.write_transact(seed_query)
             print("OK")
-    # Perform operations with the database
+    Db.reset = False     # prevent re-creating the database again 
 
 
 def main():
-    createDB()
+    create_database_if_needed()
 
     # Example: Run a query
     print()

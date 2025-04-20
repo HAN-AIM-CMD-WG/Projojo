@@ -4,20 +4,20 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 # Import the TypeDB connection module
-from initDatabase import init_database
+from initDatabase import get_database
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize TypeDB connection
     print("Initializing TypeDB connection...")
-    connection = init_database()
+    Db = get_database()
     
-    yield
+    yield Db
     
     # Close TypeDB connection on shutdown
     print("Closing TypeDB connection...")
-    connection.close()
+    Db.close()
 
 app = FastAPI(
     title="Projojo Backend",
@@ -37,7 +37,7 @@ app.add_middleware(
 
 # Dependency to get TypeDB connection
 def get_db():
-    return init_database()
+    return get_database()
 
 @app.get("/")
 async def root():
@@ -48,7 +48,7 @@ async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
     try:
         # Try to get database name to verify connection
-        db_name = db.name
+        db_name = db.name  # dit kon wel eens slagen, ook als er geen verbinding is met de Db.
         return {
             "status": "connected",
             "database": db_name,
