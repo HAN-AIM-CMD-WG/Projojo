@@ -2,15 +2,18 @@ define
 
 entity user @abstract,
     owns email @key,
-    owns imagePath @card(1) @unique,
+    owns imagePath @card(1),
     owns fullName @card(1);
 
 entity supervisor sub user,
     plays authentication:user @card(1..10),
-    plays businessAssociation:supervisor @card(1);
+    plays businessAssociation:supervisor @card(1),
+    plays projectCreation:supervisor @card(0..);
 
 entity student sub user,
-    owns schoolAccountName @card(1);
+    owns schoolAccountName @card(1),
+    plays studentSkill:student @card(0..),
+    plays taskRegistration:student @card(0..);
 
 entity teacher sub user,
     owns schoolAccountName @card(1);
@@ -20,21 +23,95 @@ entity identityProvider,
     plays authentication:identityProvider;
 
 entity business,
-    owns name @key, 
+    owns name @key,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
-    plays businessAssociation:business @card(1..);
+    plays businessAssociation:business @card(1..),
+    plays businessProjects:business @card(0..1);
+
+entity project,
+    owns name @card(1),
+    owns description @card(1),
+    owns imagePath @card(1),
+    owns createdAt @card(1),
+    plays businessProjects:project @card(1),
+    plays projectTask:project @card(0..),
+    plays projectCreation:project @card(0..);
+
+entity task,
+    owns name @card(1),
+    owns description @card(1),
+    owns totalNeeded @card(1),
+    owns createdAt @card(1),
+    plays projectTask:task @card(1),
+    plays taskSkill:task @card(0..),
+    plays taskRegistration:task @card(0..);
+
+entity skill,
+    owns name @key,
+    owns isPending @card(1),
+    owns createdAt @card(1),
+    plays taskSkill:skill @card(0..),
+    plays studentSkill:skill @card(0..);
 
 relation authentication,
     relates user,
     relates identityProvider,
     owns username @card(1),
     owns id @key;
-    
+
+#relation accessPermission,
+#    relates supervisorRole as supervisor,
+#    relates projectRole as project;
+
+    #Project Creations
+    # Ik ben van mening dat we de createdAt hier willen hebben, een supervisor maakt een project(relatie -> projectCreation) aan en de timestamp laat zien waneer dit gebeurt.
+    # mischien kunnen we met een rule dit laten overerven naar het projectzelf, als we dat willen?
+relation projectCreation,
+    relates supervisor @card(1),
+    relates project @card(0..),
+    owns createdAt @card(1);
+
 relation businessAssociation,
     relates supervisor @card(1),
-    relates business @card(1);
+    relates business @card(1),
+    owns location @card(1..);
+
+relation businessProjects,
+    relates business @card(1),
+    relates project @card(1..);
+
+relation projectTask,
+    relates project @card(1),
+    relates task @card(1);
+
+relation taskSkill,
+    relates task @card(1),
+    relates skill @card(1);
+
+relation studentSkill,
+    relates student @card(1),
+    relates skill @card(1),
+    owns description @card(1);
+
+relation taskRegistration,
+    relates student @card(1),
+    relates task @card(1),
+    owns description @card(1),
+    owns isAccepted @card(0..1),
+    owns response @card(0..1),
+    owns createdAt @card(1);
+
+#Werkt helaas nog niet :(
+# TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
+# nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
+#rule access: when {
+#    (supervisor: $s, project: $p) isa projectCreation;
+#} then {
+#    (supervisorRole: $s, projectRole: $p) isa accessPermission;
+#};
+
 
 attribute email value string;
 attribute name value string;
@@ -45,3 +122,8 @@ attribute username value string;
 attribute id value string;
 attribute description value string;
 attribute location value string;
+attribute isPending value boolean;
+attribute createdAt value datetime;
+attribute totalNeeded value integer;
+attribute isAccepted value boolean;
+attribute response value string;

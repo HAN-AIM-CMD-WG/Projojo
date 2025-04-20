@@ -1,62 +1,218 @@
 insert
 
+    # Teacher user
     $u1 isa teacher,
-        has fullName "Wouter Noordsiek",
-        has imagePath "a",
-        has schoolAccountName "Wouter.Noordsiek",
-        has email "W.Noordsiek@han.nl";
+        has fullName "Morgan Lakewood",
+        has imagePath "teacher_profile1.jpg",
+        has schoolAccountName "Morgan.Lakewood",
+        has email "M.Lakewood@han.nl";
 
+    # Student users
     $u2 isa student,
-        has fullName "Stijn Apeldoorn",
-        has imagePath "b",
-        has email "S.Apeldoorn@student.han.com",
-        has schoolAccountName "Stijn.Apeldoorn";
+        has fullName "Aria Nightshade",
+        has imagePath "student_profile1.jpg",
+        has email "A.Nightshade@student.han.com",
+        has schoolAccountName "Aria.Nightshade";
 
-    $u3 isa supervisor,
-        has fullName "Dikke Deur",
-        has imagePath "c",
-        has email "d.d@bedrijf.com";
+    $u3 isa student,
+        has fullName "Zephyr Blakely",
+        has imagePath "student_profile2.jpg",
+        has email "Z.Blakely@student.han.com",
+        has schoolAccountName "Zephyr.Blakely";
 
+    # Supervisor users
     $u4 isa supervisor,
-        has fullName "Elon Musk",
-        has imagePath "d",
-        has email "em@doge.gov";
+        has fullName "Elena Silverstone",
+        has imagePath "supervisor_profile1.jpg",
+        has email "e.silverstone@novacorp.com";
 
     $u5 isa supervisor,
-        has fullName "Pipo",
-        has imagePath "e",
-        has email "p@bedrijf.com";   
+        has fullName "Thorin Oakenshield",
+        has imagePath "supervisor_profile2.jpg",
+        has email "t.oakenshield@mountaintechnologies.com";
+
+    $u6 isa supervisor,
+        has fullName "Luna Moonshadow",
+        has imagePath "supervisor_profile3.jpg",
+        has email "l.moonshadow@celestialinnovations.com";   
+
+    # Identity providers
+    $ip1 isa identityProvider,
+        has name "Google";
 
     $ip2 isa identityProvider,
         has name "Microsoft";
 
-    $auth1 isa authentication (user: $u3, identityProvider: $ip2),
-        has username "dikkiedik",
-        has id "23454623";
+    # Authentication relations - only for supervisors
+    $auth1 isa authentication (user: $u4, identityProvider: $ip1),
+        has username "e.silverstone",
+        has id "sup10001";
 
-    $auth2 isa authentication (user: $u4, identityProvider: $ip2),
-        has username "elonmusk",
-        has id "23454624";
+    $auth2 isa authentication (user: $u5, identityProvider: $ip1),
+        has username "t.oakenshield",
+        has id "sup10002";
 
-    $auth3 isa authentication (user: $u5, identityProvider: $ip2),
-        has username "pipoclown",
-        has id "23454625";
+    $auth3 isa authentication (user: $u6, identityProvider: $ip2),
+        has username "l.moonshadow",
+        has id "sup10003";
 
+    # Businesses
     $b1 isa business,
-        has name "Circus Arnhem",
-        has description "Iedere zaterdagmiddag een show.",
-        has imagePath "f",
-        has location "Ergens in Arnhem";
+        has name "Celestial Innovations",
+        has description "Creating transformative experiences through cutting-edge digital solutions.",
+        has imagePath "business_celestial.jpg",
+        has location "Arnhem Central";
 
     $b2 isa business,
-        has name "Tesla",
-        has description "Wij verkopen auto's.",
-        has imagePath "g",
+        has name "Mountain Technologies",
+        has description "Forging the future of sustainable engineering and manufacturing.",
+        has imagePath "business_mountain.jpg",
         has location "Amsterdam",
         has location "Nijmegen",
         has location "Utrecht";
 
-    $ba1 isa businessAssociation (business: $b1, supervisor: $u3);
-    $ba2 isa businessAssociation (business: $b2, supervisor: $u4);
-    $ba3 isa businessAssociation (business: $b1, supervisor: $u5);
+    # Business associations
+    $ba1 isa businessAssociation (business: $b1, supervisor: $u4),
+        has location "Arnhem";
 
+    $ba2 isa businessAssociation (business: $b2, supervisor: $u5),
+        has location "Amsterdam";
+
+    $ba3 isa businessAssociation (business: $b1, supervisor: $u6),
+        has location "Utrecht";
+
+    # Skills
+    $sk1 isa skill,
+        has name "Python Development",
+        has isPending true,
+        has createdAt 2025-04-10T14:30:00;
+
+    $sk2 isa skill,
+        has name "UI/UX Design",
+        has isPending true,
+        has createdAt 2025-04-11T09:45:00;
+
+    $sk3 isa skill,
+        has name "Data Visualization",
+        has isPending false,
+        has createdAt 2025-04-09T16:20:00;
+
+    $sk4 isa skill,
+        has name "Cloud Infrastructure",
+        has isPending false,
+        has createdAt 2025-04-08T11:15:00;
+
+    # Projects
+    $p1 isa project,
+        has name "Digital Experience Platform",
+        has description "Create an immersive digital platform showcasing our innovative solutions",
+        has imagePath "project_dxp.jpg",
+        has createdAt 2025-04-15T13:40:00;
+
+    $p2 isa project,
+        has name "Interactive Kiosk Design",
+        has description "Design and implement interactive kiosks for our flagship store",
+        has imagePath "project_kiosk.jpg",
+        has createdAt 2025-04-14T10:15:00;
+
+    $p3 isa project,
+        has name "Event Dashboard",
+        has description "Create a real-time event dashboard for monitoring customer interactions",
+        has imagePath "project_dashboard.jpg",
+        has createdAt 2025-04-12T16:30:00;
+
+    $p4 isa project,
+        has name "Cloud Migration Strategy",
+        has description "Develop a comprehensive strategy for migrating our infrastructure to the cloud",
+        has imagePath "project_cloud.jpg",
+        has createdAt 2025-04-16T09:20:00;
+
+
+    $pc1 isa projectCreation (supervisor: $u4, project: $p1),
+        has createdAt 2025-04-15T13:40:00;
+
+    $pc2 isa projectCreation (supervisor: $u4, project: $p2),
+        has createdAt 2025-04-14T10:15:00;
+
+    $pc3 isa projectCreation (supervisor: $u6, project: $p3),
+        has createdAt 2025-04-12T16:30:00;
+
+    # Business projects relations - one relation per business with its projects
+    $bp1 isa businessProjects (business: $b1, project: $p1, project: $p2, project: $p3);
+    $bp2 isa businessProjects (business: $b2, project: $p4);
+
+    # Tasks
+    $t1 isa task,
+        has name "UX Researcher",
+        has description "Conduct user research and create personas for the digital platform",
+        has totalNeeded 1,
+        has createdAt 2025-04-15T14:30:00;
+
+    $t2 isa task,
+        has name "UI Designer",
+        has description "Create high-fidelity mockups and prototypes",
+        has totalNeeded 2,
+        has createdAt 2025-04-15T14:45:00;
+
+    $t3 isa task,
+        has name "Interaction Designer",
+        has description "Design interactive elements for the kiosk interface",
+        has totalNeeded 2,
+        has createdAt 2025-04-14T11:20:00;
+
+    $t4 isa task,
+        has name "Data Analyst",
+        has description "Develop data visualizations for the event dashboard",
+        has totalNeeded 3,
+        has createdAt 2025-04-12T17:10:00;
+
+    $t5 isa task,
+        has name "Cloud Architect",
+        has description "Architect the cloud infrastructure and migration plan",
+        has totalNeeded 1,
+        has createdAt 2025-04-16T10:05:00;
+
+    # Project tasks relations
+    $pt1 isa projectTask (project: $p1, task: $t1);
+    $pt2 isa projectTask (project: $p1, task: $t2);
+    $pt3 isa projectTask (project: $p2, task: $t3);
+    $pt4 isa projectTask (project: $p3, task: $t4);
+    $pt5 isa projectTask (project: $p4, task: $t5);
+
+    # Task skill relations
+    $ts1 isa taskSkill (task: $t1, skill: $sk2);
+    $ts2 isa taskSkill (task: $t2, skill: $sk2);
+    $ts3 isa taskSkill (task: $t3, skill: $sk2);
+    $ts4 isa taskSkill (task: $t4, skill: $sk3);
+    $ts5 isa taskSkill (task: $t5, skill: $sk4);
+    $ts6 isa taskSkill (task: $t5, skill: $sk1);
+
+    # Student skill relations
+    $stsk1 isa studentSkill (student: $u2, skill: $sk1),
+        has description "Completed several advanced Python projects during internship";
+
+    $stsk2 isa studentSkill (student: $u2, skill: $sk2),
+        has description "Certified UI/UX designer with portfolio of client work";
+
+    $stsk3 isa studentSkill (student: $u3, skill: $sk1),
+        has description "Experienced in Django and FastAPI frameworks";
+
+    $stsk4 isa studentSkill (student: $u3, skill: $sk3),
+        has description "Experienced with D3.js and Tableau";
+
+    # Task registrations
+    $tr1 isa taskRegistration (student: $u2, task: $t1),
+        has description "I'm passionate about understanding user needs and creating meaningful experiences",
+        has createdAt 2025-04-18T10:18:00;
+
+    $tr2 isa taskRegistration (student: $u2, task: $t2),
+        has description "I have extensive experience with design systems and prototyping tools",
+        has isAccepted false,
+        has response "We're looking for someone with more industry experience for this role",
+        has createdAt 2025-04-18T13:45:00;
+
+    $tr3 isa taskRegistration (student: $u3, task: $t4),
+        has description "I've completed several data visualization projects and would love to apply my skills",
+        has isAccepted true,
+        has response "Your portfolio is impressive! We'd be happy to have you join the team.",
+        has createdAt 2025-04-18T15:20:00;
