@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from contextlib import asynccontextmanager
+from controllers.test_controller import router as test_router
 
 # Import the TypeDB connection module
 from initDatabase import get_database
@@ -13,7 +14,7 @@ async def lifespan(app: FastAPI):
     print("Initializing TypeDB connection...")
     Db = get_database()
     
-    yield Db
+    yield {}
     
     # Close TypeDB connection on shutdown
     print("Closing TypeDB connection...")
@@ -34,6 +35,9 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+# Include routers
+app.include_router(test_router)
 
 # Dependency to get TypeDB connection
 def get_db():
