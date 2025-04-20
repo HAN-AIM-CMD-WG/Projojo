@@ -127,59 +127,6 @@ async def get_all_teachers():
             message=f"Error retrieving teachers: {str(e)}"
         )
 
-@router.post("/users/supervisor", response_model=DebugResponse)
-async def create_supervisor(supervisor: Supervisor = Body(...)):
-    """
-    Create a new supervisor
-    """
-    try:
-        created = user_repo.create_supervisor(supervisor)
-        return DebugResponse(
-            status="success",
-            message="Supervisor created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating supervisor: {str(e)}"
-        )
-
-@router.post("/users/student", response_model=DebugResponse)
-async def create_student(student: Student = Body(...)):
-    """
-    Create a new student
-    """
-    try:
-        created = user_repo.create_student(student)
-        return DebugResponse(
-            status="success",
-            message="Student created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating student: {str(e)}"
-        )
-
-@router.post("/users/teacher", response_model=DebugResponse)
-async def create_teacher(teacher: Teacher = Body(...)):
-    """
-    Create a new teacher
-    """
-    try:
-        created = user_repo.create_teacher(teacher)
-        return DebugResponse(
-            status="success",
-            message="Teacher created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating teacher: {str(e)}"
-        )
 
 # Business endpoints
 @router.get("/businesses", response_model=DebugResponse)
@@ -222,25 +169,6 @@ async def get_business(name: str = Path(..., description="Business name")):
             status="error",
             message=f"Error retrieving business: {str(e)}"
         )
-
-@router.post("/businesses", response_model=DebugResponse)
-async def create_business(business: Business = Body(...)):
-    """
-    Create a new business
-    """
-    try:
-        created = business_repo.create(business)
-        return DebugResponse(
-            status="success",
-            message="Business created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating business: {str(e)}"
-        )
-
 @router.get("/businesses/{name}/associations", response_model=DebugResponse)
 async def get_business_associations(name: str = Path(..., description="Business name")):
     """
@@ -301,26 +229,6 @@ async def get_project(name: str = Path(..., description="Project name")):
             message=f"Error retrieving project: {str(e)}"
         )
 
-@router.post("/projects", response_model=DebugResponse)
-async def create_project(
-    project: Project = Body(...),
-    supervisor_email: str = Query(..., description="Email of the supervisor creating the project")
-):
-    """
-    Create a new project
-    """
-    try:
-        created = project_repo.create(project, supervisor_email)
-        return DebugResponse(
-            status="success",
-            message="Project created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating project: {str(e)}"
-        )
 
 @router.get("/businesses/{name}/projects", response_model=DebugResponse)
 async def get_business_projects(name: str = Path(..., description="Business name")):
@@ -380,24 +288,6 @@ async def get_task(name: str = Path(..., description="Task name")):
         return DebugResponse(
             status="error",
             message=f"Error retrieving task: {str(e)}"
-        )
-
-@router.post("/tasks", response_model=DebugResponse)
-async def create_task(task: Task = Body(...)):
-    """
-    Create a new task
-    """
-    try:
-        created = task_repo.create(task)
-        return DebugResponse(
-            status="success",
-            message="Task created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating task: {str(e)}"
         )
 
 @router.get("/projects/{name}/tasks", response_model=DebugResponse)
@@ -475,24 +365,6 @@ async def get_skill(name: str = Path(..., description="Skill name")):
         return DebugResponse(
             status="error",
             message=f"Error retrieving skill: {str(e)}"
-        )
-
-@router.post("/skills", response_model=DebugResponse)
-async def create_skill(skill: Skill = Body(...)):
-    """
-    Create a new skill
-    """
-    try:
-        created = skill_repo.create(skill)
-        return DebugResponse(
-            status="success",
-            message="Skill created successfully",
-            data=created
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error creating skill: {str(e)}"
         )
 
 @router.get("/students/{email}/skills", response_model=DebugResponse)
