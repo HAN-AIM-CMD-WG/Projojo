@@ -169,23 +169,6 @@ async def get_business(name: str = Path(..., description="Business name")):
             status="error",
             message=f"Error retrieving business: {str(e)}"
         )
-@router.get("/businesses/{name}/associations", response_model=DebugResponse)
-async def get_business_associations(name: str = Path(..., description="Business name")):
-    """
-    Get all supervisor associations for a business
-    """
-    try:
-        associations = business_repo.get_business_associations(name)
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(associations)} associations for business {name}",
-            data=associations
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving business associations: {str(e)}"
-        )
 
 # Project endpoints
 @router.get("/projects", response_model=DebugResponse)
