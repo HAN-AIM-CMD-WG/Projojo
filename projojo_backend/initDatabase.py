@@ -71,11 +71,15 @@ def main():
         match 
             $s isa supervisor; 
             $ip isa identityProvider;
+            $b isa business;
             authentication( $s, $ip );
+            businessAssociation( $b, $s );
         fetch { 
             'name': $s.fullName, 
             'email': $s.email, 
-            'provider': $ip.name
+            'provider': $ip.name,
+            'business': $b.name,
+            'location': [$b.location],
         };
     """
     result = Db.read_transact(read_query)
