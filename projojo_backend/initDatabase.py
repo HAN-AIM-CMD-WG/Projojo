@@ -1,5 +1,6 @@
 from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
+import pprint
 from dotenv import load_dotenv
 
 
@@ -95,8 +96,7 @@ def main():
         };
     """
     result = Db.read_transact(read_query)
-    for user in result:
-        print(user)
+    pprint.pp(result)
 
     # Example 2: Run a second query
     print()
@@ -111,8 +111,7 @@ def main():
         };
     """
     skill_result = Db.read_transact(skill_query)
-    for skill in skill_result:
-        print(skill)
+    pprint.pp(skill_result)
 
     # Example 3: Run a third query
     print()
@@ -128,8 +127,7 @@ def main():
         };
     """
     project_results = Db.read_transact(project_query)
-    for project in project_results:
-        print(project)
+    pprint.pp(project_results)
 
     # Example 4: Run a fourth query
     print()
@@ -149,9 +147,8 @@ def main():
         };
     """
     task_results = Db.read_transact(task_query)
-    for task in task_results:
-        print(task)
-
+    pprint.pp(task_results)
+    
     # Example 5: Run a fifth query
     print()
     print("Running a sample query for task skills")
@@ -166,8 +163,7 @@ def main():
         };
     """
     task_skill_results = Db.read_transact(task_skill_query)
-    for task in task_skill_results:
-        print(task)
+    pprint.pp(task_skill_results)
 
     # Example 6: Run a sixth query
     print()
@@ -184,8 +180,7 @@ def main():
         };
     """
     student_results = Db.read_transact(student_query)
-    for student in student_results:
-        print(student)
+    pprint.pp(student_results)
 
     # Example 7: Run a seventh query
     print()
@@ -204,9 +199,7 @@ def main():
         };
     """
     registration_results = Db.read_transact(registration_query)
-    for registration in registration_results:
-        print(registration)
-
+    pprint.pp(registration_results)
 
     print()
     print("Running a sample query for project creations")
@@ -229,10 +222,9 @@ def main():
         };
     """
     projectcreations_query_results = Db.read_transact(projectcreations_query)
-    for projects in projectcreations_query_results:
-        print(projects)
+    pprint.pp(projectcreations_query_results)
 
-    Db.driver.close()
+    Db.close()
 
 if __name__ == "__main__":
     main()
