@@ -24,12 +24,12 @@ class Db:
             tx.commit()
 
     @staticmethod
-    def read_transact(query, sort_results=True):
+    def read_transact(query, sort_fields=True):
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
             results = list(tx.query(query).resolve())
 
             # Sort dictionaries by key for consistent output order if requested
-            if sort_results:
+            if sort_fields:
                 results = [dict(sorted(item.items())) for item in results]
 
             return results
