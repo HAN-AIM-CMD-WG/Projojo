@@ -1,5 +1,12 @@
 # Projojo Backend
 
+
+The API will be available at http://localhost:8000
+
+API documentation will be available at:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
 FastAPI backend service for the Projojo application.
 
 ## Setup
@@ -30,8 +37,3 @@ Start the server with:
 uvicorn main:app --reload
 ```
 
-The API will be available at http://localhost:8000
-
-API documentation will be available at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
