@@ -367,3 +367,19 @@ async def get_student_skills(email: str = Path(..., description="Student email")
             status="error",
             message=f"Error retrieving student skills: {str(e)}"
         )
+
+#POST endpoints
+
+@router.post("/skills", response_model=Skill, status_code=201)
+async def create_skill(skill: Skill = Body(...)):
+
+    try:
+        # Call the repository to create the skill
+        created_skill = skill_repo.create(skill)
+        return created_skill
+    except Exception as e:
+        # Handle any errors
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create skill: {str(e)}"
+        )
