@@ -395,6 +395,7 @@ class LoginResponse(BaseModel):
     status: str
     message: str
     token: str = None
+    debug_payload: Optional[Dict[str, Any]] = None
 
 SECRET_KEY = "test"
 ALGORITHM = "HS256"
@@ -423,7 +424,8 @@ async def login(login_data: LoginRequest):
         # Prepare token payload
         payload = {
             "sub": user.email,
-            "role": user.password_hash,  # hier moet nog een role aan toe worden gevoegd
+            "password_hash": user.password_hash,
+            "role": type(user).__name__.lower(),  # hier moet nog een role aan toe worden gevoegd
             "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
         }
 
@@ -432,7 +434,8 @@ async def login(login_data: LoginRequest):
         return LoginResponse(
             status="success",
             message="Login successful",
-            token=token
+            token=token,
+            debug_payload=payload
         )
     except Exception as e:
         raise HTTPException(
