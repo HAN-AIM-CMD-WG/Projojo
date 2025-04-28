@@ -69,12 +69,14 @@ class UserRepository(BaseRepository[User]):
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName;
+                has schoolAccountName $schoolAccountName,
+                has password_hash $password_hash;
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName
+                'schoolAccountName': $schoolAccountName,
+                'password_hash': $password_hash
             }};
         """
         results = Db.read_transact(query)
@@ -135,12 +137,14 @@ class UserRepository(BaseRepository[User]):
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName;
+                has schoolAccountName $schoolAccountName,
+                has password_hash $password_hash;
             fetch {
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'schoolAccountName': $schoolAccountName,
+                'password_hash': $password_hash,
             };
         """
         results = Db.read_transact(query)
@@ -168,12 +172,14 @@ class UserRepository(BaseRepository[User]):
         email = result.get("email", "")
         full_name = result.get("fullName", "")
         image_path = result.get("imagePath", "")
+        password_hash = result.get("password_hash", "")
         
         return User(
             id=email,
             email=email,
             full_name=full_name,
-            image_path=image_path
+            image_path=image_path,
+            password_hash=password_hash
         )
     
     def _map_supervisor(self, result: Dict[str, Any]) -> Supervisor:
@@ -197,6 +203,7 @@ class UserRepository(BaseRepository[User]):
         full_name = result.get("fullName", "")
         image_path = result.get("imagePath", "")
         school_account_name = result.get("schoolAccountName", "")
+        password_hash = result.get("password_hash", "")
         
         return Student(
             id=email,
@@ -205,7 +212,8 @@ class UserRepository(BaseRepository[User]):
             image_path=image_path,
             school_account_name=school_account_name,
             skill_ids=[],
-            registered_task_ids=[]
+            registered_task_ids=[],
+            password_hash=password_hash
         )
     
     def _map_teacher(self, result: Dict[str, Any]) -> Teacher:
