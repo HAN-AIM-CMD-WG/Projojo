@@ -3,7 +3,8 @@ define
 entity user @abstract,
     owns email @key,
     owns imagePath @card(1),
-    owns fullName @card(1);
+    owns fullName @card(1),
+    owns password_hash @card(1);
 
 entity supervisor sub user,
     plays authentication:user @card(1..10),
@@ -116,6 +117,7 @@ relation taskRegistration,
 attribute email value string;
 attribute name value string;
 attribute fullName value string;
+attribute password_hash value string;
 attribute imagePath value string;
 attribute schoolAccountName value string;
 attribute username value string;
