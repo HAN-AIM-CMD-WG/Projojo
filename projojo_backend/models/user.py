@@ -6,6 +6,7 @@ class User(BaseModel):
     email: str
     full_name: str
     image_path: Optional[str] = None
+    password_hash: Optional[str] = None
 
     class Config:
         from_attributes = True
