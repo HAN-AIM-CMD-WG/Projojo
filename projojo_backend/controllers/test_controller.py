@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Query, Path, Body
 from pydantic import BaseModel
+import jwt;
 
 # Import repositories
 from repositories.business_repository import BusinessRepository
@@ -382,4 +384,58 @@ async def create_skill(skill: Skill = Body(...)):
         raise HTTPException(
             status_code=500,
             detail=f"Failed to create skill: {str(e)}"
+        )
+
+# Models
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class LoginResponse(BaseModel):
+    status: str
+    message: str
+    token: str = None
+
+SECRET_KEY = "test"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # e.g., 1 hour
+
+def verify_user_credentials(email: str, password: str):
+    user = user_repo.get_by_id(email)
+    print("verifying..."+str(user))
+    if user and user.password_hash == password:
+        return user
+    return None
+
+@router.post("/login", response_model=LoginResponse)
+async def login(login_data: LoginRequest):
+    """
+    Authenticate a user and return a JWT token
+    """
+    try:
+        user = verify_user_credentials(login_data.email, login_data.password)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password"
+            )
+
+        # Prepare token payload
+        payload = {
+            "sub": user.email,
+            "role": user.password_hash,  # hier moet nog een role aan toe worden gevoegd
+            "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        }
+
+        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+        return LoginResponse(
+            status="success",
+            message="Login successful",
+            token=token
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Login error: {str(e)}"
         )
