@@ -5,36 +5,42 @@ insert
         has fullName "Morgan Lakewood",
         has imagePath "teacher_profile1.jpg",
         has schoolAccountName "Morgan.Lakewood",
-        has email "M.Lakewood@han.nl";
+        has email "M.Lakewood@han.nl",
+        has password_hash "hash_123";
 
     # Student users
     $u2 isa student,
         has fullName "Aria Nightshade",
         has imagePath "student_profile1.jpg",
         has email "A.Nightshade@student.han.com",
-        has schoolAccountName "Aria.Nightshade";
+        has schoolAccountName "Aria.Nightshade",
+        has password_hash "hash_123";
 
     $u3 isa student,
         has fullName "Zephyr Blakely",
         has imagePath "student_profile2.jpg",
         has email "Z.Blakely@student.han.com",
-        has schoolAccountName "Zephyr.Blakely";
+        has schoolAccountName "Zephyr.Blakely",
+        has password_hash "hash_123";
 
     # Supervisor users
     $u4 isa supervisor,
         has fullName "Elena Silverstone",
         has imagePath "supervisor_profile1.jpg",
-        has email "e.silverstone@novacorp.com";
+        has email "e.silverstone@novacorp.com",
+        has password_hash "hash_123";
 
     $u5 isa supervisor,
         has fullName "Thorin Oakenshield",
         has imagePath "supervisor_profile2.jpg",
-        has email "t.oakenshield@mountaintechnologies.com";
+        has email "t.oakenshield@mountaintechnologies.com",
+        has password_hash "hash_123";
 
     $u6 isa supervisor,
         has fullName "Luna Moonshadow",
         has imagePath "supervisor_profile3.jpg",
-        has email "l.moonshadow@celestialinnovations.com";   
+        has email "l.moonshadow@celestialinnovations.com",
+        has password_hash "hash_123";
 
     # Identity providers
     $ip1 isa identityProvider,
