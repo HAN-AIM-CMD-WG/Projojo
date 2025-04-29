@@ -99,7 +99,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $project isa project, has name "{project_id}";
-                $pc isa projectCreation,
+                $pc isa creates,
                     has createdAt $createdAt,
                     (supervisor: $supervisor, project: $project);
                 $supervisor isa supervisor, has email $email;

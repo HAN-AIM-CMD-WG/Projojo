@@ -134,13 +134,13 @@ insert
         has createdAt 2025-04-16T09:20:00;
 
 
-    $pc1 isa projectCreation (supervisor: $u4, project: $p1),
+    $pc1 isa creates (supervisor: $u4, project: $p1),
         has createdAt 2025-04-15T13:40:00;
 
-    $pc2 isa projectCreation (supervisor: $u4, project: $p2),
+    $pc2 isa creates (supervisor: $u4, project: $p2),
         has createdAt 2025-04-14T10:15:00;
 
-    $pc3 isa projectCreation (supervisor: $u6, project: $p3),
+    $pc3 isa creates (supervisor: $u6, project: $p3),
         has createdAt 2025-04-12T16:30:00;
 
     # Business projects relations - one relation per business with its projects
