@@ -120,7 +120,7 @@ def main():
         match 
             $b isa business;
             $p isa project;
-            businessProjects( $b, $p );
+            hasProjects( $b, $p );
         fetch { 
             'businessName': $b.name,
             'projectName': $p.name,	
@@ -137,7 +137,7 @@ def main():
             $b isa business;
             $p isa project;
             $t isa task;
-            businessProjects( $b, $p );
+            hasProjects( $b, $p );
             projectTask( $p, $t );
         fetch { 
             'businessName': $b.name,
@@ -209,7 +209,7 @@ def main():
             $b isa business;
             $p isa project;
             $ba isa manages($s, $b);
-            businessProjects($b, $p);
+            hasProjects($b, $p);
             $pc isa creates($s, $p);
         fetch { 
             'supervisorName': $s.fullName,
