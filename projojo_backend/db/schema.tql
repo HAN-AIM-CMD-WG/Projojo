@@ -7,7 +7,7 @@ entity user @abstract,
     owns password_hash @card(1);
 
 entity supervisor sub user,
-    plays authentication:user @card(1..10),
+    plays authenticates:authenticated @card(1..10),
     plays businessAssociation:supervisor @card(1),
     plays projectCreation:supervisor @card(0..);
 
@@ -21,7 +21,7 @@ entity teacher sub user,
 
 entity identityProvider,
     owns name @card(0..1),
-    plays authentication:identityProvider;
+    plays authenticates:authenticator;
 
 entity business,
     owns name @key,
@@ -56,9 +56,9 @@ entity skill,
     plays taskSkill:skill @card(0..),
     plays studentSkill:skill @card(0..);
 
-relation authentication,
-    relates user,
-    relates identityProvider,
+relation authenticates,
+    relates authenticator,
+    relates authenticated,
     owns username @card(1),
     owns id @key;
 

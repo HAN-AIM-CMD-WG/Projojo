@@ -84,7 +84,7 @@ def main():
             $s isa supervisor; 
             $ip isa identityProvider;
             $b isa business;
-            authentication( $s, $ip );
+            authenticates( $s, $ip );
             $ba isa businessAssociation( $b, $s );
         fetch { 
             'name': $s.fullName, 
