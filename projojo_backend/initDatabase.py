@@ -85,7 +85,7 @@ def main():
             $ip isa identityProvider;
             $b isa business;
             authenticates( $s, $ip );
-            $ba isa businessAssociation( $b, $s );
+            $ba isa manages( $b, $s );
         fetch { 
             'name': $s.fullName, 
             'email': $s.email, 
@@ -208,7 +208,7 @@ def main():
             $s isa supervisor;
             $b isa business;
             $p isa project;
-            $ba isa businessAssociation($s, $b);
+            $ba isa manages($s, $b);
             businessProjects($b, $p);
             $pc isa creates($s, $p);
         fetch { 

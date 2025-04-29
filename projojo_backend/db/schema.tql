@@ -8,7 +8,7 @@ entity user @abstract,
 
 entity supervisor sub user,
     plays authenticates:authenticated @card(1..10),
-    plays businessAssociation:supervisor @card(1),
+    plays manages:supervisor @card(1),
     plays creates:supervisor @card(0..);
 
 entity student sub user,
@@ -28,7 +28,7 @@ entity business,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
-    plays businessAssociation:business @card(1..),
+    plays manages:business @card(1..),
     plays businessProjects:business @card(0..1);
 
 entity project,
@@ -74,7 +74,7 @@ relation creates,
     relates project @card(0..),
     owns createdAt @card(1);
 
-relation businessAssociation,
+relation manages,
     relates supervisor @card(1),
     relates business @card(1),
     owns location @card(1..);
