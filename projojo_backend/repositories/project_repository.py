@@ -55,7 +55,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $business isa business, has name "{business_id}";
-                $bp isa businessProjects (business: $business, project: $project);
+                $bp isa hasProjects (business: $business, project: $project);
                 $project isa project,
                 has name $name,
                 has description $description,
