@@ -210,7 +210,7 @@ def main():
             $p isa project;
             $ba isa businessAssociation($s, $b);
             businessProjects($b, $p);
-            $pc isa projectCreation($s, $p);
+            $pc isa creates($s, $p);
         fetch { 
             'supervisorName': $s.fullName,
             'supervisorEmail': $s.email,
