@@ -49,16 +49,16 @@ insert
     $ip2 isa identityProvider,
         has name "Microsoft";
 
-    # Authentication relations - only for supervisors
-    $auth1 isa authentication (user: $u4, identityProvider: $ip1),
+    # Authenticates relations - only for supervisors
+    $auth1 isa authenticates (authenticated: $u4, authenticator: $ip1),
         has username "e.silverstone",
         has id "sup10001";
 
-    $auth2 isa authentication (user: $u5, identityProvider: $ip1),
+    $auth2 isa authenticates (authenticated: $u5, authenticator: $ip1),
         has username "t.oakenshield",
         has id "sup10002";
 
-    $auth3 isa authentication (user: $u6, identityProvider: $ip2),
+    $auth3 isa authenticates (authenticated: $u6, authenticator: $ip2),
         has username "l.moonshadow",
         has id "sup10003";
 
