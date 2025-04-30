@@ -34,357 +34,160 @@ class DebugResponse(BaseModel):
     data: Optional[Any] = None
 
 # User endpoints
-@router.get("/users", response_model=DebugResponse)
+@router.get("/users")
 async def get_all_users():
     """
     Get all users for debugging purposes
     """
-    try:
-        users = user_repo.get_all()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(users)} users",
-            data=users
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving users: {str(e)}"
-        )
+    users = user_repo.get_all()
+    return users
 
-@router.get("/users/{email}", response_model=DebugResponse)
+
+@router.get("/users/{email}")
 async def get_user(email: str = Path(..., description="User email")):
     """
     Get a specific user by email
     """
-    try:
-        user = user_repo.get_by_id(email)
-        if not user:
-            return DebugResponse(
-                status="error",
-                message=f"User with email {email} not found"
-            )
-        return DebugResponse(
-            status="success",
-            message=f"User found",
-            data=user
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving user: {str(e)}"
-        )
+    user = user_repo.get_by_id(email)
+    return user
 
-@router.get("/supervisors", response_model=DebugResponse)
+
+@router.get("/supervisors")
 async def get_all_supervisors():
     """
     Get all supervisors for debugging purposes
     """
-    try:
-        supervisors = user_repo.get_all_supervisors()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(supervisors)} supervisors",
-            data=supervisors
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving supervisors: {str(e)}"
-        )
+    supervisors = user_repo.get_all_supervisors()
+    return supervisors
 
-@router.get("/students", response_model=DebugResponse)
+
+@router.get("/students")
 async def get_all_students():
     """
     Get all students for debugging purposes
     """
-    try:
-        students = user_repo.get_all_students()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(students)} students",
-            data=students
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving students: {str(e)}"
-        )
+    students = user_repo.get_all_students()
+    return students
 
-@router.get("/teachers", response_model=DebugResponse)
+@router.get("/teachers")
 async def get_all_teachers():
     """
     Get all teachers for debugging purposes
     """
-    try:
-        teachers = user_repo.get_all_teachers()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(teachers)} teachers",
-            data=teachers
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving teachers: {str(e)}"
-        )
-
+    teachers = user_repo.get_all_teachers()
+    return teachers
 
 # Business endpoints
-@router.get("/businesses", response_model=DebugResponse)
+@router.get("/businesses")
 async def get_all_businesses():
     """
     Get all businesses for debugging purposes
     """
-    try:
-        businesses = business_repo.get_all()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(businesses)} businesses",
-            data=businesses
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving businesses: {str(e)}"
-        )
+    businesses = business_repo.get_all()
+    return businesses
 
-@router.get("/businesses/{name}", response_model=DebugResponse)
+@router.get("/businesses/{name}")
 async def get_business(name: str = Path(..., description="Business name")):
     """
     Get a specific business by name
     """
-    try:
-        business = business_repo.get_by_id(name)
-        if not business:
-            return DebugResponse(
-                status="error",
-                message=f"Business with name {name} not found"
-            )
-        return DebugResponse(
-            status="success",
-            message=f"Business found",
-            data=business
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving business: {str(e)}"
-        )
+    business = business_repo.get_by_id(name)
+    return business
 
 # Project endpoints
-@router.get("/projects", response_model=DebugResponse)
+@router.get("/projects")
 async def get_all_projects():
     """
     Get all projects for debugging purposes
     """
-    try:
-        projects = project_repo.get_all()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(projects)} projects",
-            data=projects
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving projects: {str(e)}"
-        )
+    projects = project_repo.get_all()
+    return projects
 
-@router.get("/projects/{name}", response_model=DebugResponse)
+@router.get("/projects/{name}")
 async def get_project(name: str = Path(..., description="Project name")):
     """
     Get a specific project by name
     """
-    try:
-        project = project_repo.get_by_id(name)
-        if not project:
-            return DebugResponse(
-                status="error",
-                message=f"Project with name {name} not found"
-            )
-        return DebugResponse(
-            status="success",
-            message=f"Project found",
-            data=project
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving project: {str(e)}"
-        )
+    project = project_repo.get_by_id(name)
+    return project
 
 
-@router.get("/businesses/{name}/projects", response_model=DebugResponse)
+@router.get("/businesses/{name}/projects")
 async def get_business_projects(name: str = Path(..., description="Business name")):
     """
     Get all projects for a business
     """
-    try:
-        projects = project_repo.get_projects_by_business(name)
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(projects)} projects for business {name}",
-            data=projects
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving business projects: {str(e)}"
-        )
+    projects = project_repo.get_projects_by_business(name)
+    return projects
 
 # Task endpoints
-@router.get("/tasks", response_model=DebugResponse)
+@router.get("/tasks")
 async def get_all_tasks():
     """
     Get all tasks for debugging purposes
     """
-    try:
-        tasks = task_repo.get_all()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(tasks)} tasks",
-            data=tasks
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving tasks: {str(e)}"
-        )
+    tasks = task_repo.get_all()
+    return tasks
 
-@router.get("/tasks/{name}", response_model=DebugResponse)
+
+@router.get("/tasks/{name}")
 async def get_task(name: str = Path(..., description="Task name")):
     """
     Get a specific task by name
     """
-    try:
-        task = task_repo.get_by_id(name)
-        if not task:
-            return DebugResponse(
-                status="error",
-                message=f"Task with name {name} not found"
-            )
-        return DebugResponse(
-            status="success",
-            message=f"Task found",
-            data=task
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving task: {str(e)}"
-        )
+    task = task_repo.get_by_id(name)
+    return task
 
-@router.get("/projects/{name}/tasks", response_model=DebugResponse)
+@router.get("/projects/{name}/tasks")
 async def get_project_tasks(name: str = Path(..., description="Project name")):
     """
     Get all tasks for a project
     """
-    try:
-        tasks = task_repo.get_tasks_by_project(name)
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(tasks)} tasks for project {name}",
-            data=tasks
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving project tasks: {str(e)}"
-        )
+    tasks = task_repo.get_tasks_by_project(name)
+    return tasks
 
-@router.get("/tasks/{name}/skills", response_model=DebugResponse)
+@router.get("/tasks/{name}/skills")
 async def get_task_skills(name: str = Path(..., description="Task name")):
     """
     Get all skills required for a task
     """
-    try:
-        skills = task_repo.get_task_skills(name)
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(skills)} skills for task {name}",
-            data=skills
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving task skills: {str(e)}"
-        )
+    taskSkills = task_repo.get_task_skills(name)
+    return taskSkills
 # Skill endpoints
-@router.get("/skills", response_model=DebugResponse)
+@router.get("/skills")
 async def get_all_skills():
     """
     Get all skills for debugging purposes
     """
-    try:
-        skills = skill_repo.get_all()
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(skills)} skills",
-            data=skills
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving skills: {str(e)}"
-        )
+    skills = skill_repo.get_all()
+    return skills
 
-@router.get("/skills/{name}", response_model=DebugResponse)
+@router.get("/skills/{name}")
 async def get_skill(name: str = Path(..., description="Skill name")):
     """
     Get a specific skill by name
     """
-    try:
-        skill = skill_repo.get_by_id(name)
-        if not skill:
-            return DebugResponse(
-                status="error",
-                message=f"Skill with name {name} not found"
-            )
-        return DebugResponse(
-            status="success",
-            message=f"Skill found",
-            data=skill
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving skill: {str(e)}"
-        )
+    skill = skill_repo.get_by_id(name)
+    return skill
 
-@router.get("/students/{email}/skills", response_model=DebugResponse)
+@router.get("/students/{email}/skills")
 async def get_student_skills(email: str = Path(..., description="Student email")):
     """
     Get all skills for a student
     """
-    try:
-        skills = skill_repo.get_student_skills(email)
-        return DebugResponse(
-            status="success",
-            message=f"Found {len(skills)} skills for student {email}",
-            data=skills
-        )
-    except Exception as e:
-        return DebugResponse(
-            status="error",
-            message=f"Error retrieving student skills: {str(e)}"
-        )
+    skills = skill_repo.get_student_skills(email)
+    return skills
 
 #POST endpoints
 
 @router.post("/skills", response_model=Skill, status_code=201)
 async def create_skill(skill: Skill = Body(...)):
+    """
+    Create a new skill
+    """
+    created_skill = skill_repo.create(skill)
+    return created_skill
 
-    try:
-        # Call the repository to create the skill
-        created_skill = skill_repo.create(skill)
-        return created_skill
-    except Exception as e:
-        # Handle any errors
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create skill: {str(e)}"
-        )
 
 # Models
 class LoginRequest(BaseModel):
@@ -413,32 +216,26 @@ async def login(login_data: LoginRequest):
     """
     Authenticate a user and return a JWT token
     """
-    try:
-        user = verify_user_credentials(login_data.email, login_data.password)
-        if not user:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid email or password"
-            )
-
-        # Prepare token payload
-        payload = {
-            "sub": user.email,
-            "password_hash": user.password_hash,
-            "role": type(user).__name__.lower(),  # hier moet nog een role aan toe worden gevoegd
-            "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        }
-
-        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-
-        return LoginResponse(
-            status="success",
-            message="Login successful",
-            token=token,
-            debug_payload=payload
-        )
-    except Exception as e:
+    user = verify_user_credentials(login_data.email, login_data.password)
+    if not user:
         raise HTTPException(
-            status_code=500,
-            detail=f"Login error: {str(e)}"
+            status_code=401,
+            detail="Invalid email or password"
         )
+
+    # Prepare token payload
+    payload = {
+        "sub": user.email,
+        "password_hash": user.password_hash,
+        "role": type(user).__name__.lower(),
+        "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    }
+
+    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+    return LoginResponse(
+        status="success",
+        message="Login successful",
+        token=token,
+        debug_payload=payload
+    )
