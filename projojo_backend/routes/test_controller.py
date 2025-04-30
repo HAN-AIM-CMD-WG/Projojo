@@ -20,12 +20,6 @@ task_repo = TaskRepository()
 skill_repo = SkillRepository()
 user_repo = UserRepository()
 
-# Debug response model
-class DebugResponse(BaseModel):
-    status: str
-    message: str
-    data: Optional[Any] = None
-
 # User endpoints
 @router.get("/users")
 async def get_all_users():
