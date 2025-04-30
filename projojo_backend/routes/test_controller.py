@@ -5,18 +5,10 @@ from pydantic import BaseModel
 import jwt;
 
 # Import repositories
-from repositories.business_repository import BusinessRepository
-from repositories.project_repository import ProjectRepository
-from repositories.task_repository import TaskRepository
-from repositories.skill_repository import SkillRepository
-from repositories.user_repository import UserRepository
+from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
 
 # Import models
-from models.user import User, Supervisor, Student, Teacher
-from models.business import Business, BusinessAssociation
-from models.project import Project, ProjectCreation, BusinessProjects
-from models.task import Task, TaskSkill, TaskRegistration
-from models.skill import Skill, StudentSkill
+from domain.models import User, Business, Project, Task, Skill
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
 
