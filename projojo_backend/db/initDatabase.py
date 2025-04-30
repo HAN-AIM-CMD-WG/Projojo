@@ -13,8 +13,8 @@ class Db:
     username = os.getenv("TYPEDB_USERNAME", "admin")
     password = os.getenv("TYPEDB_PASSWORD", "password")
     reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False
-    schema_path = "db/schema.tql"
-    seed_path = "db/seed.tql"
+    schema_path = "schema.tql"
+    seed_path = "seed.tql"
     driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))
     db = driver.databases.get(name) if driver.databases.contains(name) else None
     

@@ -1,6 +1,6 @@
 from typing import TypeVar, Generic, List, Optional, Dict, Any
 from pydantic import BaseModel
-from initDatabase import Db
+from db.initDatabase import Db
 
 T = TypeVar('T', bound=BaseModel)
 

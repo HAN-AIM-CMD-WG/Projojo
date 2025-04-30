@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.project import Project, ProjectCreation, BusinessProjects
+from db.initDatabase import Db
+from .base import BaseRepository
+from domain.models import Project, ProjectCreation, BusinessProjects
 import uuid
 from datetime import datetime
 

@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.business import Business, BusinessAssociation
+from db.initDatabase import Db
+from .base import BaseRepository
+from domain.models import Business, BusinessAssociation
 
 class BusinessRepository(BaseRepository[Business]):
     def __init__(self):

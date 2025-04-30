@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.task import Task, TaskSkill, TaskRegistration
+from db.initDatabase import Db
+from .base import BaseRepository
+from domain.models import Task, TaskSkill, TaskRegistration
 import uuid
 from datetime import datetime
 
