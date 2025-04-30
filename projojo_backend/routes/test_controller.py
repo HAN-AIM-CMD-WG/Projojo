@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Query, Path, Body
 from pydantic import BaseModel
 import jwt;
+from exceptions import ItemRetrievalException, UnauthorizedException
 
 # Import repositories
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
@@ -31,8 +32,8 @@ async def get_all_users():
     """
     Get all users for debugging purposes
     """
-    users = user_repo.get_all()
-    return users
+   # users = user_repo.get_all()
+    raise ItemRetrievalException(User)
 
 
 @router.get("/users/{email}")
