@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from db.initDatabase import Db
+from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Skill, StudentSkill
 import uuid
@@ -26,7 +27,7 @@ class SkillRepository(BaseRepository[Skill]):
         """
         results = Db.read_transact(query)
         if not results:
-            return None
+            raise ItemRetrievalException(Skill, f"Skill Issue with ID: {id}.")
         return self._map_to_model(results[0])
     
     def get_all(self) -> List[Skill]:

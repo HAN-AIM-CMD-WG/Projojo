@@ -1,5 +1,6 @@
 from typing import List, Optional, Dict, Any
 from db.initDatabase import Db
+from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import User, Supervisor, Student, Teacher
 import uuid
@@ -25,8 +26,10 @@ class UserRepository(BaseRepository[User]):
         if teacher:
             return teacher
             
+        if not supervisor and not student and not teacher:
+            raise ItemRetrievalException(User, f"User with ID {id} not found.")
         return None
-    
+
     def get_all(self) -> List[User]:
         # Combine all user types
         users = []
