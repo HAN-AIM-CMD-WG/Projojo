@@ -14,4 +14,4 @@ class ItemRetrievalException(GenericException):
     def __init__(self, item_class: type, message="Could not be found"):
         class_name = item_class.__name__
         full_message = f"{class_name} retrieval failed: {message}"
-        super().__init__(message=full_message, status_code=500)
+        super().__init__(message=full_message, status_code=404)
