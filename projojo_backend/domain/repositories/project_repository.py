@@ -1,7 +1,8 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.project import Project, ProjectCreation, BusinessProjects
+from db.initDatabase import Db
+from exceptions import ItemRetrievalException
+from .base import BaseRepository
+from domain.models import Project, ProjectCreation, BusinessProjects
 import uuid
 from datetime import datetime
 
@@ -11,12 +12,11 @@ class ProjectRepository(BaseRepository[Project]):
     
     def get_by_id(self, id: str) -> Optional[Project]:
         # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
         
         query = f"""
             match
                 $project isa project,
-                has name "{escaped_id}",
+                has name "{id}",
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
@@ -30,7 +30,7 @@ class ProjectRepository(BaseRepository[Project]):
         """
         results = Db.read_transact(query)
         if not results:
-            return None
+            raise ItemRetrievalException(Project, f"Project with ID {id} not found.")
         return self._map_to_model(results[0])
     
     def get_all(self) -> List[Project]:
