@@ -1,7 +1,8 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.business import Business, BusinessAssociation
+from db.initDatabase import Db
+from exceptions import ItemRetrievalException
+from .base import BaseRepository
+from domain.models import Business, BusinessAssociation
 
 class BusinessRepository(BaseRepository[Business]):
     def __init__(self):
@@ -9,12 +10,11 @@ class BusinessRepository(BaseRepository[Business]):
     
     def get_by_id(self, id: str) -> Optional[Business]:
         # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
         
         query = f"""
             match
                 $business isa business, 
-                has name "{escaped_id}",
+                has name "{id}",
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
@@ -28,7 +28,7 @@ class BusinessRepository(BaseRepository[Business]):
         """
         results = Db.read_transact(query)
         if not results:
-            return None
+            raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
     
     def get_all(self) -> List[Business]:

@@ -19,11 +19,11 @@ class ProjectCreation(BaseModel):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class BusinessProjects(BaseModel):
     business_id: str
     project_ids: List[str]
     
     class Config:
-        orm_mode = True
+        from_attributes = True

@@ -1,7 +1,8 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.skill import Skill, StudentSkill
+from db.initDatabase import Db
+from exceptions import ItemRetrievalException
+from .base import BaseRepository
+from domain.models import Skill, StudentSkill
 import uuid
 from datetime import datetime
 
@@ -26,7 +27,7 @@ class SkillRepository(BaseRepository[Skill]):
         """
         results = Db.read_transact(query)
         if not results:
-            return None
+            raise ItemRetrievalException(Skill, f"Skill with ID {id} not found.")
         return self._map_to_model(results[0])
     
     def get_all(self) -> List[Skill]:
