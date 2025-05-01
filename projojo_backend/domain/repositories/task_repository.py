@@ -1,7 +1,8 @@
 from typing import List, Optional, Dict, Any
-from initDatabase import Db
-from repositories.base import BaseRepository
-from models.task import Task, TaskSkill, TaskRegistration
+from db.initDatabase import Db
+from exceptions import ItemRetrievalException
+from .base import BaseRepository
+from domain.models import Task, TaskSkill, TaskRegistration
 import uuid
 from datetime import datetime
 
@@ -30,7 +31,7 @@ class TaskRepository(BaseRepository[Task]):
         """
         results = Db.read_transact(query)
         if not results:
-            return None
+            raise ItemRetrievalException(Task, f"Task with ID {id} not found.")
         return self._map_to_model(results[0])
     
     def get_all(self) -> List[Task]:
@@ -180,7 +181,8 @@ class TaskRepository(BaseRepository[Task]):
                 task_id=task_id,
                 skill_id=skill_name
             ))
-        
+        if not results:
+            raise ItemRetrievalException(Task, f"Task with ID {task_id} not found.")
         return task_skills
     
 
