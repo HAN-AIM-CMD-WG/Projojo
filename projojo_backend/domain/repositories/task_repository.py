@@ -56,7 +56,7 @@ class TaskRepository(BaseRepository[Task]):
         query = f"""
             match
                 $project isa project, has name "{project_id}";
-                $pt isa projectTask (project: $project, task: $task);
+                $pt isa containsTask (project: $project, task: $task);
                 $task isa task,
                 has name $name,
                 has description $description,
@@ -106,7 +106,7 @@ class TaskRepository(BaseRepository[Task]):
                     $project isa project, has name "{escaped_project_id}";
                     $task isa task, has name "{escaped_name}";
                 insert
-                    $pt isa projectTask (project: $project, task: $task);
+                    $pt isa containsTask (project: $project, task: $task);
             """
             Db.write_transact(project_task_query)
         

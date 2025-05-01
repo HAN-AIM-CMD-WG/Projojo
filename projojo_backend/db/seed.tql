@@ -179,11 +179,11 @@ insert
         has createdAt 2025-04-16T10:05:00;
 
     # Project tasks relations
-    $pt1 isa projectTask (project: $p1, task: $t1);
-    $pt2 isa projectTask (project: $p1, task: $t2);
-    $pt3 isa projectTask (project: $p2, task: $t3);
-    $pt4 isa projectTask (project: $p3, task: $t4);
-    $pt5 isa projectTask (project: $p4, task: $t5);
+    $pt1 isa containsTask (project: $p1, task: $t1);
+    $pt2 isa containsTask (project: $p1, task: $t2);
+    $pt3 isa containsTask (project: $p2, task: $t3);
+    $pt4 isa containsTask (project: $p3, task: $t4);
+    $pt5 isa containsTask (project: $p4, task: $t5);
 
     # Task skill relations
     $ts1 isa taskSkill (task: $t1, skill: $sk2);

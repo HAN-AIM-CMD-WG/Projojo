@@ -37,7 +37,7 @@ entity project,
     owns imagePath @card(1),
     owns createdAt @card(1),
     plays hasProjects:project @card(1),
-    plays projectTask:project @card(0..),
+    plays containsTask:project @card(0..),
     plays creates:project @card(0..);
 
 entity task,
@@ -45,7 +45,7 @@ entity task,
     owns description @card(1),
     owns totalNeeded @card(1),
     owns createdAt @card(1),
-    plays projectTask:task @card(1),
+    plays containsTask:task @card(1),
     plays taskSkill:task @card(0..),
     plays taskRegistration:task @card(0..);
 
@@ -83,7 +83,7 @@ relation hasProjects,
     relates business @card(1),
     relates project @card(1..);
 
-relation projectTask,
+relation containsTask,
     relates project @card(1),
     relates task @card(1);
 
