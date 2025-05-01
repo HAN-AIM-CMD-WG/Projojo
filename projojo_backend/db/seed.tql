@@ -78,13 +78,13 @@ insert
         has location "Utrecht";
 
     # Business associations
-    $ba1 isa manages (supervisor: $u4, business: $b1),
+    $m1 isa manages (supervisor: $u4, business: $b1),
         has location "Arnhem";
 
-    $ba2 isa manages (supervisor: $u5, business: $b2),
+    $m2 isa manages (supervisor: $u5, business: $b2),
         has location "Amsterdam";
 
-    $ba3 isa manages (supervisor: $u6, business: $b1,),
+    $m3 isa manages (supervisor: $u6, business: $b1,),
         has location "Utrecht";
 
     # Skills

@@ -85,14 +85,14 @@ def main():
             $ip isa identityProvider;
             $b isa business;
             authenticates( $s, $ip );
-            $ba isa manages( $s, $b );
+            $m isa manages( $s, $b );
         fetch { 
             'name': $s.fullName, 
             'email': $s.email, 
             'provider': $ip.name,
             'business': $b.name,
             'location': [$b.location],
-            'supervisorLocation': [$ba.location],
+            'supervisorLocation': [$m.location],
         };
     """
     result = Db.read_transact(read_query)
@@ -208,7 +208,7 @@ def main():
             $s isa supervisor;
             $b isa business;
             $p isa project;
-            $ba isa manages($s, $b);
+            $m isa manages($s, $b);
             hasProjects($b, $p);
             $pc isa creates($s, $p);
         fetch { 
@@ -218,7 +218,7 @@ def main():
             'project': $p.name,
             'projectDescription': $p.description,
             'createdAt': $pc.createdAt,
-            'locations': [$ba.location]
+            'locations': [$m.location]
         };
     """
     projectcreations_query_results = Db.read_transact(projectcreations_query)
