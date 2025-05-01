@@ -75,7 +75,7 @@ class BusinessRepository(BaseRepository[Business]):
         query = f"""
             match
                 $business isa business, has name "{escaped_business_id}";
-                $association isa manages,
+                $manages isa manages,
                     has location $location,
                     (supervisor: $supervisor, business: $business);
                 $supervisor isa supervisor, has email $email;
