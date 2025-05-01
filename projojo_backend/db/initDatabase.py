@@ -138,7 +138,7 @@ def main():
             $p isa project;
             $t isa task;
             hasProjects( $b, $p );
-            projectTask( $p, $t );
+            containsTask( $p, $t );
         fetch { 
             'businessName': $b.name,
             'projectName': $p.name,	
