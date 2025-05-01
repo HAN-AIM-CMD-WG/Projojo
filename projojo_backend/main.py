@@ -2,10 +2,13 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from contextlib import asynccontextmanager
-from controllers.test_controller import router as test_router
+
+from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
+from exceptions.global_exception_handler import generic_handler
+from routes.test_controller import router as test_router
 
 # Import the TypeDB connection module
-from initDatabase import get_database
+from projojo_backend.db.initDatabase import get_database
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -38,6 +41,10 @@ app.add_middleware(
 
 # Include routers
 app.include_router(test_router)
+
+# Add exception handler for Custom exceptions
+app.add_exception_handler(ItemRetrievalException, generic_handler)
+app.add_exception_handler(UnauthorizedException, generic_handler)
 
 # Dependency to get TypeDB connection
 def get_db():

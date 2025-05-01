@@ -3,7 +3,6 @@ import os
 import pprint
 from dotenv import load_dotenv
 
-
 # Load environment variables from .env file
 load_dotenv()
 
@@ -13,8 +12,9 @@ class Db:
     username = os.getenv("TYPEDB_USERNAME", "admin")
     password = os.getenv("TYPEDB_PASSWORD", "password")
     reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False
-    schema_path = "db/schema.tql"
-    seed_path = "db/seed.tql"
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    schema_path = os.path.join(base_path, "schema.tql")
+    seed_path = os.path.join(base_path, "seed.tql")
     driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))
     db = driver.databases.get(name) if driver.databases.contains(name) else None
     
@@ -53,7 +53,7 @@ def get_database():
     return Db
 
 def create_database_if_needed():
-    if Db.reset and Db.db is not None:
+    if Db.db is not None:
         Db.db.delete()
         Db.db = None
     if Db.db is None:
