@@ -6,8 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Note: This doesn't actually expose the port, only documents it.
-# The port must be published in docker-compose.yml via the "ports" section.
+# Document the port that will be exposed
 EXPOSE 5173
 
 # Start the development server
