@@ -186,12 +186,12 @@ insert
     $pt5 isa containsTask (project: $p4, task: $t5);
 
     # Task skill relations
-    $ts1 isa taskSkill (task: $t1, skill: $sk2);
-    $ts2 isa taskSkill (task: $t2, skill: $sk2);
-    $ts3 isa taskSkill (task: $t3, skill: $sk2);
-    $ts4 isa taskSkill (task: $t4, skill: $sk3);
-    $ts5 isa taskSkill (task: $t5, skill: $sk4);
-    $ts6 isa taskSkill (task: $t5, skill: $sk1);
+    $ts1 isa requiresSkill (task: $t1, skill: $sk2);
+    $ts2 isa requiresSkill (task: $t2, skill: $sk2);
+    $ts3 isa requiresSkill (task: $t3, skill: $sk2);
+    $ts4 isa requiresSkill (task: $t4, skill: $sk3);
+    $ts5 isa requiresSkill (task: $t5, skill: $sk4);
+    $ts6 isa requiresSkill (task: $t5, skill: $sk1);
 
     # Student skill relations
     $stsk1 isa studentSkill (student: $u2, skill: $sk1),

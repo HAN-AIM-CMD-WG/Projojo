@@ -156,7 +156,7 @@ def main():
         match 
             $t isa task;
             $sk isa skill;
-            taskSkill( $t, $sk );
+            requiresSkill( $t, $sk );
         fetch { 	
             'taskName': $t.name,	
             'skillName': $sk.name,
