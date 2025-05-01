@@ -122,7 +122,7 @@ class UserRepository(BaseRepository[User]):
                 has fullName $fullName,
                 has imagePath $imagePath;
                 $b isa business;
-                $ba isa manages( $s, $b );
+                $m isa manages( $s, $b );
             fetch {
                 'email': $email,
                 'fullName': $fullName,
