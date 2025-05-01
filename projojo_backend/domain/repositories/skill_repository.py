@@ -49,7 +49,7 @@ class SkillRepository(BaseRepository[Skill]):
         query = f"""
             match
                 $student isa student, has email "{escaped_student_id}";
-                $ss isa studentSkill(student: $student, skill: $skill),
+                $ss isa hasSkill(student: $student, skill: $skill),
                 has description $description;
                 $skill isa skill, has name $skill_name;
             fetch {{

@@ -172,7 +172,7 @@ def main():
         match 
             $s isa student;
             $sk isa skill;
-            $stsk isa studentSkill( $s, $sk );
+            $stsk isa hasSkill( $s, $sk );
         fetch { 	
             'studentName': $s.fullName,	
             'skillName': $sk.name,
@@ -189,7 +189,7 @@ def main():
         match 
             $s isa student;
             $t isa task;
-            $tr isa taskRegistration( $s, $t );
+            $tr isa registersForTask( $s, $t );
         fetch { 	
             'studentName': $s.fullName,	
             'taskName': $t.name,
