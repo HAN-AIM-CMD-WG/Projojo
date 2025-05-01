@@ -210,14 +210,14 @@ def main():
             $p isa project;
             $m isa manages($s, $b);
             hasProjects($b, $p);
-            $pc isa creates($s, $p);
+            $c isa creates($s, $p);
         fetch { 
             'supervisorName': $s.fullName,
             'supervisorEmail': $s.email,
             'business': $b.name,
             'project': $p.name,
             'projectDescription': $p.description,
-            'createdAt': $pc.createdAt,
+            'createdAt': $c.createdAt,
             'locations': [$m.location]
         };
     """
