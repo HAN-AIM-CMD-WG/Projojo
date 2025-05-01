@@ -208,7 +208,7 @@ def main():
             $s isa supervisor;
             $b isa business;
             $p isa project;
-            $ba isa manages($s, $b);
+            $ba isa manages($b, $s);
             hasProjects($b, $p);
             $pc isa creates($s, $p);
         fetch { 
