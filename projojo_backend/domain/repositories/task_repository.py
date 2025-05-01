@@ -165,7 +165,7 @@ class TaskRepository(BaseRepository[Task]):
         query = f"""
             match
                 $task isa task, has name "{task_id}";
-                $ts isa taskSkill (task: $task, skill: $skill);
+                $ts isa requiresSkill (task: $task, skill: $skill);
                 $skill isa skill, has name $skill_name;
             fetch {{
                 'skill_name': $skill_name
