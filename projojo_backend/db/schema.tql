@@ -13,8 +13,8 @@ entity supervisor sub user,
 
 entity student sub user,
     owns schoolAccountName @card(1),
-    plays studentSkill:student @card(0..),
-    plays taskRegistration:student @card(0..);
+    plays hasSkill:student @card(0..),
+    plays registersForTask:student @card(0..);
 
 entity teacher sub user,
     owns schoolAccountName @card(1);
@@ -47,14 +47,14 @@ entity task,
     owns createdAt @card(1),
     plays containsTask:task @card(1),
     plays requiresSkill:task @card(0..),
-    plays taskRegistration:task @card(0..);
+    plays registersForTask:task @card(0..);
 
 entity skill,
     owns name @key,
     owns isPending @card(1),
     owns createdAt @card(1),
     plays requiresSkill:skill @card(0..),
-    plays studentSkill:skill @card(0..);
+    plays hasSkill:skill @card(0..);
 
 relation authenticates,
     relates authenticator,
@@ -91,12 +91,12 @@ relation requiresSkill,
     relates task @card(1),
     relates skill @card(1);
 
-relation studentSkill,
+relation hasSkill,
     relates student @card(1),
     relates skill @card(1),
     owns description @card(1);
 
-relation taskRegistration,
+relation registersForTask,
     relates student @card(1),
     relates task @card(1),
     owns description @card(1),

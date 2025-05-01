@@ -194,30 +194,30 @@ insert
     $ts6 isa requiresSkill (task: $t5, skill: $sk1);
 
     # Student skill relations
-    $stsk1 isa studentSkill (student: $u2, skill: $sk1),
+    $stsk1 isa hasSkill (student: $u2, skill: $sk1),
         has description "Completed several advanced Python projects during internship";
 
-    $stsk2 isa studentSkill (student: $u2, skill: $sk2),
+    $stsk2 isa hasSkill (student: $u2, skill: $sk2),
         has description "Certified UI/UX designer with portfolio of client work";
 
-    $stsk3 isa studentSkill (student: $u3, skill: $sk1),
+    $stsk3 isa hasSkill (student: $u3, skill: $sk1),
         has description "Experienced in Django and FastAPI frameworks";
 
-    $stsk4 isa studentSkill (student: $u3, skill: $sk3),
+    $stsk4 isa hasSkill (student: $u3, skill: $sk3),
         has description "Experienced with D3.js and Tableau";
 
     # Task registrations
-    $tr1 isa taskRegistration (student: $u2, task: $t1),
+    $tr1 isa registersForTask (student: $u2, task: $t1),
         has description "I'm passionate about understanding user needs and creating meaningful experiences",
         has createdAt 2025-04-18T10:18:00;
 
-    $tr2 isa taskRegistration (student: $u2, task: $t2),
+    $tr2 isa registersForTask (student: $u2, task: $t2),
         has description "I have extensive experience with design systems and prototyping tools",
         has isAccepted false,
         has response "We're looking for someone with more industry experience for this role",
         has createdAt 2025-04-18T13:45:00;
 
-    $tr3 isa taskRegistration (student: $u3, task: $t4),
+    $tr3 isa registersForTask (student: $u3, task: $t4),
         has description "I've completed several data visualization projects and would love to apply my skills",
         has isAccepted true,
         has response "Your portfolio is impressive! We'd be happy to have you join the team.",
