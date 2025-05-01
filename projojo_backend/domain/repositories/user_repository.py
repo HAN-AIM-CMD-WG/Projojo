@@ -127,7 +127,7 @@ class UserRepository(BaseRepository[User]):
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'business_association_id': $b.name
+                'business_association_id': $business.name
             };
         """
         results = Db.read_transact(query)
