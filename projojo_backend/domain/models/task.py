@@ -11,7 +11,7 @@ class Task(BaseModel):
     project_id: Optional[str] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class TaskSkill(BaseModel):
     task_id: str
@@ -29,4 +29,4 @@ class TaskRegistration(BaseModel):
     created_at: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True

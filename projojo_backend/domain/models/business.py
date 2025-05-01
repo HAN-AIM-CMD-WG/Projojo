@@ -9,7 +9,7 @@ class Business(BaseModel):
     location: List[str]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class BusinessAssociation(BaseModel):
     business_id: str
@@ -17,6 +17,6 @@ class BusinessAssociation(BaseModel):
     location: List[str]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 from pydantic import BaseModel
 from typing import List, Optional
