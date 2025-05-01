@@ -1,5 +1,7 @@
 # Node specific
 node_modules/
+.npm
+.yarn-integrity
 
 # Build outputs
 dist/
@@ -10,12 +12,14 @@ build/
 # Environment and IDE
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.development*
+.env.test*
+.env.production*
 .idea/
 .vscode/
 *.swp
+*.sublime-project
+*.sublime-workspace
 
 # Logs
 *.log
@@ -23,6 +27,7 @@ build/
 # Docker
 .dockerignore
 Dockerfile
+docker-compose*.yml
 
 # Git
 .git/
@@ -34,7 +39,13 @@ tests/
 __tests__/
 *.test.js
 *.spec.js
+.nyc_output
 
 # OS specific
 .DS_Store
 Thumbs.db
+*.directory
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
