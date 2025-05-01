@@ -12,10 +12,10 @@ export default defineConfig({
     watch: {
       usePolling: true,  // Required for file changes to be detected in Docker on Windows
       interval: 250,     // Polling interval in ms - lower is more responsive but uses more CPU
-      ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**']  // Explicitly ignore directories that don't need watching
     },
     hmr: {
-      clientPort: 5173  // Ensures HMR works through Docker port mapping
+      clientPort: 5173,  // Ensures HMR works through Docker port mapping
+      overlay: true      // Shows an overlay when errors occur
     }
     // Note: host is set via CLI in Dockerfile: --host 0.0.0.0
   }
