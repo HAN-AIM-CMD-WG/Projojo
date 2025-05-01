@@ -117,12 +117,12 @@ class UserRepository(BaseRepository[User]):
     def get_all_supervisors(self) -> List[Supervisor]:
         query = """
             match
-                $s isa supervisor,
+                $supervisor isa supervisor,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath;
-                $b isa business;
-                $m isa manages( $s, $b );
+                $business isa business;
+                $manages isa manages( $supervisor, $business );
             fetch {
                 'email': $email,
                 'fullName': $fullName,
@@ -136,7 +136,7 @@ class UserRepository(BaseRepository[User]):
     def get_all_students(self) -> List[Student]:
         query = """
             match
-                $s isa student,
+                $student isa student,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath,
