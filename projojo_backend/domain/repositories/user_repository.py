@@ -117,17 +117,17 @@ class UserRepository(BaseRepository[User]):
     def get_all_supervisors(self) -> List[Supervisor]:
         query = """
             match
-                $s isa supervisor,
+                $supervisor isa supervisor,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath;
-                $b isa business;
-                $ba isa businessAssociation( $b, $s );
+                $business isa business;
+                $manages isa manages( $supervisor, $business );
             fetch {
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'business_association_id': $b.name
+                'business_association_id': $business.name
             };
         """
         results = Db.read_transact(query)
@@ -136,7 +136,7 @@ class UserRepository(BaseRepository[User]):
     def get_all_students(self) -> List[Student]:
         query = """
             match
-                $s isa student,
+                $student isa student,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath,

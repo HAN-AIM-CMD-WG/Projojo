@@ -75,9 +75,9 @@ class BusinessRepository(BaseRepository[Business]):
         query = f"""
             match
                 $business isa business, has name "{escaped_business_id}";
-                $association isa businessAssociation,
+                $manages isa manages,
                     has location $location,
-                    (business: $business, supervisor: $supervisor);
+                    (supervisor: $supervisor, business: $business);
                 $supervisor isa supervisor, has email $email;
             fetch {{
                 'email': $email,

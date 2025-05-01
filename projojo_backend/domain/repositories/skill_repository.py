@@ -33,11 +33,11 @@ class SkillRepository(BaseRepository[Skill]):
     def get_all(self) -> List[Skill]:
         query = """
             match 
-                $sk isa skill;
+                $skill isa skill;
             fetch { 
-                'name': $sk.name,	
-                'isPending': $sk.isPending,
-                'createdAt': $sk.createdAt,
+                'name': $skill.name,	
+                'isPending': $skill.isPending,
+                'createdAt': $skill.createdAt,
             };
         """
         results = Db.read_transact(query)
@@ -49,7 +49,7 @@ class SkillRepository(BaseRepository[Skill]):
         query = f"""
             match
                 $student isa student, has email "{escaped_student_id}";
-                $ss isa studentSkill(student: $student, skill: $skill),
+                $hasSkill isa hasSkill(student: $student, skill: $skill),
                 has description $description;
                 $skill isa skill, has name $skill_name;
             fetch {{
