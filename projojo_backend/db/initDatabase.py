@@ -53,7 +53,7 @@ def get_database():
     return Db
 
 def create_database_if_needed():
-    if Db.db is not None:
+    if Db.reset and Db.db is not None:
         Db.db.delete()
         Db.db = None
     if Db.db is None:

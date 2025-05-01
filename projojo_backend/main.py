@@ -8,7 +8,7 @@ from exceptions.global_exception_handler import generic_handler
 from routes.test_controller import router as test_router
 
 # Import the TypeDB connection module
-from projojo_backend.db.initDatabase import get_database
+from db.initDatabase import get_database
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -72,4 +72,5 @@ async def typedb_status(db=Depends(get_db)):
         }
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
