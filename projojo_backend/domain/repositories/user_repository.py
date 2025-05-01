@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Optional, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
@@ -113,7 +114,7 @@ class UserRepository(BaseRepository[User]):
             return None
         
         return self._map_teacher(results[0])
-    
+
     def get_all_supervisors(self) -> List[Supervisor]:
         query = """
             match
@@ -122,16 +123,36 @@ class UserRepository(BaseRepository[User]):
                 has fullName $fullName,
                 has imagePath $imagePath;
                 $business isa business;
+                $project isa project;
+                $creates isa creates( $supervisor, $project);
                 $manages isa manages( $supervisor, $business );
             fetch {
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'business_association_id': $business.name
+                'business_association_id': $business.name,
+                'created_project_id': $project.name
             };
         """
         results = Db.read_transact(query)
-        return [self._map_supervisor(result) for result in results]
+
+        grouped = defaultdict(lambda: {
+            "email": None,
+            "fullName": None,
+            "imagePath": None,
+            "business_association_id": None,
+            "created_project_ids": []
+        })
+
+        for result in results:
+            email = result["email"]
+            grouped[email]["email"] = email
+            grouped[email]["fullName"] = result["fullName"]
+            grouped[email]["imagePath"] = result["imagePath"]
+            grouped[email]["business_association_id"] = result["business_association_id"]
+            grouped[email]["created_project_ids"].append(result["created_project_id"])
+
+        return [self._map_supervisor(data) for data in grouped.values()]
     
     def get_all_students(self) -> List[Student]:
         query = """
@@ -190,6 +211,7 @@ class UserRepository(BaseRepository[User]):
         full_name = result.get("fullName", "")
         image_path = result.get("imagePath", "")
         business_association_id = result.get("business_association_id", "")
+        created_project_ids = result.get("created_project_ids", [])
         
         return Supervisor(
             id=email,
@@ -198,7 +220,7 @@ class UserRepository(BaseRepository[User]):
             image_path=image_path,
             authentication_ids=[],
             business_association_id=business_association_id,
-            created_project_ids=[]
+            created_project_ids=created_project_ids
         )
     
     def _map_student(self, result: Dict[str, Any]) -> Student:

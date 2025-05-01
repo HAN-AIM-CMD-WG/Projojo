@@ -137,6 +137,9 @@ insert
     $c1 isa creates (supervisor: $u4, project: $p1),
         has createdAt 2025-04-15T13:40:00;
 
+    $c4 isa creates (supervisor: $u4, project: $p4),
+        has createdAt 2025-04-15T14:40:00;
+
     $c2 isa creates (supervisor: $u4, project: $p2),
         has createdAt 2025-04-14T10:15:00;
 
