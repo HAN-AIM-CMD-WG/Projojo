@@ -49,18 +49,28 @@ class UserRepository(BaseRepository[User]):
                 has email "{escaped_email}",
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath;
+                has imagePath $imagePath,
+                has password_hash $password_hash;
+                $business isa business;
+                $project isa project;
+                $creates isa creates( $supervisor, $project);
+                $manages isa manages( $supervisor, $business );
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
-                'imagePath': $imagePath
+                'imagePath': $imagePath,
+                'password_hash': $password_hash,
+                'business_association_id': $business.name,
+                'created_project_id': $project.name
             }};
         """
         results = Db.read_transact(query)
         if not results:
             return None
-        
-        return self._map_supervisor(results[0])
+
+        grouped = self.group_by_email(results)
+
+        return self._map_supervisor(next(iter(grouped.values())))
     
     def get_student_by_id(self, email: str) -> Optional[Student]:
         # Escape any double quotes in the email
@@ -101,12 +111,14 @@ class UserRepository(BaseRepository[User]):
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName;
+                has schoolAccountName $schoolAccountName,
+                has password_hash $password_hash;
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName
+                'schoolAccountName': $schoolAccountName,
+                'password_hash': $password_hash
             }};
         """
         results = Db.read_transact(query)
@@ -121,6 +133,7 @@ class UserRepository(BaseRepository[User]):
                 $supervisor isa supervisor,
                 has email $email,
                 has fullName $fullName,
+                has password_hash $password_hash,
                 has imagePath $imagePath;
                 $business isa business;
                 $project isa project;
@@ -131,11 +144,17 @@ class UserRepository(BaseRepository[User]):
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'business_association_id': $business.name,
-                'created_project_id': $project.name
+                'created_project_id': $project.name,
+                'password_hash': $password_hash
             };
         """
         results = Db.read_transact(query)
 
+        grouped = self.group_by_email(results)
+
+        return [self._map_supervisor(data) for data in grouped.values()]
+
+    def group_by_email(self, results):
         grouped = defaultdict(lambda: {
             "email": None,
             "fullName": None,
@@ -143,17 +162,16 @@ class UserRepository(BaseRepository[User]):
             "business_association_id": None,
             "created_project_ids": []
         })
-
         for result in results:
             email = result["email"]
             grouped[email]["email"] = email
             grouped[email]["fullName"] = result["fullName"]
             grouped[email]["imagePath"] = result["imagePath"]
+            grouped[email]["password_hash"] = result["password_hash"]
             grouped[email]["business_association_id"] = result["business_association_id"]
             grouped[email]["created_project_ids"].append(result["created_project_id"])
+        return grouped
 
-        return [self._map_supervisor(data) for data in grouped.values()]
-    
     def get_all_students(self) -> List[Student]:
         query = """
             match
@@ -212,7 +230,7 @@ class UserRepository(BaseRepository[User]):
         image_path = result.get("imagePath", "")
         business_association_id = result.get("business_association_id", "")
         created_project_ids = result.get("created_project_ids", [])
-        
+        password_hash = result.get("password_hash", "")
         return Supervisor(
             id=email,
             email=email,
@@ -220,7 +238,8 @@ class UserRepository(BaseRepository[User]):
             image_path=image_path,
             authentication_ids=[],
             business_association_id=business_association_id,
-            created_project_ids=created_project_ids
+            created_project_ids=created_project_ids,
+            password_hash=password_hash
         )
     
     def _map_student(self, result: Dict[str, Any]) -> Student:
