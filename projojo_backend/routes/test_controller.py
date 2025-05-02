@@ -191,7 +191,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60  # e.g., 1 hour
 
 def verify_user_credentials(email: str, password: str):
     user = user_repo.get_by_id(email)
-    print("verifying..."+str(user))
+    print("verifying... "+str(email))
     if user and user.password_hash == password:
         return user
     return None
