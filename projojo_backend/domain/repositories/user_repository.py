@@ -10,6 +10,31 @@ from datetime import datetime
 class UserRepository(BaseRepository[User]):
     def __init__(self):
         super().__init__(User, "user")
+
+    def get_credentials(self, id: str) -> Optional[User]:
+        query = f"""
+            match
+                $user isa user,
+                has email "{id}",
+                has email $email,
+                has fullName $fullName,
+                has imagePath $imagePath,
+                has password_hash $password_hash;
+                $user isa $usertype;
+            fetch {{
+                'email': $email,
+                'fullName': $fullName,
+                'imagePath': $imagePath,
+                'password_hash': $password_hash,
+                'usertype': $usertype
+            }};
+        """
+        results = Db.read_transact(query)
+        result_with_type = next((r for r in results if r.get("usertype", {}).get("label") != "user"), results[0])
+        print(result_with_type)
+        if not results:
+            raise ItemRetrievalException(User, f"User with ID {id} not found.")
+        return self._map_to_model(result_with_type)
     
     def get_by_id(self, id: str) -> Optional[User]:
         # First try to find as a supervisor
@@ -215,13 +240,15 @@ class UserRepository(BaseRepository[User]):
         full_name = result.get("fullName", "")
         image_path = result.get("imagePath", "")
         password_hash = result.get("password_hash", "")
+        usertype_label = result.get("usertype", {}).get("label")
         
         return User(
             id=email,
             email=email,
             full_name=full_name,
             image_path=image_path,
-            password_hash=password_hash
+            password_hash=password_hash,
+            type=usertype_label
         )
     
     def _map_supervisor(self, result: Dict[str, Any]) -> Supervisor:
