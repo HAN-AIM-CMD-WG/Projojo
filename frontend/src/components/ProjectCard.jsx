@@ -14,7 +14,7 @@ export default function ProjectCard({ project, index=0, isExpanded=false }) {
   return (
     <div className={`h-[350px] w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden transition-all transform hover:scale-102 hover:shadow-2xl ${!isExpanded && (index == 2 ? 'hidden [@media(min-width:1195px)]:block' : index == 1 && 'hidden [@media(min-width:813px)]:block')}`}>
       <Link
-        to={`/projects/${project.projectId}`}
+        to={`/projects/${project.name}`}
         className="block h-full focus:outline-none group"
       >
         <div className="relative h-full bg-slate-200">
