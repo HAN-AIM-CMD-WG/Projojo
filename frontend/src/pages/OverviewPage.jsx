@@ -3,7 +3,7 @@ import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
 import Loading from '../components/Loading';
-import { getProjects } from '../services';
+import { getBusinesses, getProjects } from '../services';
 import PageHeader from '../components/PageHeader';
 
 export default function OverviewPage() {
@@ -16,7 +16,7 @@ export default function OverviewPage() {
     let ignore = false;
     setIsLoading(true);
 
-    getProjects()
+    getBusinesses()
       .then(data => {
         if (ignore) return;
         setInitialBusinesses(data);

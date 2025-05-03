@@ -12,13 +12,12 @@ import PageHeader from '../components/PageHeader';
  * Creates a BusinessPage component
  */
 export default function BusinessPage() {
-    const { businessId } = useParams();
+    const businessId = "Celestial Innovations";
 
-    const { data: projectsData, error: projectsError } = useFetch(() => getProjectsWithBusinessId(Number(businessId)).then(async projects => {
+    const { data: projectsData, error: projectsError } = useFetch(() => getProjectsWithBusinessId(businessId).then(async projects => {
         const promises = [];
         for (let i = 0; i < projects.length; i++) {
             const project = projects[i];
-            promises.push(getTasks(project.id));
         }
 
         const awaited = await Promise.all(promises);
@@ -26,10 +25,11 @@ export default function BusinessPage() {
         for (let i = 0; i < projects.length; i++) {
             projects[i].tasks = awaited[i];
         }
-        return projects.map((project) => { project.image = { path: project.photo.path }; project.projectId = project.id; return project; });
-    }), [Number(businessId)]);
+        console.log("projectsssssssssssss", projects);
+        return projects.map((project) => { project.image = { path: project.image_path }; project.projectId = project.id; return project; });
+    }), [businessId]);
 
-    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusiness(Number(businessId)), [Number(businessId)]);
+    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusiness(businessId), [businessId]);
 
     let businessErrorMessage = undefined;
     if (businessError !== undefined) {
