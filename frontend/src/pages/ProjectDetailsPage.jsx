@@ -20,13 +20,12 @@ export default function ProjectDetailsPage() {
             .then(data => {
                 setProject(data)
             })
-            .catch(() => setShowNotFound(true));
-
-        getTasks(projectId)
-            .then(data => {
-                setTasks(data)
-            })
-            .catch(() => setShowNotFound(true))
+            // .catch(() => setShowNotFound(true));
+        // getTasks(projectId)
+        //     .then(data => {
+        //         setTasks(data)
+        //     })
+            // .catch(() => setShowNotFound(false))
     };
 
     useEffect(() => {
@@ -43,18 +42,19 @@ export default function ProjectDetailsPage() {
             }, 1500);
         }, 300);
     };
-    if (!projectId || isNaN(projectId) || projectId <= 0 || !Number.isInteger(parseFloat(projectId))) return <NotFoundPage />
-    if (showNotFound) return <NotFoundPage />
+    //if (!projectId || isNaN(projectId) || projectId <= 0 || !Number.isInteger(parseFloat(projectId))) return <NotFoundPage />
+    // if (showNotFound) return <NotFoundPage />
 
     return (
         <>
             <PageHeader name={'Projectpagina'} />
             <div className="bg-gray-100 rounded-lg">
-                <ProjectDetails project={project} businessId={project?.business?.businessId} refreshData={() => {
+                {console.log(project)}
+                <ProjectDetails project={project} businessId={project?.business_id} refreshData={() => {
                     fetchProjectAndTasks();
                     scrollToLastTask();
                 }} />
-                <ProjectTasks tasks={tasks} fetchAmount={fetchAmount} setFetchAmount={setFetchAmount} businessId={project?.business?.businessId} lastTaskRef={lastTaskRef} />
+                <ProjectTasks tasks={tasks} fetchAmount={fetchAmount} setFetchAmount={setFetchAmount} businessId={project?.business_id} lastTaskRef={lastTaskRef} />
             </div>
         </>
     )
