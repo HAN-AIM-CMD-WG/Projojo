@@ -15,5 +15,5 @@ createRoot(document.getElementById('root')).render(
         </NotifySystem>
       </AuthProvider>
     </BrowserRouter>
-  </StrictMode>,
+  </StrictMode>
 )

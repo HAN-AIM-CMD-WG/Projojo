@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:8080/";
+export const API_BASE_URL = "http://localhost:8000/test/";
 export const FILE_BASE_URL = `${API_BASE_URL}files`;
 
 export class HttpError extends Error {
@@ -29,7 +29,6 @@ function fetchWithError(url, request, returnsVoid = false) {
 
     return fetch(url, {
         ...request,
-        credentials: "include",
     })
         .then(response => {
             if (!response.ok) {
@@ -99,16 +98,17 @@ export function updateBusiness(formData) {
 }
 
 /**
- * gets the business using the {@link businessId}
- * @param {number} businessId 
+ * gets the business using the {@link business_id}
+ * @param {string} business_id 
  * @returns { Promise<{ name: string, description: string, location: string, photo: { path: string }  } | undefined> }
  */
-export function getBusiness(businessId) {
-    return fetchWithError(`${API_BASE_URL}business/${businessId}`, {
+export function getBusiness(business_id) {
+    return fetchWithError(`${API_BASE_URL}business/${business_id}`, {
         headers: {
             Accept: 'application/json',
         },
-        method: "GET"
+        method: "GET",
+        body: JSON.stringify(business_id)
     });
 }
 
@@ -142,19 +142,17 @@ export function createNewBusiness(businessName) {
 
 /**
  * @param {number | undefined} businessId optional businessId parameter for getting only the projects for 1 business
- * @returns { Promise<{ id: number, title: string, description: string, business: { name: string, description: string, location: string, photo: { path: string }  }, photo: { path: string }, projectTopSkills: { skillId: number, name: string, isPending: boolean }  }[] | undefined> }
+ * @returns { Promise<{ id: string, title: string, description: string, business: { name: string, description: string, location: string, photo: { path: string }  }, photo: { path: string }, projectTopSkills: { skillId: number, name: string, isPending: boolean }  }[] | undefined> }
  */
-export function getProjectsWithBusinessId(businessId = undefined) {
-    let url = `${API_BASE_URL}projects`;
-    if (businessId !== undefined) {
-        url = `${url}?businessId=${businessId}`;
-    }
-
+export function getProjectsWithBusinessId(business_id) {
+    let url = `${API_BASE_URL}businesses/${business_id}/projects`;
+    console.log("url", url)
     return fetchWithError(url, {
         headers: {
             Accept: 'application/json',
         },
-        method: "GET"
+        method: "GET",
+        body: JSON.stringify(business_id)
     })
 }
 
@@ -162,7 +160,10 @@ export function getProjectsWithBusinessId(businessId = undefined) {
  * 
  */
 export function getProjects() {
-    return fetchWithError(`${API_BASE_URL}projects/all`);
+    return fetchWithError(`${API_BASE_URL}projects`);
+}
+export function getBusinesses() {
+    return fetchWithError(`${API_BASE_URL}businesses`);
 }
 
 /**
@@ -190,17 +191,7 @@ export function createProject(formData) {
  * @returns {Promise<{ type: "none" } | { type: "student" | "invalid" | "teacher", userId: number } | { type: "supervisor", userId: number, businessId: number }>}
  */
 export function getAuthorization() {
-    return fetchWithError(`${API_BASE_URL}verify`, {
-        method: "GET",
-        headers: {
-            Accept: "application/json",
-        },
-    }).then(authentication => {
-        if (authentication.type !== undefined) {
-            authentication.type = authentication.type.toLowerCase();
-        }
-        return authentication;
-    });
+    return localStorage.getItem("token")
 }
 
 export function logout() {
@@ -401,14 +392,19 @@ export function updateStudentSkills(skillIds) {
     }, true);
 }
 
-export function login(username) {
+export function login(credentials) {
+    try {
+    console.log(credentials)
     return fetchWithError(`${API_BASE_URL}login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify(username),
-    }, true);
+        body: JSON.stringify(credentials),
+    });
+  } catch (error) {
+    console.error("Request failed:", error);
+  }
 }
 
 /**

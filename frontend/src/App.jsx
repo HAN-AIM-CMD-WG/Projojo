@@ -25,31 +25,8 @@ export default function App() {
     let ignore = false;
 
     getAuthorization()
-      .then(data => {
-        if (ignore) return;
+      
 
-        if (data.type === "none" && location.pathname !== "/") {
-          navigate("/");
-          return
-        }
-
-        if (data.type === "invalid" && location.pathname !== "/email-not-found") {
-          navigate("/email-not-found");
-          return;
-        }
-
-        data.isLoading = false
-        setAuthData(data)
-      })
-      .catch(() => {
-        if (!ignore && location.pathname !== "/") {
-          navigate("/")
-        }
-      })
-
-    return () => {
-      ignore = true;
-    }
   }, [location, setAuthData]);
 
   return (
