@@ -30,9 +30,9 @@ class UserRepository(BaseRepository[User]):
             }};
         """
         results = Db.read_transact(query)
-        result_with_type = next((r for r in results if r.get("usertype", {}).get("label") != "user"), results[0])
         if not results:
             raise ItemRetrievalException(User, f"User with ID {id} not found.")
+        result_with_type = next((r for r in results if r.get("usertype", {}).get("label") != "user"), results[0])
         return self._map_to_model(result_with_type)
     
     def get_by_id(self, id: str) -> Optional[User]:
