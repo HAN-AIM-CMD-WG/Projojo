@@ -1,9 +1,7 @@
 from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Query, Path, Body
-from pydantic import BaseModel
 import jwt;
-from exceptions import ItemRetrievalException, UnauthorizedException
+from domain.models.dto import LoginRequest, LoginResponse
 
 # Import repositories
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
@@ -173,24 +171,12 @@ async def create_skill(skill: Skill = Body(...)):
     created_skill = skill_repo.create(skill)
     return created_skill
 
-
-# Models
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-class LoginResponse(BaseModel):
-    status: str
-    message: str
-    token: str = None
-    debug_payload: Optional[Dict[str, Any]] = None
-
 SECRET_KEY = "test"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60  # e.g., 1 hour
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 def verify_user_credentials(email: str, password: str):
-    user = user_repo.get_by_id(email)
+    user = user_repo.get_credentials(email)
     print("verifying... "+str(email))
     if user and user.password_hash == password:
         return user
@@ -212,10 +198,12 @@ async def login(login_data: LoginRequest):
     payload = {
         "sub": user.email,
         "password_hash": user.password_hash,
-        "role": type(user).__name__.lower(),
+        "role": user.type.lower(),
         "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     }
-
+    if user.type == "supervisor":
+        user = user_repo.get_supervisor_by_id(user.id)
+        payload["business"] = user.business_association_id
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
     return LoginResponse(
