@@ -8,6 +8,7 @@ from domain.repositories import BusinessRepository, ProjectRepository, TaskRepos
 
 # Import models
 from domain.models import User, Business, Project, Task, Skill
+from service import business_service
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
 
@@ -62,12 +63,17 @@ async def get_all_teachers():
 
 # Business endpoints
 @router.get("/businesses")
-async def get_all_businesses():
+async def get_all_businesses_with_projects():
     """
     Get all businesses for debugging purposes
     """
-    businesses = business_repo.get_all()
-    return businesses
+    businesses_with_projects = []
+    for business in business_repo.get_all():
+        businesses_with_projects.append(
+            business_service.get_business_with_projects(business.id)
+        )
+
+    return businesses_with_projects
 
 @router.get("/businesses/{name}")
 async def get_business(name: str = Path(..., description="Business name")):
@@ -187,6 +193,7 @@ async def login(login_data: LoginRequest):
     """
     Authenticate a user and return a JWT token
     """
+    print("login data: "+str(login_data))
     user = verify_user_credentials(login_data.email, login_data.password)
     if not user:
         raise HTTPException(

@@ -1,12 +1,16 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
+from .project import Project
+
+
 class Business(BaseModel):
     id: str
     name: str
     description: str
     image_path: str
     location: List[str]
+    projects: Optional[List[Project]] = None
     
     class Config:
         from_attributes = True

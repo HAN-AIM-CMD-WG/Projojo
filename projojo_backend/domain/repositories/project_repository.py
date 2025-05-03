@@ -25,7 +25,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'createdAt': $createdAt
+                'createdAt': $createdAt,
             }};
         """
         results = Db.read_transact(query)
@@ -41,11 +41,13 @@ class ProjectRepository(BaseRepository[Project]):
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
+                $hasProjects isa hasProjects(business: $business, project: $project);
             fetch {
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'createdAt': $createdAt
+                'createdAt': $createdAt,
+                'business': $business.name
             };
         """
         results = Db.read_transact(query)
@@ -65,7 +67,8 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'createdAt': $createdAt
+                'createdAt': $createdAt,
+                'business': $business.name
             }};
         """
         results = Db.read_transact(query)
@@ -83,6 +86,7 @@ class ProjectRepository(BaseRepository[Project]):
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
         created_at_str = result.get("createdAt", "")
+        business = result.get("business", "")
         
         # Convert createdAt string to datetime
         created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
@@ -92,7 +96,8 @@ class ProjectRepository(BaseRepository[Project]):
             name=name,
             description=description,
             image_path=image_path,
-            created_at=created_at
+            created_at=created_at,
+            business_id=business
         )
     
     def get_project_creation(self, project_id: str) -> Optional[ProjectCreation]:
