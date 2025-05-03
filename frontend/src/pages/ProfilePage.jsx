@@ -15,8 +15,7 @@ export default function ProfilePage() {
     useEffect(() => {
         let ignore = false;
 
-        fetch(`${API_BASE_URL}students/${profileId}`, {
-            credentials: "include",
+        fetch(`${API_BASE_URL}users/${profileId}`, {
             headers: {
                 Accept: 'application/json',
             },

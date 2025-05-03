@@ -92,7 +92,7 @@ class UserRepository(BaseRepository[User]):
         if not results:
             return None
 
-        grouped = self.group_by_email(results)
+        grouped = self.group_supervisor_by_email(results)
 
         return self._map_supervisor(next(iter(grouped.values())))
     
@@ -109,19 +109,24 @@ class UserRepository(BaseRepository[User]):
                 has imagePath $imagePath,
                 has schoolAccountName $schoolAccountName,
                 has password_hash $password_hash;
+                $skill isa skill;
+                hasSkill( $skill, $student );
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'password_hash': $password_hash,
+                'skill_ids': $skill.name
             }};
         """
         results = Db.read_transact(query)
         if not results:
             return None
+
+        grouped = self.group_student_by_email(results)
         
-        return self._map_student(results[0])
+        return self._map_student(next(iter(grouped.values())))
 
     
     def get_teacher_by_id(self, email: str) -> Optional[Teacher]:
@@ -178,7 +183,7 @@ class UserRepository(BaseRepository[User]):
 
         return [self._map_supervisor(data) for data in grouped.values()]
 
-    def group_by_email(self, results):
+    def group_supervisor_by_email(self, results):
         grouped = defaultdict(lambda: {
             "email": None,
             "fullName": None,
@@ -194,6 +199,23 @@ class UserRepository(BaseRepository[User]):
             grouped[email]["password_hash"] = result["password_hash"]
             grouped[email]["business_association_id"] = result["business_association_id"]
             grouped[email]["created_project_ids"].append(result["created_project_id"])
+        return grouped
+    def group_student_by_email(self, results):
+        grouped = defaultdict(lambda: {
+            "email": None,
+            "fullName": None,
+            "imagePath": None,
+            "schoolAccountName": None,
+            "skill_ids": [],
+        })
+        for result in results:
+            email = result["email"]
+            grouped[email]["email"] = email
+            grouped[email]["fullName"] = result["fullName"]
+            grouped[email]["imagePath"] = result["imagePath"]
+            grouped[email]["password_hash"] = result["password_hash"]
+            grouped[email]["schoolAccountName"] = result["schoolAccountName"]
+            grouped[email]["skill_ids"].append(result["skill_ids"])
         return grouped
 
     def get_all_students(self) -> List[Student]:
@@ -274,6 +296,7 @@ class UserRepository(BaseRepository[User]):
         image_path = result.get("imagePath", "")
         school_account_name = result.get("schoolAccountName", "")
         password_hash = result.get("password_hash", "")
+        skill_ids = result.get("skill_ids", [])
         
         return Student(
             id=email,
@@ -281,7 +304,7 @@ class UserRepository(BaseRepository[User]):
             full_name=full_name,
             image_path=image_path,
             school_account_name=school_account_name,
-            skill_ids=[],
+            skill_ids=skill_ids,
             registered_task_ids=[],
             password_hash=password_hash
         )

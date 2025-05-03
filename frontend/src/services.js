@@ -169,10 +169,13 @@ export function getUser(email) {
 
 /**
  * 
- * @returns {Promise<{skillId: number, name: string, isPending: boolean}[]>}
+ * @returns {Promise<{id: string, name: string, isPending: boolean}[]>}
  */
 export function getSkills() {
     return fetchWithError(`${API_BASE_URL}skills`);
+}
+export function getSkillsFromStudent(email) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
 /**
@@ -242,6 +245,7 @@ export function login(credentials) {
 export function logout() {
     localStorage.removeItem("token");
     localStorage.removeItem("payload");
+    return this
 }
 
 
