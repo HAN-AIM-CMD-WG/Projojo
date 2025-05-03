@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { createErrorMessage, getBusiness, updateBusiness } from '../services';
+import { createErrorMessage, getBusinessByName, /*updateBusiness*/ } from '../services';
 import useFetch from '../useFetch';
 
 /**
@@ -27,7 +27,7 @@ export default function UpdateBusinessPage() {
         }
     }, [authData])
 
-    const { data: business } = useFetch(async () => !authData.isLoading && await getBusiness(authData.businessId), [authData.businessId]);
+    const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessByName(authData.businessId), [authData.businessId]);
     if (business?.description !== undefined && description === undefined) {
         setDescription(business?.description);
     }

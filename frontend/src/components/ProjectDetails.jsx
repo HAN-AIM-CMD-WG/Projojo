@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { createTask, FILE_BASE_URL } from "../services";
+import { /*createTask*/ FILE_BASE_URL } from "../services";
 import { useAuth } from "./AuthProvider";
 import FormInput from "./FormInput";
 import Modal from "./Modal";
@@ -23,12 +23,12 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             formDataObj[key] = value;
         });
         setError("");
-        createTask(project.id, formDataObj)
-            .then(() => {
-                handleCloseModal();
-                refreshData();
-            })
-            .catch(error => setError(error.message));
+        // createTask(project.id, formDataObj)
+        //     .then(() => {
+        //         handleCloseModal();
+        //         refreshData();
+        //     })
+        //     .catch(error => setError(error.message));
     }
 
     const handleOpenModal = () => setIsModalOpen(true);

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSkill, getStudent } from "../services";
+import { createSkill, getUser } from "../services";
 import { useAuth } from "./AuthProvider";
 import SkillBadge from "./SkillBadge";
 
@@ -85,7 +85,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
         let ignore = false
 
         if (authData.type === 'student') {
-            getStudent(authData.userId)
+            getUser(authData.userId)
                 .then(data => {
                     if (ignore) return
                     setStudentsSkills(data.skills.map(skill => skill.skill.skillId))

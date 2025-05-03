@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createBusinessInviteLink, FILE_BASE_URL } from '../services';
+import { FILE_BASE_URL } from '../services';
 import { useAuth } from './AuthProvider';
 import FormInput from './FormInput';
 import Loading from "./Loading";
@@ -25,25 +25,25 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         return date.toLocaleDateString("nl-NL", options);
     };
 
-    const openGenerateLinkModel = () => {
-        setInviteLink(null);
-        setExpiry(null);
-        setError(null);
-        setIsModalOpen(true);
+    // const openGenerateLinkModel = () => {
+    //     setInviteLink(null);
+    //     setExpiry(null);
+    //     setError(null);
+    //     setIsModalOpen(true);
 
-        setIsLoading(true);
-        createBusinessInviteLink(businessId)
-            .then(({ link, timestamp }) => {
-                setInviteLink(link);
-                setExpiry(timestamp);
+    //     setIsLoading(true);
+    //     createBusinessInviteLink(businessId)
+    //         .then(({ link, timestamp }) => {
+    //             setInviteLink(link);
+    //             setExpiry(timestamp);
 
-                setIsLoading(false);
-            })
-            .catch(error => {
-                setError(error.message);
-                setIsLoading(false);
-            });
-    }
+    //             setIsLoading(false);
+    //         })
+    //         .catch(error => {
+    //             setError(error.message);
+    //             setIsLoading(false);
+    //         });
+    // }
 
     const onCopyLink = () => {
         navigator.clipboard.writeText(inviteLink);

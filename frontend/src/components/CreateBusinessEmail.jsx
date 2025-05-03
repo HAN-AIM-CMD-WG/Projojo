@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { getColleaguesEmailAdresses, getStudentEmailAdresses } from "../services";
+import { /*getColleaguesEmailAdresses, getStudentEmailAdresses*/ } from "../services";
 import FormInput from "./FormInput";
 import Loading from "./Loading";
 import Modal from "./Modal";
@@ -31,29 +31,29 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
         }
 
         setIsMailLoading(true);
-        getStudentEmailAdresses(selection, taskId)
-            .then(adresses => {
-                if (!adresses || adresses.length === 0) {
-                    setFetchError("Geen e-mailadressen gevonden.");
-                    return;
-                }
-                const joined = encodeURI(adresses.join(","));
-                if (!dontSetLocation) {
-                    if (sendCCToColleagues) {
-                        getColleaguesEmailAdresses()
-                        .then(colleagues => {
-                            const cc = encodeURI(colleagues.join(","));
-                            document.location = `mailto:?subject=${encodeURI(subject.toString())}&cc=${cc}&bcc=${joined}`;
-                        })
-                    } else {
-                        document.location = `mailto:?subject=${encodeURI(subject.toString())}&bcc=${joined}`;
-                    }
-                }
+        // getStudentEmailAdresses(selection, taskId)
+        //     .then(adresses => {
+        //         if (!adresses || adresses.length === 0) {
+        //             setFetchError("Geen e-mailadressen gevonden.");
+        //             return;
+        //         }
+        //         const joined = encodeURI(adresses.join(","));
+        //         if (!dontSetLocation) {
+        //             if (sendCCToColleagues) {
+        //                 getColleaguesEmailAdresses()
+        //                 .then(colleagues => {
+        //                     const cc = encodeURI(colleagues.join(","));
+        //                     document.location = `mailto:?subject=${encodeURI(subject.toString())}&cc=${cc}&bcc=${joined}`;
+        //                 })
+        //             } else {
+        //                 document.location = `mailto:?subject=${encodeURI(subject.toString())}&bcc=${joined}`;
+        //             }
+        //         }
 
-                setIsCreateMailModalOpen(false);
-            })
-            .catch(error => setFetchError(error.message))
-            .finally(() => setIsMailLoading(false));
+        //         setIsCreateMailModalOpen(false);
+        //     })
+        //     .catch(error => setFetchError(error.message))
+        //     .finally(() => setIsMailLoading(false));
     }
 
     return (

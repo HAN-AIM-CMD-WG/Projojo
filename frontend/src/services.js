@@ -86,73 +86,18 @@ export function createErrorMessage(error, mapper) {
     return message ?? "Er is een onverwachte fout opgetreden.";
 }
 
-/**
- * @param {FormData} formData 
- * @returns {Promise<void>}
- */
-export function updateBusiness(formData) {
-    return fetchWithError(`${API_BASE_URL}business`, {
-        body: formData,
-        method: "PUT",
-    }, true);
-}
+// These functions have been replaced by getBusinessByName
 
 /**
- * gets the business using the {@link business_id}
- * @param {string} business_id 
- * @returns { Promise<{ name: string, description: string, location: string, photo: { path: string }  } | undefined> }
- */
-export function getBusiness(business_id) {
-    return fetchWithError(`${API_BASE_URL}business/${business_id}`, {
-        headers: {
-            Accept: 'application/json',
-        },
-        method: "GET",
-        body: JSON.stringify(business_id)
-    });
-}
-
-/**
- * @param {number} businessId
- * @returns {Promise<{ link: string, expires: string }>}
- */
-export function getBusinessInviteLink(businessId) {
-    return fetchWithError(`${API_BASE_URL}invite`, {
-        headers: {
-            Accept: 'application/json',
-        },
-        body: businessId,
-        method: "POST"
-    });
-}
-
-/**
- * @param {string} businessName
- * @returns {Promise<{ id: number }>}
- */
-export function createNewBusiness(businessName) {
-    return fetchWithError(`${API_BASE_URL}business`, {
-        headers: {
-            Accept: 'application/json',
-        },
-        body: businessName,
-        method: "POST"
-    });
-}
-
-/**
- * @param {number | undefined} businessId optional businessId parameter for getting only the projects for 1 business
+ * @param {string} businessName optional business name parameter for getting only the projects for 1 business
  * @returns { Promise<{ id: string, title: string, description: string, business: { name: string, description: string, location: string, photo: { path: string }  }, photo: { path: string }, projectTopSkills: { skillId: number, name: string, isPending: boolean }  }[] | undefined> }
  */
-export function getProjectsWithBusinessId(business_id) {
-    let url = `${API_BASE_URL}businesses/${business_id}/projects`;
-    console.log("url", url)
-    return fetchWithError(url, {
+export function getProjectsWithBusinessId(businessName) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessName}/projects`, {
         headers: {
             Accept: 'application/json',
         },
-        method: "GET",
-        body: JSON.stringify(business_id)
+        method: "GET"
     })
 }
 
@@ -168,23 +113,14 @@ export function getBusinesses() {
 
 /**
  * 
- * @param {number} projectId 
+ * @param {string} projectName 
  * @returns {Promise<{ id: number, title: string, description: string, projectTopSkills: Awaited<ReturnType<typeof getSkills>>, business: Awaited<ReturnType<typeof getBusiness>>, photo: { path: string } }>}
  */
-export function getProject(projectId) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectId}`)
+export function getProject(projectName) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectName}`)
 }
 
-/**
- * @param {FormData} formData 
- * @returns {Promise<void>}
- */
-export function createProject(formData) {
-    return fetchWithError(`${API_BASE_URL}projects`, {
-        method: 'POST',
-        body: formData
-    })
-}
+// This function is not available in the backend
 
 /**
  * 
@@ -194,30 +130,16 @@ export function getAuthorization() {
     return localStorage.getItem("token")
 }
 
-export function logout() {
-    return fetchWithError(`${API_BASE_URL}logout`, {
-        method: "POST",
-    }, true);
-}
+// This function is not available in the backend
 
-export function getFile(filePath) {
-    return fetch(`${FILE_BASE_URL}${filePath}`, {
-        method: "GET",
-        credentials: "include",
-    }).then(response => {
-        if (!response.ok) {
-            throw new HttpError("An unexpected error occured", response.status);
-        }
-        return response.blob();
-    }).then(blob => new File([blob], filePath, { type: blob.type }));
-}
+// This function is not available in the backend
 
 /**
- * @param {number} projectId 
+ * @param {string} projectName 
  * @returns {Promise<{taskId: number, title: string, description: string, totalNeeded: number, totalAccepted: number, skills: { skillId: number, name: string, isPending: boolean }[]}[]>}
  */
-export function getTasks(projectId) {
-    return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {
+export function getTasks(projectName) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectName}/tasks`, {
         method: "GET",
         headers: {
             Accept: "application/json",
@@ -225,27 +147,15 @@ export function getTasks(projectId) {
     });
 }
 
-/**
- * @param {number} projectId 
- * @param {{ taskId: number, projectId: number, title: string, description: string, totalNeeded: number }} taskDto 
- */
-export function createTask(projectId, taskDto) {
-    return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(taskDto),
-    }, true);
-}
+// This function is not available in the backend
 
 /**
  * 
- * @param {number} studentId 
- * @returns {Promise<{ username: string, description: string, profilePicture: { path: string }, cv: { path: string }, skills: { description: string, skill: { name: string, skillId: number, isPending: boolean } }[]> }}
+ * @param {string} email 
+ * @returns {Promise<User>}
  */
-export function getStudent(studentId) {
-    return fetchWithError(`${API_BASE_URL}students/${studentId}`, {
+export function getUser(email) {
+    return fetchWithError(`${API_BASE_URL}users/${email}`, {
         method: "GET",
         headers: {
             Accept: "application/json",
@@ -253,27 +163,9 @@ export function getStudent(studentId) {
     });
 }
 
-/**
- * 
- * @param {FormData} formData 
- */
-export function updateStudent(formData) {
-    return fetchWithError(`${API_BASE_URL}students`, {
-        method: "PUT",
-        headers: {
-            Accept: "application/json",
-        },
-        body: formData,
-    }, true);
-}
+// This function is not available in the backend
 
-/**
- * 
- * @returns {Promise<number[]>}
- */
-export function getUserRegistrations() {
-    return fetchWithError(`${API_BASE_URL}registrations/existing-user-registrations`);
-}
+// This function is not available in the backend
 
 /**
  * 
@@ -285,116 +177,60 @@ export function getSkills() {
 
 /**
  * 
- * @param {string} name
+ * @param {Skill} skill - The skill object to create
  * @returns {Promise<{skillId: number, name: string, isPending: boolean}>}
  */
-export function createSkill(name) {
+export function createSkill(skill) {
     return fetchWithError(`${API_BASE_URL}skills`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: name,
+        body: JSON.stringify(skill),
     });
 }
 
 /**
- * @param {number} skillId
  * @param {string} name
  * @returns {Promise<void>}
  */
-export function updateSkillName(skillId, name) {
-    return fetchWithError(`${API_BASE_URL}skills/${skillId}/name`, {
-        method: "PATCH",
+export function getSkill(name) {
+    return fetchWithError(`${API_BASE_URL}skills/${name}`, {
+        method: "GET",
         headers: {
-            "Content-Type": "application/text",
+            Accept: "application/json",
         },
-        body: name,
-    }, true);
+    });
 }
 
 /**
- * @param {number} skillId
- * @param {boolean} accepted
+ * @param {string} email
  * @returns {Promise<void>}
  */
-export function updateSkillAcceptance(skillId, accepted) {
-    return fetchWithError(`${API_BASE_URL}skills/${skillId}/acceptance`, {
-        method: "PATCH",
+export function getStudentSkills(email) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+        method: "GET",
         headers: {
-            "Content-Type": "application/json",
+            Accept: "application/json",
         },
-        body: accepted,
-    }, true);
+    });
 }
+
+// This function is not available in the backend
 
 /**
  * 
- * @param {number} taskId 
- * @param {string} motivation 
- * @returns {Promise<void>}
+ * @param {string} taskName 
+ * @returns {Promise<{skillId: number, name: string, isPending: boolean}[]>}
  */
-export function createRegistration(taskId, motivation) {
-    return fetchWithError(`${API_BASE_URL}registrations/${taskId}`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: motivation,
-    }, true);
+export function getTaskSkills(taskName) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills`)
 }
 
-/**
- * 
- * @param {number} taskId 
- * @returns {Promise<{taskId: number, reason: string, accepted: boolean | null, response: string, student: Awaited<ReturnType<typeof getStudent>>}[]>}
- */
-export function getRegistrations(taskId) {
-    return fetchWithError(`${API_BASE_URL}registrations/${taskId}`)
-}
 
-/**
- * 
- * @param {{taskId: number, userId: number, accepted: boolean, response: string}} updatedRegistration 
- * @returns {Promise<void>}
- */
-export function updateRegistration(updatedRegistration) {
-    return fetchWithError(`${API_BASE_URL}registrations`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedRegistration),
-    }, true);
-}
 
-/**
- * @param {number[]} skillIds 
- * @returns {Promise<void>}
- */
-export function updateTaskSkills(taskId, skillIds) {
-    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(skillIds),
-    }, true);
-}
-
-export function updateStudentSkills(skillIds) {
-    return fetchWithError(`${API_BASE_URL}students/skills`, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(skillIds),
-    }, true);
-}
 
 export function login(credentials) {
-    try {
-    console.log(credentials)
     return fetchWithError(`${API_BASE_URL}login`, {
         method: "POST",
         headers: {
@@ -402,69 +238,86 @@ export function login(credentials) {
         },
         body: JSON.stringify(credentials),
     });
-  } catch (error) {
-    console.error("Request failed:", error);
-  }
 }
+export function logout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("payload");
+}
+
+
+
 
 /**
- * @param {number|undefined} businessId
- * @returns {Promise<{ link: string, date: Date }>}
+ * @returns {Promise<User[]>}
  */
-export function createBusinessInviteLink(businessId) {
-    const json = (businessId ?? null)
-    return fetchWithError(`${API_BASE_URL}invite`, {
-        method: "POST",
-        body: json,
+export function getAllUsers() {
+    return fetchWithError(`${API_BASE_URL}users`, {
+        method: "GET",
         headers: {
-            "Content-Type": "application/json",
-        }
-    }).then(r => {
-        r.timestamp = new Date(new Date(r.timestamp).getTime() + 7 * 24 * 60 * 60 * 1000);
-        return r;
-    });
-}
-
-export function createColleagueInviteLink() {
-    return fetchWithError(`${API_BASE_URL}invite`, {
-        method: "POST",
-    }).then(r => {
-        r.timestamp = new Date(new Date(r.timestamp).getTime() + 7 * 24 * 60 * 60 * 1000);
-        return r;
-    });
-}
-
-/**
- * @param {string} email 
- * @returns 
- */
-export function setEmail(email) {
-    return fetchWithError(`${API_BASE_URL}set-email`, {
-        method: "PATCH",
-        headers: {
-            "Content-Type": "application/json"
+            Accept: "application/json",
         },
-        body: email,
-    }, true);
-}
-
-/**
- * @param {number} selection 
- * @param {number} taskId
- * @returns {Promise<string[]>}
- */
-export function getStudentEmailAdresses(selection, taskId) {
-    return fetchWithError(`${API_BASE_URL}students/email?selection=${selection}&taskId=${taskId}`, {
-        method: "GET",
     });
 }
 
 /**
- * @returns {Promise<string[]>}
+ * @returns {Promise<User[]>}
  */
-export function getColleaguesEmailAdresses() {
-    return fetchWithError(`${API_BASE_URL}business/email/all`, {
+export function getAllSupervisors() {
+    return fetchWithError(`${API_BASE_URL}supervisors`, {
         method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+}
+
+/**
+ * @returns {Promise<User[]>}
+ */
+export function getAllStudents() {
+    return fetchWithError(`${API_BASE_URL}students`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+}
+
+/**
+ * @returns {Promise<User[]>}
+ */
+export function getAllTeachers() {
+    return fetchWithError(`${API_BASE_URL}teachers`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+}
+
+/**
+ * @param {string} name
+ * @returns {Promise<Business>}
+ */
+export function getBusinessByName(name) {
+    return fetchWithError(`${API_BASE_URL}businesses/${name}`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+}
+
+/**
+ * @param {string} name
+ * @returns {Promise<Task>}
+ */
+export function getTaskByName(name) {
+    return fetchWithError(`${API_BASE_URL}tasks/${name}`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
     });
 }
 

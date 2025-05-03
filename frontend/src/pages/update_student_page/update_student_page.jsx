@@ -7,7 +7,7 @@ import FormInput from "../../components/FormInput";
 import Page from "../../components/paged_component/page";
 import PagedComponent from "../../components/paged_component/paged_component";
 import RichTextEditor from "../../components/RichTextEditor";
-import { createErrorMessage, getStudent, updateStudent } from "../../services";
+import { createErrorMessage, getUser, /*updateStudent*/ } from "../../services";
 import useFetch from "../../useFetch";
 
 const authErrorMessages = {
@@ -32,7 +32,7 @@ export default function UpdateStudentPage() {
         navigate("/home");
     }
 
-    const { data, error, isLoading } = useFetch(() => getStudent(authData.userId), [authData.userId]);
+    const { data, error, isLoading } = useFetch(() => getUser(authData.userId), [authData.userId]);
     if (!isLoading && data && description === undefined) {
         setDescription(data.description);
     }

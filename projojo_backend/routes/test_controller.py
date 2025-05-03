@@ -67,6 +67,7 @@ async def get_all_businesses():
     Get all businesses for debugging purposes
     """
     businesses = business_repo.get_all()
+    print(businesses)
     return businesses
 
 @router.get("/businesses/{name}")
