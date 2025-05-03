@@ -202,8 +202,9 @@ async def login(login_data: LoginRequest):
         "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     }
     if user.type == "supervisor":
-        user = user_repo.get_supervisor_by_id(user.id)
-        payload["business"] = user.business_association_id
+        supervisor = user_repo.get_supervisor_by_id(user.id)
+        payload["business"] = supervisor.business_association_id
+        payload["projects"] = supervisor.created_project_ids
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
     return LoginResponse(
