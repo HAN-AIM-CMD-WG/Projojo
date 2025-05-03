@@ -73,9 +73,7 @@ insert
         has name "Mountain Technologies",
         has description "Forging the future of sustainable engineering and manufacturing.",
         has imagePath "business_mountain.jpg",
-        has location "Amsterdam",
-        has location "Nijmegen",
-        has location "Utrecht";
+        has location "Amsterdam";
 
     # Business associations
     $m1 isa manages (supervisor: $u4, business: $b1),

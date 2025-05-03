@@ -1,7 +1,7 @@
 import { useState } from "react";
 import FormInput from "../components/FormInput";
 import Loading from "../components/Loading";
-import { setEmail } from "../services";
+import { /*setEmail*/ } from "../services";
 import { useNavigate } from "react-router-dom";
 
 export default function EmailNotFound() {

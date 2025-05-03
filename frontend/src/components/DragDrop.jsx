@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getFile } from '../services';
+import { /*getFile*/ } from '../services';
 
 /**
  * 
@@ -14,17 +14,17 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
     useEffect(() => {
         let ignore = false;
 
-        if (initialFilePath !== undefined) {
-            getFile(initialFilePath)
-                .then(file => {
-                    if (ignore) return;
-                    const fileArray = [file];
-                    if (typeof onFileChanged === "function") {
-                        onFileChanged(fileArray.length === 0 ? undefined : fileArray);
-                    }
-                    setFiles(fileArray);
-                });
-        }
+        // if (initialFilePath !== undefined) {
+        //     getFile(initialFilePath)
+        //         .then(file => {
+        //             if (ignore) return;
+        //             const fileArray = [file];
+        //             if (typeof onFileChanged === "function") {
+        //                 onFileChanged(fileArray.length === 0 ? undefined : fileArray);
+        //             }
+        //             setFiles(fileArray);
+        //         });
+        // }
 
         return () => {
             ignore = true;

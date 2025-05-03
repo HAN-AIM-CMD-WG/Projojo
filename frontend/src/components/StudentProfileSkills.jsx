@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSkills, updateStudentSkills } from "../services";
+import { getSkills, /*updateStudentSkills*/ } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 import SkillsEditor from "./SkillsEditor";
@@ -20,7 +20,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
         setStudentSkillsError("");
 
         try {
-            await updateStudentSkills(skillIds);
+            //await updateStudentSkills(skillIds);
             setIsEditing(false)
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {

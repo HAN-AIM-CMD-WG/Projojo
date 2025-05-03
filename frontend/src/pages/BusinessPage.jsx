@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import Alert from "../components/Alert";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
-import { getBusiness, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
+import { getBusinessByName, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
 import useFetch from '../useFetch';
 import NotFound from './NotFound';
 import PageHeader from '../components/PageHeader';
@@ -29,7 +29,7 @@ export default function BusinessPage() {
         return projects.map((project) => { project.image = { path: project.image_path }; project.projectId = project.id; return project; });
     }), [businessId]);
 
-    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusiness(businessId), [businessId]);
+    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusinessByName(businessId), [businessId]);
 
     let businessErrorMessage = undefined;
     if (businessError !== undefined) {

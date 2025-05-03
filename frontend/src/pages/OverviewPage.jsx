@@ -114,6 +114,7 @@ export default function OverviewPage() {
         <Alert text={error} isCloseable={false} />
       </div>
       {isLoading && <Loading />}
+      {console.log(shownBusinesses)}
       <DashboardsOverview businesses={shownBusinesses} />
     </>
   );

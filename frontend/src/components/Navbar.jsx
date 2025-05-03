@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FILE_BASE_URL, getStudent, logout } from "../services";
+import { FILE_BASE_URL, getUser } from "../services";
 import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
@@ -39,7 +39,7 @@ export default function Navbar() {
         let ignore = false;
 
         if (authData.type === "student") {
-            getStudent(authData.userId)
+            getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
                     setProfilePicture(`${FILE_BASE_URL}${data.profilePicture.path}`); // data.profilePicture is formatted like "/uuid.png"

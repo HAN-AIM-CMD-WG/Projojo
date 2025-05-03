@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSkills, updateSkillAcceptance, updateSkillName as updateSkillNameService } from "../services";
+import { getSkills, /*updateSkillAcceptance, updateSkillName as updateSkillNameService*/ } from "../services";
 import Alert from "./Alert";
 import Modal from "./Modal";
 

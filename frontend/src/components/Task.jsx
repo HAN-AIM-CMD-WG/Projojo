@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
+import { /*createRegistration getRegistrations, updateRegistration, updateTaskSkills*/ } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 import FormInput from "./FormInput";
@@ -36,18 +36,18 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
 
         setError("");
 
-        try {
-            createRegistration(task.taskId, motivation.trim())
-                .then(() => {
-                    setIsModalOpen(false);
-                    if (setFetchAmount) {
-                        setFetchAmount(currentAmount => currentAmount + 1);
-                    }
-                })
-                .catch(error => setError(error.message));
-        } catch {
-            setError("Er is iets misgegaan bij het versturen van de aanmelding.");
-        }
+        // try {
+        //     createRegistration(task.taskId, motivation.trim())
+        //         .then(() => {
+        //             setIsModalOpen(false);
+        //             if (setFetchAmount) {
+        //                 setFetchAmount(currentAmount => currentAmount + 1);
+        //             }
+        //         })
+        //         .catch(error => setError(error.message));
+        // } catch {
+        //     setError("Er is iets misgegaan bij het versturen van de aanmelding.");
+        // }
     };
 
     useEffect(() => {
@@ -57,19 +57,19 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
 
         let ignore = false;
 
-        getRegistrations(task.taskId)
-            .then(data => {
-                if (ignore) return;
-                setRegistrations(data);
-            })
-            .catch(error => {
-                if (ignore) return;
-                setRegistrationErrors((currentErrors) => [...currentErrors, error.message]);
-            });
+        // getRegistrations(task.taskId)
+        //     .then(data => {
+        //         if (ignore) return;
+        //         setRegistrations(data);
+        //     })
+        //     .catch(error => {
+        //         if (ignore) return;
+        //         setRegistrationErrors((currentErrors) => [...currentErrors, error.message]);
+        //     });
 
-        return () => {
-            ignore = true;
-        };
+        // return () => {
+        //     ignore = true;
+        // };
     }, [isOwner, task.taskId]);
 
     const handleRegistrationResponse = (e) => {

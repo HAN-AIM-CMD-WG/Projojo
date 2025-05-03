@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
-import { getSkills, getUserRegistrations } from '../services';
+import { getSkills, /*getUserRegistrations*/ } from '../services';
 import Alert from './Alert';
 import { useAuth } from "./AuthProvider";
 import Task from "./Task";
@@ -25,15 +25,15 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
         }
         let ignore = false;
 
-        getUserRegistrations()
-            .then((data) => {
-                if (ignore) return;
-                setCurrentRegistrations(data);
-            })
-            .catch(error => {
-                if (ignore) return;
-                setError(error.message)
-            });
+        // getUserRegistrations()
+        //     .then((data) => {
+        //         if (ignore) return;
+        //         setCurrentRegistrations(data);
+        //     })
+        //     .catch(error => {
+        //         if (ignore) return;
+        //         setError(error.message)
+        //     });
 
     }, [fetchAmount, authData.type]);
 
