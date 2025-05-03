@@ -45,12 +45,12 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
             ignore = true;
         }
     }, []);
-
-    const currentSkills = student.skills.map((skill) => {
+    console.log(student)
+    const currentSkills = allSkills.map((skill) => {
         return {
-            skillId: skill.skill.skillId,
-            name: skill.skill.name,
-            isPending: skill.skill.isPending,
+            skillId: skill.id,
+            name: skill.name,
+            isPending: skill.isPending,
         }
     })
 
@@ -74,7 +74,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                         setError={setStudentSkillsError}
                         isAbsolute={false}
                     >
-                        {student?.skills?.map(skill => <StudentProfileSkill key={skill.skill.skillId} skill={skill} isOwnProfile={isOwnProfile} />)}
+                        {allSkills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
                     </SkillsEditor>
                 </div>
             </div>

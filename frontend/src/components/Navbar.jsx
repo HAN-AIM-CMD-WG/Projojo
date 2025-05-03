@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FILE_BASE_URL, getUser } from "../services";
+import { FILE_BASE_URL, getUser, logout } from "../services";
 import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
@@ -31,7 +31,7 @@ export default function Navbar() {
     } else if (authData.type === "student") {
         routes.push({
             name: "Mijn profiel",
-            ref: `/profile/${authData.userId}`,
+            ref: `/student/${authData.userId}`,
         });
     }
 
@@ -52,9 +52,9 @@ export default function Navbar() {
     }, [authData])
 
     const signOut = () => {
-        logout().then(() => {
-            navigate("/");
-        })
+        logout();
+        navigate("/");
+        
     }
 
     const toggleCollapse = () => {

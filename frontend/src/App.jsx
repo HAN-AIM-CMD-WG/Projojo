@@ -45,7 +45,7 @@ export default function App() {
             <Route path=":businessId" element={<BusinessPage />} />
             <Route path="update" element={<UpdateBusinessPage />} />
           </Route>
-          <Route path="/profile">
+          <Route path="/student">
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
