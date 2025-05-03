@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .btn {
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-pink-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg;
+    }
+
+    .btn-primary {
+        @apply btn bg-primary hover:bg-darkPrimary focus:ring-pink-300 text-white;
+    }
+
+    .btn-primary:disabled {
+        @apply btn bg-gray-400 hover:bg-gray-500 focus:ring-gray-400 text-white;
+    }
+
+    .btn-secondary {
+        @apply btn bg-gray-500 hover:bg-gray-600 focus:ring-gray-400 text-white;
+    }
+}
