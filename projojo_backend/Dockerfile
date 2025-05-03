@@ -17,5 +17,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Document the port that will be exposed
 EXPOSE 8000
 
-# Start the application directly using uvicorn command (more efficient than running `python main.py`)
+# Run on container start (using uvicorn directly is more efficient than using `python main.py`)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

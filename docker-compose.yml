@@ -24,11 +24,11 @@ services:
     volumes:
       - ./projojo_backend:/app
     environment:
-      - TYPEDB_SERVER_ADDR=typedb:1729  # TypeDB server connection URL - uses the service name within Docker network
-      - TYPEDB_NAME=projojo_db          # Database name for TypeDB (matches variable name in initDatabase.py)
-      - PYTHONUNBUFFERED=1              # Ensures Python output is sent straight to terminal without buffering
-      - PYTHONDONTWRITEBYTECODE=1       # Prevents Python from writing .pyc files
-      - PYTHONPATH=/app                 # Sets the Python path to /app to enable module imports
+      - TYPEDB_SERVER_ADDR=typedb:1729
+      - TYPEDB_NAME=projojo_db
+      - PYTHONUNBUFFERED=1         # Ensures Python output is sent straight to terminal without buffering
+      - PYTHONDONTWRITEBYTECODE=1  # Prevents Python from writing .pyc files
+      - PYTHONPATH=/app            # Sets the Python path to /app to enable module imports
     networks:
       - projojo-network
 
