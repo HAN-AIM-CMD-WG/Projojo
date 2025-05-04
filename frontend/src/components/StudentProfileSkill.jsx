@@ -1,36 +1,34 @@
 import { useState } from 'react';
 import { API_BASE_URL, getSkillsFromStudent } from "../services";
 import Alert from "./Alert";
+import { useAuth } from "./AuthProvider";
 
 export default function StudentProfileSkill({ skill, isOwnProfile }) {
     const [error, setError] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(skill.description);
+    const { authData } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
         const dataFormat = {
-            skill: {
-                skillId: skill.skill.skillId,
-                name: skill.skill.name
-            },
-            description: description
+            skills: {
+                id: skill.id,
+                name: skill.name,
+                is_pending: skill.is_pending,
+                description: description
+            }
         };
 
         try {
-            const response = await getSkillsFromStudent(authData.userId)
-
-            if (!response.ok) {
-                const backendErrorMessage = await response.json();
-                setError(backendErrorMessage.message || "Er is iets misgegaan bij het opslaan van de skill beschrijving.");
-                return;
-            }
-
+            const response = await getSkillsFromStudent(authData.userId);
+            
+            // For now, we're just updating the local state since the update endpoint is commented out
             skill.description = description;
             setIsEditing(false);
-        } catch {
+        } catch (error) {
             setError("Er is iets misgegaan bij het opslaan van de beschrijving.");
         }
     };
