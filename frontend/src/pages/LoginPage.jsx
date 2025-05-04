@@ -34,13 +34,10 @@ export default function LoginPage() {
     setFormError(null);
 
     try {
-      console.log("Logging in with credentials:", credentials);
       const response = await login(credentials);
-      console.log("Login successful:", response);
       if (response.status === "success") {
         
         const { role, business, sub } = response.debug_payload;
-        console.log("User role:", role);
         if (role === "supervisor") {
           setAuthData({ 
             type: "supervisor", 
@@ -63,7 +60,6 @@ export default function LoginPage() {
             isLoading: false 
           });
         }
-        console.log(authData)
         navigate("/home");
         
         // Store token in localStorage or sessionStorage if needed
