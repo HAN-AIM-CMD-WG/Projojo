@@ -88,7 +88,14 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return
-                    setStudentsSkills(data.skills.map(skill => skill.skill.skillId))
+                    // Handle the new API response format
+                    if (data.skill_ids) {
+                        // If we have skill_ids directly in the user object
+                        setStudentsSkills(data.skill_ids)
+                    } else if (data.skills) {
+                        // If we have a skills array
+                        setStudentsSkills(data.skills.map(skill => skill.id))
+                    }
                 })
                 .catch(() => {
                     if (ignore) return

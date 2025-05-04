@@ -12,7 +12,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     const [studentSkillsError, setStudentSkillsError] = useState("");
 
     const { authData } = useAuth();
-    const isOwnProfile = authData.type === "student" && authData.userId === student.userId;
+    const isOwnProfile = authData.type === "student" && authData.userId === student.id;
 
     const handleSave = async (skills) => {
         const skillIds = skills.map((skill) => skill.skillId);
@@ -45,14 +45,17 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
             ignore = true;
         }
     }, []);
-    console.log(student)
-    const currentSkills = allSkills.map((skill) => {
+    
+    // Map student skills to the format expected by SkillsEditor
+    const currentSkills = student?.skills?.map((skill) => {
         return {
             skillId: skill.id,
             name: skill.name,
-            isPending: skill.isPending,
+            isPending: skill.is_pending,
+            description: skill.description,
+            createdAt: skill.created_at
         }
-    })
+    }) || [];
 
     return (
         <div className="flex flex-col gap-4 w-full rounded-b-lg">
@@ -74,7 +77,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                         setError={setStudentSkillsError}
                         isAbsolute={false}
                     >
-                        {allSkills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
+                        {student?.skills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
                     </SkillsEditor>
                 </div>
             </div>
