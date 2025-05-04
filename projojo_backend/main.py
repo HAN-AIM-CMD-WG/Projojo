@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 from contextlib import asynccontextmanager
 
@@ -49,6 +50,8 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 # Dependency to get TypeDB connection
 def get_db():
     return get_database()
+
+app.mount("/test/files", StaticFiles(directory="static/images"), name="files")
 
 @app.get("/")
 async def root():
