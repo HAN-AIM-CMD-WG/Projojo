@@ -1,5 +1,5 @@
 export const API_BASE_URL = "http://localhost:8000/test/";
-export const FILE_BASE_URL = `${API_BASE_URL}files`;
+export const FILE_BASE_URL = `${API_BASE_URL}files/`;
 
 export class HttpError extends Error {
     #statusCode;
@@ -90,7 +90,7 @@ export function createErrorMessage(error, mapper) {
 
 /**
  * @param {string} businessName optional business name parameter for getting only the projects for 1 business
- * @returns { Promise<{ id: string, title: string, description: string, business: { name: string, description: string, location: string, photo: { path: string }  }, photo: { path: string }, projectTopSkills: { skillId: number, name: string, isPending: boolean }  }[] | undefined> }
+ * @returns { Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}[]> }
  */
 export function getProjectsWithBusinessId(businessName) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessName}/projects`, {
@@ -102,11 +102,15 @@ export function getProjectsWithBusinessId(businessName) {
 }
 
 /**
- * 
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}[]>}
  */
 export function getProjects() {
     return fetchWithError(`${API_BASE_URL}projects`);
 }
+
+/**
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}[]>}
+ */
 export function getBusinesses() {
     return fetchWithError(`${API_BASE_URL}businesses`);
 }
@@ -114,7 +118,7 @@ export function getBusinesses() {
 /**
  * 
  * @param {string} projectName 
- * @returns {Promise<{ id: number, title: string, description: string, projectTopSkills: Awaited<ReturnType<typeof getSkills>>, business: Awaited<ReturnType<typeof getBusiness>>, photo: { path: string } }>}
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}>}
  */
 export function getProject(projectName) {
     return fetchWithError(`${API_BASE_URL}projects/${projectName}`)
@@ -136,7 +140,7 @@ export function getAuthorization() {
 
 /**
  * @param {string} projectName 
- * @returns {Promise<{taskId: number, title: string, description: string, totalNeeded: number, totalAccepted: number, skills: { skillId: number, name: string, isPending: boolean }[]}[]>}
+ * @returns {Promise<{id: string, name: string, description: string, total_needed: number, created_at: string, project_id: string}[]>}
  */
 export function getTasks(projectName) {
     return fetchWithError(`${API_BASE_URL}projects/${projectName}/tasks`, {
@@ -152,7 +156,7 @@ export function getTasks(projectName) {
 /**
  * 
  * @param {string} email 
- * @returns {Promise<User>}
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: string[], registered_task_ids: string[]}>}
  */
 export function getUser(email) {
     return fetchWithError(`${API_BASE_URL}users/${email}`, {
@@ -169,11 +173,15 @@ export function getUser(email) {
 
 /**
  * 
- * @returns {Promise<{id: string, name: string, isPending: boolean}[]>}
+ * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getSkills() {
     return fetchWithError(`${API_BASE_URL}skills`);
 }
+/**
+ * @param {string} email
+ * @returns {Promise<{student: any, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
+ */
 export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
@@ -181,7 +189,7 @@ export function getSkillsFromStudent(email) {
 /**
  * 
  * @param {Skill} skill - The skill object to create
- * @returns {Promise<{skillId: number, name: string, isPending: boolean}>}
+ * @returns {Promise<{id: string, name: string, is_pending: boolean}>}
  */
 export function createSkill(skill) {
     return fetchWithError(`${API_BASE_URL}skills`, {
@@ -224,7 +232,7 @@ export function getStudentSkills(email) {
 /**
  * 
  * @param {string} taskName 
- * @returns {Promise<{skillId: number, name: string, isPending: boolean}[]>}
+ * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getTaskSkills(taskName) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills`)
@@ -301,7 +309,7 @@ export function getAllTeachers() {
 
 /**
  * @param {string} name
- * @returns {Promise<Business>}
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}>}
  */
 export function getBusinessByName(name) {
     return fetchWithError(`${API_BASE_URL}businesses/${name}`, {
