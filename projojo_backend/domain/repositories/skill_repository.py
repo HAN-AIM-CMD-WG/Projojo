@@ -48,13 +48,18 @@ class SkillRepository(BaseRepository[Skill]):
         escaped_student_id = student_id.replace('"', '\\"')
         query = f"""
             match
-                $student isa student, has email "{escaped_student_id}";
-                $hasSkill isa hasSkill(student: $student, skill: $skill),
+                $student isa student, 
+                has email "{escaped_student_id}";
+                $hasSkill isa hasSkill( $student, $skill),
                 has description $description;
-                $skill isa skill, has name $skill_name;
+                $skill isa skill,
+                has createdAt $createdAt,
+                has name $skill_name;
             fetch {{
                 'skill_name': $skill_name,
-                'description': $description
+                'description': $description,
+                'isPending': $skill.isPending,
+                'createdAt': $createdAt
             }};
         """
         results = Db.read_transact(query)
@@ -63,11 +68,15 @@ class SkillRepository(BaseRepository[Skill]):
         for result in results:
             skill_name = result.get("skill_name", "")
             description = result.get("description", "")
+            is_pending_value = result.get("isPending", True)
+            created_at_str = result.get("createdAt", "")
 
             student_skills.append(StudentSkill(
-                student_id=student_id,
-                skill_id=skill_name,
-                description=description
+                id=skill_name,  # Using name as the ID since it's marked as @key
+                name=skill_name,
+                description=description,
+                is_pending=is_pending_value,
+                created_at=created_at_str
             ))
 
         return student_skills
