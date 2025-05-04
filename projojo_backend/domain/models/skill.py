@@ -18,9 +18,7 @@ class Skill(BaseModel):
         }
 
 
-class StudentSkill(BaseModel):
-    student_id: str
-    skill_id: str
+class StudentSkill(Skill):
     description: str
     
     class Config:
