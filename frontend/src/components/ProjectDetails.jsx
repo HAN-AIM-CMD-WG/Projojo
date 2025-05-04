@@ -36,18 +36,14 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
 
     if (isLoading) {
         project = {
+            id: 0,
             projectId: 0,
+            name: "Laden...",
             title: "Laden...",
             description: "",
-            business: {
-                businessId: 0,
-                name: "Laden...",
-                description: "",
-                photo: "",
-                location: ""
-            },
-            photo: "",
-            projectTopSkills: []
+            business_id: "",
+            image_path: "",
+            created_at: ""
         }
     }
 

@@ -18,14 +18,18 @@ export default function ProjectDetailsPage() {
     const fetchProjectAndTasks = () => {
         getProject(projectId)
             .then(data => {
-                setProject(data)
+                // Ensure project has the expected format for the components
+                data.projectId = data.id;
+                data.title = data.name;
+                setProject(data);
             })
-            // .catch(() => setShowNotFound(true));
-        // getTasks(projectId)
-        //     .then(data => {
-        //         setTasks(data)
-        //     })
-            // .catch(() => setShowNotFound(false))
+            .catch(() => setShowNotFound(true));
+        
+        getTasks(projectId)
+            .then(data => {
+                setTasks(data);
+            })
+            .catch(() => setShowNotFound(false));
     };
 
     useEffect(() => {
