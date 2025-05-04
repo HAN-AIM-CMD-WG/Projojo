@@ -53,7 +53,6 @@ export default function ProjectDetailsPage() {
         <>
             <PageHeader name={'Projectpagina'} />
             <div className="bg-gray-100 rounded-lg">
-                {console.log(project)}
                 <ProjectDetails project={project} businessId={project?.business_id} refreshData={() => {
                     fetchProjectAndTasks();
                     scrollToLastTask();
