@@ -8,7 +8,7 @@ from domain.repositories import BusinessRepository, ProjectRepository, TaskRepos
 
 # Import models
 from domain.models import User, Business, Project, Task, Skill
-from service import business_service
+from service import business_service, student_service
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
 
@@ -164,8 +164,8 @@ async def get_student_skills(email: str = Path(..., description="Student email")
     """
     Get all skills for a student
     """
-    skills = skill_repo.get_student_skills(email)
-    return skills
+    student_with_skills = student_service.get_student_with_skills(email)
+    return student_with_skills
 
 #POST endpoints
 
