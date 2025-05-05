@@ -99,15 +99,17 @@ class ProjectRepository(BaseRepository[Project]):
             created_at=created_at,
             business_id=business
         )
-    
+
+    # Is not used
     def get_project_creation(self, project_id: str) -> Optional[ProjectCreation]:
         query = f"""
             match
-                $project isa project, has name "{project_id}";
-                $creates isa creates,
-                    has createdAt $createdAt,
-                    (supervisor: $supervisor, project: $project);
-                $supervisor isa supervisor, has email $email;
+                $project isa project, 
+                has name "{project_id}";
+                $creates isa creates( $supervisor, $project ),
+                has createdAt $createdAt;
+                $supervisor isa supervisor,
+                has email $email;
             fetch {{
                 'email': $email,
                 'createdAt': $createdAt
@@ -126,4 +128,42 @@ class ProjectRepository(BaseRepository[Project]):
             project_id=project_id,
             supervisor_id=supervisor_email,
             created_at=created_at
+        )
+    def create(self, project: ProjectCreation) -> ProjectCreation:
+        print(project)
+        project.created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        query = f"""
+            match
+                $business isa business,
+                has name "{project.business_id}";
+            insert 
+                $project isa project,
+                has name "{project.name}",
+                has description "{project.description}",
+                has imagePath "{project.image_path}",
+                has createdAt {project.created_at};
+                $hasProjects isa hasProjects($business, $project);
+        """
+        Db.write_transact(query)
+
+        # Create the relationship with the supervisor
+        query = f"""
+            match
+                $supervisor isa supervisor,
+                has email "{project.supervisor_id}";
+                $project isa project,
+                has name "{project.name}";
+            insert $creates isa creates($supervisor, $project),
+                has createdAt {project.created_at};
+        """
+        Db.write_transact(query)
+
+        return ProjectCreation(
+            id=project.name,  # Using name as the ID
+            name=project.name,
+            description=project.description,
+            image_path=project.image_path,
+            created_at=project.created_at,
+            business_id=project.business_id,
+            supervisor_id=project.supervisor_id
         )
