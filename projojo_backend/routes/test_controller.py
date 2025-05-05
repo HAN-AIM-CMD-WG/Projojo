@@ -9,7 +9,7 @@ from domain.models.dto import LoginRequest, LoginResponse
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
 
 # Import models
-from domain.models import ProjectCreation, Skill
+from domain.models import ProjectCreation, Skill, BusinessProjects
 from service import business_service, student_service, task_service
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
@@ -71,8 +71,10 @@ async def get_all_businesses_with_projects():
     """
     businesses_with_projects = []
     for business in business_repo.get_all():
+        projects = project_repo.get_projects_by_business(business.name)
+
         businesses_with_projects.append(
-            business_service.get_business_with_projects(business.id)
+            BusinessProjects(**business.model_dump(), projects=projects)
         )
 
     return businesses_with_projects

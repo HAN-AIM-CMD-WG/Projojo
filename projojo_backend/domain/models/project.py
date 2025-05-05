@@ -23,10 +23,3 @@ class ProjectCreation(Project):
     
     class Config:
         from_attributes = True
-
-class BusinessProjects(BaseModel):
-    business_id: str
-    project_ids: List[str]
-    
-    class Config:
-        from_attributes = True
