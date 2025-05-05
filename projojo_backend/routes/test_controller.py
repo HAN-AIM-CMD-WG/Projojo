@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta
-from fastapi import APIRouter, HTTPException, Query, Path, Body
-import jwt;
+import os
+import shutil
+from fastapi import APIRouter, HTTPException, Query, Path, Body, UploadFile, File
+import jwt
 from domain.models.dto import LoginRequest, LoginResponse
 
 # Import repositories
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
 
 # Import models
-from domain.models import User, Business, Project, Task, Skill
+from domain.models import User, Business, Project, Task, Skill, ProjectCreation
 from service import business_service, student_service
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
@@ -177,6 +179,14 @@ async def create_skill(skill: Skill = Body(...)):
     created_skill = skill_repo.create(skill)
     return created_skill
 
+@router.post("/projects", response_model=ProjectCreation, status_code=201)
+async def create_project(project_creation: ProjectCreation = Body(...)):
+    """
+    Create a new project
+    """
+    created_project = project_repo.create(project_creation)
+    return created_project
+
 SECRET_KEY = "test"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
@@ -220,3 +230,19 @@ async def login(login_data: LoginRequest):
         token=token,
         debug_payload=payload
     )
+
+@router.post("/upload", status_code=201)
+async def upload_file(file: UploadFile = File(...)):
+    """
+    Upload a file to the server
+    """
+    # Create the static/images directory if it doesn't exist
+    os.makedirs("projojo_backend/static/images", exist_ok=True)
+    
+    # Save the file to the static/images directory
+    file_path = os.path.join("projojo_backend/static/images", file.filename)
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    return {"filename": file.filename, "path": file_path}
