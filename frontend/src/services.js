@@ -202,6 +202,21 @@ export function createSkill(skill) {
 }
 
 /**
+ * 
+ * @param {ProjectCreation} project_creation - The project_creation object to create
+ * @returns {Promise<{id: string, name: string, description: string, imagePath: string, createdAt: string, business_id: string, supervisor_id: string}>}
+ */
+export function createProject(project_creation) {
+    return fetchWithError(`${API_BASE_URL}projects`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(project_creation),
+    });
+}
+
+/**
  * @param {string} name
  * @returns {Promise<void>}
  */
