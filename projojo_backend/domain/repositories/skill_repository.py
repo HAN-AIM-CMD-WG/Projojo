@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import Skill, StudentSkill
+from domain.models import Skill, StudentSkill, TaskSkill, Task
 import uuid
 from datetime import datetime
 
@@ -128,6 +128,34 @@ class SkillRepository(BaseRepository[Skill]):
             is_pending=is_pending,
             created_at=created_at
         )
+
+    def get_task_skills(self, task_id: str) -> List[Skill]:
+        query = f"""
+            match
+                $task isa task, has name "{task_id}";
+                $taskSkill isa requiresSkill (task: $task, skill: $skill);
+                $skill isa skill, has name $skill_name;
+            fetch {{
+                'skill_name': $skill_name,
+                'isPending': $skill.isPending
+            }};
+        """
+        results = Db.read_transact(query)
+
+        skills = []
+        for result in results:
+            skill_name = result.get("skill_name", "")
+            is_pending_value = result.get("isPending", True)
+
+            skills.append(Skill(
+                id=skill_name,  # Using name as the ID since it's marked as @key
+                name=skill_name,
+                is_pending=is_pending_value,
+                created_at=datetime.now()  # Assuming created_at is not needed here
+            ))
+        if not results:
+            raise ItemRetrievalException(Task, f"Task with ID {task_id} not found.")
+        return skills
     
 
 

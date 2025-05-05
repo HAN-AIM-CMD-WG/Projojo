@@ -9,8 +9,8 @@ from domain.models.dto import LoginRequest, LoginResponse
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
 
 # Import models
-from domain.models import User, Business, Project, Task, Skill, ProjectCreation
-from service import business_service, student_service
+from domain.models import ProjectCreation, Skill
+from service import business_service, student_service, task_service
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
 
@@ -134,7 +134,7 @@ async def get_project_tasks(name: str = Path(..., description="Project name")):
     """
     Get all tasks for a project
     """
-    tasks = task_repo.get_tasks_by_project(name)
+    tasks = task_service.get_tasks_with_skills_by_project(name)
     return tasks
 
 @router.get("/tasks/{name}/skills")
@@ -142,8 +142,8 @@ async def get_task_skills(name: str = Path(..., description="Task name")):
     """
     Get all skills required for a task
     """
-    taskSkills = task_repo.get_task_skills(name)
-    return taskSkills
+    task_skills = task_service.get_task_with_skills(name)
+    return task_skills
 # Skill endpoints
 @router.get("/skills")
 async def get_all_skills():

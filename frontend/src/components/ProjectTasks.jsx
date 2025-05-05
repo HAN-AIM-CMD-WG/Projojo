@@ -86,9 +86,8 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                         totalNeeded: task.total_needed,
                         totalAccepted: 0, // Default value since it's not in the new API
                         totalRegistered: 0, // Default value since it's not in the new API
-                        skills: [] // Default value since it's not in the new API
+                        skills: task.skills // Default value since it's not in the new API
                     };
-                    
                     return (
                         <div
                             ref={(el) => {

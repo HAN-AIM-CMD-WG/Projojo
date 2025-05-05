@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { /*createRegistration getRegistrations, updateRegistration, updateTaskSkills*/ } from "../services";
+import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 import FormInput from "./FormInput";
@@ -11,6 +11,7 @@ import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
+import console from "console";
 
 export default function Task({ task, setFetchAmount, businessId, allSkills, isNotAllowedToRegister }) {
     const { authData } = useAuth();
@@ -36,40 +37,39 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
 
         setError("");
 
-        // try {
-        //     createRegistration(task.taskId, motivation.trim())
-        //         .then(() => {
-        //             setIsModalOpen(false);
-        //             if (setFetchAmount) {
-        //                 setFetchAmount(currentAmount => currentAmount + 1);
-        //             }
-        //         })
-        //         .catch(error => setError(error.message));
-        // } catch {
-        //     setError("Er is iets misgegaan bij het versturen van de aanmelding.");
-        // }
+        try {
+            createRegistration(task.taskId, motivation.trim())
+                .then(() => {
+                    setIsModalOpen(false);
+                    if (setFetchAmount) {
+                        setFetchAmount(currentAmount => currentAmount + 1);
+                    }
+                })
+                .catch(error => setError(error.message));
+        } catch {
+            setError("Er is iets misgegaan bij het versturen van de aanmelding.");
+        }
     };
 
     useEffect(() => {
         if (!isOwner) {
             return;
         }
-
         let ignore = false;
 
-        // getRegistrations(task.taskId)
-        //     .then(data => {
-        //         if (ignore) return;
-        //         setRegistrations(data);
-        //     })
-        //     .catch(error => {
-        //         if (ignore) return;
-        //         setRegistrationErrors((currentErrors) => [...currentErrors, error.message]);
-        //     });
+        getRegistrations(task.taskId)
+            .then(data => {
+                if (ignore) return;
+                setRegistrations(data);
+            })
+            .catch(error => {
+                if (ignore) return;
+                setRegistrationErrors((currentErrors) => [...currentErrors, error.message]);
+            });
 
-        // return () => {
-        //     ignore = true;
-        // };
+        return () => {
+            ignore = true;
+        };
     }, [isOwner, task.taskId]);
 
     const handleRegistrationResponse = (e) => {
@@ -137,7 +137,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                         isAllowedToAddSkill={isOwner}
                     >
                         <div className="flex flex-wrap gap-2 items-center">
-                            {task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
+                            
+                            {task.skills === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
                             {task.skills.map((skill) => (
                                 <SkillBadge
                                     key={skill.skillId}
