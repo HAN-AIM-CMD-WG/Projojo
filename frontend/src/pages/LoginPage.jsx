@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     try {
       const response = await login(credentials);
-      if (response.status === "success") {
+      if (response) {
         
         const { role, business, sub } = response.debug_payload;
         if (role === "supervisor") {

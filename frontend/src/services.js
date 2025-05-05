@@ -140,7 +140,7 @@ export function getAuthorization() {
 
 /**
  * @param {string} projectName 
- * @returns {Promise<{id: string, name: string, description: string, total_needed: number, created_at: string, project_id: string}[]>}
+ * @returns {Promise<{id: string, name: string, description: string, total_needed: number, created_at: string, project_id: string, skills: skill[]}[]>}
  */
 export function getTasks(projectName) {
     return fetchWithError(`${API_BASE_URL}projects/${projectName}/tasks`, {
@@ -186,6 +186,10 @@ export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
+export function getRegistrations() {
+    return fetchWithError(`${API_BASE_URL}registrations`);
+}
+
 /**
  * 
  * @param {Skill} skill - The skill object to create
@@ -215,13 +219,54 @@ export function createProject(project_creation) {
         body: JSON.stringify(project_creation),
     });
 }
+//not implemented in the backend yet
+export function createTask(task) {
+    return fetchWithError(`${API_BASE_URL}projects`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(task),
+    });
+}
+//not implemented in the backend yet
+export function createRegistration(registration) {
+    return fetchWithError(`${API_BASE_URL}registrations`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(registration),
+    });
+}
+//Not implemented in the backend yet
+export function updateRegistration(registration) {
+    return fetchWithError(`${API_BASE_URL}registrations`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(registration),
+    });
+}
+
+//Not implemented in the backend yet
+export function updateTaskSkills(name, taskSkills) {
+    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(taskSkills),
+    });
+}
 
 /**
  * @param {string} name
  * @returns {Promise<void>}
  */
 export function getSkill(name) {
-    return fetchWithError(`${API_BASE_URL}skills/${name}`, {
+    return fetchWithError(`${API_BASE_URL}task/${name}/skills`, {
         method: "GET",
         headers: {
             Accept: "application/json",

@@ -21,11 +21,13 @@ class ProjectRepository(BaseRepository[Project]):
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
+                $hasProjects isa hasProjects(business: $business, project: $project);
             fetch {{
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
+                'business': $business.name
             }};
         """
         results = Db.read_transact(query)

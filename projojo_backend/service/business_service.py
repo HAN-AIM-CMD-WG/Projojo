@@ -11,7 +11,7 @@ def get_business_with_projects(business_id: str) -> Business:
     business = business_repo.get_by_id(business_id)
     projects = project_repo.get_projects_by_business(business_id)
 
-    business_dict = business.dict()
+    business_dict = business.model_dump()
     business_dict.pop('projects', None)  # Remove projects key to avoid duplicate
 
     return Business(**business_dict, projects=projects)

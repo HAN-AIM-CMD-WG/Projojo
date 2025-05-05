@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectDetails from "../components/ProjectDetails";
 import ProjectTasks from "../components/ProjectTasks";
-import { getProject, getTasks } from "../services";
+import { getProject, getProjectsWithBusinessId, getTasks, getTaskSkills } from "../services";
 import NotFoundPage from "./NotFound";
 import PageHeader from '../components/PageHeader';
 
@@ -19,9 +19,10 @@ export default function ProjectDetailsPage() {
         getProject(projectId)
             .then(data => {
                 // Ensure project has the expected format for the components
-                data.projectId = data.id;
-                data.title = data.name;
+                data.id = data.id;
+                data.name = data.name;
                 setProject(data);
+                
             })
             .catch(() => setShowNotFound(true));
         

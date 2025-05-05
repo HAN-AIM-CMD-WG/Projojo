@@ -41,7 +41,7 @@ export default function OverviewPage() {
                 totalNeeded: task.total_needed,
                 totalAccepted: 0, // Default value
                 totalRegistered: 0, // Default value
-                skills: [] // Default value
+                skills: task.skills // Default value
               }))
             };
           }));
@@ -61,7 +61,7 @@ export default function OverviewPage() {
                 (Array.isArray(business.location) ? business.location[0] : business.location) : ""
             },
             projects: projectsWithTasks,
-            topSkills: [] // Default value
+            topSkills: []// Default value
           };
         }));
         
