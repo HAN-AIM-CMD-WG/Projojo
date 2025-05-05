@@ -15,8 +15,8 @@ export default function ProjectsAddPage() {
         }
         
         createProject(data)
-            .then(newProjectId => {
-                navigate(`/projects/${newProjectId}`);
+            .then(newProject => {
+                navigate(`/projects/${newProject.id}`);
             })
             .catch((errorMessage) => setServerErrorMessage(errorMessage.message));
     }
