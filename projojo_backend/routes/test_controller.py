@@ -225,8 +225,6 @@ async def login(login_data: LoginRequest):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
     return LoginResponse(
-        status="success",
-        message="Login successful",
         token=token,
         debug_payload=payload
     )

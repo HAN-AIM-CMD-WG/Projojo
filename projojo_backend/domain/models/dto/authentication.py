@@ -8,7 +8,5 @@ class LoginRequest(BaseModel):
     password: str
 
 class LoginResponse(BaseModel):
-    status: str
-    message: str
     token: str = None
     debug_payload: Optional[Dict[str, Any]] = None
