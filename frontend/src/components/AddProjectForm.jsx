@@ -1,28 +1,67 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthProvider";
 import Alert from "./Alert";
 import DragDrop from "./DragDrop";
 import FormInput from "./FormInput";
 import RichTextEditor from "./RichTextEditor";
 
 export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
-    const [titleError, setTitleError] = useState();
+    const [nameError, setNameError] = useState();
     const [descriptionError, setDescriptionError] = useState();
+    const { authData } = useAuth();
     const navigation = useNavigate();
 
     const [description, setDescription] = useState("");
 
     const handleSubmit = event => {
         event.preventDefault();
-        if (titleError != undefined || descriptionError != undefined) {
+        if (nameError != undefined || descriptionError != undefined) {
             return;
         }
 
         const formData = new FormData(event.target);
-        formData.set("title", formData.get("title").trim());
-        formData.set("description", description.trim());
-
-        onSubmit(formData);
+        
+        // Get the image file
+        const imageFile = formData.get("image");
+        
+        // Create project data object for JSON submission
+        const projectData = {
+            id: formData.get("name").trim(),
+            name: formData.get("name").trim(),
+            description: description.trim(),
+            supervisor_id: authData.userId,
+            business_id: authData.businessId,
+            created_at: new Date().toISOString(),
+            image_path: imageFile.name
+        };
+        
+        // Create a new FormData for file upload
+        const fileFormData = new FormData();
+        fileFormData.append("file", imageFile);
+        
+        // First upload the image file
+        fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/test"}/upload`, {
+            method: "POST",
+            body: fileFormData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Failed to upload image");
+            }
+            return response.json();
+        })
+        .then(() => {
+            // Then create the project with the image path
+            onSubmit(projectData);
+        })
+        .catch(error => {
+            console.error("Error uploading image:", error);
+            // Set server error message
+            if (typeof onSubmit === "function") {
+                onSubmit({ error: error.message });
+            }
+        });
     }
 
     return (
@@ -36,9 +75,9 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     label="Titel"
                     placeholder="Titel van het project"
                     type="text"
-                    name="title"
-                    error={titleError}
-                    setError={setTitleError}
+                    name="name"
+                    error={nameError}
+                    setError={setNameError}
                     max={50}
                     required
                 />

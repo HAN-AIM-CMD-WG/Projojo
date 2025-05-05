@@ -64,6 +64,13 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
         if (!multiple) {
             fileArray = fileArray.slice(0, 1);
         }
+        
+        // Validate that files were actually selected
+        if (fileArray.length === 0) {
+            setError("Geen afbeelding toegevoegd");
+            return;
+        }
+        
         setFiles(fileArray);
         if (typeof onFileChanged === "function") {
             onFileChanged(fileArray.length === 0 ? undefined : fileArray);
