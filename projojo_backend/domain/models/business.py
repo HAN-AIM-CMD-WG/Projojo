@@ -10,14 +10,14 @@ class Business(BaseModel):
     description: str
     image_path: str
     location: List[str]
-    
+
     class Config:
         from_attributes = True
 
 
 
 class BusinessProjects(Business):
-    projects: Optional[List[Project]] = []
+    projects: Optional[List[Project]] = None
 
 class BusinessAssociation(BaseModel):
     business_id: str
