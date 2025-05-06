@@ -3,7 +3,7 @@ import os
 import shutil
 from fastapi import APIRouter, HTTPException, Query, Path, Body, UploadFile, File
 import jwt
-from domain.models.dto import LoginRequest, LoginResponse
+from domain.models import LoginRequest, LoginResponse
 
 # Import repositories
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
