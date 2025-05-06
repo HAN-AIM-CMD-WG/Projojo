@@ -1,5 +1,5 @@
-from .user import User, Supervisor, Student, Teacher
+from .user import User, Supervisor, Student, Teacher, StudentSkills
 from .business import Business, BusinessAssociation, BusinessProjects
 from .project import Project, ProjectCreation
 from .task import Task, TaskSkill, TaskRegistration
-from .skill import Skill, StudentSkill
+from .skill import Skill
