@@ -36,7 +36,7 @@ class ProjectRepository(BaseRepository[Project]):
     def get_all(self) -> List[Project]:
         query = """
             match
-                $p isa project,
+                $project isa project,
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
@@ -55,7 +55,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $business isa business, has name "{business_id}";
-                $bp isa businessProjects (business: $business, project: $project);
+                $hasProjects isa hasProjects (business: $business, project: $project);
                 $project isa project,
                 has name $name,
                 has description $description,
@@ -99,7 +99,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $project isa project, has name "{project_id}";
-                $pc isa projectCreation,
+                $creates isa creates,
                     has createdAt $createdAt,
                     (supervisor: $supervisor, project: $project);
                 $supervisor isa supervisor, has email $email;

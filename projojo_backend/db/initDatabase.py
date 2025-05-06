@@ -84,15 +84,15 @@ def main():
             $s isa supervisor; 
             $ip isa identityProvider;
             $b isa business;
-            authentication( $s, $ip );
-            $ba isa businessAssociation( $b, $s );
+            authenticates( $s, $ip );
+            $m isa manages( $s, $b );
         fetch { 
             'name': $s.fullName, 
             'email': $s.email, 
             'provider': $ip.name,
             'business': $b.name,
             'location': [$b.location],
-            'supervisorLocation': [$ba.location],
+            'supervisorLocation': [$m.location],
         };
     """
     result = Db.read_transact(read_query)
@@ -120,7 +120,7 @@ def main():
         match 
             $b isa business;
             $p isa project;
-            businessProjects( $b, $p );
+            hasProjects( $b, $p );
         fetch { 
             'businessName': $b.name,
             'projectName': $p.name,	
@@ -137,8 +137,8 @@ def main():
             $b isa business;
             $p isa project;
             $t isa task;
-            businessProjects( $b, $p );
-            projectTask( $p, $t );
+            hasProjects( $b, $p );
+            containsTask( $p, $t );
         fetch { 
             'businessName': $b.name,
             'projectName': $p.name,	
@@ -156,7 +156,7 @@ def main():
         match 
             $t isa task;
             $sk isa skill;
-            taskSkill( $t, $sk );
+            requiresSkill( $t, $sk );
         fetch { 	
             'taskName': $t.name,	
             'skillName': $sk.name,
@@ -172,7 +172,7 @@ def main():
         match 
             $s isa student;
             $sk isa skill;
-            $stsk isa studentSkill( $s, $sk );
+            $stsk isa hasSkill( $s, $sk );
         fetch { 	
             'studentName': $s.fullName,	
             'skillName': $sk.name,
@@ -189,7 +189,7 @@ def main():
         match 
             $s isa student;
             $t isa task;
-            $tr isa taskRegistration( $s, $t );
+            $tr isa registersForTask( $s, $t );
         fetch { 	
             'studentName': $s.fullName,	
             'taskName': $t.name,
@@ -208,17 +208,17 @@ def main():
             $s isa supervisor;
             $b isa business;
             $p isa project;
-            $ba isa businessAssociation($s, $b);
-            businessProjects($b, $p);
-            $pc isa projectCreation($s, $p);
+            $m isa manages($s, $b);
+            hasProjects($b, $p);
+            $c isa creates($s, $p);
         fetch { 
             'supervisorName': $s.fullName,
             'supervisorEmail': $s.email,
             'business': $b.name,
             'project': $p.name,
             'projectDescription': $p.description,
-            'createdAt': $pc.createdAt,
-            'locations': [$ba.location]
+            'createdAt': $c.createdAt,
+            'locations': [$m.location]
         };
     """
     projectcreations_query_results = Db.read_transact(projectcreations_query)

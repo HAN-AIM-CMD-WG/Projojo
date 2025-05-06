@@ -56,7 +56,7 @@ class TaskRepository(BaseRepository[Task]):
         query = f"""
             match
                 $project isa project, has name "{project_id}";
-                $pt isa projectTask (project: $project, task: $task);
+                $projectTask isa containsTask (project: $project, task: $task);
                 $task isa task,
                 has name $name,
                 has description $description,
@@ -106,7 +106,7 @@ class TaskRepository(BaseRepository[Task]):
                     $project isa project, has name "{escaped_project_id}";
                     $task isa task, has name "{escaped_name}";
                 insert
-                    $pt isa projectTask (project: $project, task: $task);
+                    $projectTask isa containsTask (project: $project, task: $task);
             """
             Db.write_transact(project_task_query)
         
@@ -165,7 +165,7 @@ class TaskRepository(BaseRepository[Task]):
         query = f"""
             match
                 $task isa task, has name "{task_id}";
-                $ts isa taskSkill (task: $task, skill: $skill);
+                $taskSkill isa requiresSkill (task: $task, skill: $skill);
                 $skill isa skill, has name $skill_name;
             fetch {{
                 'skill_name': $skill_name
