@@ -7,58 +7,58 @@ entity user @abstract,
     owns password_hash @card(1);
 
 entity supervisor sub user,
-    plays authentication:user @card(1..10),
-    plays businessAssociation:supervisor @card(1),
-    plays projectCreation:supervisor @card(0..);
+    plays authenticates:authenticated @card(1..10),
+    plays manages:supervisor @card(1),
+    plays creates:supervisor @card(0..);
 
 entity student sub user,
     owns schoolAccountName @card(1),
-    plays studentSkill:student @card(0..),
-    plays taskRegistration:student @card(0..);
+    plays hasSkill:student @card(0..),
+    plays registersForTask:student @card(0..);
 
 entity teacher sub user,
     owns schoolAccountName @card(1);
 
 entity identityProvider,
     owns name @card(0..1),
-    plays authentication:identityProvider;
+    plays authenticates:authenticator;
 
 entity business,
     owns name @key,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
-    plays businessAssociation:business @card(1..),
-    plays businessProjects:business @card(0..1);
+    plays manages:business @card(1..),
+    plays hasProjects:business @card(0..1);
 
 entity project,
     owns name @card(1),
     owns description @card(1),
     owns imagePath @card(1),
     owns createdAt @card(1),
-    plays businessProjects:project @card(1),
-    plays projectTask:project @card(0..),
-    plays projectCreation:project @card(0..);
+    plays hasProjects:project @card(1),
+    plays containsTask:project @card(0..),
+    plays creates:project @card(0..);
 
 entity task,
     owns name @card(1),
     owns description @card(1),
     owns totalNeeded @card(1),
     owns createdAt @card(1),
-    plays projectTask:task @card(1),
-    plays taskSkill:task @card(0..),
-    plays taskRegistration:task @card(0..);
+    plays containsTask:task @card(1),
+    plays requiresSkill:task @card(0..),
+    plays registersForTask:task @card(0..);
 
 entity skill,
     owns name @key,
     owns isPending @card(1),
     owns createdAt @card(1),
-    plays taskSkill:skill @card(0..),
-    plays studentSkill:skill @card(0..);
+    plays requiresSkill:skill @card(0..),
+    plays hasSkill:skill @card(0..);
 
-relation authentication,
-    relates user,
-    relates identityProvider,
+relation authenticates,
+    relates authenticator,
+    relates authenticated,
     owns username @card(1),
     owns id @key;
 
@@ -69,34 +69,34 @@ relation authentication,
     #Project Creations
     # Ik ben van mening dat we de createdAt hier willen hebben, een supervisor maakt een project(relatie -> projectCreation) aan en de timestamp laat zien waneer dit gebeurt.
     # mischien kunnen we met een rule dit laten overerven naar het projectzelf, als we dat willen?
-relation projectCreation,
+relation creates,
     relates supervisor @card(1),
     relates project @card(0..),
     owns createdAt @card(1);
 
-relation businessAssociation,
+relation manages,
     relates supervisor @card(1),
     relates business @card(1),
     owns location @card(1..);
 
-relation businessProjects,
+relation hasProjects,
     relates business @card(1),
     relates project @card(1..);
 
-relation projectTask,
+relation containsTask,
     relates project @card(1),
     relates task @card(1);
 
-relation taskSkill,
+relation requiresSkill,
     relates task @card(1),
     relates skill @card(1);
 
-relation studentSkill,
+relation hasSkill,
     relates student @card(1),
     relates skill @card(1),
     owns description @card(1);
 
-relation taskRegistration,
+relation registersForTask,
     relates student @card(1),
     relates task @card(1),
     owns description @card(1),
