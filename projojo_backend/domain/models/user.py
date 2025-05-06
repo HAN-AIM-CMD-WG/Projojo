@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional, List
 
+from .skill import StudentSkill
+
+
 class User(BaseModel):
     id: str
     email: str
@@ -30,3 +33,6 @@ class Student(User):
 
 class Teacher(User):
     school_account_name: str
+
+class StudentSkills(Student):
+    Skills: List[StudentSkill] = []

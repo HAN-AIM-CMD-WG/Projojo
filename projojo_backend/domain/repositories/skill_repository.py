@@ -2,9 +2,12 @@ from typing import List, Optional, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import Skill, StudentSkill, TaskSkill, Task
+from domain.models import StudentSkills, TaskSkill, Task, Skill
 import uuid
 from datetime import datetime
+
+from ..models.skill import StudentSkill
+
 
 class SkillRepository(BaseRepository[Skill]):
     def __init__(self):
@@ -43,7 +46,7 @@ class SkillRepository(BaseRepository[Skill]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
 
-    def get_student_skills(self, student_id: str) -> List[StudentSkill]:
+    def get_student_skills(self, student_id: str) -> List[Skill | StudentSkill]:
         # Escape the student_id to prevent injection
         escaped_student_id = student_id.replace('"', '\\"')
         query = f"""
@@ -56,7 +59,7 @@ class SkillRepository(BaseRepository[Skill]):
                 has createdAt $createdAt,
                 has name $skill_name;
             fetch {{
-                'skill_name': $skill_name,
+                'name': $skill_name,
                 'description': $description,
                 'isPending': $skill.isPending,
                 'createdAt': $createdAt
@@ -64,22 +67,7 @@ class SkillRepository(BaseRepository[Skill]):
         """
         results = Db.read_transact(query)
 
-        student_skills = []
-        for result in results:
-            skill_name = result.get("skill_name", "")
-            description = result.get("description", "")
-            is_pending_value = result.get("isPending", True)
-            created_at_str = result.get("createdAt", "")
-
-            student_skills.append(StudentSkill(
-                id=skill_name,  # Using name as the ID since it's marked as @key
-                name=skill_name,
-                description=description,
-                is_pending=is_pending_value,
-                created_at=created_at_str
-            ))
-
-        return student_skills
+        return [self._map_to_model(result) for result in results]
 
     def create(self, skill: Skill) -> Skill:
         # Generate a creation timestamp if not provided
@@ -121,6 +109,16 @@ class SkillRepository(BaseRepository[Skill]):
         
         # Convert createdAt string to datetime
         created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+
+        description = result.get("description")
+        if description:
+            return StudentSkill(
+                id=name,  # Using name as the ID since it's marked as @key
+                name=name,
+                description=description,
+                is_pending=is_pending,
+                created_at=created_at
+            )
         
         return Skill(
             id=name,  # Using name as the ID since it's marked as @key

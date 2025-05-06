@@ -33,8 +33,8 @@ export default function ProfilePage() {
                 if (ignore) return;
                 // Combine student data with skills
                 const studentWithSkills = {
-                    ...data.student,
-                    skills: data.skills
+                    ...data,
+                    skills: data.Skills
                 };
                 setStudent(studentWithSkills);
             })

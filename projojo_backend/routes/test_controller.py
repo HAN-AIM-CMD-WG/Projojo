@@ -9,8 +9,8 @@ from domain.models.dto import LoginRequest, LoginResponse
 from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository, UserRepository
 
 # Import models
-from domain.models import ProjectCreation, Skill, BusinessProjects
-from service import business_service, student_service, task_service
+from domain.models import ProjectCreation, StudentSkills, BusinessProjects, Skill
+from service import task_service
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
 
@@ -168,8 +168,30 @@ async def get_student_skills(email: str = Path(..., description="Student email")
     """
     Get all skills for a student
     """
-    student_with_skills = student_service.get_student_with_skills(email)
-    return student_with_skills
+    student = user_repo.get_student_by_id(email)
+    skills = skill_repo.get_student_skills(student.email)
+
+    return StudentSkills(
+        **student.model_dump(),
+        Skills=skills
+    )
+        
+
+    # student = user_repo.get_student_by_id(email)
+    # skills = skill_repo.get_student_skills(student.email)
+    #
+    # return Student_With_Skills(
+    #     student=student,
+    #     skills=skills
+    # )
+
+    # businesses_with_projects = []
+    # for business in business_repo.get_all():
+    #     projects = project_repo.get_projects_by_business(business.name)
+    #
+    #     businesses_with_projects.append(
+    #         BusinessProjects(**business.model_dump(), projects=projects)
+    #     )
 
 #POST endpoints
 

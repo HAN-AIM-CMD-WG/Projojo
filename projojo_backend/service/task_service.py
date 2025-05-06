@@ -26,7 +26,7 @@ def get_tasks_with_skills_by_project(project_name: str) -> list[TaskSkill]:
 
     task_skills_list = []
     for task in tasks:
-        skills = skill_repo.get_task_skills(task.name)  # task.name == task_id in your current model
+        skills = skill_repo.get_task_skills(task.name)
         task_data = task.model_dump()
         task_data.pop('skills', None)
         task_skills_list.append(TaskSkill(**task_data, skills=skills))
