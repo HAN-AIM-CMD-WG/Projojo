@@ -1,0 +1,61 @@
+# Node specific
+node_modules/
+.npm
+.yarn-integrity
+
+# Build outputs
+dist/
+build/
+.cache/
+.vite/
+
+# Environment and IDE
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.swp
+*.sublime-project
+*.sublime-workspace
+.eslintcache
+*.prettier*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose*.yml
+
+# Git
+.git/
+.gitignore
+
+# Testing
+coverage/
+tests/
+__tests__/
+__mocks__
+*.test.js
+*.spec.js
+*.spec.*
+*.test.*
+.nyc_output
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.directory
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Misc
+*.bak
+*.backup

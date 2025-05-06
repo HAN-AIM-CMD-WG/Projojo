@@ -1,0 +1,58 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Python virtual environments
+.Python
+env/
+.env
+.env.local
+venv/
+ENV/
+.virtualenvs/
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# TypeDB specific
+*.sock
+
+# Git
+.git/
+.gitignore
+
+# Testing
+tests/
+.pytest_cache/
+coverage/
+htmlcov/
+.coverage
+test_*.py
+*_test.py
