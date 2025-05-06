@@ -69,3 +69,4 @@ projojo_backend/.pytest_cache/
 projojo_backend/*.log
 node_modules
 .arena_temp
+/projojo_backend/static/images/
