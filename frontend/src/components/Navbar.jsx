@@ -46,6 +46,14 @@ export default function Navbar() {
                     setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
                 })
         }
+        if (authData.type === "supervisor") {
+            getUser(authData.userId)
+                .then(data => {
+                    console.log(data);
+                    if (ignore) return;
+                    setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
+                })
+        }
 
         return () => {
             ignore = true;
@@ -96,8 +104,8 @@ export default function Navbar() {
                             </li>
                             {
                                 // profile picture, only for students
-                                authData.type === "student"
-                                    ? <li key="profile-picture" className="flex items-center ml-2">
+                                authData.type === "student" || authData.type === "supervisor" ?
+                                     <li key="profile-picture" className="flex items-center ml-2">
                                         <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
                                     </li>
                                     : null
