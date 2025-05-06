@@ -25,7 +25,7 @@ export default function App() {
     let ignore = false;
 
     getAuthorization()
-      
+
 
   }, [location, setAuthData]);
 
@@ -57,3 +57,5 @@ export default function App() {
     </>
   )
 }
+
+
