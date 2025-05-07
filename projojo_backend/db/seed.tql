@@ -145,8 +145,10 @@ insert
         has createdAt 2025-04-12T16:30:00;
 
     # Business projects relations - one relation per business with its projects
-    $bp1 isa hasProjects (business: $b1, project: $p1, project: $p2, project: $p3);
-    $bp2 isa hasProjects (business: $b2, project: $p4);
+    $bp1 isa hasProjects (business: $b1, project: $p1);
+    $bp2 isa hasProjects (business: $b1, project: $p2);
+    $bp3 isa hasProjects (business: $b1, project: $p3);
+    $bp4 isa hasProjects (business: $b2, project: $p4);
 
     # Tasks
     $t1 isa task,

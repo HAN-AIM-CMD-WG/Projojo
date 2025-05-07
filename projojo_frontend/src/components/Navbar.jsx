@@ -41,7 +41,6 @@ export default function Navbar() {
         if (authData.type === "student") {
             getUser(authData.userId)
                 .then(data => {
-                    console.log(data);
                     if (ignore) return;
                     setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
                 })
@@ -49,7 +48,6 @@ export default function Navbar() {
         if (authData.type === "supervisor") {
             getUser(authData.userId)
                 .then(data => {
-                    console.log(data);
                     if (ignore) return;
                     setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
                 })
