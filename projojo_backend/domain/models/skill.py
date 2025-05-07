@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Annotated
+from typing import Annotated, Optional
 from datetime import datetime
 
 class Skill(BaseModel):
@@ -19,7 +19,7 @@ class Skill(BaseModel):
 
 
 class StudentSkill(Skill):
-    description: str
+    description: Optional[str] = None
     
     class Config:
         from_attributes = True
