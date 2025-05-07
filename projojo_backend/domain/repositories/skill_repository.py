@@ -152,7 +152,7 @@ class SkillRepository(BaseRepository[Skill]):
                 created_at=datetime.now()  # Assuming created_at is not needed here
             ))
         if not results:
-            raise ItemRetrievalException(Task, f"Task with ID {task_id} not found.")
+            return skills  # Return an empty list if no skills are found
         return skills
     
 
