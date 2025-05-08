@@ -11,7 +11,6 @@ import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
-import console from "console";
 
 export default function Task({ task, setFetchAmount, businessId, allSkills, isNotAllowedToRegister }) {
     const { authData } = useAuth();
