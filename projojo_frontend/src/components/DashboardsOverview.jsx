@@ -5,8 +5,8 @@ export default function DashboardsOverview({ businesses }) {
         <div className="flex flex-col gap-16">
             {businesses.map((businessInformation) => (
                 <BusinessProjectDashboard
-                    key={businessInformation.business.businessId}
-                    business={businessInformation.business}
+                    key={businessInformation.id}
+                    business={businessInformation}
                     topSkills={businessInformation.topSkills}
                     projects={businessInformation.projects}
                 />

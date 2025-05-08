@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
+from .project_repository import ProjectRepository as project_repo
 from .base import BaseRepository
 from domain.models import Business, BusinessAssociation
 
@@ -43,7 +44,7 @@ class BusinessRepository(BaseRepository[Business]):
                 'name': $name, 
                 'description': $description, 
                 'imagePath': $imagePath, 
-                'location': $location
+                'location': $location,
             };
         """
         results = Db.read_transact(query)
@@ -59,13 +60,13 @@ class BusinessRepository(BaseRepository[Business]):
         locations = result.get("location", [])
         if not isinstance(locations, list):
             locations = [locations]
-        
+
         return Business(
             id=name,  # Using name as the ID since it's marked as @key
             name=name,
             description=description,
             image_path=image_path,
-            location=locations
+            location=locations,
         )
     
     def get_business_associations(self, business_id: str) -> List[BusinessAssociation]:

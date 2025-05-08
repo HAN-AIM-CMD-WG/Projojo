@@ -36,18 +36,14 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
 
     if (isLoading) {
         project = {
+            id: 0,
             projectId: 0,
+            name: "Laden...",
             title: "Laden...",
             description: "",
-            business: {
-                businessId: 0,
-                name: "Laden...",
-                description: "",
-                photo: "",
-                location: ""
-            },
-            photo: "",
-            projectTopSkills: []
+            business_id: "",
+            image_path: "",
+            created_at: ""
         }
     }
 
@@ -58,32 +54,32 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     <div>
                         <img
                             className="w-full sm:w-48 h-52 sm:h-48 aspect-square object-cover"
-                            src={isLoading ? '/loading.gif' : `${FILE_BASE_URL}${project.photo.path}`}
+                            src={isLoading ? '/loading.gif' : `${FILE_BASE_URL}${project.image_path}`}
                             alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
                         />
                     </div>
                     <div className="w-full">
                         <h1 className="text-3xl font-semibold text-gray-800 tracking-wide leading-tight border-b-2 border-primary m-4 pb-2">
-                            {project.title}
+                            {project.name}
                         </h1>
                         <div className="flex flex-row gap-4 ms-4">
-                            <Link to={`/business/${project.business.businessId}`} className="group">
+                            <Link to={`/business/${project.business_id}`} className="group">
                                 <img
                                     className="h-14 w-14 sm:h-16 sm:w-16 aspect-square object-cover rounded-full border border-gray-300 shadow-sm"
-                                    src={isLoading ? '/loading.gif' : `${FILE_BASE_URL}${project.business.photo.path}`}
+                                    src={isLoading ? '/loading.gif' : `${FILE_BASE_URL}${project.image_path}`}
                                     alt={isLoading ? "Aan het laden" : "Bedrijfslogo"}
                                 />
                             </Link>
                             <div className="max-w-[75%]">
                                 <Link
-                                    to={`/business/${project.business.businessId}`}
+                                    to={`/business/${project.business_id}`}
                                     className="font-bold text-lg break-words text-black-800 hover:text-primary transition"
                                 >
-                                    {project.business.name}
+                                    {project.business_id}
                                 </Link>
                                 <p className="text-black-600 text-sm flex gap-1">
                                     <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                    {project.business.location}
+                                    {project.location}
                                 </p>
                             </div>
                         </div>
@@ -104,15 +100,15 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             </div>
 
             <h2 className="text-lg font-semibold text-black-700 pt-3 px-4">
-                Top {project.projectTopSkills.length} skills van het project
+                Top {5} skills van het project
             </h2>
             <div className="flex flex-row justify-between">
                 <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
-                    {project.projectTopSkills.map((skill) => (
+                    {/* {project.skills.map((skill) => (
                         <li key={skill.skillId}>
                             <SkillBadge skillName={skill.name} isPending={skill.isPending} />
                         </li>
-                    ))}
+                    ))} */}
                 </ul>
                 {isOwner && (
                     <div className="w-fit p-4 pt-0 flex">

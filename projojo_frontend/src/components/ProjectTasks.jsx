@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
-import { getSkills, getUserRegistrations } from '../services';
+import { getSkills, /*getUserRegistrations*/ } from '../services';
 import Alert from './Alert';
 import { useAuth } from "./AuthProvider";
 import Task from "./Task";
@@ -25,15 +25,15 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
         }
         let ignore = false;
 
-        getUserRegistrations()
-            .then((data) => {
-                if (ignore) return;
-                setCurrentRegistrations(data);
-            })
-            .catch(error => {
-                if (ignore) return;
-                setError(error.message)
-            });
+        // getUserRegistrations()
+        //     .then((data) => {
+        //         if (ignore) return;
+        //         setCurrentRegistrations(data);
+        //     })
+        //     .catch(error => {
+        //         if (ignore) return;
+        //         setError(error.message)
+        //     });
 
     }, [fetchAmount, authData.type]);
 
@@ -78,15 +78,25 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                 ? <h2>Er zijn geen taken om weer te geven</h2>
                 : tasks.map((task, index) => {
                     const isLast = index === tasks.length - 1;
+                    // Ensure task has the expected format for the components
+                    const formattedTask = {
+                        taskId: task.id,
+                        title: task.name,
+                        description: task.description,
+                        totalNeeded: task.total_needed,
+                        totalAccepted: 0, // Default value since it's not in the new API
+                        totalRegistered: 0, // Default value since it's not in the new API
+                        skills: task.skills // Default value since it's not in the new API
+                    };
                     return (
                         <div
                             ref={(el) => {
-                                taskRefs.current[task.taskId] = el;
+                                taskRefs.current[formattedTask.taskId] = el;
                                 if (isLast && lastTaskRef) lastTaskRef.current = el;
                             }}
-                            key={task.taskId}
-                            id={`task-${task.taskId}`}>
-                            <Task task={task} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} isNotAllowedToRegister={currentRegistrations.includes(task.taskId)} />
+                            key={formattedTask.taskId}
+                            id={`task-${formattedTask.taskId}`}>
+                            <Task task={formattedTask} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} isNotAllowedToRegister={currentRegistrations.includes(formattedTask.taskId)} />
                         </div >
                     )
                 })}

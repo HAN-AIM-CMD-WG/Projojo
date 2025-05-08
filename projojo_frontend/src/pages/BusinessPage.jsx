@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import Alert from "../components/Alert";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
-import { getBusiness, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
+import { getBusinessByName, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
 import useFetch from '../useFetch';
 import NotFound from './NotFound';
 import PageHeader from '../components/PageHeader';
@@ -13,11 +13,13 @@ import PageHeader from '../components/PageHeader';
  */
 export default function BusinessPage() {
     const { businessId } = useParams();
+    const businessName = businessId || "Celestial Innovations";
 
-    const { data: projectsData, error: projectsError } = useFetch(() => getProjectsWithBusinessId(Number(businessId)).then(async projects => {
+    const { data: projectsData, error: projectsError } = useFetch(() => getProjectsWithBusinessId(businessName).then(async projects => {
         const promises = [];
         for (let i = 0; i < projects.length; i++) {
             const project = projects[i];
+            // Fetch tasks for each project
             promises.push(getTasks(project.id));
         }
 
@@ -26,10 +28,16 @@ export default function BusinessPage() {
         for (let i = 0; i < projects.length; i++) {
             projects[i].tasks = awaited[i];
         }
-        return projects.map((project) => { project.image = { path: project.photo.path }; project.projectId = project.id; return project; });
-    }), [Number(businessId)]);
+        
+        return projects.map((project) => { 
+            // Ensure project has the expected format for the components
+            project.projectId = project.id;
+            project.title = project.name;
+            return project; 
+        });
+    }), [businessName]);
 
-    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusiness(Number(businessId)), [Number(businessId)]);
+    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusinessByName(businessName), [businessName]);
 
     let businessErrorMessage = undefined;
     if (businessError !== undefined) {
@@ -59,9 +67,7 @@ export default function BusinessPage() {
         }
     }
 
-    if (businessData !== undefined) {
-        businessData.imagePath = businessData?.photo?.path;
-    }
+    // No need to set imagePath as it's already in image_path field in the new API response
 
     return (
         <>

@@ -8,9 +8,15 @@ export default function ProjectsAddPage() {
     const [serverErrorMessage, setServerErrorMessage] = useState('');
 
     const onSubmit = (data) => {
+        // Check if there's an error from the image upload
+        if (data.error) {
+            setServerErrorMessage(data.error);
+            return;
+        }
+        
         createProject(data)
-            .then(newProjectId => {
-                navigate(`/projects/${newProjectId}`);
+            .then(newProject => {
+                navigate(`/projects/${newProject.id}`);
             })
             .catch((errorMessage) => setServerErrorMessage(errorMessage.message));
     }

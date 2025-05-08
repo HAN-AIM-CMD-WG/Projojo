@@ -15,8 +15,7 @@ export default function ProfilePage() {
     useEffect(() => {
         let ignore = false;
 
-        fetch(`${API_BASE_URL}students/${profileId}`, {
-            credentials: "include",
+        fetch(`${API_BASE_URL}students/${profileId}/skills`, {
             headers: {
                 Accept: 'application/json',
             },
@@ -32,7 +31,12 @@ export default function ProfilePage() {
             })
             .then(data => {
                 if (ignore) return;
-                setStudent(data);
+                // Combine student data with skills
+                const studentWithSkills = {
+                    ...data,
+                    skills: data.Skills
+                };
+                setStudent(studentWithSkills);
             })
             .catch(error => {
                 if (ignore) return;
