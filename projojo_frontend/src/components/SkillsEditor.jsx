@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createSkill, getStudent } from "../services";
+import { createSkill, getUser } from "../services";
 import { useAuth } from "./AuthProvider";
 import SkillBadge from "./SkillBadge";
 
@@ -85,10 +85,17 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
         let ignore = false
 
         if (authData.type === 'student') {
-            getStudent(authData.userId)
+            getUser(authData.userId)
                 .then(data => {
                     if (ignore) return
-                    setStudentsSkills(data.skills.map(skill => skill.skill.skillId))
+                    // Handle the new API response format
+                    if (data.skill_ids) {
+                        // If we have skill_ids directly in the user object
+                        setStudentsSkills(data.skill_ids)
+                    } else if (data.skills) {
+                        // If we have a skills array
+                        setStudentsSkills(data.skills.map(skill => skill.id))
+                    }
                 })
                 .catch(() => {
                     if (ignore) return

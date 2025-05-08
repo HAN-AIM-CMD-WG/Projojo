@@ -8,7 +8,7 @@ import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import Tooltip from "../components/Tooltip";
-import { createColleagueInviteLink, createNewBusiness, getProjects } from "../services";
+import { /*createColleagueInviteLink, createNewBusiness,*/ getProjects } from "../services";
 
 export default function TeacherPage() {
     const { authData } = useAuth();

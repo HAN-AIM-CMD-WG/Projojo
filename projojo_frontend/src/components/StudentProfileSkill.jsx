@@ -1,43 +1,34 @@
 import { useState } from 'react';
-import { API_BASE_URL } from "../services";
+import { API_BASE_URL, getSkillsFromStudent } from "../services";
 import Alert from "./Alert";
+import { useAuth } from "./AuthProvider";
 
 export default function StudentProfileSkill({ skill, isOwnProfile }) {
     const [error, setError] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [description, setDescription] = useState(skill.description);
+    const { authData } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
         const dataFormat = {
-            skill: {
-                skillId: skill.skill.skillId,
-                name: skill.skill.name
-            },
-            description: description
+            skills: {
+                id: skill.id,
+                name: skill.name,
+                is_pending: skill.is_pending,
+                description: description
+            }
         };
 
         try {
-            const response = await fetch(`${API_BASE_URL}students/skill`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(dataFormat),
-                credentials: "include",
-            });
-
-            if (!response.ok) {
-                const backendErrorMessage = await response.json();
-                setError(backendErrorMessage.message || "Er is iets misgegaan bij het opslaan van de skill beschrijving.");
-                return;
-            }
-
+            const response = await getSkillsFromStudent(authData.userId);
+            
+            // For now, we're just updating the local state since the update endpoint is commented out
             skill.description = description;
             setIsEditing(false);
-        } catch {
+        } catch (error) {
             setError("Er is iets misgegaan bij het opslaan van de beschrijving.");
         }
     };
@@ -49,10 +40,10 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
     };
 
     return (
-        <div key={skill.skill.skillId} className="w-full p-5 rounded-lg bg-white shadow-md border border-gray-300 transition hover:shadow-lg">
+        <div key={skill.id} className="w-full p-5 rounded-lg bg-white shadow-md border border-gray-300 transition hover:shadow-lg">
             <div className="w-full">
                 <div className="flex flex-col min-[400px]:flex-row min-[400px]:justify-between  gap-2">
-                    <h2 className="text-lg font-semibold text-gray-800">{skill.skill.name}</h2>
+                    <h2 className="text-lg font-semibold text-gray-800">{skill.name}</h2>
                     {isOwnProfile && !isEditing && (
                         <button className="btn-secondary py-1 px-3 self-start" onClick={() => setIsEditing(true)}>Onderbouwing ✏️</button>
                     )}

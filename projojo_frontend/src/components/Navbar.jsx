@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FILE_BASE_URL, getStudent, logout } from "../services";
+import { FILE_BASE_URL, getUser, logout } from "../services";
 import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
@@ -31,7 +31,7 @@ export default function Navbar() {
     } else if (authData.type === "student") {
         routes.push({
             name: "Mijn profiel",
-            ref: `/profile/${authData.userId}`,
+            ref: `/student/${authData.userId}`,
         });
     }
 
@@ -39,10 +39,17 @@ export default function Navbar() {
         let ignore = false;
 
         if (authData.type === "student") {
-            getStudent(authData.userId)
+            getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${FILE_BASE_URL}${data.profilePicture.path}`); // data.profilePicture is formatted like "/uuid.png"
+                    setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
+                })
+        }
+        if (authData.type === "supervisor") {
+            getUser(authData.userId)
+                .then(data => {
+                    if (ignore) return;
+                    setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
                 })
         }
 
@@ -52,9 +59,9 @@ export default function Navbar() {
     }, [authData])
 
     const signOut = () => {
-        logout().then(() => {
-            navigate("/");
-        })
+        logout();
+        navigate("/");
+        
     }
 
     const toggleCollapse = () => {
@@ -95,8 +102,8 @@ export default function Navbar() {
                             </li>
                             {
                                 // profile picture, only for students
-                                authData.type === "student"
-                                    ? <li key="profile-picture" className="flex items-center ml-2">
+                                authData.type === "student" || authData.type === "supervisor" ?
+                                     <li key="profile-picture" className="flex items-center ml-2">
                                         <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
                                     </li>
                                     : null

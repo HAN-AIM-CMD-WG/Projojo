@@ -69,3 +69,7 @@ projojo_backend/.pytest_cache/
 projojo_backend/*.log
 node_modules
 .arena_temp
+
+# Backend Static Files
+projojo_backend/static/images/*
+!projojo_backend/static/images/__init__.py

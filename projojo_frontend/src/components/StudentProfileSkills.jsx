@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSkills, updateStudentSkills } from "../services";
+import { getSkills, /*updateStudentSkills*/ } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 import SkillsEditor from "./SkillsEditor";
@@ -12,7 +12,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     const [studentSkillsError, setStudentSkillsError] = useState("");
 
     const { authData } = useAuth();
-    const isOwnProfile = authData.type === "student" && authData.userId === student.userId;
+    const isOwnProfile = authData.type === "student" && authData.userId === student.id;
 
     const handleSave = async (skills) => {
         const skillIds = skills.map((skill) => skill.skillId);
@@ -20,7 +20,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
         setStudentSkillsError("");
 
         try {
-            await updateStudentSkills(skillIds);
+            //await updateStudentSkills(skillIds);
             setIsEditing(false)
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
@@ -45,14 +45,17 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
             ignore = true;
         }
     }, []);
-
-    const currentSkills = student.skills.map((skill) => {
+    
+    // Map student skills to the format expected by SkillsEditor
+    const currentSkills = student?.skills?.map((skill) => {
         return {
-            skillId: skill.skill.skillId,
-            name: skill.skill.name,
-            isPending: skill.skill.isPending,
+            skillId: skill.id,
+            name: skill.name,
+            isPending: skill.is_pending,
+            description: skill.description,
+            createdAt: skill.created_at
         }
-    })
+    }) || [];
 
     return (
         <div className="flex flex-col gap-4 w-full rounded-b-lg">
@@ -74,7 +77,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                         setError={setStudentSkillsError}
                         isAbsolute={false}
                     >
-                        {student?.skills?.map(skill => <StudentProfileSkill key={skill.skill.skillId} skill={skill} isOwnProfile={isOwnProfile} />)}
+                        {student?.skills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
                     </SkillsEditor>
                 </div>
             </div>

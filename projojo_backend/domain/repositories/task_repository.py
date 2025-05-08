@@ -161,28 +161,4 @@ class TaskRepository(BaseRepository[Task]):
             created_at=created_at
         )
     
-    def get_task_skills(self, task_id: str) -> List[TaskSkill]:
-        query = f"""
-            match
-                $task isa task, has name "{task_id}";
-                $taskSkill isa requiresSkill (task: $task, skill: $skill);
-                $skill isa skill, has name $skill_name;
-            fetch {{
-                'skill_name': $skill_name
-            }};
-        """
-        results = Db.read_transact(query)
-        
-        task_skills = []
-        for result in results:
-            skill_name = result.get("skill_name", "")
-            
-            task_skills.append(TaskSkill(
-                task_id=task_id,
-                skill_id=skill_name
-            ))
-        if not results:
-            raise ItemRetrievalException(Task, f"Task with ID {task_id} not found.")
-        return task_skills
-    
 
