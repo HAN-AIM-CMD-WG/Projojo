@@ -32,8 +32,8 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         if not results:
             raise ItemRetrievalException(User, f"User with ID {id} not found.")
-        result_with_type = next((r for r in results if r.get("usertype", {}).get("label") != "user"), results[0])
-        return self._map_to_model(result_with_type)
+        print(results)
+        return self._map_to_model(results[1])
     
     def get_by_id(self, id: str) -> Optional[User]:
         # First try to find as a supervisor
@@ -228,72 +228,46 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         return [self._map_teacher(result) for result in results]
 
+    def _base_user_data(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "id": result.get("email", ""),
+            "email": result.get("email", ""),
+            "full_name": result.get("fullName", ""),
+            "image_path": result.get("imagePath", ""),
+            "password_hash": result.get("password_hash", ""),
+        }
+
     def _map_to_model(self, result: Dict[str, Any]) -> User:
-        email = result.get("email", "")
-        full_name = result.get("fullName", "")
-        image_path = result.get("imagePath", "")
-        password_hash = result.get("password_hash", "")
-        usertype_label = result.get("usertype", {}).get("label")
-        
-        return User(
-            id=email,
-            email=email,
-            full_name=full_name,
-            image_path=image_path,
-            password_hash=password_hash,
-            type=usertype_label
-        )
-    
+        data = self._base_user_data(result)
+        user_type = result.get("usertype", {}).get("label", "").lower()
+        data["type"] = user_type
+        return User(**data)
+
+
     def _map_supervisor(self, result: Dict[str, Any]) -> Supervisor:
-        email = result.get("email", "")
-        full_name = result.get("fullName", "")
-        image_path = result.get("imagePath", "")
-        business_association_id = result.get("business_association_id", "")
-        created_project_ids = result.get("created_project_ids", [])
-        password_hash = result.get("password_hash", "")
-        return Supervisor(
-            id=email,
-            email=email,
-            full_name=full_name,
-            image_path=image_path,
-            authentication_ids=[],
-            business_association_id=business_association_id,
-            created_project_ids=created_project_ids,
-            password_hash=password_hash
-        )
-    
+        data = self._base_user_data(result)
+        data.update({
+            "authentication_ids": [],
+            "business_association_id": result.get("business_association_id", ""),
+            "created_project_ids": result.get("created_project_ids", []),
+        })
+        return Supervisor(**data)
+
     def _map_student(self, result: Dict[str, Any]) -> Student:
-        email = result.get("email", "")
-        full_name = result.get("fullName", "")
-        image_path = result.get("imagePath", "")
-        school_account_name = result.get("schoolAccountName", "")
-        password_hash = result.get("password_hash", "")
-        skill_ids = result.get("skill_ids", [])
-        
-        return Student(
-            id=email,
-            email=email,
-            full_name=full_name,
-            image_path=image_path,
-            school_account_name=school_account_name,
-            skill_ids=skill_ids,
-            registered_task_ids=[],
-            password_hash=password_hash
-        )
-    
+        data = self._base_user_data(result)
+        data.update({
+            "school_account_name": result.get("schoolAccountName", ""),
+            "skill_ids": result.get("skill_ids", []),
+            "registered_task_ids": [],
+        })
+        return Student(**data)
+
     def _map_teacher(self, result: Dict[str, Any]) -> Teacher:
-        email = result.get("email", "")
-        full_name = result.get("fullName", "")
-        image_path = result.get("imagePath", "")
-        school_account_name = result.get("schoolAccountName", "")
-        
-        return Teacher(
-            id=email,
-            email=email,
-            full_name=full_name,
-            image_path=image_path,
-            school_account_name=school_account_name
-        )
+        data = self._base_user_data(result)
+        data.update({
+            "school_account_name": result.get("schoolAccountName", ""),
+        })
+        return Teacher(**data)
 
     @staticmethod
     def group_supervisor_by_email(results):
