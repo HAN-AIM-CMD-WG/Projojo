@@ -151,8 +151,6 @@ class SkillRepository(BaseRepository[Skill]):
                 is_pending=is_pending_value,
                 created_at=datetime.now()  # Assuming created_at is not needed here
             ))
-        if not results:
-            return skills  # Return an empty list if no skills are found
         return skills
     
 
