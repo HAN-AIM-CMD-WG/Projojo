@@ -140,9 +140,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                             {task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
                             {task.skills.map((skill) => (
                                 <SkillBadge
-                                    key={skill.skillId}
+                                    key={skill.name}
                                     skillName={skill.name}
-                                    isPending={skill.isPending}
+                                    isPending={skill.is_pending}
                                 />
                             ))}
                             {isOwner && !isEditing && (

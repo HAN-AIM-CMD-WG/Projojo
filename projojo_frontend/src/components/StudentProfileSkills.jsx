@@ -45,9 +45,8 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
             ignore = true;
         }
     }, []);
-    
     // Map student skills to the format expected by SkillsEditor
-    const currentSkills = student?.skills?.map((skill) => {
+    const currentSkills = student?.Skills?.map((skill) => {
         return {
             skillId: skill.id,
             name: skill.name,
@@ -56,7 +55,6 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
             createdAt: skill.created_at
         }
     }) || [];
-
     return (
         <div className="flex flex-col gap-4 w-full rounded-b-lg">
             <div className="flex flex-col gap-3 bg-gray-200 p-3 rounded-lg">
@@ -77,7 +75,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                         setError={setStudentSkillsError}
                         isAbsolute={false}
                     >
-                        {student?.skills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
+                        {student?.Skills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
                     </SkillsEditor>
                 </div>
             </div>
