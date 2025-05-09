@@ -25,12 +25,11 @@ export default function StudentProfileCv({ cv }) {
         <div className="flex flex-col gap-4 w-full bg-gray-100 rounded-b-lg overflow-hidden">
             <div className="bg-gray-200 p-1 rounded-lg">
             <h2 className="text-lg ms-1 mb-2 font-semibold">CV</h2>
-                {exists === false
-                    ? <h2>Er is geen cv om weer te geven</h2>
-                    : (
-                        <PdfPreview link={cv ? `${PDF_BASE_URL}${cv}` : "/loading.gif"} />
-                    )
-                }
+                {(exists === null || exists === undefined) && (
+                    <img src="/loading.gif" alt="Laden..." className="h-6 w-6" />
+                )}
+                {exists === false && <h2>Er is geen cv om weer te geven</h2>}
+                {exists === true && <PdfPreview link={`${PDF_BASE_URL}${cv}`} />}
             </div>
         </div>
     )
