@@ -1,5 +1,6 @@
 export const API_BASE_URL = "http://localhost:8000/test/";
-export const FILE_BASE_URL = `${API_BASE_URL}files/`;
+export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
+export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
 
 export class HttpError extends Error {
     #statusCode;
@@ -43,26 +44,26 @@ function fetchWithError(url, request, returnsVoid = false) {
         .then(json => {
             if (errorStatus !== undefined) {
                 let message;
+                const jsonObj = JSON.parse(json);
                 try {
-                    const jsonObj = JSON.parse(json);
-                    if (typeof jsonObj !== "object" || jsonObj.message === undefined || jsonObj.message === null || jsonObj.message === "") {
+                    if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
                         throw new Error();
                     }
-                    message = jsonObj.message;
+                    message = jsonObj.detail;
                 } catch {
 
                     switch (errorStatus) {
                         case 401:
-                            message = "U bent niet ingelogd.";
+                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
                             break;
                         case 403:
-                            message = "U bent niet geautoriseerd om dit te doen.";
+                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
                             break;
                         case 404:
-                            message = "De url waar naar gezocht wordt kan niet gevonden worden.";
+                            message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
                             break;
                         default:
-                            message = "Er is een onverwachte fout opgetreden.";
+                            message = message ?? "Er is een onverwachte fout opgetreden.";
                             break;
                     }
                 }
