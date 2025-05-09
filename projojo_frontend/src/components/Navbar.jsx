@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { FILE_BASE_URL, getUser, logout } from "../services";
+import { IMAGE_BASE_URL, getUser, logout } from "../services";
 import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
@@ -42,14 +42,14 @@ export default function Navbar() {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
+                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
                 })
         }
         if (authData.type === "supervisor") {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${FILE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
+                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
                 })
         }
 
