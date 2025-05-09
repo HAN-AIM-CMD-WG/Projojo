@@ -31,12 +31,12 @@ export default function ProfilePage() {
             })
             .then(data => {
                 if (ignore) return;
-                // Combine student data with skills
-                const studentWithSkills = {
+                // Combine student data with CV for testing purposes
+                const studentWithCV = {
                     ...data,
-                    skills: data.Skills
+                    cv_path: "PVDCV.pdf" // Placeholder for CV path, replace with actual data if available
                 };
-                setStudent(studentWithSkills);
+                setStudent(studentWithCV);
             })
             .catch(error => {
                 if (ignore) return;
