@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { notification } from "../components/notifications/NotifySystem";
-import { login } from "../services";
 import FormInput from "../components/FormInput";
 import { useAuth } from "../components/AuthProvider";
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { authData, setAuthData } = useAuth();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState(null);
   const [credentials, setCredentials] = useState({
@@ -16,10 +15,7 @@ export default function LoginPage() {
     password: ""
   });
 
-  const error = searchParams.get("error");
-  if (error !== null) {
-    notification.error(error);
-  }
+
 
   const handleInputChange = (field) => (value) => {
     setCredentials(prev => ({
@@ -34,45 +30,14 @@ export default function LoginPage() {
     setFormError(null);
 
     try {
-      const response = await login(credentials);
-      if (response) {
-        
-        const { role, business, sub } = response.debug_payload;
-        if (role === "supervisor") {
-          setAuthData({ 
-            type: "supervisor", 
-            userId: sub, 
-            businessId: business, 
-            isLoading: false 
-          });
-        } else if (role === "student") {
-          setAuthData({ 
-            type: "student", 
-            userId: sub, 
-            businessId: null, 
-            isLoading: false 
-          });
-        } else if (role === "teacher") {
-          setAuthData({ 
-            type: "teacher", 
-            userId: sub, 
-            businessId: null, 
-            isLoading: false 
-          });
-        }
+      const result = await login(credentials);
+      if (result.success) {
         navigate("/home");
-        
-        // Store token in localStorage or sessionStorage if needed
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("payload", response.debug_payload)
-        
-        notification.success("Succesvol ingelogd");
       } else {
-        setFormError("Login mislukt. Controleer uw gegevens.");
+        setFormError(result.error ? "Ongeldige gebruikersnaam of wachtwoord" : result.error);
       }
     } catch (error) {
-      setFormError(error.message || "Er is een fout opgetreden bij het inloggen");
-      notification.error(error.message || "Er is een fout opgetreden bij het inloggen");
+      setFormError("Er is een fout opgetreden bij het inloggen");
     } finally {
       setIsLoading(false);
     }
