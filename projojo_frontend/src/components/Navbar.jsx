@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { IMAGE_BASE_URL, getUser, logout } from "../services";
+import { IMAGE_BASE_URL, getUser } from "../services";
 import { useAuth } from "./AuthProvider";
 
 export default function Navbar() {
-    const { authData } = useAuth();
+    const { authData, logout } = useAuth();
     const [profilePicture, setProfilePicture] = useState("/default_profile_picture.png");
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navigate = useNavigate();
@@ -61,7 +61,6 @@ export default function Navbar() {
     const signOut = () => {
         logout();
         navigate("/");
-        
     }
 
     const toggleCollapse = () => {
