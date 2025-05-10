@@ -77,7 +77,7 @@ class NotificationSystem {
     }
 }
 
-const notificationDuration = 15000; // in milliseconds   
+const notificationDuration = 3000; // in milliseconds   
 // eslint-disable-next-line react-refresh/only-export-components
 export const notification = new NotificationSystem();
 
