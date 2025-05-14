@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -10,7 +10,7 @@ class TaskRepository(BaseRepository[Task]):
     def __init__(self):
         super().__init__(Task, "task")
     
-    def get_by_id(self, id: str) -> Optional[Task]:
+    def get_by_id(self, id: str) -> Task | None:
         # Escape any double quotes in the ID
         escaped_id = id.replace('"', '\\"')
         
@@ -114,7 +114,7 @@ class TaskRepository(BaseRepository[Task]):
         task.created_at = datetime.fromisoformat(created_at)
         return task
     
-    def update(self, id: str, task: Task) -> Optional[Task]:
+    def update(self, id: str, task: Task) -> Task | None:
         # First delete the old task
         # Escape any double quotes in the ID
         escaped_id = id.replace('"', '\\"')
