@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -11,7 +11,7 @@ class UserRepository(BaseRepository[User]):
     def __init__(self):
         super().__init__(User, "user")
 
-    def get_credentials(self, id: str) -> Optional[User]:
+    def get_credentials(self, id: str) -> User | None:
         query = f"""
             match
                 $user isa user,
@@ -35,7 +35,7 @@ class UserRepository(BaseRepository[User]):
         print(results)
         return self._map_to_model(results[1])
     
-    def get_by_id(self, id: str) -> Optional[User]:
+    def get_by_id(self, id: str) -> User | None:
         # First try to find as a supervisor
         supervisor = self.get_supervisor_by_id(id)
         if supervisor:
@@ -63,7 +63,7 @@ class UserRepository(BaseRepository[User]):
         users.extend(self.get_all_teachers())
         return users
     
-    def get_supervisor_by_id(self, email: str) -> Optional[Supervisor]:
+    def get_supervisor_by_id(self, email: str) -> Supervisor | None :
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
         
@@ -96,7 +96,7 @@ class UserRepository(BaseRepository[User]):
 
         return self._map_supervisor(next(iter(grouped.values())))
     
-    def get_student_by_id(self, email: str) -> Optional[Student]:
+    def get_student_by_id(self, email: str) -> Student | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
         
@@ -129,7 +129,7 @@ class UserRepository(BaseRepository[User]):
         return self._map_student(next(iter(grouped.values())))
 
     
-    def get_teacher_by_id(self, email: str) -> Optional[Teacher]:
+    def get_teacher_by_id(self, email: str) -> Teacher | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
         
