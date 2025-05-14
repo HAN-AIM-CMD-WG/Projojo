@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -143,7 +143,7 @@ class TaskRepository(BaseRepository[Task]):
         Db.write_transact(query)
         return True
     
-    def _map_to_model(self, result: Dict[str, Any]) -> Task:
+    def _map_to_model(self, result: dict[str, Any]) -> Task:
         # Extract relevant information from the query result
         name = result.get("name", "")
         description = result.get("description", "")
