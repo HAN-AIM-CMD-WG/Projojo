@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -13,7 +13,7 @@ class SkillRepository(BaseRepository[Skill]):
     def __init__(self):
         super().__init__(Skill, "skill")
     
-    def get_by_id(self, id: str) -> Optional[Skill]:
+    def get_by_id(self, id: str) -> Skill | None:
         escaped_id = id.replace('"', '\\"')
         query = f"""
             match
