@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -10,7 +10,7 @@ class ProjectRepository(BaseRepository[Project]):
     def __init__(self):
         super().__init__(Project, "project")
     
-    def get_by_id(self, id: str) -> Optional[Project]:
+    def get_by_id(self, id: str) ->  Project | None:
         # Escape any double quotes in the ID
         
         query = f"""
@@ -103,7 +103,7 @@ class ProjectRepository(BaseRepository[Project]):
         )
 
     # Is not used
-    def get_project_creation(self, project_id: str) -> Optional[ProjectCreation]:
+    def get_project_creation(self, project_id: str) -> ProjectCreation | None:
         query = f"""
             match
                 $project isa project, 
