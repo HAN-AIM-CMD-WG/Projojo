@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -35,7 +35,7 @@ class ProjectRepository(BaseRepository[Project]):
             raise ItemRetrievalException(Project, f"Project with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Project]:
+    def get_all(self) -> list[Project]:
         query = """
             match
                 $project isa project,
@@ -55,7 +55,7 @@ class ProjectRepository(BaseRepository[Project]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
     
-    def get_projects_by_business(self, business_id: str) -> List[Project]:
+    def get_projects_by_business(self, business_id: str) -> list[Project]:
         query = f"""
             match
                 $business isa business, has name "{business_id}";
