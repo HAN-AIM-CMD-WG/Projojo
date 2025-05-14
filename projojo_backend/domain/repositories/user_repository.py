@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -55,7 +55,7 @@ class UserRepository(BaseRepository[User]):
             raise ItemRetrievalException(User, f"User with ID {id} not found.")
         return None
 
-    def get_all(self) -> List[User]:
+    def get_all(self) -> list[User]:
         # Combine all user types
         users = []
         users.extend(self.get_all_supervisors())
@@ -156,7 +156,7 @@ class UserRepository(BaseRepository[User]):
         
         return self._map_teacher(results[0])
 
-    def get_all_supervisors(self) -> List[Supervisor]:
+    def get_all_supervisors(self) -> list[Supervisor]:
         query = """
             match
                 $supervisor isa supervisor,
@@ -184,7 +184,7 @@ class UserRepository(BaseRepository[User]):
         return [self._map_supervisor(data) for data in grouped.values()]
 
 
-    def get_all_students(self) -> List[Student]:
+    def get_all_students(self) -> list[Student]:
         query = """
             match
                 $student isa student,
@@ -210,7 +210,7 @@ class UserRepository(BaseRepository[User]):
 
         return [self._map_student(data) for data in grouped.values()]
     
-    def get_all_teachers(self) -> List[Teacher]:
+    def get_all_teachers(self) -> list[Teacher]:
         query = """
             match
                 $teacher isa teacher,
