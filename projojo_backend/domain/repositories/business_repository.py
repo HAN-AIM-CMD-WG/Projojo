@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .project_repository import ProjectRepository as project_repo
@@ -50,7 +50,7 @@ class BusinessRepository(BaseRepository[Business]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
 
-    def _map_to_model(self, result: Dict[str, Any]) -> Business:
+    def _map_to_model(self, result: dict[str, Any]) -> Business:
         # Extract relevant information from the query result
         name = result.get("name", "")
         description = result.get("description", "")

@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Dict, Any
+from typing import TypeVar, Generic, Any
 from pydantic import BaseModel
 from db.initDatabase import Db
 
@@ -41,6 +41,6 @@ class BaseRepository(Generic[T]):
         # To be implemented in child classes due to specific delete requirements
         raise NotImplementedError("Delete method must be implemented by child classes")
     
-    def _map_to_model(self, result: Dict[str, Any]) -> T:
+    def _map_to_model(self, result: dict[str, Any]) -> T:
         # To be implemented in child classes for specific mapping
         raise NotImplementedError("_map_to_model method must be implemented by child classes")

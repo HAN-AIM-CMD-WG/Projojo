@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -97,7 +97,7 @@ class SkillRepository(BaseRepository[Skill]):
 
         return skill
 
-    def _map_to_model(self, result: Dict[str, Any]) -> Skill:
+    def _map_to_model(self, result: dict[str, Any]) -> Skill:
         # Extract relevant information from the query result
         name = result.get("name", "")
         is_pending_value = result.get("isPending", True)
