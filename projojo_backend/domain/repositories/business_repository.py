@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import List, Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .project_repository import ProjectRepository as project_repo
@@ -9,7 +9,7 @@ class BusinessRepository(BaseRepository[Business]):
     def __init__(self):
         super().__init__(Business, "business")
     
-    def get_by_id(self, id: str) -> Optional[Business]:
+    def get_by_id(self, id: str) -> Business | None:
         # Escape any double quotes in the ID
         
         query = f"""
