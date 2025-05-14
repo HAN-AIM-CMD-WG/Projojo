@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -228,7 +228,7 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         return [self._map_teacher(result) for result in results]
 
-    def _base_user_data(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _base_user_data(self, result: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": result.get("email", ""),
             "email": result.get("email", ""),
@@ -237,14 +237,14 @@ class UserRepository(BaseRepository[User]):
             "password_hash": result.get("password_hash", ""),
         }
 
-    def _map_to_model(self, result: Dict[str, Any]) -> User:
+    def _map_to_model(self, result: dict[str, Any]) -> User:
         data = self._base_user_data(result)
         user_type = result.get("usertype", {}).get("label", "").lower()
         data["type"] = user_type
         return User(**data)
 
 
-    def _map_supervisor(self, result: Dict[str, Any]) -> Supervisor:
+    def _map_supervisor(self, result: dict[str, Any]) -> Supervisor:
         data = self._base_user_data(result)
         data.update({
             "authentication_ids": [],
@@ -253,7 +253,7 @@ class UserRepository(BaseRepository[User]):
         })
         return Supervisor(**data)
 
-    def _map_student(self, result: Dict[str, Any]) -> Student:
+    def _map_student(self, result: dict[str, Any]) -> Student:
         data = self._base_user_data(result)
         data.update({
             "school_account_name": result.get("schoolAccountName", ""),
@@ -262,7 +262,7 @@ class UserRepository(BaseRepository[User]):
         })
         return Student(**data)
 
-    def _map_teacher(self, result: Dict[str, Any]) -> Teacher:
+    def _map_teacher(self, result: dict[str, Any]) -> Teacher:
         data = self._base_user_data(result)
         data.update({
             "school_account_name": result.get("schoolAccountName", ""),
