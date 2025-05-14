@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .project_repository import ProjectRepository as project_repo
@@ -32,7 +32,7 @@ class BusinessRepository(BaseRepository[Business]):
             raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Business]:
+    def get_all(self) -> list[Business]:
         query = """
             match
                 $business isa business,
@@ -69,7 +69,7 @@ class BusinessRepository(BaseRepository[Business]):
             location=locations,
         )
     
-    def get_business_associations(self, business_id: str) -> List[BusinessAssociation]:
+    def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
         # Escape any double quotes in the business ID
         escaped_business_id = business_id.replace('"', '\\"')
         

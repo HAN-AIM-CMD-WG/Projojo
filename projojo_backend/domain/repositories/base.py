@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, List, Dict, Any
+from typing import TypeVar, Generic, Dict, Any
 from pydantic import BaseModel
 from db.initDatabase import Db
 
@@ -20,7 +20,7 @@ class BaseRepository(Generic[T]):
             return None
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[T]:
+    def get_all(self) -> list[T]:
         query = f"""
             match
                 ${self.entity_type} isa {self.entity_type};

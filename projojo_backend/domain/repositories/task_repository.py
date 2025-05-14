@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import Dict, Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -34,7 +34,7 @@ class TaskRepository(BaseRepository[Task]):
             raise ItemRetrievalException(Task, f"Task with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Task]:
+    def get_all(self) -> list[Task]:
         query = """
             match
                 $task isa task,
@@ -52,7 +52,7 @@ class TaskRepository(BaseRepository[Task]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
     
-    def get_tasks_by_project(self, project_id: str) -> List[Task]:
+    def get_tasks_by_project(self, project_id: str) -> list[Task]:
         query = f"""
             match
                 $project isa project, has name "{project_id}";
