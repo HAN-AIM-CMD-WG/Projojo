@@ -39,41 +39,11 @@ if ($reset) {
     docker compose up -d
 }
 
-# Wait for the frontend service to be ready before opening the browser
-$frontendPort = 5173
-$maxAttempts = 20 # Approx 20 seconds (20 * 1000ms)
-$attemptDelayMs = 1000 # 1 second
-$attemptCount = 0
-$frontendReady = $false
+Write-Host "Allowing a few seconds for services to initialize..."
+Start-Sleep -Seconds 5
 
-Write-Host "Waiting for frontend service (port $frontendPort) to become available..."
-while ($attemptCount -lt $maxAttempts) {
-    try {
-        # Suppress progress bar for Test-NetConnection
-        $connection = Test-NetConnection -ComputerName localhost -Port $frontendPort -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -ProgressAction SilentlyContinue
-        if ($connection -and $connection.TcpTestSucceeded) {
-            Write-Host "Frontend service is responsive on port $frontendPort."
-            $frontendReady = $true
-            break
-        }
-    }
-    catch {
-        # Ignore exceptions, we'll retry
-    }
-    Start-Sleep -Milliseconds $attemptDelayMs
-    $attemptCount++
-    Write-Host -NoNewline "."
-}
-Write-Host "" # Newline after dots
-
-if ($frontendReady) {
-    Write-Host "Opening browser to http://localhost:$frontendPort..."
-    Start-Process "http://localhost:$frontendPort"
-} else {
-    Write-Warning "Frontend service did not become available on port $frontendPort after $maxAttempts attempts."
-    Write-Warning "You may need to check the container logs or wait longer and open the browser manually."
-}
-
+Write-Host "Opening browser to http://localhost:5173..."
+Start-Process "http://localhost:5173"
 
 # Show logs for backend and frontend services
 Write-Host "Showing logs for backend and frontend services (press Ctrl+C to stop log streaming)..."
