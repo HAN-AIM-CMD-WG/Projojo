@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .project_repository import ProjectRepository as project_repo
@@ -9,7 +9,7 @@ class BusinessRepository(BaseRepository[Business]):
     def __init__(self):
         super().__init__(Business, "business")
     
-    def get_by_id(self, id: str) -> Optional[Business]:
+    def get_by_id(self, id: str) -> Business | None:
         # Escape any double quotes in the ID
         
         query = f"""
@@ -32,7 +32,7 @@ class BusinessRepository(BaseRepository[Business]):
             raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Business]:
+    def get_all(self) -> list[Business]:
         query = """
             match
                 $business isa business,
@@ -50,7 +50,7 @@ class BusinessRepository(BaseRepository[Business]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
 
-    def _map_to_model(self, result: Dict[str, Any]) -> Business:
+    def _map_to_model(self, result: dict[str, Any]) -> Business:
         # Extract relevant information from the query result
         name = result.get("name", "")
         description = result.get("description", "")
@@ -69,7 +69,7 @@ class BusinessRepository(BaseRepository[Business]):
             location=locations,
         )
     
-    def get_business_associations(self, business_id: str) -> List[BusinessAssociation]:
+    def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
         # Escape any double quotes in the business ID
         escaped_business_id = business_id.replace('"', '\\"')
         

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Annotated
+from typing import Annotated
 from datetime import datetime
 
 class Project(BaseModel):
@@ -10,7 +10,7 @@ class Project(BaseModel):
     created_at: Annotated[datetime, Field(
         examples=["2025-04-21T10:02:58"]
     )]
-    business_id: Optional[str] = None
+    business_id: str | None = None
     
     class Config:
         from_attributes = True

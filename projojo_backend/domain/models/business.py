@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import List, Optional
 
 from .project import Project
 
@@ -9,7 +8,7 @@ class Business(BaseModel):
     name: str
     description: str
     image_path: str
-    location: List[str]
+    location: list[str]
 
     class Config:
         from_attributes = True
@@ -17,12 +16,12 @@ class Business(BaseModel):
 
 
 class BusinessProjects(Business):
-    projects: Optional[List[Project]] = None
+    projects: list[Project] | None = None
 
 class BusinessAssociation(BaseModel):
     business_id: str
     supervisor_id: str
-    location: List[str]
+    location: list[str]
 
     class Config:
         from_attributes = True

@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
 
 from .skill import Skill
@@ -11,13 +10,13 @@ class Task(BaseModel):
     description: str
     total_needed: int
     created_at: datetime
-    project_id: Optional[str] = None
+    project_id: str | None = None
     
     class Config:
         from_attributes = True
 
 class TaskSkill(Task):
-    skills: Optional[List[Skill]] = []
+    skills: list[Skill] | None = None
     
     class Config:
         from_attributes = True
@@ -26,8 +25,8 @@ class TaskRegistration(BaseModel):
     task_id: str
     student_id: str
     description: str
-    is_accepted: Optional[bool] = None
-    response: Optional[str] = None
+    is_accepted: bool | None = None
+    response: str | None = None
     created_at: datetime
     
     class Config:
