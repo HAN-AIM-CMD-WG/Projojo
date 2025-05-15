@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -10,7 +10,7 @@ class TaskRepository(BaseRepository[Task]):
     def __init__(self):
         super().__init__(Task, "task")
     
-    def get_by_id(self, id: str) -> Optional[Task]:
+    def get_by_id(self, id: str) -> Task | None:
         # Escape any double quotes in the ID
         escaped_id = id.replace('"', '\\"')
         
@@ -34,7 +34,7 @@ class TaskRepository(BaseRepository[Task]):
             raise ItemRetrievalException(Task, f"Task with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Task]:
+    def get_all(self) -> list[Task]:
         query = """
             match
                 $task isa task,
@@ -52,7 +52,7 @@ class TaskRepository(BaseRepository[Task]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
     
-    def get_tasks_by_project(self, project_id: str) -> List[Task]:
+    def get_tasks_by_project(self, project_id: str) -> list[Task]:
         query = f"""
             match
                 $project isa project, has name "{project_id}";
@@ -114,7 +114,7 @@ class TaskRepository(BaseRepository[Task]):
         task.created_at = datetime.fromisoformat(created_at)
         return task
     
-    def update(self, id: str, task: Task) -> Optional[Task]:
+    def update(self, id: str, task: Task) -> Task | None:
         # First delete the old task
         # Escape any double quotes in the ID
         escaped_id = id.replace('"', '\\"')
@@ -143,7 +143,7 @@ class TaskRepository(BaseRepository[Task]):
         Db.write_transact(query)
         return True
     
-    def _map_to_model(self, result: Dict[str, Any]) -> Task:
+    def _map_to_model(self, result: dict[str, Any]) -> Task:
         # Extract relevant information from the query result
         name = result.get("name", "")
         description = result.get("description", "")

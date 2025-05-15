@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Optional, Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -11,7 +11,7 @@ class UserRepository(BaseRepository[User]):
     def __init__(self):
         super().__init__(User, "user")
 
-    def get_credentials(self, id: str) -> Optional[User]:
+    def get_credentials(self, id: str) -> User | None:
         query = f"""
             match
                 $user isa user,
@@ -35,7 +35,7 @@ class UserRepository(BaseRepository[User]):
         print(results)
         return self._map_to_model(results[1])
     
-    def get_by_id(self, id: str) -> Optional[User]:
+    def get_by_id(self, id: str) -> User | None:
         # First try to find as a supervisor
         supervisor = self.get_supervisor_by_id(id)
         if supervisor:
@@ -55,7 +55,7 @@ class UserRepository(BaseRepository[User]):
             raise ItemRetrievalException(User, f"User with ID {id} not found.")
         return None
 
-    def get_all(self) -> List[User]:
+    def get_all(self) -> list[User]:
         # Combine all user types
         users = []
         users.extend(self.get_all_supervisors())
@@ -63,7 +63,7 @@ class UserRepository(BaseRepository[User]):
         users.extend(self.get_all_teachers())
         return users
     
-    def get_supervisor_by_id(self, email: str) -> Optional[Supervisor]:
+    def get_supervisor_by_id(self, email: str) -> Supervisor | None :
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
         
@@ -96,7 +96,7 @@ class UserRepository(BaseRepository[User]):
 
         return self._map_supervisor(next(iter(grouped.values())))
     
-    def get_student_by_id(self, email: str) -> Optional[Student]:
+    def get_student_by_id(self, email: str) -> Student | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
         
@@ -129,7 +129,7 @@ class UserRepository(BaseRepository[User]):
         return self._map_student(next(iter(grouped.values())))
 
     
-    def get_teacher_by_id(self, email: str) -> Optional[Teacher]:
+    def get_teacher_by_id(self, email: str) -> Teacher | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
         
@@ -156,7 +156,7 @@ class UserRepository(BaseRepository[User]):
         
         return self._map_teacher(results[0])
 
-    def get_all_supervisors(self) -> List[Supervisor]:
+    def get_all_supervisors(self) -> list[Supervisor]:
         query = """
             match
                 $supervisor isa supervisor,
@@ -184,7 +184,7 @@ class UserRepository(BaseRepository[User]):
         return [self._map_supervisor(data) for data in grouped.values()]
 
 
-    def get_all_students(self) -> List[Student]:
+    def get_all_students(self) -> list[Student]:
         query = """
             match
                 $student isa student,
@@ -210,7 +210,7 @@ class UserRepository(BaseRepository[User]):
 
         return [self._map_student(data) for data in grouped.values()]
     
-    def get_all_teachers(self) -> List[Teacher]:
+    def get_all_teachers(self) -> list[Teacher]:
         query = """
             match
                 $teacher isa teacher,
@@ -228,7 +228,7 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         return [self._map_teacher(result) for result in results]
 
-    def _base_user_data(self, result: Dict[str, Any]) -> Dict[str, Any]:
+    def _base_user_data(self, result: dict[str, Any]) -> dict[str, Any]:
         return {
             "id": result.get("email", ""),
             "email": result.get("email", ""),
@@ -237,14 +237,14 @@ class UserRepository(BaseRepository[User]):
             "password_hash": result.get("password_hash", ""),
         }
 
-    def _map_to_model(self, result: Dict[str, Any]) -> User:
+    def _map_to_model(self, result: dict[str, Any]) -> User:
         data = self._base_user_data(result)
         user_type = result.get("usertype", {}).get("label", "").lower()
         data["type"] = user_type
         return User(**data)
 
 
-    def _map_supervisor(self, result: Dict[str, Any]) -> Supervisor:
+    def _map_supervisor(self, result: dict[str, Any]) -> Supervisor:
         data = self._base_user_data(result)
         data.update({
             "authentication_ids": [],
@@ -253,7 +253,7 @@ class UserRepository(BaseRepository[User]):
         })
         return Supervisor(**data)
 
-    def _map_student(self, result: Dict[str, Any]) -> Student:
+    def _map_student(self, result: dict[str, Any]) -> Student:
         data = self._base_user_data(result)
         data.update({
             "school_account_name": result.get("schoolAccountName", ""),
@@ -262,7 +262,7 @@ class UserRepository(BaseRepository[User]):
         })
         return Student(**data)
 
-    def _map_teacher(self, result: Dict[str, Any]) -> Teacher:
+    def _map_teacher(self, result: dict[str, Any]) -> Teacher:
         data = self._base_user_data(result)
         data.update({
             "school_account_name": result.get("schoolAccountName", ""),

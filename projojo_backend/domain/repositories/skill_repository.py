@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -13,7 +13,7 @@ class SkillRepository(BaseRepository[Skill]):
     def __init__(self):
         super().__init__(Skill, "skill")
     
-    def get_by_id(self, id: str) -> Optional[Skill]:
+    def get_by_id(self, id: str) -> Skill | None:
         escaped_id = id.replace('"', '\\"')
         query = f"""
             match
@@ -33,7 +33,7 @@ class SkillRepository(BaseRepository[Skill]):
             raise ItemRetrievalException(Skill, f"Skill with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Skill]:
+    def get_all(self) -> list[Skill]:
         query = """
             match 
                 $skill isa skill;
@@ -46,7 +46,7 @@ class SkillRepository(BaseRepository[Skill]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
 
-    def get_student_skills(self, student_id: str) -> List[Skill | StudentSkill]:
+    def get_student_skills(self, student_id: str) -> list[Skill | StudentSkill]:
         # Escape the student_id to prevent injection
         escaped_student_id = student_id.replace('"', '\\"')
         query = f"""
@@ -97,7 +97,7 @@ class SkillRepository(BaseRepository[Skill]):
 
         return skill
 
-    def _map_to_model(self, result: Dict[str, Any]) -> Skill:
+    def _map_to_model(self, result: dict[str, Any]) -> Skill:
         # Extract relevant information from the query result
         name = result.get("name", "")
         is_pending_value = result.get("isPending", True)
@@ -127,7 +127,7 @@ class SkillRepository(BaseRepository[Skill]):
             created_at=created_at
         )
 
-    def get_task_skills(self, task_id: str) -> List[Skill]:
+    def get_task_skills(self, task_id: str) -> list[Skill]:
         query = f"""
             match
                 $task isa task, has name "{task_id}";

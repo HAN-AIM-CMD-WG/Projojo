@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -10,7 +10,7 @@ class ProjectRepository(BaseRepository[Project]):
     def __init__(self):
         super().__init__(Project, "project")
     
-    def get_by_id(self, id: str) -> Optional[Project]:
+    def get_by_id(self, id: str) -> Project | None:
         # Escape any double quotes in the ID
         
         query = f"""
@@ -35,7 +35,7 @@ class ProjectRepository(BaseRepository[Project]):
             raise ItemRetrievalException(Project, f"Project with ID {id} not found.")
         return self._map_to_model(results[0])
     
-    def get_all(self) -> List[Project]:
+    def get_all(self) -> list[Project]:
         query = """
             match
                 $project isa project,
@@ -55,7 +55,7 @@ class ProjectRepository(BaseRepository[Project]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
     
-    def get_projects_by_business(self, business_id: str) -> List[Project]:
+    def get_projects_by_business(self, business_id: str) -> list[Project]:
         query = f"""
             match
                 $business isa business, has name "{business_id}";
@@ -82,7 +82,7 @@ class ProjectRepository(BaseRepository[Project]):
             
         return projects
     
-    def _map_to_model(self, result: Dict[str, Any]) -> Project:
+    def _map_to_model(self, result: dict[str, Any]) -> Project:
         # Extract relevant information from the query result
         name = result.get("name", "")
         description = result.get("description", "")
@@ -103,7 +103,7 @@ class ProjectRepository(BaseRepository[Project]):
         )
 
     # Is not used
-    def get_project_creation(self, project_id: str) -> Optional[ProjectCreation]:
+    def get_project_creation(self, project_id: str) -> ProjectCreation | None:
         query = f"""
             match
                 $project isa project, 
