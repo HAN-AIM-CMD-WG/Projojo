@@ -7,7 +7,7 @@
 # Usage:
 #   .\docker-start.ps1
 #     Starts the Docker containers if they are not running, or creates them if they don't exist.
-#     Uses existing images. If core services are already running, it will notify and skip restart.
+#     Uses existing images.
 #
 #   .\docker-start.ps1 -reset
 #     Stops and removes all containers, networks, and named volumes associated with this
@@ -17,9 +17,8 @@
 #
 # Behavior:
 # - Starts services in detached mode.
-# - Waits for the frontend service to be accessible before attempting to open the browser.
-# - Opens the default web browser to the frontend URL (http://localhost:5173).
-# - Streams logs only from the 'backend' and 'frontend' services.
+# - Opens the default web browser to http://localhost:5173 after a short delay.
+# - Streams the last 20 logs and then follows new logs from 'backend' and 'frontend'.
 # - Pressing Ctrl+C while logs are streaming will stop the log stream but will NOT
 #   stop the running containers. Containers should be managed via Docker Desktop or
 #   other Docker CLI commands (e.g., 'docker compose stop').
@@ -42,8 +41,9 @@ if ($reset) {
 Write-Host "Allowing a few seconds for services to initialize..."
 Start-Sleep -Seconds 5
 
-Write-Host "Opening browser to http://localhost:5173..."
-Start-Process "http://localhost:5173"
+$URL = "http://localhost:5173"
+Write-Host "Opening browser to $URL..."
+Start-Process $URL
 
 # Show logs for backend and frontend services
 Write-Host "Showing logs for backend and frontend services (press Ctrl+C to stop log streaming)..."
