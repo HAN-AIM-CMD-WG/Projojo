@@ -47,4 +47,4 @@ Start-Process "http://localhost:5173"
 
 # Show logs for backend and frontend services
 Write-Host "Showing logs for backend and frontend services (press Ctrl+C to stop log streaming)..."
-docker compose logs -f backend frontend
+docker compose logs -f backend frontend --tail 20
