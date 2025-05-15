@@ -1,6 +1,13 @@
 match
-  $y isa user;
+#  $y isa user;
+#  $y iid 0x1e00020000000000000000;
+#  $y has $attr $value;
+#  
+    attribute $e;
+    
 
 
-fetch { $y };
+#fetch { "type": $attr,
+#        "value": $value,
+#        "name": $y.fullName };
 
