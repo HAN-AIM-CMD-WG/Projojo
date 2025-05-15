@@ -10,7 +10,7 @@ class ProjectRepository(BaseRepository[Project]):
     def __init__(self):
         super().__init__(Project, "project")
     
-    def get_by_id(self, id: str) ->  Project | None:
+    def get_by_id(self, id: str) -> Project | None:
         # Escape any double quotes in the ID
         
         query = f"""
