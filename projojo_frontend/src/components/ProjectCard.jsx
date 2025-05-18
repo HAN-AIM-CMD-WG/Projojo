@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { FILE_BASE_URL } from '../services';
+import { IMAGE_BASE_URL } from '../services';
 import RichTextViewer from "./RichTextViewer";
 import TaskCard from "./TaskCard";
 
@@ -20,7 +20,7 @@ export default function ProjectCard({ project, index=0, isExpanded=false }) {
         <div className="relative h-full bg-slate-200">
           <img
             className="rounded-t-lg w-full h-[65%] object-cover transition-opacity duration-300 group-hover:opacity-95 group-focus:opacity-95"
-            src={`${FILE_BASE_URL}${project.image_path}`}
+            src={`${IMAGE_BASE_URL}${project.image_path}`}
             alt="Projectafbeelding"
           />
           <div className="h-fit bottom-0 left-0 right-0 p-8 pt-4">

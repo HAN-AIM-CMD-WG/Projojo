@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FILE_BASE_URL } from '../services';
+import { IMAGE_BASE_URL } from '../services';
 import { useAuth } from './AuthProvider';
 import FormInput from './FormInput';
 import Loading from "./Loading";
@@ -60,7 +60,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
 
     return (
         <div className="flex flex-col items-center bg-slate-200 border border-gray-200 rounded-lg shadow md:flex-row w-full  ">
-            <img className="w-full max-h-64 rounded-t-lg md:h-48 md:w-48 md:rounded-none md:rounded-s-lg object-cover" src={`${FILE_BASE_URL}${image}`} alt="Bedrijfslogo" />
+            <img className="w-full max-h-64 rounded-t-lg md:h-48 md:w-48 md:rounded-none md:rounded-s-lg object-cover" src={`${IMAGE_BASE_URL}${image}`} alt="Bedrijfslogo" />
             <div className="flex flex-col justify-between p-4 leading-normal">
                 <h2 className="mb-1 text-4xl font-bold tracking-tight text-gray-900">{name}</h2>
                 <h3 className="mb-1 text-xl font-bold tracking-tight text-gray-900 flex gap-1">
