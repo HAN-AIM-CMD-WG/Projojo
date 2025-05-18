@@ -73,10 +73,10 @@ Entities are defined by Pydantic models decorated with `@entity`.
 -   **Explicit Naming**:
     ```python
     @entity("student")
-    class Student(BaseModel):
+    class StudentData(BaseModel):
         # ... attributes
     ```
-    This defines an entity named `student` in TypeDB.
+    This defines an entity named `student` in TypeDB, despite the class name being `StudentData`.
 
 -   **Abstract Entities**:
     The `@abstract` decorator marks an entity as abstract in TypeDB.
@@ -91,13 +91,13 @@ Entities are defined by Pydantic models decorated with `@entity`.
 -   **Inheritance**:
     Python class inheritance is translated to TypeDB subtyping.
     ```python
-    @entity("student")
+    @entity()
     class Student(User): # Assuming User is another @entity decorated class
         # ... student-specific attributes
     ```
     This generates `entity student sub user;`.
 
-### Annotated
+### Annotations
 Entity attributes can be annotated using `typing.Annotated` to provide TypeDB-specific details. These annotations control how attributes are defined and behave within the TypeDB schema.
 
 -   **`@key`**: Marks an attribute as a key for the entity.
@@ -145,7 +145,7 @@ class User(BaseModel):
 Generates:
 ```typeql
 define
-user sub entity,
+entity user,
   owns email @key,
   owns age @card(1); # @card(1) is default for singular types
 
@@ -179,7 +179,7 @@ Relations are defined by Pydantic models decorated with `@relation`.
     Attributes defined directly on the relation model (like `description: str` above) become attributes owned by the relation itself.
     ```typeql
     define
-    hasSkill sub relation,
+    relation hasSkill,
       owns description @card(1); # Assuming str defaults to @card(1)
     ```
 
@@ -212,7 +212,7 @@ Entities are linked to relations through roles. This is defined using `Plays` an
     This generates TypeQL like:
     ```typeql
     define
-    hasSkill sub relation,
+    relation hasSkill,
       relates student @card(1),  # Role 'student'
       relates skill @card(1),  # Role 'skill' (assuming default card(1) for Skill | None)
       owns description @card(1);
@@ -265,38 +265,45 @@ Entities are linked to relations through roles. This is defined using `Plays` an
 ### Adding features
 <!-- how to add features to the generator, eg. `@key`, `@card`, `@plays`, `@relates`, but specifically annotations that are currently not supported -->
 
-## Decisions
+<!-- ## Decisions -->
 <!-- decisions made on logic/syntax during the development of the schema generator -->
 
 ## Example
-<!-- TODO: extract syntax from example and document individually -->
 
 ### Decorators
 ```python
+# TODO: when using the function like `@entity` without parentheses, it will probably not work...
+# TODO: otherwise, these functions have not been tested, but are just a guess of what the decorator should look like
 def entity(name: str = None):
-    # TODO: find out what this means. 'cls'? '_typeql_entity'?   maybe metadata properties?
     def decorator(cls):
-        # TODO: i think this `cls` is the class which is decorated with this decorator.
-        # TODO: in that case, `cls._typeql_entity` is setting the `_typeql_entity` attribute of the class to the name provided in the decorator or the lowercase version of the class name.
-        cls._typeql_entity = name or cls.__name__.lower()
+        set_typeql_meta(cls, "type", "entity")
+        set_typeql_meta(cls, "name", name or cls.__name__.lower())
         return cls
     return decorator
-
 
 def relation(name: str = None):
     def decorator(cls):
-        cls._typeql_relation = name or cls.__name__.lower()
+        set_typeql_meta(cls, "type", "relation")
+        set_typeql_meta(cls, "name", name or cls.__name__.lower())
         return cls
     return decorator
 
-
 def abstract(cls):
-    cls._typeql_abstract = True
+    def decorator(cls):
+        set_typeql_meta(cls, "abstract", True)
+        return cls
+    return decorator
+
+def set_typeql_meta(cls, key: str, value: str):
+    if not hasattr(cls, "_typeql_meta"):
+        cls._typeql_meta = {}
+    cls._typeql_meta[key] = value
     return cls
 ```
 
 ### Annotations
 ```python
+# TODO: same as above, these are just a guess of what the annotations should look like
 class TypeQLAnnotation:
     def __init__(self, annotation: str):
         self.annotation = annotation
@@ -320,10 +327,11 @@ class Relates(TypeQLAnnotation):
         super().__init__(f"relates {target}")
 
 
-# TODO: check if the {relation}:{role} is implemented correctly
+# TODO: check if the {relation}:{role} is implemented correctly (Where to get the role name from?)
 # class Plays(TypeQLAnnotation):
 #     def __init__(self, relation: str):
 #         super().__init__(f"plays {relation}")
+# example: `plays hasSkill:student`
 
 
 class Ignore:
@@ -340,6 +348,7 @@ for attr, type_hint in hints.items():
 ```
 
 ### Pydantic Models
+<!-- from this point on, the code is the original code used to figure out how the syntax would look/work and if it is intuitive. -->
 ```python
 from pydantic import BaseModel
 from typing import Annotated
@@ -362,7 +371,7 @@ class User(BaseModel):
 class Student(User):
     # --- fields ---
     school_account_name: str
-    postal_code: Annotated[str, TypeQLAnnotation('@regex("regular expression")')] # annotations for typeDB that have not been implemented yet, can be added via a string with the exact annotation as it would be in typeDB
+    postal_code: Annotated[str, TypeQLAnnotation('@regex("\d{4}[ ]?[A-Z]{2}")')] # annotations for typeDB that have not been implemented yet, can be added via a string with the exact annotation as it would be in typeDB
 
     # --- relations (plays) ---
     # A relation is always an `| None` with default `None`, as it is not required to be fetched every time
@@ -435,7 +444,7 @@ class User(BaseModel):
 @entity("student")
 class Student(User):
     school_account_name: str
-    postal_code: Annotated[str, TypeQLAnnotation('@regex("regular expression")')]
+    postal_code: Annotated[str, TypeQLAnnotation('@regex("\d{4}[ ]?[A-Z]{2}")')]
 
     hasSkill: Annotated[list[HasSkill] | None, Plays(HasSkill), Card("0..")] = None
 
