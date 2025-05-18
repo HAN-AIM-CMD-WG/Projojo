@@ -51,8 +51,8 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/test/files", StaticFiles(directory="static/images"), name="files")
-
+app.mount("/test/image", StaticFiles(directory="static/images"), name="image")
+# app.mount("/test/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}

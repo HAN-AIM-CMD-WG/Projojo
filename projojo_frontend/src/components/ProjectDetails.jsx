@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { createTask, FILE_BASE_URL } from "../services";
+import { createTask, IMAGE_BASE_URL } from "../services";
 import { useAuth } from "./AuthProvider";
 import FormInput from "./FormInput";
 import Modal from "./Modal";
@@ -54,7 +54,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     <div>
                         <img
                             className="w-full sm:w-48 h-52 sm:h-48 aspect-square object-cover"
-                            src={isLoading ? '/loading.gif' : `${FILE_BASE_URL}${project.image_path}`}
+                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
                             alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
                         />
                     </div>
@@ -66,7 +66,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                             <Link to={`/business/${project.business_id}`} className="group">
                                 <img
                                     className="h-14 w-14 sm:h-16 sm:w-16 aspect-square object-cover rounded-full border border-gray-300 shadow-sm"
-                                    src={isLoading ? '/loading.gif' : `${FILE_BASE_URL}${project.image_path}`}
+                                    src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
                                     alt={isLoading ? "Aan het laden" : "Bedrijfslogo"}
                                 />
                             </Link>
