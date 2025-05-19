@@ -1,12 +1,10 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react-swc'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    tailwindcss(),
-    react()
+    react(),
   ],
   server: {
     watch: {
@@ -17,6 +15,5 @@ export default defineConfig({
       clientPort: 5173,  // Ensures HMR works through Docker port mapping
       overlay: true      // Shows an overlay when errors occur
     }
-    // Note: host is set via CLI in Dockerfile: --host 0.0.0.0
   }
 })
