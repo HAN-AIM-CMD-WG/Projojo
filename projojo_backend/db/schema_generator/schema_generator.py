@@ -1,6 +1,7 @@
 import os
 import importlib.util
 import inspect
+import types # Import types for types.UnionType
 from typing import Type, Any, get_type_hints, get_args, Union
 from pydantic import BaseModel
 import sys # For path manipulation if needed
@@ -158,51 +159,54 @@ class TypeQLSchemaGenerator:
         type_args = getattr(py_type, "__args__", tuple())
 
         # Handle Optional[T] (i.e., T | None)
-        # types.UnionType is for `X | Y`
-        # typing.Union is for `Union[X, Y]`
-        is_optional_typing_union = origin_type is Union and len(type_args) == 2 and type_args[1] is type(None)
-        # In Python 3.10+, `X | None` results in `types.UnionType`
-        is_optional_union_type = isinstance(py_type, type(Union[int, str])) and len(get_args(py_type)) == 2 and type(None) in get_args(py_type)
+        # py_type is the initial type hint for the field
 
+        current_type_to_check = py_type
 
-        if is_optional_typing_union:
-            actual_type = type_args[0]
-        elif is_optional_union_type:
-            actual_type = next(t for t in get_args(py_type) if t is not type(None))
-        else:
-            actual_type = py_type
+        # Loop to unwrap Optionals, potentially multiple times (e.g., Optional[Optional[str]])
+        # or List[Optional[str]] after list unwrapping.
+        while True:
+            origin_check = getattr(current_type_to_check, "__origin__", None)
+            args_check = getattr(current_type_to_check, "__args__", tuple())
 
-        # Re-check origin and args for the potentially unwrapped actual_type
-        origin_type = getattr(actual_type, "__origin__", None)
-        type_args = getattr(actual_type, "__args__", tuple())
+            is_typing_union_optional = origin_check is Union and len(args_check) == 2 and args_check[1] is type(None)
+            is_types_uniontype_optional = isinstance(current_type_to_check, types.UnionType) and len(get_args(current_type_to_check)) == 2 and type(None) in get_args(current_type_to_check)
 
-        # Handle List[T] -> T
-        if origin_type is list or actual_type is list: # actual_type for cases like `pets: list`
-            if type_args: # e.g. list[str]
-                actual_type = type_args[0]
-                 # If actual_type is now an Optional (e.g. list[str | None]), unwrap it again
-                if isinstance(actual_type, type(Union[int, str])) and len(get_args(actual_type)) == 2 and type(None) in get_args(actual_type):
-                    actual_type = next(t for t in get_args(actual_type) if t is not type(None))
-                elif getattr(actual_type, "__origin__", None) is Union and len(getattr(actual_type, "__args__", tuple())) == 2 and getattr(actual_type, "__args__", tuple())[1] is type(None):
-                     actual_type = getattr(actual_type, "__args__", tuple())[0]
+            if is_typing_union_optional:
+                current_type_to_check = args_check[0] # Unwrap typing.Union[T, None] to T
+            elif is_types_uniontype_optional:
+                current_type_to_check = next(t for t in get_args(current_type_to_check) if t is not type(None)) # Unwrap T | None to T
+            else:
+                break # Not an Optional type, or no more Optionals to unwrap
 
-            else: # Case: `pets: list` without specific type e.g. `list` alone
+        actual_type = current_type_to_check
+
+        # actual_type is now potentially unwrapped from Optional.
+        # Now, handle List[T] if actual_type is a list.
+        origin_actual = getattr(actual_type, "__origin__", None)
+        args_actual = getattr(actual_type, "__args__", tuple())
+
+        if origin_actual is list or actual_type is list: # Check if it's a list type
+            if args_actual: # e.g. list[str] or list[str | None]
+                list_inner_type = args_actual[0]
+
+                # The inner type of the list could itself be Optional, so unwrap it.
+                origin_list_inner = getattr(list_inner_type, "__origin__", None)
+                args_list_inner = getattr(list_inner_type, "__args__", tuple())
+
+                is_typing_union_optional_list_inner = origin_list_inner is Union and len(args_list_inner) == 2 and args_list_inner[1] is type(None)
+                is_types_uniontype_optional_list_inner = isinstance(list_inner_type, types.UnionType) and len(get_args(list_inner_type)) == 2 and type(None) in get_args(list_inner_type)
+
+                if is_typing_union_optional_list_inner:
+                    actual_type = args_list_inner[0]
+                elif is_types_uniontype_optional_list_inner:
+                    actual_type = next(t for t in get_args(list_inner_type) if t is not type(None))
+                else:
+                    actual_type = list_inner_type # Not an optional inner type
+            else: # Case: `field: list` (raw list without inner type)
                 print(f"Warning: List type hint for field does not specify inner type. Assuming 'string'. Field: {py_type}")
                 return "string"
-
-        # Final check for Optional if the list contained an Optional or if the original type was Optional
-        is_optional_typing_union_final = getattr(actual_type, "__origin__", None) is Union and \
-                                         len(getattr(actual_type, "__args__", tuple())) == 2 and \
-                                         getattr(actual_type, "__args__", tuple())[1] is type(None)
-        is_optional_union_type_final = isinstance(actual_type, type(Union[int, str])) and \
-                                       len(get_args(actual_type)) == 2 and \
-                                       type(None) in get_args(actual_type)
-
-        if is_optional_typing_union_final:
-            actual_type = getattr(actual_type, "__args__", tuple())[0]
-        elif is_optional_union_type_final:
-            actual_type = next(t for t in get_args(actual_type) if t is not type(None))
-        # actual_type should now be the non-Optional base type
+        # If it wasn't a list, actual_type remains as it was after initial Optional unwrap.
 
 
         if actual_type is str: return "string"
