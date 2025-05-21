@@ -3,17 +3,23 @@
 # - things like @card("1..0"), @key
 # the functions/classes from this file will be imported by developers for defining the models
 
-from typing import TypeVar, Type, Callable
+from typing import TypeVar, Type, Callable, Any # Imported Any
+
+# Global registry for TypeQL metadata
+_MODEL_METADATA_REGISTRY: dict[Type, dict[str, Any]] = {}
 
 # Helper function to store metadata on classes
-def set_typeql_meta(cls, key: str, value: any):
-    if not hasattr(cls, "_typeql_meta"):
-        cls._typeql_meta = {}
-    cls._typeql_meta[key] = value
-    return cls
+def set_typeql_meta(cls: Type, key: str, value: Any):
+    if cls not in _MODEL_METADATA_REGISTRY:
+        _MODEL_METADATA_REGISTRY[cls] = {}
+    _MODEL_METADATA_REGISTRY[cls][key] = value
+    # No need to return cls, as we are modifying a global registry
 
-def get_typeql_meta(cls, key: str, default: any = None):
-    return getattr(cls, "_typeql_meta", {}).get(key, default)
+def get_typeql_meta(cls: Type, key: str, default: Any = None) -> Any:
+    return _MODEL_METADATA_REGISTRY.get(cls, {}).get(key, default)
+
+def has_typeql_meta(cls: Type) -> bool:
+    return cls in _MODEL_METADATA_REGISTRY
 
 # Decorators
 T = TypeVar('T')

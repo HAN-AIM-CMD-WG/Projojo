@@ -2,11 +2,11 @@ from pydantic import BaseModel
 from typing import Annotated
 from datetime import datetime
 
-# Import the decorators and annotations from tql_generator
+# Import the decorators and annotations from tql_decorators
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from tql_generator import (
+from tql_decorators import (
     entity, relation, abstract,
     Key, Card, Plays, Relates, Ignore, TypeQLRawAnnotation
 )

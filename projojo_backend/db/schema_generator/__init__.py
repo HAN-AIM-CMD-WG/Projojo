@@ -1,6 +1,6 @@
 # Export the main functions and classes for easy importing
 from .schema_generator import generate_typeql_schema, TypeQLSchemaGenerator
-from .tql_generator import (
+from .tql_decorators import (
     entity, relation, abstract,
     Key, Card, Plays, Relates, Ignore, TypeQLRawAnnotation,
     get_typeql_meta, set_typeql_meta
