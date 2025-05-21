@@ -210,9 +210,9 @@ class TypeQLSchemaGenerator:
 
 
         if actual_type is str: return "string"
-        if actual_type is int: return "long"
+        if actual_type is int: return "integer"
         if actual_type is float: return "double"
-        if actual_type is bool: return "boolean" # This should now catch unwrapped bool
+        if actual_type is bool: return "boolean"
 
         # Check for datetime by name
         if hasattr(actual_type, '__name__') and actual_type.__name__ == 'datetime': return "datetime"
@@ -246,7 +246,10 @@ class TypeQLSchemaGenerator:
         # self.all_attributes is updated directly by _get_typeql_value_type and attribute processing
 
         for cls, meta_dict, module_globals in self.entities: # meta_dict is from registry
-            entity_name = meta_dict.get("name", cls.__name__.lower())
+            class_name_str = cls.__name__
+            default_tql_name = class_name_str[0].lower() + class_name_str[1:] if class_name_str else ""
+
+            entity_name = meta_dict.get("name", default_tql_name)
             is_abstract = meta_dict.get("abstract", False)
 
             supertype_name = None
@@ -255,7 +258,9 @@ class TypeQLSchemaGenerator:
 
             for base in cls.__bases__:
                 if has_typeql_meta(base) and get_typeql_meta(base, "type") == "entity":
-                    supertype_name = get_typeql_meta(base, "name", base.__name__.lower())
+                    base_class_name_str = base.__name__
+                    default_base_tql_name = base_class_name_str[0].lower() + base_class_name_str[1:] if base_class_name_str else ""
+                    supertype_name = get_typeql_meta(base, "name", default_base_tql_name)
                     typeql_parent_class = base
                     # Get fields from the direct TypeDB parent model
                     parent_fields_dict = typeql_parent_class.model_fields if hasattr(typeql_parent_class, 'model_fields') else typeql_parent_class.__fields__
@@ -318,13 +323,16 @@ class TypeQLSchemaGenerator:
                             type_to_infer_from = next(t for t in get_args(type_to_infer_from) if t is not type(None))
                         relation_cls_for_name = type_to_infer_from
 
-                    # Get relation name from its metadata or class name (lowercased)
+                    # Get relation name from its metadata or class name (first letter lowercased)
                     if isinstance(relation_type_in_plays, str): # If name was given as string
                         relation_name = relation_type_in_plays # Use as is, assuming user provided correct case
                     elif relation_cls_for_name and has_typeql_meta(relation_cls_for_name):
-                        relation_name = get_typeql_meta(relation_cls_for_name, "name", relation_cls_for_name.__name__.lower())
+                        rel_cls_name_str = relation_cls_for_name.__name__
+                        default_rel_tql_name = rel_cls_name_str[0].lower() + rel_cls_name_str[1:] if rel_cls_name_str else ""
+                        relation_name = get_typeql_meta(relation_cls_for_name, "name", default_rel_tql_name)
                     elif relation_cls_for_name: # Fallback if no meta, but type object exists
-                        relation_name = relation_cls_for_name.__name__.lower()
+                        rel_cls_name_str = relation_cls_for_name.__name__
+                        relation_name = rel_cls_name_str[0].lower() + rel_cls_name_str[1:] if rel_cls_name_str else ""
                     else:
                         # This case should be rare if type hints are proper
                         print(f"Warning: Could not determine relation name for Plays annotation in {entity_name}.{field_name}. Defaulting to empty string.")
@@ -381,7 +389,7 @@ class TypeQLSchemaGenerator:
             all_clauses = owns_clauses + plays_clauses
             if all_clauses:
                 definition_parts[-1] += "," # Add comma to the last part of header (name, sub, or abstract)
-                entity_def_str = " ".join(definition_parts) + "\n  " + ",\n  ".join(all_clauses) + ";\n"
+                entity_def_str = " ".join(definition_parts) + "\n    " + ",\n    ".join(all_clauses) + ";\n"
             else:
                 entity_def_str = " ".join(definition_parts) + ";\n"
             entity_definitions.append(entity_def_str)
@@ -393,7 +401,9 @@ class TypeQLSchemaGenerator:
         # self.all_attributes is assumed to be populated/updated during entity processing or here if needed
 
         for cls, meta_dict, module_globals in self.relations: # meta_dict is from registry
-            relation_name = meta_dict.get("name", cls.__name__.lower())
+            class_name_str = cls.__name__
+            default_tql_name = class_name_str[0].lower() + class_name_str[1:] if class_name_str else ""
+            relation_name = meta_dict.get("name", default_tql_name)
 
             owns_clauses = []
             relates_clauses = []
@@ -472,7 +482,7 @@ class TypeQLSchemaGenerator:
             all_clauses = relates_clauses + owns_clauses # TypeDB typically lists relates first for relations
             if all_clauses:
                 definition_parts[-1] += ","
-                relation_def_str = " ".join(definition_parts) + "\n  " + ",\n  ".join(all_clauses) + ";\n"
+                relation_def_str = " ".join(definition_parts) + "\n    " + ",\n    ".join(all_clauses) + ";\n"
             else:
                 relation_def_str = " ".join(definition_parts) + ";\n"
             relation_definitions.append(relation_def_str)

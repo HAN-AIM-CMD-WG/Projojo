@@ -6,13 +6,11 @@ from datetime import datetime
 # Assuming tql_decorators.py is in the parent directory or accessible via PYTHONPATH
 # For direct execution of schema_generator.py from its own directory,
 # this import should work due to sys.path modifications in schema_generator.
-from tql_decorators import entity, relation, abstract, Key, Card, Plays, Relates, Ignore, TypeQLRawAnnotation
+from tql_decorators import entity, relation, abstract, Key, Card, Plays, Relates, TypeQLRawAnnotation
 
-# Forward declarations for type hints where classes are defined later or circularly
-# Pydantic usually handles string forward refs, but explicit ones can be clearer.
-# However, for this generator, direct class references are preferred in Plays/Relates if possible.
-# Let's define them as needed or rely on Pydantic's string resolution.
-
+# --- Forward declarations ---
+# These help type hints refer to classes defined later in the file.
+# Pydantic's model_rebuild() or update_forward_refs() resolves these.
 class User(BaseModel): pass
 class Supervisor(User): pass
 class Student(User): pass
@@ -78,7 +76,7 @@ class Business(BaseModel):
     name: Annotated[str, Key()]
     description: Annotated[str, Card("1")]
     imagePath: Annotated[str, Card("1")]
-    location: Annotated[list[str], Card("1..")] # At least one location
+    location: Annotated[list[str], Card("1..")]
     # plays manages:business @card(1..)
     managed_by_relations: Annotated[list[Manages] | None, Plays(Manages, role_name="business"), Card("1..")] = None
     # plays hasProjects:business @card(0..1)
@@ -94,17 +92,17 @@ class Project(BaseModel):
     part_of_business_relation: Annotated[HasProjects | None, Plays(HasProjects, role_name="project"), Card("1")] = None
     # plays containsTask:project @card(0..)
     tasks_relations: Annotated[list[ContainsTask] | None, Plays(ContainsTask, role_name="project"), Card("0..")] = None
-    # plays creates:project @card(0..) -> This seems to imply a project can be part of multiple "creates" relations if a supervisor creates multiple.
-    # However, the 'creates' relation in schema has 'relates project @card(0..)' for a supervisor.
-    # This means a 'creates' relation instance links one supervisor to potentially many projects.
-    # So, a Project would be linked via one 'creates' relation instance.
-    creation_relation: Annotated[Creates | None, Plays(Creates, role_name="project"), Card("0..1")] = None # Assuming a project is created once.
+    # plays creates:project @card(0..1) - Interpreted as a project is created via one 'Creates' relation instance.
+    # The TQL schema for 'creates' relation has 'relates project @card(0..)' for a supervisor.
+    # This implies a supervisor's "act of creation" (a single 'Creates' instance) can link to multiple projects.
+    # For Pydantic representation on the Project side, it means a Project is involved in one such 'Creates' event.
+    creation_relation: Annotated[Creates | None, Plays(Creates, role_name="project"), Card("0..1")] = None
 
 @entity
 class Task(BaseModel):
     name: Annotated[str, Card("1")]
     description: Annotated[str, Card("1")]
-    totalNeeded: Annotated[int, Card("1")] # Mapped to long (int)
+    totalNeeded: Annotated[int, Card("1")]
     createdAt: Annotated[datetime, Card("1")]
     # plays containsTask:task @card(1)
     part_of_project_relation: Annotated[ContainsTask | None, Plays(ContainsTask, role_name="task"), Card("1")] = None
@@ -139,17 +137,14 @@ class Authenticates(BaseModel):
 class Creates(BaseModel):
     # relates supervisor @card(1)
     supervisor: Annotated[Supervisor | None, Relates(Supervisor), Card("1")]
-    # relates project @card(0..) -> This means one 'Creates' instance can link to multiple projects.
-    # This is unusual for a direct Pydantic field. Typically, a relation instance links one set of role-players.
-    # If a supervisor creates multiple projects, it would be multiple instances of 'Creates' relation,
-    # each linking to one project, or the 'project' role here should be singular.
-    # Assuming the TQL means a supervisor's "act of creation" can be one event that spawns multiple projects.
-    # For Pydantic, this might be better modeled as `project: Annotated[Project | None, Relates(Project)]` if one relation instance = one project created.
-    # Or, if a single 'Creates' event links to many projects, the Pydantic model might not directly hold a list of projects.
-    # Let's assume one 'Creates' instance for one project for simplicity in Pydantic.
+    # relates project @card(0..)
+    # This Pydantic model represents one instance of the 'creates' relation.
+    # If a single 'creates' event links one supervisor to multiple projects,
+    # that logic is on the 'supervisor' role in TQL. Here, one 'creates' links to one project.
     project: Annotated[Project | None, Relates(Project)] # Default card(1)
-    createdAt: Annotated[datetime, Card("1")] # Schema shows @index, using TypeQLRawAnnotation if needed, or just Card(1)
-    # createdAt: Annotated[datetime, TypeQLRawAnnotation("@index"), Card("1")] # If @index is critical
+    createdAt: Annotated[datetime, Card("1")] # Schema shows @index for this attribute on the relation.
+    # If @index is a custom TypeQL feature, it could be:
+    # createdAt: Annotated[datetime, Card("1"), TypeQLRawAnnotation("@index")]
 
 @relation
 class Manages(BaseModel):
@@ -163,8 +158,10 @@ class Manages(BaseModel):
 class HasProjects(BaseModel):
     # relates business @card(1)
     business: Annotated[Business | None, Relates(Business), Card("1")]
-    # relates project @card(1..)
-    project: Annotated[Project | None, Relates(Project), Card("1")] # A single HasProjects links one business to one project. List is on Business.
+    # relates project @card(1..) in TQL.
+    # This Pydantic model represents one link (one project per HasProjects instance).
+    # The 'Business' entity would have a list of these if it 'plays' in multiple 'HasProjects' relations.
+    project: Annotated[Project | None, Relates(Project), Card("1")]
 
 @relation
 class ContainsTask(BaseModel):

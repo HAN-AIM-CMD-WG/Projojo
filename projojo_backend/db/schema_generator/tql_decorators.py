@@ -31,7 +31,9 @@ def entity(name_or_class: str | Type[T] | None = None) -> Callable[[Type[T]], Ty
     """
     def decorator(cls: Type[T]) -> Type[T]:
         set_typeql_meta(cls, "type", "entity")
-        actual_name = name_or_class if isinstance(name_or_class, str) else cls.__name__.lower()
+        class_name = cls.__name__
+        default_name = class_name[0].lower() + class_name[1:] if class_name else ""
+        actual_name = name_or_class if isinstance(name_or_class, str) else default_name
         set_typeql_meta(cls, "name", actual_name)
         return cls
 
@@ -48,7 +50,9 @@ def relation(name_or_class: str | Type[T] | None = None) -> Callable[[Type[T]], 
     """
     def decorator(cls: Type[T]) -> Type[T]:
         set_typeql_meta(cls, "type", "relation")
-        actual_name = name_or_class if isinstance(name_or_class, str) else cls.__name__.lower()
+        class_name = cls.__name__
+        default_name = class_name[0].lower() + class_name[1:] if class_name else ""
+        actual_name = name_or_class if isinstance(name_or_class, str) else default_name
         set_typeql_meta(cls, "name", actual_name)
         return cls
 
