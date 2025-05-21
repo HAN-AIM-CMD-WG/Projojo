@@ -106,17 +106,29 @@ class TypeQLSchemaGenerator:
                 print(f"Warning: Could not process file during initial discovery {file_path}. Full traceback:")
                 traceback.print_exc() # Print full traceback for this specific file processing
 
+        # Combine all module dictionaries into a single namespace for forward ref resolution
+        combined_globals = {}
+        for mc in discovered_model_classes: # Iterate through classes that had _temp_processing_info
+            if hasattr(mc, "_temp_processing_info"):
+                combined_globals.update(mc._temp_processing_info['module_dict'])
+
+        # Add builtins to combined_globals as Pydantic might need them
+        combined_globals.update(sys.modules['builtins'].__dict__)
+
+
         # After all modules are loaded, try to update forward refs for all discovered Pydantic models
         for model_class in discovered_model_classes:
             try:
+                # Ensure the class itself is in the globals for self-references if stringified
+                combined_globals[model_class.__name__] = model_class
+
                 if hasattr(model_class, 'model_rebuild'): # Pydantic v2
-                    model_class.model_rebuild(force=True)
+                    # Pydantic V2's model_rebuild uses the class's own module's globals by default.
+                    # Providing _types_namespace can extend this.
+                    model_class.model_rebuild(force=True, _types_namespace=combined_globals)
                 elif hasattr(model_class, 'update_forward_refs'): # Pydantic v1
-                    # update_forward_refs might need arguments if types are in different modules' globals
-                    # For simplicity, try without first. This might need refinement.
-                    # We can pass a combined global namespace if necessary.
-                    # For now, rely on Pydantic's ability to find them if modules are in sys.modules
-                    model_class.update_forward_refs()
+                    # update_forward_refs can take kwargs for globals and locals
+                    model_class.update_forward_refs(**combined_globals)
                 # print(f"Successfully rebuilt/updated forward refs for {model_class.__name__}")
             except Exception as e:
                 print(f"Warning: Could not update forward refs for {model_class.__name__}: {e}")
@@ -178,20 +190,27 @@ class TypeQLSchemaGenerator:
                 print(f"Warning: List type hint for field does not specify inner type. Assuming 'string'. Field: {py_type}")
                 return "string"
 
-        # Final check for Optional if the list contained an Optional
-        if isinstance(actual_type, type(Union[int, str])) and len(get_args(actual_type)) == 2 and type(None) in get_args(actual_type):
-             actual_type = next(t for t in get_args(actual_type) if t is not type(None))
-        elif getattr(actual_type, "__origin__", None) is Union and len(getattr(actual_type, "__args__", tuple())) == 2 and getattr(actual_type, "__args__", tuple())[1] is type(None):
-             actual_type = getattr(actual_type, "__args__", tuple())[0]
+        # Final check for Optional if the list contained an Optional or if the original type was Optional
+        is_optional_typing_union_final = getattr(actual_type, "__origin__", None) is Union and \
+                                         len(getattr(actual_type, "__args__", tuple())) == 2 and \
+                                         getattr(actual_type, "__args__", tuple())[1] is type(None)
+        is_optional_union_type_final = isinstance(actual_type, type(Union[int, str])) and \
+                                       len(get_args(actual_type)) == 2 and \
+                                       type(None) in get_args(actual_type)
+
+        if is_optional_typing_union_final:
+            actual_type = getattr(actual_type, "__args__", tuple())[0]
+        elif is_optional_union_type_final:
+            actual_type = next(t for t in get_args(actual_type) if t is not type(None))
+        # actual_type should now be the non-Optional base type
 
 
         if actual_type is str: return "string"
         if actual_type is int: return "long"
         if actual_type is float: return "double"
-        if actual_type is bool: return "boolean"
+        if actual_type is bool: return "boolean" # This should now catch unwrapped bool
 
-        # Check for datetime by name, as it's not a built-in type like str, int.
-        # It could be `datetime.datetime` or just `datetime` if imported as `from datetime import datetime`.
+        # Check for datetime by name
         if hasattr(actual_type, '__name__') and actual_type.__name__ == 'datetime': return "datetime"
 
         # Fallback or error for unmapped types
@@ -268,25 +287,35 @@ class TypeQLSchemaGenerator:
                     # Infer relation name from Plays annotation or field type
                     relation_type_in_plays = plays_ann.relation_type
                     relation_name = ""
+                    # Determine the class representing the relation
+                    relation_cls_for_name = None
                     if relation_type_in_plays:
-                        if isinstance(relation_type_in_plays, str):
-                            relation_name = relation_type_in_plays.lower() # Assuming string is direct name
-                        elif has_typeql_meta(relation_type_in_plays): # Use has_typeql_meta
-                            relation_name = get_typeql_meta(relation_type_in_plays, "name", relation_type_in_plays.__name__.lower())
-                        else: # Fallback if it's a type without meta
-                            relation_name = relation_type_in_plays.__name__.lower()
-                    else: # Infer from field's Python type (e.g. list[HasSkill] -> hasSkill)
-                        # This needs to correctly extract from List[RelationModel] or RelationModel
+                        if not isinstance(relation_type_in_plays, str): # If it's a type object
+                            relation_cls_for_name = relation_type_in_plays
+                    else: # Infer from field's Python type
                         type_to_infer_from = py_actual_type
-                        origin = getattr(py_actual_type, "__origin__", None)
-                        type_args_infer = getattr(py_actual_type, "__args__", tuple())
-                        if origin is list and type_args_infer:
-                            type_to_infer_from = type_args_infer[0]
+                        origin_infer = getattr(py_actual_type, "__origin__", None)
+                        args_infer = getattr(py_actual_type, "__args__", tuple())
+                        if origin_infer is list and args_infer:
+                            type_to_infer_from = args_infer[0]
+                        # Unwrap if Optional, e.g. list[Optional[RelationType]]
+                        origin_inner = getattr(type_to_infer_from, "__origin__", None)
+                        args_inner = getattr(type_to_infer_from, "__args__", tuple())
+                        if (origin_inner is Union and len(args_inner) == 2 and args_inner[1] is type(None)) or \
+                           (isinstance(type_to_infer_from, type(Union[int,str])) and len(get_args(type_to_infer_from)) == 2 and type(None) in get_args(type_to_infer_from)):
+                            type_to_infer_from = next(t for t in get_args(type_to_infer_from) if t is not type(None))
+                        relation_cls_for_name = type_to_infer_from
 
-                        if has_typeql_meta(type_to_infer_from): # Use has_typeql_meta
-                            relation_name = get_typeql_meta(type_to_infer_from, "name", type_to_infer_from.__name__.lower())
-                        else:
-                            relation_name = type_to_infer_from.__name__.lower()
+                    # Get relation name from its metadata or class name (lowercased)
+                    if isinstance(relation_type_in_plays, str): # If name was given as string
+                        relation_name = relation_type_in_plays # Use as is, assuming user provided correct case
+                    elif relation_cls_for_name and has_typeql_meta(relation_cls_for_name):
+                        relation_name = get_typeql_meta(relation_cls_for_name, "name", relation_cls_for_name.__name__.lower())
+                    elif relation_cls_for_name: # Fallback if no meta, but type object exists
+                        relation_name = relation_cls_for_name.__name__.lower()
+                    else:
+                        # This case should be rare if type hints are proper
+                        print(f"Warning: Could not determine relation name for Plays annotation in {entity_name}.{field_name}. Defaulting to empty string.")
 
 
                     role_name = plays_ann.role_name if plays_ann.role_name else entity_name # Default role is entity name
