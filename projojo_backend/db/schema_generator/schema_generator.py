@@ -97,7 +97,7 @@ class TypeQLSchemaGenerator:
                         # Store metadata and module dict for later association
                         # We'll associate after attempting to rebuild all models
                         if not hasattr(member, "_temp_processing_info"):
-                             member._temp_processing_info = {}
+                            member._temp_processing_info = {}
                         # Get the full metadata dict from the registry for this class
                         member._temp_processing_info['meta'] = _MODEL_METADATA_REGISTRY.get(member, {})
                         member._temp_processing_info['module_dict'] = module.__dict__
@@ -218,7 +218,7 @@ class TypeQLSchemaGenerator:
         if hasattr(actual_type, '__name__') and actual_type.__name__ == 'datetime': return "datetime"
 
         # Fallback or error for unmapped types
-        print(f"Warning: Unmapped Python type {actual_type}. Defaulting to 'string'. Consider adding a mapping.")
+        print(f"Warning: Unmapped Python type {actual_type} (original: {py_type}). Defaulting to 'string'. Consider adding a mapping.") # Added original py_type for context
         return "string"
 
 
@@ -250,12 +250,17 @@ class TypeQLSchemaGenerator:
             is_abstract = meta_dict.get("abstract", False)
 
             supertype_name = None
+            parent_entity_fields = set()
+            typeql_parent_class = None
+
             for base in cls.__bases__:
-                if has_typeql_meta(base): # Use has_typeql_meta
-                    base_type = get_typeql_meta(base, "type")
-                    if base_type == "entity":
-                        supertype_name = get_typeql_meta(base, "name", base.__name__.lower())
-                        break
+                if has_typeql_meta(base) and get_typeql_meta(base, "type") == "entity":
+                    supertype_name = get_typeql_meta(base, "name", base.__name__.lower())
+                    typeql_parent_class = base
+                    # Get fields from the direct TypeDB parent model
+                    parent_fields_dict = typeql_parent_class.model_fields if hasattr(typeql_parent_class, 'model_fields') else typeql_parent_class.__fields__
+                    parent_entity_fields.update(parent_fields_dict.keys())
+                    break # Assuming single TypeDB inheritance for now
 
             owns_clauses = []
             plays_clauses = []
@@ -271,6 +276,9 @@ class TypeQLSchemaGenerator:
 
 
             for field_name, field_obj in fields.items():
+                if field_name in parent_entity_fields: # Skip inherited fields
+                    continue
+
                 py_type_hint_full = type_hints_with_extras.get(field_name)
                 if py_type_hint_full is None:
                     print(f"Warning: Could not get type hint for {entity_name}.{field_name}")
@@ -306,7 +314,7 @@ class TypeQLSchemaGenerator:
                         origin_inner = getattr(type_to_infer_from, "__origin__", None)
                         args_inner = getattr(type_to_infer_from, "__args__", tuple())
                         if (origin_inner is Union and len(args_inner) == 2 and args_inner[1] is type(None)) or \
-                           (isinstance(type_to_infer_from, type(Union[int,str])) and len(get_args(type_to_infer_from)) == 2 and type(None) in get_args(type_to_infer_from)):
+                            (isinstance(type_to_infer_from, type(Union[int,str])) and len(get_args(type_to_infer_from)) == 2 and type(None) in get_args(type_to_infer_from)):
                             type_to_infer_from = next(t for t in get_args(type_to_infer_from) if t is not type(None))
                         relation_cls_for_name = type_to_infer_from
 
@@ -323,19 +331,46 @@ class TypeQLSchemaGenerator:
 
 
                     role_name = plays_ann.role_name if plays_ann.role_name else entity_name # Default role is entity name
-                    cardinality = str(card_ann) if card_ann else self._get_default_cardinality(py_actual_type)
-                    plays_clauses.append(f"plays {relation_name}:{role_name} {cardinality}".strip())
+
+                    final_cardinality_str = ""
+                    if card_ann:
+                        final_cardinality_str = str(card_ann)
+                    else:
+                        default_card_val = self._get_default_cardinality(py_actual_type)
+                        if default_card_val: # Ensure it's not empty if we decide some types have no default card
+                            final_cardinality_str = f"@card({default_card_val})"
+
+                    plays_clauses.append(f"plays {relation_name}:{role_name} {final_cardinality_str}".strip())
                 else: # Owned attribute
                     attr_name_tql = field_name # Or field_obj.alias if using Pydantic alias
                     typeql_value_type = self._get_typeql_value_type(py_actual_type, field_tql_annotations)
                     self.all_attributes.add((attr_name_tql, typeql_value_type))
 
-                    cardinality = str(card_ann) if card_ann else self._get_default_cardinality(py_actual_type)
-                    other_anns_str = self._format_typeql_annotations([ann for ann in field_tql_annotations if not isinstance(ann, Card)])
+                    # Check if the attribute is a key
+                    is_key_attribute = any(isinstance(ann, Key) for ann in field_tql_annotations)
+
+                    # Format other annotations (like @key, or custom ones)
+                    # Exclude Card annotation here as it's handled separately or skipped for @key
+                    other_anns_str = self._format_typeql_annotations(
+                        [ann for ann in field_tql_annotations if not isinstance(ann, Card)]
+                    )
 
                     owns_clause = f"owns {attr_name_tql}"
-                    if other_anns_str: owns_clause += f" {other_anns_str}"
-                    if cardinality: owns_clause += f" {cardinality}" # Card is already @card(X)
+                    if other_anns_str: # This will add @key if present
+                        owns_clause += f" {other_anns_str}"
+
+                    if not is_key_attribute: # Only add cardinality if not a key
+                        final_cardinality_str = ""
+                        if card_ann: # Explicit Card annotation
+                            final_cardinality_str = str(card_ann)
+                        else: # Default cardinality
+                            default_card_val = self._get_default_cardinality(py_actual_type)
+                            if default_card_val:
+                                final_cardinality_str = f"@card({default_card_val})"
+
+                        if final_cardinality_str:
+                            owns_clause += f" {final_cardinality_str}"
+
                     owns_clauses.append(owns_clause.strip())
 
             # Assemble entity definition
@@ -392,19 +427,45 @@ class TypeQLSchemaGenerator:
                     # Target entity type from Relates.target_entity_type or infer. Not fully implemented here.
                     # For now, we assume the generator needs to resolve this.
                     # The Relates annotation itself doesn't carry the role name string in its __str__.
-                    cardinality = str(card_ann) if card_ann else self._get_default_cardinality(py_actual_type, is_relation_role=True)
-                    relates_clauses.append(f"relates {role_name} {cardinality}".strip())
+                    final_cardinality_str = ""
+                    if card_ann:
+                        final_cardinality_str = str(card_ann)
+                    else:
+                        default_card_val = self._get_default_cardinality(py_actual_type, is_relation_role=True)
+                        if default_card_val:
+                            final_cardinality_str = f"@card({default_card_val})"
+                    relates_clauses.append(f"relates {role_name} {final_cardinality_str}".strip())
                 else: # Owned attribute by the relation
                     attr_name_tql = field_name
                     typeql_value_type = self._get_typeql_value_type(py_actual_type, field_tql_annotations)
                     self.all_attributes.add((attr_name_tql, typeql_value_type))
 
-                    cardinality = str(card_ann) if card_ann else self._get_default_cardinality(py_actual_type)
-                    other_anns_str = self._format_typeql_annotations([ann for ann in field_tql_annotations if not isinstance(ann, Card)])
+                    # Relation attributes cannot be @key in TypeDB, but we apply same logic for consistency
+                    # though TypeDB would likely error if @key is on a relation attribute.
+                    # For now, let's assume @key is only for entity attributes.
+                    # If a relation attribute could be a key in some TypeQL extension, this logic would apply.
+                    is_key_attribute = any(isinstance(ann, Key) for ann in field_tql_annotations)
+
+                    other_anns_str = self._format_typeql_annotations(
+                        [ann for ann in field_tql_annotations if not isinstance(ann, Card)]
+                    )
 
                     owns_clause = f"owns {attr_name_tql}"
-                    if other_anns_str: owns_clause += f" {other_anns_str}"
-                    if cardinality: owns_clause += f" {cardinality}"
+                    if other_anns_str: # This would include @key if it were allowed and present
+                        owns_clause += f" {other_anns_str}"
+
+                    if not is_key_attribute: # Only add cardinality if not a key (or if keys on relations could have explicit cards)
+                        final_cardinality_str = ""
+                        if card_ann:
+                            final_cardinality_str = str(card_ann)
+                        else:
+                            default_card_val = self._get_default_cardinality(py_actual_type)
+                            if default_card_val:
+                                final_cardinality_str = f"@card({default_card_val})"
+
+                        if final_cardinality_str:
+                            owns_clause += f" {final_cardinality_str}"
+
                     owns_clauses.append(owns_clause.strip())
 
             definition_parts = [f"relation {relation_name}"]
@@ -432,21 +493,87 @@ class TypeQLSchemaGenerator:
         3. Processes relations.
         4. Assembles the final TypeQL schema string.
         """
-        self.discover_models()
+        self.discover_models() # Populates self.entities
 
-        entity_definition_strs = self._process_entities()
-        relation_definition_strs = self._process_relations()
-        attribute_definition_strs = self._generate_attribute_definitions()
+        # Sort entities to ensure supertypes are defined before subtypes
+        # self.entities is a list of (class_obj, meta_dict, module_globals)
+        # We need to sort based on class_obj's inheritance
 
-        schema_parts = ["define\n"]
+        # Create a map of class to its TypeDB parent class object
+        parent_map: dict[Type[BaseModel], Type[BaseModel] | None] = {}
+        class_to_entry_map: dict[Type[BaseModel], tuple[Type[BaseModel], dict[str, Any], dict[str, Any]]] = {
+            entry[0]: entry for entry in self.entities
+        }
+
+        for cls, _, _ in self.entities:
+            parent_map[cls] = None
+            for base in cls.__bases__:
+                if has_typeql_meta(base) and get_typeql_meta(base, "type") == "entity":
+                    parent_map[cls] = base
+                    break
+
+        # Topological sort (simple version for single inheritance chains)
+        sorted_entities_entries: list[tuple[Type[BaseModel], dict[str, Any], dict[str, Any]]] = []
+        processed_classes: set[Type[BaseModel]] = set()
+
+        # Iteratively add entities whose parents are already processed or have no parent
+        # This might need multiple passes if the initial self.entities list is not well-ordered
+        # A more robust topo sort would handle complex graphs better.
+
+        temp_entities_list = list(self.entities) # Work on a copy
+
+        while len(sorted_entities_entries) < len(self.entities):
+            start_count = len(sorted_entities_entries)
+            remaining_entities_after_pass = []
+
+            for entry in temp_entities_list:
+                cls = entry[0]
+                parent = parent_map.get(cls)
+                if parent is None or parent in processed_classes:
+                    if cls not in processed_classes:
+                        sorted_entities_entries.append(entry)
+                        processed_classes.add(cls)
+                else:
+                    remaining_entities_after_pass.append(entry)
+
+            if len(sorted_entities_entries) == start_count and remaining_entities_after_pass:
+                # Stuck, indicates a cycle or unresolvable parent not in self.entities
+                # This shouldn't happen if all TypeDB entities are discovered correctly
+                print(f"Warning: Could not topologically sort all entities. Remaining: {[e[0].__name__ for e in remaining_entities_after_pass]}")
+                # Add remaining ones to avoid infinite loop, though order might be wrong
+                sorted_entities_entries.extend(remaining_entities_after_pass)
+                break
+
+            temp_entities_list = remaining_entities_after_pass
+
+        # Replace self.entities with the sorted version before processing
+        original_entities_for_processing = self.entities
+        self.entities = sorted_entities_entries
+
+        entity_definition_strs = self._process_entities() # These already end with ";\n"
+
+        self.entities = original_entities_for_processing # Restore if needed elsewhere, though likely not
+
+        relation_definition_strs = self._process_relations() # These already end with ";\n"
+        attribute_definition_strs = self._generate_attribute_definitions() # These already end with ";\n"
+
+        final_schema_string = "define\n\n"
+
+        if entity_definition_strs:
+            final_schema_string += "\n".join(entity_definition_strs) # Join with single \n, as each already has one.
+                                                                    # This creates one blank line between them.
+            if relation_definition_strs or attribute_definition_strs:
+                final_schema_string += "\n" # Extra newline before next block
+
+        if relation_definition_strs:
+            final_schema_string += "\n".join(relation_definition_strs)
+            if attribute_definition_strs:
+                final_schema_string += "\n" # Extra newline before attributes
+
         if attribute_definition_strs:
-            schema_parts.extend(attribute_definition_strs)
-            schema_parts.append("\n") # Add a newline after attribute definitions
+            final_schema_string += "".join(attribute_definition_strs) # Attributes are typically dense
 
-        schema_parts.extend(entity_definition_strs)
-        schema_parts.extend(relation_definition_strs)
-
-        return "".join(schema_parts)
+        return final_schema_string.strip() + "\n" # Ensure a single trailing newline
 
 
 def generate_typeql_schema(module_or_package_path: str) -> str:
