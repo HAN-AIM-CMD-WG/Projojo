@@ -32,15 +32,20 @@ class RegistersForTask(BaseModel): pass
 @abstract
 @entity
 class User(BaseModel):
+    # owns email @key,
     email: Annotated[str, Key()]
+    # owns imagePath @card(1),
     imagePath: str
+    # owns fullName @card(1),
     fullName: str
+    # owns password_hash @card(1);
     password_hash: str
+
 
 @entity
 class Supervisor(User):
     # Inherits attributes from User
-    # plays authenticates:authenticated @card(1..10) -> This implies a list of Authenticates relations
+    # plays authenticates:authenticated @card(1..10)
     authentications: Annotated[list[Authenticates] | None, Plays(Authenticates, role_name="authenticated"), Card("1..10")] = None
     # plays manages:supervisor @card(1)
     management_relations: Annotated[Manages | None, Plays(Manages)] = None
@@ -76,7 +81,7 @@ class Business(BaseModel):
     # plays manages:business @card(1..)
     managed_by_relations: Annotated[list[Manages] | None, Plays(Manages), Card("1..")] = None
     # plays hasProjects:business @card(0..)
-    projects_relation: Annotated[HasProjects | None, Plays(HasProjects)] = None
+    projects_relation: Annotated[list[HasProjects] | None, Plays(HasProjects)] = None
 
 @entity
 class Project(BaseModel):
@@ -89,7 +94,7 @@ class Project(BaseModel):
     # plays containsTask:project @card(0..)
     tasks_relations: Annotated[list[ContainsTask] | None, Plays(ContainsTask)] = None
     # plays creates:project @card(0..)
-    creation_relation: Annotated[Creates | None, Plays(Creates)] = None
+    creation_relation: Annotated[list[Creates] | None, Plays(Creates)] = None
 
 @entity
 class Task(BaseModel):
@@ -131,7 +136,7 @@ class Creates(BaseModel):
     # relates supervisor @card(1)
     supervisor: Annotated[Supervisor | None, Relates(Supervisor)]
     # relates project @card(0..)
-    project: Annotated[Project | None, Relates(Project)]
+    project: Annotated[list[Project] | None, Relates(Project)]
     createdAt: datetime
 
 @relation
@@ -147,7 +152,7 @@ class HasProjects(BaseModel):
     # relates business @card(1)
     business: Annotated[Business | None, Relates(Business)]
     # relates project @card(1..)
-    project: Annotated[Project | None, Relates(Project)]
+    project: Annotated[list[Project] | None, Relates(Project), Card("1..")]
 
 @relation
 class ContainsTask(BaseModel):
