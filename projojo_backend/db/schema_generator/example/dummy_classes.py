@@ -1,12 +1,9 @@
-from __future__ import annotations # For forward references in type hints
+# from __future__ import annotations # For forward references in type hints
 from pydantic import BaseModel
 from typing import Annotated
 from datetime import datetime
 
-# Assuming tql_decorators.py is in the parent directory or accessible via PYTHONPATH
-# For direct execution of schema_generator.py from its own directory,
-# this import should work due to sys.path modifications in schema_generator.
-from tql_decorators import entity, relation, abstract, Key, Card, Plays, Relates, TypeQLRawAnnotation
+from tql_decorators import entity, relation, abstract, Key, Card, Plays, Relates
 
 # --- Forward declarations ---
 # These help type hints refer to classes defined later in the file.
