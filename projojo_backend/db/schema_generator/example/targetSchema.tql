@@ -1,0 +1,114 @@
+define
+
+entity business,
+    owns name @key,
+    owns description @card(1),
+    owns imagePath @card(1),
+    owns location @card(1..),
+    plays manages:business @card(1..),
+    plays hasProjects:business @card(0..1);
+
+entity identityProvider,
+    owns name @card(0..1),
+    plays authenticates:authenticator;
+
+entity project,
+    owns name @card(1),
+    owns description @card(1),
+    owns imagePath @card(1),
+    owns createdAt @card(1),
+    plays hasProjects:project @card(1),
+    plays containsTask:project @card(0..),
+    plays creates:project @card(0..);
+
+entity skill,
+    owns name @key,
+    owns isPending @card(1),
+    owns createdAt @card(1),
+    plays requiresSkill:skill @card(0..),
+    plays hasSkill:skill @card(0..);
+
+entity task,
+    owns name @card(1),
+    owns description @card(1),
+    owns totalNeeded @card(1),
+    owns createdAt @card(1),
+    plays containsTask:task @card(1),
+    plays requiresSkill:task @card(0..),
+    plays registersForTask:task @card(0..);
+
+entity user @abstract,
+    owns email @key,
+    owns imagePath @card(1),
+    owns fullName @card(1),
+    owns password_hash @card(1);
+
+entity student sub user,
+    owns schoolAccountName @card(1),
+    plays hasSkill:student @card(0..),
+    plays registersForTask:student @card(0..);
+
+entity supervisor sub user,
+    plays authenticates:authenticated @card(1..10),
+    plays manages:supervisor @card(1),
+    plays creates:supervisor @card(0..);
+
+entity teacher sub user,
+    owns schoolAccountName @card(1);
+
+relation authenticates,
+    relates authenticator,
+    relates authenticated,
+    owns username @card(1),
+    owns id @key;
+
+relation containsTask,
+    relates project @card(1),
+    relates task @card(1);
+
+relation creates,
+    relates supervisor @card(1),
+    relates project @card(0..),
+    owns createdAt @card(1);
+
+relation hasProjects,
+    relates business @card(1),
+    relates project @card(1..);
+
+relation hasSkill,
+    relates student @card(1),
+    relates skill @card(1),
+    owns description @card(1);
+
+relation manages,
+    relates supervisor @card(1),
+    relates business @card(1),
+    owns location @card(1..);
+
+relation registersForTask,
+    relates student @card(1),
+    relates task @card(1),
+    owns description @card(1),
+    owns isAccepted @card(0..1),
+    owns response @card(0..1),
+    owns createdAt @card(1);
+
+relation requiresSkill,
+    relates task @card(1),
+    relates skill @card(1);
+
+attribute createdAt value datetime;
+attribute description value string;
+attribute email value string;
+attribute fullName value string;
+attribute id value string;
+attribute imagePath value string;
+attribute isAccepted value boolean;
+attribute isPending value boolean;
+attribute location value string;
+attribute name value string;
+attribute password_hash value string;
+attribute response value string;
+attribute schoolAccountName value string;
+attribute totalNeeded value integer;
+attribute username value string;
