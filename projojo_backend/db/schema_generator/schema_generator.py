@@ -208,8 +208,6 @@ class TypeQLSchemaGenerator:
                 print(f"Warning: List type hint for field does not specify inner type. Assuming 'string'. Field: {py_type}")
                 return "string"
         # If it wasn't a list, actual_type remains as it was after initial Optional unwrap.
-
-
         if actual_type is str: return "string"
         if actual_type is int: return "integer"
         if actual_type is float: return "double"
@@ -222,20 +220,48 @@ class TypeQLSchemaGenerator:
         print(f"Warning: Unmapped Python type {actual_type} (original: {py_type}). Defaulting to 'string'. Consider adding a mapping.") # Added original py_type for context
         return "string"
 
-
     def _get_default_cardinality(self, py_type: Type, is_relation_role: bool = False) -> str:
         """Determines default cardinality based on Python type."""
-        origin_type = getattr(py_type, "__origin__", None)
-        type_args = getattr(py_type, "__args__", tuple())
 
+        # Handle Annotated types by extracting the actual type
+        if hasattr(py_type, '__origin__') and py_type.__origin__ is not None:
+            # Check if this is an Annotated type
+            if str(py_type).startswith('typing.Annotated'):
+                # Extract the first type argument (the actual type)
+                type_args = getattr(py_type, '__args__', tuple())
+                if type_args:
+                    actual_type = type_args[0]
+                else:
+                    actual_type = py_type
+            else:
+                actual_type = py_type
+        else:
+            actual_type = py_type
+
+        origin_type = getattr(actual_type, "__origin__", None)
+        type_args = getattr(actual_type, "__args__", tuple())
+
+        # Handle direct list types
         if origin_type is list:
-            return "0..*" # list[T] defaults to 0 or more
-        if origin_type is Union and len(type_args) == 2 and type_args[1] is type(None):
-            # T | None (Optional[T]) defaults to 1 for attributes,
-            # but for relation roles, it often implies 0..1 or 1 if not a list.
-            # The README implies `T | None` defaults to `@card(1)` for attributes.
-            # For roles like `student: Annotated[Student | None, Relates(Student)]` it's also `card(1)`.
-            return "1"
+            return "0.." # list[T] defaults to 0 or more
+
+        # Handle Optional[list[T]] (i.e., list[T] | None)
+        # Check for both typing.Union and the new | syntax
+        is_union = (origin_type is Union) or (hasattr(actual_type, '__class__') and 'UnionType' in str(actual_type.__class__))
+
+        if is_union and len(type_args) == 2 and type_args[1] is type(None):
+            # Check if the first type argument is a list
+            first_type = type_args[0]
+            first_origin = getattr(first_type, "__origin__", None)
+            if first_origin is list:
+                return "0.." # Optional[list[T]] also defaults to 0 or more
+            else:
+                # T | None (Optional[T]) defaults to 1 for attributes,
+                # but for relation roles, it often implies 0..1 or 1 if not a list.
+                # The README implies `T | None` defaults to `@card(1)` for attributes.
+                # For roles like `student: Annotated[Student | None, Relates(Student)]` it's also `card(1)`.
+                return "1"
+
         return "1" # Singular types default to 1
 
     def _format_typeql_annotations(self, annotations: list[Any]) -> str:
@@ -345,7 +371,7 @@ class TypeQLSchemaGenerator:
                     if card_ann:
                         final_cardinality_str = str(card_ann)
                     else:
-                        default_card_val = self._get_default_cardinality(py_actual_type)
+                        default_card_val = self._get_default_cardinality(py_type_hint_full)  # Use original type hint for cardinality
                         if default_card_val: # Ensure it's not empty if we decide some types have no default card
                             final_cardinality_str = f"@card({default_card_val})"
 
@@ -373,7 +399,7 @@ class TypeQLSchemaGenerator:
                         if card_ann: # Explicit Card annotation
                             final_cardinality_str = str(card_ann)
                         else: # Default cardinality
-                            default_card_val = self._get_default_cardinality(py_actual_type)
+                            default_card_val = self._get_default_cardinality(py_type_hint_full)  # Use original type hint for cardinality
                             if default_card_val:
                                 final_cardinality_str = f"@card({default_card_val})"
 
@@ -442,7 +468,7 @@ class TypeQLSchemaGenerator:
                     if card_ann:
                         final_cardinality_str = str(card_ann)
                     else:
-                        default_card_val = self._get_default_cardinality(py_actual_type, is_relation_role=True)
+                        default_card_val = self._get_default_cardinality(py_type_hint_full, is_relation_role=True)
                         if default_card_val:
                             final_cardinality_str = f"@card({default_card_val})"
                     relates_clauses.append(f"relates {role_name} {final_cardinality_str}".strip())
@@ -470,7 +496,7 @@ class TypeQLSchemaGenerator:
                         if card_ann:
                             final_cardinality_str = str(card_ann)
                         else:
-                            default_card_val = self._get_default_cardinality(py_actual_type)
+                            default_card_val = self._get_default_cardinality(py_type_hint_full)
                             if default_card_val:
                                 final_cardinality_str = f"@card({default_card_val})"
 
