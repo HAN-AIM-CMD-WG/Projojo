@@ -1,4 +1,3 @@
-# from __future__ import annotations # For forward references in type hints
 from pydantic import BaseModel
 from typing import Annotated
 from datetime import datetime
@@ -34,9 +33,9 @@ class RegistersForTask(BaseModel): pass
 @entity
 class User(BaseModel):
     email: Annotated[str, Key()]
-    imagePath: Annotated[str, Card("1")] # Explicitly @card(1) as per schema, though it's default for str
-    fullName: Annotated[str, Card("1")]
-    password_hash: Annotated[str, Card("1")] # In schema, implies it's always there
+    imagePath: str
+    fullName: str
+    password_hash: str
 
 @entity
 class Supervisor(User):
@@ -44,151 +43,141 @@ class Supervisor(User):
     # plays authenticates:authenticated @card(1..10) -> This implies a list of Authenticates relations
     authentications: Annotated[list[Authenticates] | None, Plays(Authenticates, role_name="authenticated"), Card("1..10")] = None
     # plays manages:supervisor @card(1)
-    management_relations: Annotated[Manages | None, Plays(Manages, role_name="supervisor"), Card("1")] = None # Assuming one Manages relation instance
+    management_relations: Annotated[Manages | None, Plays(Manages)] = None
     # plays creates:supervisor @card(0..)
-    created_projects_relations: Annotated[list[Creates] | None, Plays(Creates, role_name="supervisor"), Card("0..")] = None
+    created_projects_relations: Annotated[list[Creates] | None, Plays(Creates)] = None
 
 @entity
 class Student(User):
     # Inherits attributes from User
-    schoolAccountName: Annotated[str, Card("1")]
+    schoolAccountName: str
     # plays hasSkill:student @card(0..)
-    skills_relations: Annotated[list[HasSkill] | None, Plays(HasSkill, role_name="student"), Card("0..")] = None
+    skills_relations: Annotated[list[HasSkill] | None, Plays(HasSkill)] = None
     # plays registersForTask:student @card(0..)
-    task_registrations: Annotated[list[RegistersForTask] | None, Plays(RegistersForTask, role_name="student"), Card("0..")] = None
+    task_registrations: Annotated[list[RegistersForTask] | None, Plays(RegistersForTask)] = None
 
 @entity
 class Teacher(User):
     # Inherits attributes from User
-    schoolAccountName: Annotated[str, Card("1")]
+    schoolAccountName: str
 
 @entity
 class IdentityProvider(BaseModel):
-    name: Annotated[str | None, Card("0..1")] # Optional attribute
-    # plays authenticates:authenticator
-    authentication_provider_relations: Annotated[list[Authenticates] | None, Plays(Authenticates, role_name="authenticator")] = None # Default card(0..*) for list
+    name: Annotated[str | None, Card("0..1")]
+    # plays authenticates:authenticator @card(0..)
+    authentication_provider_relations: Annotated[list[Authenticates] | None, Plays(Authenticates, role_name="authenticator")] = None
 
 @entity
 class Business(BaseModel):
     name: Annotated[str, Key()]
-    description: Annotated[str, Card("1")]
-    imagePath: Annotated[str, Card("1")]
+    description: str
+    imagePath: str
     location: Annotated[list[str], Card("1..")]
     # plays manages:business @card(1..)
-    managed_by_relations: Annotated[list[Manages] | None, Plays(Manages, role_name="business"), Card("1..")] = None
-    # plays hasProjects:business @card(0..1)
-    projects_relation: Annotated[HasProjects | None, Plays(HasProjects, role_name="business"), Card("0..1")] = None
+    managed_by_relations: Annotated[list[Manages] | None, Plays(Manages), Card("1..")] = None
+    # plays hasProjects:business @card(0..)
+    projects_relation: Annotated[HasProjects | None, Plays(HasProjects)] = None
 
 @entity
 class Project(BaseModel):
-    name: Annotated[str, Card("1")]
-    description: Annotated[str, Card("1")]
-    imagePath: Annotated[str, Card("1")]
-    createdAt: Annotated[datetime, Card("1")]
+    name: str
+    description: str
+    imagePath: str
+    createdAt: datetime
     # plays hasProjects:project @card(1)
-    part_of_business_relation: Annotated[HasProjects | None, Plays(HasProjects, role_name="project"), Card("1")] = None
+    part_of_business_relation: Annotated[HasProjects | None, Plays(HasProjects)] = None
     # plays containsTask:project @card(0..)
-    tasks_relations: Annotated[list[ContainsTask] | None, Plays(ContainsTask, role_name="project"), Card("0..")] = None
-    # plays creates:project @card(0..1) - Interpreted as a project is created via one 'Creates' relation instance.
-    # The TQL schema for 'creates' relation has 'relates project @card(0..)' for a supervisor.
-    # This implies a supervisor's "act of creation" (a single 'Creates' instance) can link to multiple projects.
-    # For Pydantic representation on the Project side, it means a Project is involved in one such 'Creates' event.
-    creation_relation: Annotated[Creates | None, Plays(Creates, role_name="project"), Card("0..1")] = None
+    tasks_relations: Annotated[list[ContainsTask] | None, Plays(ContainsTask)] = None
+    # plays creates:project @card(0..)
+    creation_relation: Annotated[Creates | None, Plays(Creates)] = None
 
 @entity
 class Task(BaseModel):
-    name: Annotated[str, Card("1")]
-    description: Annotated[str, Card("1")]
-    totalNeeded: Annotated[int, Card("1")]
-    createdAt: Annotated[datetime, Card("1")]
+    name: str
+    description: str
+    totalNeeded: int
+    createdAt: datetime
     # plays containsTask:task @card(1)
-    part_of_project_relation: Annotated[ContainsTask | None, Plays(ContainsTask, role_name="task"), Card("1")] = None
+    part_of_project_relation: Annotated[ContainsTask | None, Plays(ContainsTask)] = None
     # plays requiresSkill:task @card(0..)
-    required_skills_relations: Annotated[list[RequiresSkill] | None, Plays(RequiresSkill, role_name="task"), Card("0..")] = None
+    required_skills_relations: Annotated[list[RequiresSkill] | None, Plays(RequiresSkill)] = None
     # plays registersForTask:task @card(0..)
-    student_registrations_relations: Annotated[list[RegistersForTask] | None, Plays(RegistersForTask, role_name="task"), Card("0..")] = None
+    student_registrations_relations: Annotated[list[RegistersForTask] | None, Plays(RegistersForTask)] = None
 
 @entity
 class Skill(BaseModel):
     name: Annotated[str, Key()]
-    isPending: Annotated[bool, Card("1")]
-    createdAt: Annotated[datetime, Card("1")]
+    isPending: bool
+    createdAt: datetime
     # plays requiresSkill:skill @card(0..)
-    task_requirements_relations: Annotated[list[RequiresSkill] | None, Plays(RequiresSkill, role_name="skill"), Card("0..")] = None
+    task_requirements_relations: Annotated[list[RequiresSkill] | None, Plays(RequiresSkill)] = None
     # plays hasSkill:skill @card(0..)
-    student_has_skill_relations: Annotated[list[HasSkill] | None, Plays(HasSkill, role_name="skill"), Card("0..")] = None
+    student_has_skill_relations: Annotated[list[HasSkill] | None, Plays(HasSkill)] = None
 
 
 # --- Relations ---
 
 @relation
 class Authenticates(BaseModel):
-    # relates authenticator
-    authenticator: Annotated[IdentityProvider | None, Relates(IdentityProvider)] # Default card(1)
-    # relates authenticated
-    authenticated: Annotated[Supervisor | None, Relates(Supervisor)] # Default card(1) - Supervisor is specified in schema for this role
-    username: Annotated[str, Card("1")]
-    id: Annotated[str, Key()] # Relation key
+    # relates authenticator @card(1)
+    authenticator: Annotated[IdentityProvider | None, Relates(IdentityProvider)]
+    # relates authenticated @card(1)
+    authenticated: Annotated[Supervisor | None, Relates(Supervisor)]
+    username: str
+    id: Annotated[str, Key()]
 
 @relation
 class Creates(BaseModel):
     # relates supervisor @card(1)
-    supervisor: Annotated[Supervisor | None, Relates(Supervisor), Card("1")]
+    supervisor: Annotated[Supervisor | None, Relates(Supervisor)]
     # relates project @card(0..)
-    # This Pydantic model represents one instance of the 'creates' relation.
-    # If a single 'creates' event links one supervisor to multiple projects,
-    # that logic is on the 'supervisor' role in TQL. Here, one 'creates' links to one project.
-    project: Annotated[Project | None, Relates(Project)] # Default card(1)
-    createdAt: Annotated[datetime, Card("1")] # Schema shows @index for this attribute on the relation.
-    # If @index is a custom TypeQL feature, it could be:
-    # createdAt: Annotated[datetime, Card("1"), TypeQLRawAnnotation("@index")]
+    project: Annotated[Project | None, Relates(Project)]
+    createdAt: datetime
 
 @relation
 class Manages(BaseModel):
     # relates supervisor @card(1)
-    supervisor: Annotated[Supervisor | None, Relates(Supervisor), Card("1")]
+    supervisor: Annotated[Supervisor | None, Relates(Supervisor)]
     # relates business @card(1)
-    business: Annotated[Business | None, Relates(Business), Card("1")]
-    location: Annotated[list[str], Card("1..")] # Attribute of the relation
+    business: Annotated[Business | None, Relates(Business)]
+    location: Annotated[list[str], Card("1..")]
 
 @relation
 class HasProjects(BaseModel):
     # relates business @card(1)
-    business: Annotated[Business | None, Relates(Business), Card("1")]
-    # relates project @card(1..) in TQL.
-    # This Pydantic model represents one link (one project per HasProjects instance).
-    # The 'Business' entity would have a list of these if it 'plays' in multiple 'HasProjects' relations.
-    project: Annotated[Project | None, Relates(Project), Card("1")]
+    business: Annotated[Business | None, Relates(Business)]
+    # relates project @card(1..)
+    project: Annotated[Project | None, Relates(Project)]
 
 @relation
 class ContainsTask(BaseModel):
     # relates project @card(1)
-    project: Annotated[Project | None, Relates(Project), Card("1")]
+    project: Annotated[Project | None, Relates(Project)]
     # relates task @card(1)
-    task: Annotated[Task | None, Relates(Task), Card("1")]
+    task: Annotated[Task | None, Relates(Task)]
 
 @relation
 class RequiresSkill(BaseModel):
     # relates task @card(1)
-    task: Annotated[Task | None, Relates(Task), Card("1")]
+    task: Annotated[Task | None, Relates(Task)]
     # relates skill @card(1)
-    skill: Annotated[Skill | None, Relates(Skill), Card("1")]
+    skill: Annotated[Skill | None, Relates(Skill)]
 
 @relation
 class HasSkill(BaseModel):
     # relates student @card(1)
-    student: Annotated[Student | None, Relates(Student), Card("1")]
+    student: Annotated[Student | None, Relates(Student)]
     # relates skill @card(1)
-    skill: Annotated[Skill | None, Relates(Skill), Card("1")]
-    description: Annotated[str, Card("1")]
+    skill: Annotated[Skill | None, Relates(Skill)]
+    description: str
 
 @relation
 class RegistersForTask(BaseModel):
     # relates student @card(1)
-    student: Annotated[Student | None, Relates(Student), Card("1")]
+    student: Annotated[Student | None, Relates(Student)]
     # relates task @card(1)
-    task: Annotated[Task | None, Relates(Task), Card("1")]
-    description: Annotated[str, Card("1")]
-    isAccepted: Annotated[bool | None, Card("0..1")] # Optional boolean
-    response: Annotated[str | None, Card("0..1")] # Optional string
-    createdAt: Annotated[datetime, Card("1")]
+    task: Annotated[Task | None, Relates(Task)]
+    description: str
+    isAccepted: Annotated[bool | None, Card("0..1")]
+    response: Annotated[str | None, Card("0..1")]
+    createdAt: datetime
