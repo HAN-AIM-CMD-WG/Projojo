@@ -11,6 +11,11 @@ import sys # For path manipulation if needed
 from tql_decorators import get_typeql_meta, has_typeql_meta, Key, Card, Relates, Plays, Ignore, TypeQLRawAnnotation, _MODEL_METADATA_REGISTRY
 
 class TypeQLSchemaGenerator:
+    models_path: str
+    entities: list[tuple[Type[BaseModel], dict[str, Any], dict[str, Any]]]
+    relations: list[tuple[Type[BaseModel], dict[str, Any], dict[str, Any]]]
+    all_attributes: set[tuple[str, str]]
+
     def __init__(self, models_path: str):
         """
         Initializes the schema generator.
@@ -77,7 +82,7 @@ class TypeQLSchemaGenerator:
             sys.path = original_sys_path
         return module
 
-    def discover_models(self):
+    def discover_models(self) -> None:
         """
         Discovers Pydantic models decorated with @entity or @relation from the specified path and populates self.entities and self.relations.
         """
@@ -602,9 +607,16 @@ def generate_typeql_schema(module_or_package_path: str) -> str:
 
 # Example Usage (for testing purposes, typically you'd import and call generate_typeql_schema)
 if __name__ == '__main__':
-    # When running this script directly from its own directory
-    # (e.g., .../schema_generator> python ./schema_generator.py),
-    # the 'example' directory is a direct subdirectory.
+    # When running this script directly from its own directory. The 'example' directory is a direct subdirectory.
     # The TypeQLSchemaGenerator will convert "example" to an absolute path based on CWD.
-    schema = generate_typeql_schema("example")
-    print(schema)
+    generated_schema = generate_typeql_schema("example")
+
+    # Save to file (or not if there's no difference)
+    with open("example/generatedSchema.tql", "r") as file:
+        existing_schema = file.read().strip()
+    if generated_schema.strip() != existing_schema:
+        with open("example/generatedSchema.tql", "w") as file:
+            file.write(generated_schema.strip())
+        print("Schema updated in example/generatedSchema.tql")
+    else:
+        print("Schema is up-to-date, no changes made.")
