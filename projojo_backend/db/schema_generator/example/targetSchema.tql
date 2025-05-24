@@ -6,7 +6,7 @@ entity business,
     owns imagePath @card(1),
     owns location @card(1..),
     plays manages:business @card(1..),
-    plays hasProjects:business @card(0..1);
+    plays hasProjects:business @card(0..);
 
 entity identityProvider,
     owns name @card(0..1),
