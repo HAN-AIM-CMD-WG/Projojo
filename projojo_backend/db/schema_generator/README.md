@@ -1,5 +1,7 @@
 # TypeDB Schema Generator
 
+<!-- TODO: fact-check the documentation now that the generator is completed -->
+
 ## Datatypes
 
 ### Inferred
@@ -256,8 +258,9 @@ Entities are linked to relations through roles. This is defined using `Plays` an
     The attribute name in the Python entity model (e.g., `hasSkill_relations`, `participates_in_hasSkill`) is for Python-side access and does not directly translate to a TypeQL name in the `plays` statement, other than guiding which relation is being referred to. The crucial parts are the `Plays` annotation specifying the relation class, and the implicit or explicit role.
 
 ## The generator
-<!-- TODO: make the generator -->
 <!-- how the generator works, what it does, how to use it -->
+
+<!-- TODO: make the generator (Done, now only the documentation is left) -->
 
 ### Running the generator
 <!-- parameters of the (to be) function to generate -->
@@ -269,6 +272,9 @@ Entities are linked to relations through roles. This is defined using `Plays` an
 <!-- decisions made on logic/syntax during the development of the schema generator -->
 
 ## Example
+
+<!-- TODO: Everything below was made before the actual generator, and was just a test of how the syntax would look, and also some experiments on how to implement decorators, annotations, etc. Therefore this was not written in a way to make unfamiliar developers familiar with the syntax and such. -->
+<!-- TODO: This needs to be completely rewritten to make it more introduction-friendly, and only the the Pydantic models and the corresponding schema should be included. -->
 
 ### Decorators
 ```python
