@@ -1,13 +1,11 @@
 import os
 import importlib.util
 import inspect
-import types # Import types for types.UnionType
+import types
 from typing import Type, Any, get_type_hints, get_args, Union
 from pydantic import BaseModel
-import sys # For path manipulation if needed
+import sys
 
-# Import decorators and annotations from tql_decorators.py
-# Assuming tql_decorators.py is in the same directory or accessible via Python path
 from tql_decorators import get_typeql_meta, has_typeql_meta, Key, Card, Relates, Plays, Ignore, TypeQLRawAnnotation, _MODEL_METADATA_REGISTRY
 
 class TypeQLSchemaGenerator:
@@ -91,32 +89,33 @@ class TypeQLSchemaGenerator:
         py_files = self._find_python_files()
 
         discovered_model_classes = [] # Store all model classes first
+        # Store processing info in a separate dict to avoid losing it during model rebuilds
+        processing_info = {}
 
         for file_path in py_files:
             try:
                 module = self._import_module_from_path(file_path)
                 for _, member in inspect.getmembers(module, inspect.isclass):
-                    if issubclass(member, BaseModel) and has_typeql_meta(member): # Use has_typeql_meta
+                    # Only process classes that are actually defined in this module (not imported)
+                    if (issubclass(member, BaseModel) and has_typeql_meta(member) and
+                        hasattr(member, '__module__') and member.__module__ == module.__name__):
                         discovered_model_classes.append(member) # Collect class
 
-                        # Store metadata and module dict for later association
-                        # We'll associate after attempting to rebuild all models
-                        if not hasattr(member, "_temp_processing_info"):
-                            member._temp_processing_info = {}
-                        # Get the full metadata dict from the registry for this class
-                        member._temp_processing_info['meta'] = _MODEL_METADATA_REGISTRY.get(member, {})
-                        member._temp_processing_info['module_dict'] = module.__dict__
+                        # Store metadata and module dict in separate dict to avoid losing during rebuilds
+                        class_key = (member.__name__, member.__module__)
+                        processing_info[class_key] = {
+                            'meta': _MODEL_METADATA_REGISTRY.get(member, {}),
+                            'module_dict': module.__dict__,
+                            'class_obj': member
+                        }
 
             except Exception:
                 import traceback
                 print(f"Warning: Could not process file during initial discovery {file_path}. Full traceback:")
-                traceback.print_exc() # Print full traceback for this specific file processing
-
-        # Combine all module dictionaries into a single namespace for forward ref resolution
+                traceback.print_exc() # Print full traceback for this specific file processing# Combine all module dictionaries into a single namespace for forward ref resolution
         combined_globals = {}
-        for mc in discovered_model_classes: # Iterate through classes that had _temp_processing_info
-            if hasattr(mc, "_temp_processing_info"):
-                combined_globals.update(mc._temp_processing_info['module_dict'])
+        for class_key, info in processing_info.items():
+            combined_globals.update(info['module_dict'])
 
         # Add builtins to combined_globals as Pydantic might need them
         combined_globals.update(sys.modules['builtins'].__dict__)
@@ -137,12 +136,11 @@ class TypeQLSchemaGenerator:
                     model_class.update_forward_refs(**combined_globals)
                 # print(f"Successfully rebuilt/updated forward refs for {model_class.__name__}")
             except Exception as e:
-                print(f"Warning: Could not update forward refs for {model_class.__name__}: {e}")
-
-        # Now populate self.entities and self.relations
+                print(f"Warning: Could not update forward refs for {model_class.__name__}: {e}")        # Now populate self.entities and self.relations
         for model_class in discovered_model_classes:
-            if hasattr(model_class, "_temp_processing_info"):
-                info = model_class._temp_processing_info
+            class_key = (model_class.__name__, model_class.__module__)
+            if class_key in processing_info:
+                info = processing_info[class_key]
                 meta = info['meta']
                 module_dict = info['module_dict']
                 model_type = meta.get("type")
@@ -151,11 +149,9 @@ class TypeQLSchemaGenerator:
                     self.entities.append((model_class, meta, module_dict))
                 elif model_type == "relation":
                     self.relations.append((model_class, meta, module_dict))
-
-                delattr(model_class, "_temp_processing_info") # Clean up temporary attribute
             else:
                 # This case should ideally not happen if logic is correct
-                print(f"Warning: Missing _temp_processing_info for {model_class.__name__}")
+                print(f"Warning: Missing processing_info for {model_class.__name__}")
 
     def _get_typeql_value_type(self, py_type: Type, field_annotations: list[Any]) -> str:
         """Maps Python type to TypeDB value type string."""
