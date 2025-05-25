@@ -632,6 +632,7 @@ if __name__ == '__main__':
     # When running this script directly from its own directory. The 'example' directory is a direct subdirectory.
     # The TypeQLSchemaGenerator will convert "example" to an absolute path based on CWD.
     generated_schema = generate_typeql_schema("example")
+    # generated_schema = generate_typeql_schema("C:/Projects/HAN/HAN-FLEX/Projojo/projojo_backend/db/schema_generator/example")
 
     # Save to file (or not if there's no difference)
     with open("example/generatedSchema.tql", "r") as file:
