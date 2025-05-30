@@ -16,6 +16,7 @@ from routes.student_router import router as student_router
 from routes.supervisor_router import router as supervisor_router
 from routes.task_router import router as task_router
 from routes.teacher_router import router as teacher_router
+from routes.user_router import router as user_router
 
 from routes.test_router import router as test_router
 
@@ -60,6 +61,7 @@ app.include_router(student_router)
 app.include_router(supervisor_router)
 app.include_router(task_router)
 app.include_router(teacher_router)
+app.include_router(user_router)
 
 app.include_router(test_router)
 
@@ -71,8 +73,8 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/test/image", StaticFiles(directory="static/images"), name="image")
-# app.mount("/test/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+app.mount("/image", StaticFiles(directory="static/images"), name="image")
+# app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}
