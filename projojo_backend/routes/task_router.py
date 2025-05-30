@@ -5,10 +5,10 @@ task_repo = TaskRepository()
 
 from service import task_service
 
-router = APIRouter(prefix="/test", tags=["Task Endpoints"])
+router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
 # Task endpoints
-@router.get("/tasks")
+@router.get("/")
 async def get_all_tasks():
     """
     Get all tasks for debugging purposes
@@ -17,7 +17,7 @@ async def get_all_tasks():
     return tasks
 
 
-@router.get("/tasks/{name}")
+@router.get("/{name}")
 async def get_task(name: str = Path(..., description="Task name")):
     """
     Get a specific task by name
@@ -25,7 +25,7 @@ async def get_task(name: str = Path(..., description="Task name")):
     task = task_repo.get_by_id(name)
     return task
 
-@router.get("/tasks/{name}/skills")
+@router.get("/{name}/skills")
 async def get_task_skills(name: str = Path(..., description="Task name")):
     """
     Get all skills required for a task

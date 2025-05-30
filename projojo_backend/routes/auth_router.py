@@ -6,7 +6,7 @@ from domain.models import LoginRequest, LoginResponse
 from domain.repositories import UserRepository
 user_repo = UserRepository()
 
-router = APIRouter(prefix="/test", tags=["Auth Endpoints"])
+router = APIRouter(tags=["Auth Endpoints"])
 
 SECRET_KEY = "test"
 ALGORITHM = "HS256"

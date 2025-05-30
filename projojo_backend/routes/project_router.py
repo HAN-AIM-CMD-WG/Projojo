@@ -6,10 +6,10 @@ project_repo = ProjectRepository()
 from domain.models import ProjectCreation
 from service import task_service
 
-router = APIRouter(prefix="/test", tags=["Project Endpoints"])
+router = APIRouter(prefix="/projects", tags=["Project Endpoints"])
 
 # Project endpoints
-@router.get("/projects")
+@router.get("/")
 async def get_all_projects():
     """
     Get all projects for debugging purposes
@@ -17,7 +17,7 @@ async def get_all_projects():
     projects = project_repo.get_all()
     return projects
 
-@router.get("/projects/{name}")
+@router.get("/{name}")
 async def get_project(name: str = Path(..., description="Project name")):
     """
     Get a specific project by name
@@ -26,7 +26,7 @@ async def get_project(name: str = Path(..., description="Project name")):
     return project
 
 
-@router.get("/projects/{name}/tasks")
+@router.get("/{name}/tasks")
 async def get_project_tasks(name: str = Path(..., description="Project name")):
     """
     Get all tasks for a project
@@ -34,7 +34,7 @@ async def get_project_tasks(name: str = Path(..., description="Project name")):
     tasks = task_service.get_tasks_with_skills_by_project(name)
     return tasks
 
-@router.post("/projects", response_model=ProjectCreation, status_code=201)
+@router.post("/", response_model=ProjectCreation, status_code=201)
 async def create_project(project_creation: ProjectCreation = Body(...)):
     """
     Create a new project
