@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_BASE_URL, getSkillsFromStudent } from "../services";
+import { getSkillsFromStudent } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 
@@ -24,7 +24,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
 
         try {
             const response = await getSkillsFromStudent(authData.userId);
-            
+
             // For now, we're just updating the local state since the update endpoint is commented out
             skill.description = description;
             setIsEditing(false);
