@@ -1,7 +1,5 @@
 # TypeDB Schema Generator
 
-<!-- TODO: fact-check the documentation now that the generator is completed -->
-
 ## Datatypes
 
 ### Inferred
@@ -208,27 +206,7 @@ Entity attributes can be annotated using `typing.Annotated` to provide TypeDB-sp
     ```
     This would generate `owns postal_code @card(1) @regex("^[0-9]{4}[A-Z]{2}$");`.
 
-All attributes defined on an entity model (unless `Ignore()`-d) are considered "owned" by that entity in TypeDB. For example:
-```python
-from pydantic import BaseModel
-from typing import Annotated
-from tql_decorators import entity, Key
-
-@entity
-class User(BaseModel):
-    email: Annotated[str, Key()]
-    age: int # Will be 'long' in TypeDB
-```
-Generates:
-```typeql
-define
-entity user,
-  owns email @key,
-  owns age @card(1);
-
-attribute email value string;
-attribute age value long;
-```
+All attributes defined on an entity model (unless `Ignore()`-d) are considered "owned" by that entity in TypeDB.
 
 ## Relations
 
@@ -302,6 +280,7 @@ Entities are linked to relations through roles. This is defined using `Plays` an
     ```
 
 2.  **`Plays(relation_type: type | str | None = None, role_name: str | None = None)` (used within an Entity Model)**:
+    <!-- TODO: instead of repeating the entity in the `Plays` parameter, use inferred type from the field type -->
     This annotation on an entity's attribute indicates that the entity plays a role in a specified relation. The attribute itself usually holds instances of the relation model (or a list of them).
     The `role_name` in `Plays` should match a role defined in the target relation (via `Relates`). If `role_name` is `None`, the generator attempts to infer it based on the name of the class.
     ```python
@@ -316,21 +295,21 @@ Entities are linked to relations through roles. This is defined using `Plays` an
 
     # --- Entities (simplified) ---
     @entity
-    class User(BaseModel):
+    class Employee(BaseModel):
         name: str
-        # User plays the 'employee' role in the Employment relation
-        employments: Annotated[list["Employment"], Plays("Employment", role_name="employee")] = []
+        # Employee plays the 'employee' role in the Employment relation
+        employments: Annotated[list[Employment], Plays(Employment)] = []
 
     @entity
     class Company(BaseModel):
         name: str
         # Company plays the 'employer' role in the Employment relation
-        employees_relations: Annotated[list["Employment"], Plays("Employment", role_name="employer")] = []
+        employees_relations: Annotated[list[Employment], Plays(Employment, role_name="employer")] = []
 
     # --- Relation ---
     @relation
     class Employment(BaseModel):
-        employee: Annotated[User, Relates(User)]        # Role is 'employee'
+        employee: Annotated[Employee, Relates(Employee)]        # Role is 'employee'
         employer: Annotated[Company, Relates(Company)]  # Role is 'employer'
         role_title: str
 
@@ -339,9 +318,9 @@ Entities are linked to relations through roles. This is defined using `Plays` an
     ```typeql
     define
 
-    entity user,
+    entity employee,
       owns name,
-      plays employment:employee; # User plays 'employee' in 'employment' relation
+      plays employment:employee; # Employee plays 'employee' in 'employment' relation
 
     entity company,
       owns name,
