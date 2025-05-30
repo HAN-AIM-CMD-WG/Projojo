@@ -6,9 +6,9 @@ user_repo = UserRepository()
 
 from domain.models import StudentSkills
 
-router = APIRouter(prefix="/test", tags=["Student Endpoints"])
+router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
-@router.get("/students")
+@router.get("/")
 async def get_all_students():
     """
     Get all students for debugging purposes
@@ -17,7 +17,7 @@ async def get_all_students():
     return students
 
 
-@router.get("/students/{email}/skills")
+@router.get("/{email}/skills")
 async def get_student_skills(email: str = Path(..., description="Student email")):
     """
     Get all skills for a student

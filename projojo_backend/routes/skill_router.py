@@ -5,10 +5,10 @@ skill_repo = SkillRepository()
 
 from domain.models import Skill
 
-router = APIRouter(prefix="/test", tags=["Skill Endpoints"])
+router = APIRouter(prefix="/skills", tags=["Skill Endpoints"])
 
 # Skill endpoints
-@router.get("/skills")
+@router.get("/")
 async def get_all_skills():
     """
     Get all skills for debugging purposes
@@ -16,7 +16,7 @@ async def get_all_skills():
     skills = skill_repo.get_all()
     return skills
 
-@router.get("/skills/{name}")
+@router.get("/{name}")
 async def get_skill(name: str = Path(..., description="Skill name")):
     """
     Get a specific skill by name
@@ -24,7 +24,7 @@ async def get_skill(name: str = Path(..., description="Skill name")):
     skill = skill_repo.get_by_id(name)
     return skill
 
-@router.post("/skills", response_model=Skill, status_code=201)
+@router.post("/", response_model=Skill, status_code=201)
 async def create_skill(skill: Skill = Body(...)):
     """
     Create a new skill

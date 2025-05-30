@@ -6,10 +6,10 @@ project_repo = ProjectRepository()
 
 from domain.models import BusinessProjects
 
-router = APIRouter(prefix="/test", tags=["Business Endpoints"])
+router = APIRouter(prefix="/businesses", tags=["Business Endpoints"])
 
 # Business endpoints
-@router.get("/businesses")
+@router.get("/")
 async def get_all_businesses_with_projects():
     """
     Get all businesses for debugging purposes
@@ -24,7 +24,7 @@ async def get_all_businesses_with_projects():
 
     return businesses_with_projects
 
-@router.get("/businesses/{name}")
+@router.get("/{name}")
 async def get_business(name: str = Path(..., description="Business name")):
     """
     Get a specific business by name
@@ -32,7 +32,7 @@ async def get_business(name: str = Path(..., description="Business name")):
     business = business_repo.get_by_id(name)
     return business
 
-@router.get("/businesses/{name}/projects")
+@router.get("/{name}/projects")
 async def get_business_projects(name: str = Path(..., description="Business name")):
     """
     Get all projects for a business
