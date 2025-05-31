@@ -1,14 +1,6 @@
 import os
 import shutil
-from fastapi import APIRouter, UploadFile, File, Path
-
-from domain.repositories import BusinessRepository, ProjectRepository, SkillRepository, UserRepository
-business_repo = BusinessRepository()
-project_repo = ProjectRepository()
-skill_repo = SkillRepository()
-user_repo = UserRepository()
-
-from domain.models import BusinessProjects, Skill
+from fastapi import APIRouter, UploadFile, File
 
 router = APIRouter(prefix="/test", tags=["Test Endpoints"])
 
@@ -27,20 +19,3 @@ async def upload_file(file: UploadFile = File(...)):
         shutil.copyfileobj(file.file, buffer)
 
     return {"filename": file.filename, "path": file_path}
-
-
-    # student = user_repo.get_student_by_id(email)
-    # skills = skill_repo.get_student_skills(student.email)
-    #
-    # return Student_With_Skills(
-    #     student=student,
-    #     skills=skills
-    # )
-
-    # businesses_with_projects = []
-    # for business in business_repo.get_all():
-    #     projects = project_repo.get_projects_by_business(business.name)
-    #
-    #     businesses_with_projects.append(
-    #         BusinessProjects(**business.model_dump(), projects=projects)
-    #     )
