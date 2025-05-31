@@ -68,6 +68,19 @@ class SkillRepository(BaseRepository[Skill]):
 
         return [self._map_to_model(result) for result in results]
 
+    def update_student_skills(self, student_id: str, skill_ids: list[str]) -> None:
+        escaped_student_id = student_id.replace('"', '\\"')
+
+        # get the current skills of the student
+
+        # check which skills are removed from original skills
+
+        # check which skills are added to original skills
+
+        # remove the removed skills
+
+        # add the added skills
+
     def create(self, skill: Skill) -> Skill:
         # Generate a creation timestamp if not provided
         created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
