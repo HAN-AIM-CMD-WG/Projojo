@@ -6,7 +6,19 @@ from contextlib import asynccontextmanager
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
-from routes.test_controller import router as test_router
+
+# Import routers
+from routes.auth_router import router as auth_router
+from routes.business_router import router as business_router
+from routes.project_router import router as project_router
+from routes.skill_router import router as skill_router
+from routes.student_router import router as student_router
+from routes.supervisor_router import router as supervisor_router
+from routes.task_router import router as task_router
+from routes.teacher_router import router as teacher_router
+from routes.user_router import router as user_router
+
+from routes.test_router import router as test_router
 
 # Import the TypeDB connection module
 from db.initDatabase import get_database
@@ -17,9 +29,9 @@ async def lifespan(app: FastAPI):
     # Initialize TypeDB connection
     print("Initializing TypeDB connection...")
     Db = get_database()
-    
+
     yield {}
-    
+
     # Close TypeDB connection on shutdown
     print("Closing TypeDB connection...")
     Db.close()
@@ -41,6 +53,16 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth_router)
+app.include_router(business_router)
+app.include_router(project_router)
+app.include_router(skill_router)
+app.include_router(student_router)
+app.include_router(supervisor_router)
+app.include_router(task_router)
+app.include_router(teacher_router)
+app.include_router(user_router)
+
 app.include_router(test_router)
 
 # Add exception handler for Custom exceptions
@@ -51,8 +73,8 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/test/image", StaticFiles(directory="static/images"), name="image")
-# app.mount("/test/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+app.mount("/image", StaticFiles(directory="static/images"), name="image")
+# app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}

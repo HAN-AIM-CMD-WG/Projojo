@@ -1,4 +1,4 @@
-export const API_BASE_URL = "http://localhost:8000/test/";
+export const API_BASE_URL = "http://localhost:8000/";
 export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
 export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
 
@@ -19,11 +19,11 @@ export class HttpError extends Error {
 }
 
 /**
- * 
- * @param {string} url 
- * @param {RequestInit} request 
- * @param {true|false} returnsVoid 
- * @returns 
+ *
+ * @param {string} url
+ * @param {RequestInit} request
+ * @param {true|false} returnsVoid
+ * @returns
  */
 function fetchWithError(url, request, returnsVoid = false) {
     let errorStatus = undefined;
@@ -76,8 +76,8 @@ function fetchWithError(url, request, returnsVoid = false) {
 }
 
 /**
- * @param {Error} error 
- * @param {Record<number, string>} mapper 
+ * @param {Error} error
+ * @param {Record<number, string>} mapper
  */
 export function createErrorMessage(error, mapper) {
     let message = error?.message;
@@ -117,8 +117,8 @@ export function getBusinesses() {
 }
 
 /**
- * 
- * @param {string} projectName 
+ *
+ * @param {string} projectName
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}>}
  */
 export function getProject(projectName) {
@@ -128,7 +128,7 @@ export function getProject(projectName) {
 // This function is not available in the backend
 
 /**
- * 
+ *
  * @returns {Promise<{ type: "none" } | { type: "student" | "invalid" | "teacher", userId: number } | { type: "supervisor", userId: number, businessId: number }>}
  */
 export function getAuthorization() {
@@ -140,7 +140,7 @@ export function getAuthorization() {
 // This function is not available in the backend
 
 /**
- * @param {string} projectName 
+ * @param {string} projectName
  * @returns {Promise<{id: string, name: string, description: string, total_needed: number, created_at: string, project_id: string, skills: skill[]}[]>}
  */
 export function getTasks(projectName) {
@@ -155,8 +155,8 @@ export function getTasks(projectName) {
 // This function is not available in the backend
 
 /**
- * 
- * @param {string} email 
+ *
+ * @param {string} email
  * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: string[], registered_task_ids: string[]}>}
  */
 export function getUser(email) {
@@ -173,7 +173,7 @@ export function getUser(email) {
 // This function is not available in the backend
 
 /**
- * 
+ *
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getSkills() {
@@ -192,7 +192,7 @@ export function getRegistrations() {
 }
 
 /**
- * 
+ *
  * @param {Skill} skill - The skill object to create
  * @returns {Promise<{id: string, name: string, is_pending: boolean}>}
  */
@@ -207,7 +207,7 @@ export function createSkill(skill) {
 }
 
 /**
- * 
+ *
  * @param {ProjectCreation} project_creation - The project_creation object to create
  * @returns {Promise<{id: string, name: string, description: string, imagePath: string, createdAt: string, business_id: string, supervisor_id: string}>}
  */
@@ -291,8 +291,8 @@ export function getStudentSkills(email) {
 // This function is not available in the backend
 
 /**
- * 
- * @param {string} taskName 
+ *
+ * @param {string} taskName
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getTaskSkills(taskName) {
