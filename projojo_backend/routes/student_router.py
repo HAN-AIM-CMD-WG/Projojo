@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Body
 
 from domain.repositories import SkillRepository, UserRepository
+from domain.models import StudentSkills
+
 skill_repo = SkillRepository()
 user_repo = UserRepository()
 
-from domain.models import StudentSkills
 
 router = APIRouter(prefix="/students", tags=["Student Endpoints"])
+
 
 @router.get("/")
 async def get_all_students():
@@ -25,7 +27,17 @@ async def get_student_skills(email: str = Path(..., description="Student email")
     student = user_repo.get_student_by_id(email)
     skills = skill_repo.get_student_skills(student.email)
 
-    return StudentSkills(
-        **student.model_dump(),
-        Skills=skills
-    )
+    return StudentSkills(**student.model_dump(), Skills=skills)
+
+
+@router.put("/{email}/skills")
+async def update_student_skills(
+    email: str = Path(..., description="Student email"),
+    skill_ids: list[str] = Body(..., description="List of skillnames"),
+):
+    """
+    Update skills for a student
+    """
+    student = user_repo.get_student_by_id(email)
+    skill_repo.update_student_skills(student.email, skill_ids)
+    return {"message": "Student skills updated successfully"}
