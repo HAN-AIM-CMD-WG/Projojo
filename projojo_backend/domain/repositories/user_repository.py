@@ -34,23 +34,23 @@ class UserRepository(BaseRepository[User]):
             raise ItemRetrievalException(User, f"User with ID {id} not found.")
         print(results)
         return self._map_to_model(results[1])
-    
+
     def get_by_id(self, id: str) -> User | None:
         # First try to find as a supervisor
         supervisor = self.get_supervisor_by_id(id)
         if supervisor:
             return supervisor
-            
+
         # Then try as a student
         student = self.get_student_by_id(id)
         if student:
             return student
-            
+
         # Finally try as a teacher
         teacher = self.get_teacher_by_id(id)
         if teacher:
             return teacher
-            
+
         if not supervisor and not student and not teacher:
             raise ItemRetrievalException(User, f"User with ID {id} not found.")
         return None
@@ -62,11 +62,11 @@ class UserRepository(BaseRepository[User]):
         users.extend(self.get_all_students())
         users.extend(self.get_all_teachers())
         return users
-    
+
     def get_supervisor_by_id(self, email: str) -> Supervisor | None :
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
-        
+
         query = f"""
             match
                 $supervisor isa supervisor,
@@ -95,11 +95,11 @@ class UserRepository(BaseRepository[User]):
         grouped = self.group_supervisor_by_email(results)
 
         return self._map_supervisor(next(iter(grouped.values())))
-    
+
     def get_student_by_id(self, email: str) -> Student | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
-        
+
         query = f"""
             match
                 $student isa student,
@@ -125,14 +125,14 @@ class UserRepository(BaseRepository[User]):
             return None
 
         grouped = self.group_student_by_email(results)
-        
+
         return self._map_student(next(iter(grouped.values())))
 
-    
+
     def get_teacher_by_id(self, email: str) -> Teacher | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
-        
+
         query = f"""
             match
                 $teacher isa teacher,
@@ -153,7 +153,7 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         if not results:
             return None
-        
+
         return self._map_teacher(results[0])
 
     def get_all_supervisors(self) -> list[Supervisor]:
@@ -209,7 +209,7 @@ class UserRepository(BaseRepository[User]):
         grouped = self.group_student_by_email(results)
 
         return [self._map_student(data) for data in grouped.values()]
-    
+
     def get_all_teachers(self) -> list[Teacher]:
         query = """
             match
@@ -217,12 +217,14 @@ class UserRepository(BaseRepository[User]):
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName;
+                has schoolAccountName $schoolAccountName,
+                has password_hash $password_hash;
             fetch {
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName
+                'schoolAccountName': $schoolAccountName,
+                'password_hash': $password_hash
             };
         """
         results = Db.read_transact(query)
