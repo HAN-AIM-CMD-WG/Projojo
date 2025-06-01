@@ -208,16 +208,28 @@ export function createSkill(skill) {
 
 /**
  *
- * @param {ProjectCreation} project_creation - The project_creation object to create
- * @returns {Promise<{id: string, name: string, description: string, imagePath: string, createdAt: string, business_id: string, supervisor_id: string}>}
+ * @param {ProjectCreation} project_creation - The project_creation object to create with image file
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string, supervisor_id: string}>}
  */
-export function createProject(project_creation) {
+export function createProject(project_data) {
+    // Create form data for multi-part form submission
+    const formData = new FormData();
+
+    // Add text fields
+    formData.append("name", project_data.name);
+    formData.append("description", project_data.description);
+    formData.append("supervisor_id", project_data.supervisor_id);
+    formData.append("business_id", project_data.business_id);
+
+    // Add image file
+    if (project_data.imageFile) {
+        formData.append("image", project_data.imageFile);
+    }
+
     return fetchWithError(`${API_BASE_URL}projects`, {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(project_creation),
+        // Don't set Content-Type header, it will be set automatically with the correct boundary
+        body: formData,
     });
 }
 //not implemented in the backend yet
