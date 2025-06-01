@@ -21,47 +21,22 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
         }
 
         const formData = new FormData(event.target);
-        
+
         // Get the image file
         const imageFile = formData.get("image");
-        
-        // Create project data object for JSON submission
+
+        // Create project data object for submission with file
         const projectData = {
             id: formData.get("name").trim(),
             name: formData.get("name").trim(),
             description: description.trim(),
             supervisor_id: authData.userId,
             business_id: authData.businessId,
-            created_at: new Date().toISOString(),
-            image_path: imageFile.name
+            imageFile: imageFile // Pass the actual file object
         };
-        
-        // Create a new FormData for file upload
-        const fileFormData = new FormData();
-        fileFormData.append("file", imageFile);
-        
-        // First upload the image file
-        fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/test"}/upload`, {
-            method: "POST",
-            body: fileFormData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to upload image");
-            }
-            return response.json();
-        })
-        .then(() => {
-            // Then create the project with the image path
-            onSubmit(projectData);
-        })
-        .catch(error => {
-            console.error("Error uploading image:", error);
-            // Set server error message
-            if (typeof onSubmit === "function") {
-                onSubmit({ error: error.message });
-            }
-        });
+
+        // Submit both project data and image in a single call
+        onSubmit(projectData);
     }
 
     return (
