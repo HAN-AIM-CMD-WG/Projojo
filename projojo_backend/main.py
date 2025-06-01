@@ -18,8 +18,6 @@ from routes.task_router import router as task_router
 from routes.teacher_router import router as teacher_router
 from routes.user_router import router as user_router
 
-from routes.test_router import router as test_router
-
 # Import the TypeDB connection module
 from db.initDatabase import get_database
 
@@ -62,8 +60,6 @@ app.include_router(supervisor_router)
 app.include_router(task_router)
 app.include_router(teacher_router)
 app.include_router(user_router)
-
-app.include_router(test_router)
 
 # Add exception handler for Custom exceptions
 app.add_exception_handler(ItemRetrievalException, generic_handler)
