@@ -13,10 +13,22 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
     const navigation = useNavigate();
 
     const [description, setDescription] = useState("");
+    const [image, setImage] = useState(null);
+    const [imageError, setImageError] = useState('');
+
+    const handleImageChange = (file) => {
+        setImage(file);
+        setImageError('');
+    };
 
     const handleSubmit = event => {
         event.preventDefault();
         if (nameError != undefined || descriptionError != undefined) {
+            return;
+        }
+
+        if (!image) {
+            setImageError('Een projectafbeelding is verplicht.');
             return;
         }
 
@@ -65,7 +77,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     error={descriptionError}
                     setError={setDescriptionError}
                 />
-                <DragDrop multiple={false} name="image" />
+                <DragDrop onFileChanged={handleImageChange} multiple={false} name="image" />
+                {imageError && <p className="text-red-500">{imageError}</p>}
                 <div className="grid grid-cols-2 gap-2">
                     <button type="button" className="btn-secondary w-full" onClick={() => navigation(-1)}>Annuleren</button>
                     <button type="submit" className="btn-primary w-full">Opslaan</button>
