@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, File, UploadFile, Form
+from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException
 from typing import Annotated
 from datetime import datetime
 
@@ -47,6 +47,13 @@ async def create_project(
     """
     Create a new project with image upload
     """
+    # Validate required fields
+    if project_repo.check_project_exists(name, business_id):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project met de naam '{name}' bestaat al binnen dit bedrijf."
+        )
+
     # Save the image with a random filename
     _, unique_filename = save_image(image)
 
