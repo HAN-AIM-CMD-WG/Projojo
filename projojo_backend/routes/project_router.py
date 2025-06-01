@@ -48,6 +48,12 @@ async def create_project(
     Create a new project with image upload
     """
     # Validate required fields
+    if not image or not image.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="Een projectafbeelding is verplicht."
+        )
+
     if project_repo.check_project_exists(name, business_id):
         raise HTTPException(
             status_code=400,
