@@ -5,8 +5,12 @@ export default function TestUserSelector({ onUserSelect }) {
 	const [testUsers, setTestUsers] = useState([]);
 	const [isTestUsersLoading, setIsTestUsersLoading] = useState(false);
 
-	// Fetch test users when component mounts
+	// Only show test functionality on localhost
+	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+	// Fetch test users when component mounts (only on localhost)
 	useEffect(() => {
+		if (!isLocalhost) return;
 		const fetchTestUsers = async () => {
 			setIsTestUsersLoading(true);
 			try {
@@ -23,7 +27,7 @@ export default function TestUserSelector({ onUserSelect }) {
 		};
 
 		fetchTestUsers();
-	}, []);
+	}, [isLocalhost]);
 
 	// Handle test user selection
 	const handleTestUserSelect = (e) => {
@@ -38,6 +42,11 @@ export default function TestUserSelector({ onUserSelect }) {
 			});
 		}
 	};
+
+	// Don't render anything if not on localhost
+	if (!isLocalhost) {
+		return null;
+	}
 
 	return (
 		<div className="mb-6 p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
