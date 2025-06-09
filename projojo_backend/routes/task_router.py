@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Path, Query, HTTPException, Request
+from fastapi import APIRouter, Path, Query, HTTPException, Depends
 
 from domain.repositories import TaskRepository, UserRepository
-from auth.jwt_utils import decode_jwt_token
+from auth.jwt_utils import get_token_payload
 task_repo = TaskRepository()
 user_repo = UserRepository()
 
@@ -21,32 +21,19 @@ async def get_all_tasks():
 
 # Specific routes first (more specific paths before generic ones)
 @router.get("/emails/colleagues")
-async def get_colleague_email_addresses(request: Request):
+async def get_colleague_email_addresses(payload: dict = Depends(get_token_payload)):
     """
     Get email addresses of colleague supervisors in the same business
     """
-    # Extract JWT token from authorization header
-    auth_header = request.headers.get("authorization")
+    # Check if user is a supervisor
+    if payload.get("role") != "supervisor":
+        raise HTTPException(status_code=403, detail="Supervisor access required")
 
-    if not auth_header or not auth_header.startswith("bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    supervisor_email = payload["sub"]  # Extract email from JWT sub field
 
-    token = auth_header.replace("bearer ", "")
-
-    try:
-        # Decode JWT token and extract supervisor email
-        payload = decode_jwt_token(token)
-        if payload.get("role") != "supervisor":
-            raise HTTPException(status_code=403, detail="Supervisor access required")
-
-        supervisor_email = payload["sub"]  # Extract email from JWT sub field
-
-        # Get colleagues for this supervisor
-        colleagues = user_repo.get_colleagues(supervisor_email)
-        return [colleague.email for colleague in colleagues]
-
-    except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    # Get colleagues for this supervisor
+    colleagues = user_repo.get_colleagues(supervisor_email)
+    return [colleague.email for colleague in colleagues]
 
 @router.get("/{name}/student-emails")
 async def get_student_email_addresses(
