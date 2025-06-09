@@ -76,23 +76,48 @@ class UserRepository(BaseRepository[User]):
                 has imagePath $imagePath,
                 has password_hash $password_hash;
                 $business isa business;
-                $project isa project;
-                $creates isa creates( $supervisor, $project);
                 $manages isa manages( $supervisor, $business );
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'password_hash': $password_hash,
-                'business_association_id': $business.name,
-                'created_project_id': $project.name
+                'business_association_id': $business.name
             }};
         """
         results = Db.read_transact(query)
         if not results:
             return None
 
-        grouped = self.group_supervisor_by_email(results)
+        # Get projects for this supervisor
+        project_query = f"""
+            match
+                $supervisor isa supervisor,
+                has email "{escaped_email}";
+                $project isa project;
+                $creates isa creates( $supervisor, $project);
+            fetch {{
+                'created_project_id': $project.name
+            }};
+        """
+        project_results = Db.read_transact(project_query)
+
+        # Merge project data with supervisor data
+        merged_results = []
+        if project_results:
+            for result in results:
+                for proj in project_results:
+                    merged_result = result.copy()
+                    merged_result['created_project_id'] = proj['created_project_id']
+                    merged_results.append(merged_result)
+        else:
+            # Supervisor with no projects
+            for result in results:
+                merged_result = result.copy()
+                merged_result['created_project_id'] = None
+                merged_results.append(merged_result)
+
+        grouped = UserRepository.group_supervisor_by_email(merged_results)
 
         return self._map_supervisor(next(iter(grouped.values())))
 
@@ -165,21 +190,54 @@ class UserRepository(BaseRepository[User]):
                 has password_hash $password_hash,
                 has imagePath $imagePath;
                 $business isa business;
-                $project isa project;
-                $creates isa creates( $supervisor, $project);
                 $manages isa manages( $supervisor, $business );
             fetch {
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'business_association_id': $business.name,
-                'created_project_id': $project.name,
                 'password_hash': $password_hash
             };
         """
         results = Db.read_transact(query)
 
-        grouped = self.group_supervisor_by_email(results)
+        # Get projects separately for each supervisor
+        project_query = """
+            match
+                $supervisor isa supervisor,
+                has email $email;
+                $project isa project;
+                $creates isa creates( $supervisor, $project);
+            fetch {
+                'email': $email,
+                'created_project_id': $project.name
+            };
+        """
+        project_results = Db.read_transact(project_query)
+
+        # Merge the results
+        merged_results = []
+        supervisor_projects = defaultdict(list)
+
+        # Group projects by supervisor email
+        for proj in project_results:
+            supervisor_projects[proj['email']].append(proj['created_project_id'])
+
+        # Add project data to supervisor results
+        for result in results:
+            supervisor_email = result['email']
+            if supervisor_email in supervisor_projects:
+                for project_name in supervisor_projects[supervisor_email]:
+                    merged_result = result.copy()
+                    merged_result['created_project_id'] = project_name
+                    merged_results.append(merged_result)
+            else:
+                # Supervisor with no projects
+                merged_result = result.copy()
+                merged_result['created_project_id'] = None
+                merged_results.append(merged_result)
+
+        grouped = UserRepository.group_supervisor_by_email(merged_results)
 
         return [self._map_supervisor(data) for data in grouped.values()]
 
@@ -287,7 +345,10 @@ class UserRepository(BaseRepository[User]):
             grouped[email]["imagePath"] = result["imagePath"]
             grouped[email]["password_hash"] = result["password_hash"]
             grouped[email]["business_association_id"] = result["business_association_id"]
-            grouped[email]["created_project_ids"].append(result["created_project_id"])
+            # Only add project_id if it's not None
+            project_id = result["created_project_id"]
+            if project_id is not None:
+                grouped[email]["created_project_ids"].append(project_id)
         return grouped
 
     @staticmethod
