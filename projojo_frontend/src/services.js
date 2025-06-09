@@ -25,11 +25,22 @@ export class HttpError extends Error {
  * @param {true|false} returnsVoid
  * @returns
  */
-function fetchWithError(url, request, returnsVoid = false) {
+function fetchWithError(url, request = {}, returnsVoid = false) {
     let errorStatus = undefined;
+
+    // Automatically add authorization header if token exists
+    const token = localStorage.getItem("token");
+    let headers = {
+        ...request.headers,
+    };
+
+    if (token) {
+        headers.authorization = `bearer ${token}`;
+    }
 
     return fetch(url, {
         ...request,
+        headers: headers,
     })
         .then(response => {
             if (!response.ok) {
@@ -414,4 +425,32 @@ export function preprocessMarkdown(input) {
         .replace(/~~([^~]+)~~/g, '<del>$1</del>')
         .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>')
         .replace(/&gt;/g, '>')
+}
+
+/**
+ * Get student email addresses for a specific task based on selection criteria
+ * @param {number} selection - Bitwise selection: 1=registered, 2=accepted, 4=rejected
+ * @param {string} taskId - Task ID
+ * @returns {Promise<string[]>} Array of email addresses
+ */
+export function getStudentEmailAddresses(selection, taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/student-emails?selection=${selection}`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+}
+
+/**
+ * Get colleague email addresses (teachers and supervisors)
+ * @returns {Promise<string[]>} Array of email addresses
+ */
+export function getColleaguesEmailAddresses() {
+    return fetchWithError(`${API_BASE_URL}tasks/emails/colleagues`, {
+        method: "GET",
+        headers: {
+            Accept: "application/json",
+        },
+    });
 }

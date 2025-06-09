@@ -308,3 +308,88 @@ class UserRepository(BaseRepository[User]):
             grouped[email]["schoolAccountName"] = result["schoolAccountName"]
             grouped[email]["skill_ids"].append(result["skill_ids"])
         return grouped
+
+    def get_students_by_task_status(self, task_name: str, status: str) -> list[Student]:
+        """
+        Get students by task and their application status
+        """
+        escaped_task_name = task_name.replace('"', '\\"')
+
+        query = f"""
+            match
+                $task isa task, has name "{escaped_task_name}";
+                $student isa student,
+                has email $email,
+                has fullName $fullName,
+                has imagePath $imagePath,
+                has schoolAccountName $schoolAccountName,
+                has password_hash $password_hash;
+                $registration isa registersForTask (student: $student, task: $task);
+        """
+
+        # Add status filter based on the status parameter
+        if status == "registered":
+            # Students who registered but haven't been accepted or rejected yet
+            query += """
+                not { $registration has isAccepted true; };
+                not { $registration has isAccepted false; };
+            """
+        elif status == "accepted":
+            query += """
+                $registration has isAccepted true;
+            """
+        elif status == "rejected":
+            query += """
+                $registration has isAccepted false;
+            """
+
+        query += """
+            fetch {
+                'email': $email,
+                'fullName': $fullName,
+                'imagePath': $imagePath,
+                'schoolAccountName': $schoolAccountName,
+                'password_hash': $password_hash
+            };
+        """
+
+        results = Db.read_transact(query)
+        students = []
+
+        for result in results:
+            student_data = {
+                "email": result["email"],
+                "fullName": result["fullName"],
+                "imagePath": result["imagePath"],
+                "schoolAccountName": result["schoolAccountName"],
+                "password_hash": result["password_hash"],
+                "skill_ids": []
+            }
+            students.append(self._map_student(student_data))
+
+        return students
+
+    def get_colleagues(self, supervisor_email: str) -> list[User]:
+        """
+        Get supervisors who work in the same business as the authenticated supervisor
+        """
+        # Escape the supervisor email to prevent injection
+        escaped_email = supervisor_email.replace('"', '\\"')
+
+        query = f"""
+            match
+                $auth_supervisor isa supervisor, has email "{escaped_email}";
+                $manages_auth isa manages (supervisor: $auth_supervisor, business: $business);
+                $manages_colleague isa manages (supervisor: $colleague, business: $business);
+                $colleague isa supervisor,
+                has email $email,
+                has fullName $fullName;
+            fetch {{
+                'id': $email,
+                'email': $email,
+                'full_name': $fullName,
+            }};
+        """
+
+        results = Db.read_transact(query)
+        return [User(**result) for result in results]
