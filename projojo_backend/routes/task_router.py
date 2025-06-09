@@ -38,25 +38,20 @@ async def get_colleague_email_addresses(payload: dict = Depends(get_token_payloa
 @router.get("/{name}/student-emails")
 async def get_student_email_addresses(
     name: str = Path(..., description="Task name"),
-    selection: int = Query(..., description="Bitwise selection: 1=registered, 2=accepted, 4=rejected")
+    selection: str = Query(..., description="Comma-separated list: registered,accepted,rejected")
 ):
     """
-    Get student email addresses for a task based on selection criteria
+    Get student email addresses for a task based on status selection
+    Example: ?selection=registered,accepted or ?selection=rejected
     """
     emails = []
+    statuses = [status.strip() for status in selection.split(",")]
 
     # Get students based on selection criteria
-    if selection & 1:  # registered students
-        registered_students = user_repo.get_students_by_task_status(name, "registered")
-        emails.extend([student.email for student in registered_students])
-
-    if selection & 2:  # accepted students
-        accepted_students = user_repo.get_students_by_task_status(name, "accepted")
-        emails.extend([student.email for student in accepted_students])
-
-    if selection & 4:  # rejected students
-        rejected_students = user_repo.get_students_by_task_status(name, "rejected")
-        emails.extend([student.email for student in rejected_students])
+    for status in statuses:
+        if status in ["registered", "accepted", "rejected"]:
+            students = user_repo.get_students_by_task_status(name, status)
+            emails.extend([student.email for student in students])
 
     # Remove duplicates
     unique_emails = list(set(emails))
