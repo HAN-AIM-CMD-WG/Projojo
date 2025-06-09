@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import StudentProfile from "../components/StudentProfile";
-import { API_BASE_URL } from "../services";
+import { getSkillsFromStudent } from "../services";
 import NotFound from "./NotFound";
 import PageHeader from '../components/PageHeader';
 
@@ -15,20 +15,7 @@ export default function ProfilePage() {
     useEffect(() => {
         let ignore = false;
 
-        fetch(`${API_BASE_URL}students/${profileId}/skills`, {
-            headers: {
-                Accept: 'application/json',
-            },
-        })
-            .then(response => {
-                if (ignore) return;
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw { statusCode: response.status, message: data.message };
-                    });
-                }
-                return response.json();
-            })
+        getSkillsFromStudent(profileId)
             .then(data => {
                 if (ignore) return;
                 // Combine student data with CV for testing purposes
