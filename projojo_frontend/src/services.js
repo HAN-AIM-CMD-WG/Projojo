@@ -372,12 +372,13 @@ export function preprocessMarkdown(input) {
 
 /**
  * Get student email addresses for a specific task based on selection criteria
- * @param {number} selection - Bitwise selection: 1=registered, 2=accepted, 4=rejected
+ * @param {string[]} selection - Array of status strings: ['registered', 'accepted', 'rejected']
  * @param {string} taskId - Task ID
  * @returns {Promise<string[]>} Array of email addresses
  */
 export function getStudentEmailAddresses(selection, taskId) {
-    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/student-emails?selection=${selection}`);
+    const selectionString = selection.join(',');
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/student-emails?selection=${selectionString}`);
 }
 
 /**
