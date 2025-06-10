@@ -9,10 +9,10 @@ from datetime import datetime
 class ProjectRepository(BaseRepository[Project]):
     def __init__(self):
         super().__init__(Project, "project")
-    
+
     def get_by_id(self, id: str) -> Project | None:
         # Escape any double quotes in the ID
-        
+
         query = f"""
             match
                 $project isa project,
@@ -34,7 +34,7 @@ class ProjectRepository(BaseRepository[Project]):
         if not results:
             raise ItemRetrievalException(Project, f"Project with ID {id} not found.")
         return self._map_to_model(results[0])
-    
+
     def get_all(self) -> list[Project]:
         query = """
             match
@@ -54,7 +54,7 @@ class ProjectRepository(BaseRepository[Project]):
         """
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
-    
+
     def get_projects_by_business(self, business_id: str) -> list[Project]:
         query = f"""
             match
@@ -75,13 +75,13 @@ class ProjectRepository(BaseRepository[Project]):
         """
         results = Db.read_transact(query)
         projects = [self._map_to_model(result) for result in results]
-        
+
         # Add business_id to each project
         for project in projects:
             project.business_id = business_id
-            
+
         return projects
-    
+
     def _map_to_model(self, result: dict[str, Any]) -> Project:
         # Extract relevant information from the query result
         name = result.get("name", "")
@@ -89,10 +89,10 @@ class ProjectRepository(BaseRepository[Project]):
         image_path = result.get("imagePath", "")
         created_at_str = result.get("createdAt", "")
         business = result.get("business", "")
-        
+
         # Convert createdAt string to datetime
         created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
-        
+
         return Project(
             id=name,  # Using name as the ID
             name=name,
@@ -102,11 +102,24 @@ class ProjectRepository(BaseRepository[Project]):
             business_id=business
         )
 
+    def check_project_exists(self, name: str, business_id: str) -> bool:
+        query = f"""
+            match
+                $business isa business, has name "{business_id}";
+                $project isa project, has name "{name}";
+                $hasProjects isa hasProjects (business: $business, project: $project);
+            fetch {{
+                'name': $project.name
+            }};
+        """
+        results = Db.read_transact(query)
+        return len(results) > 0
+
     # Is not used
     def get_project_creation(self, project_id: str) -> ProjectCreation | None:
         query = f"""
             match
-                $project isa project, 
+                $project isa project,
                 has name "{project_id}";
                 $creates isa creates( $supervisor, $project ),
                 has createdAt $createdAt;
@@ -120,17 +133,18 @@ class ProjectRepository(BaseRepository[Project]):
         results = Db.read_transact(query)
         if not results:
             return None
-            
+
         result = results[0]
         supervisor_email = result.get("email", "")
         created_at_str = result.get("createdAt", "")
         created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
-        
+
         return ProjectCreation(
             project_id=project_id,
             supervisor_id=supervisor_email,
             created_at=created_at
         )
+
     def create(self, project: ProjectCreation) -> ProjectCreation:
         print(project)
         project.created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -138,7 +152,7 @@ class ProjectRepository(BaseRepository[Project]):
             match
                 $business isa business,
                 has name "{project.business_id}";
-            insert 
+            insert
                 $project isa project,
                 has name "{project.name}",
                 has description "{project.description}",
