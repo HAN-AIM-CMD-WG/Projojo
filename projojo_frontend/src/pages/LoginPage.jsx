@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { notification } from "../components/notifications/NotifySystem";
 import FormInput from "../components/FormInput";
+import TestUserSelector from "../components/TestUserSelector";
 import { useAuth } from "../components/AuthProvider";
 
 export default function LoginPage() {
@@ -14,14 +15,16 @@ export default function LoginPage() {
     email: "",
     password: ""
   });
-
-
-
   const handleInputChange = (field) => (value) => {
     setCredentials(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  // Handle test user selection from TestUserSelector component
+  const handleTestUserSelect = (userCredentials) => {
+    setCredentials(userCredentials);
   };
 
   const handleSubmit = async (e) => {
@@ -34,7 +37,7 @@ export default function LoginPage() {
       if (result.success) {
         navigate("/home");
       } else {
-        setFormError(result.error ? "Ongeldige gebruikersnaam of wachtwoord" : result.error);
+        setFormError(result.error ? result.error : "Ongeldige gebruikersnaam of wachtwoord");
       }
     } catch (error) {
       setFormError("Er is een fout opgetreden bij het inloggen");
@@ -52,7 +55,9 @@ export default function LoginPage() {
         <h2 className="mb-4 text-center text-lg font-semibold">
           Login met je account
         </h2>
-        
+
+        <TestUserSelector onUserSelect={handleTestUserSelect} />
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <FormInput
             label="email"
@@ -64,7 +69,7 @@ export default function LoginPage() {
             onChange={handleInputChange("email")}
             autocomplete="email"
           />
-          
+
           <FormInput
             label="Wachtwoord"
             name="password"
@@ -75,13 +80,13 @@ export default function LoginPage() {
             onChange={handleInputChange("password")}
             autocomplete="current-password"
           />
-          
+
           {formError && (
             <div className="text-red-500 text-sm mt-2">{formError}</div>
           )}
-          
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             className="btn bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md mt-2"
             disabled={isLoading}
           >

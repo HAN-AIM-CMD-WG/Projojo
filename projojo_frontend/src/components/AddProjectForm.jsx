@@ -13,6 +13,13 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
     const navigation = useNavigate();
 
     const [description, setDescription] = useState("");
+    const [image, setImage] = useState(null);
+    const [imageError, setImageError] = useState('');
+
+    const handleImageChange = (file) => {
+        setImage(file);
+        setImageError('');
+    };
 
     const handleSubmit = event => {
         event.preventDefault();
@@ -20,48 +27,28 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
             return;
         }
 
+        if (!image) {
+            setImageError('Een projectafbeelding is verplicht.');
+            return;
+        }
+
         const formData = new FormData(event.target);
-        
+
         // Get the image file
         const imageFile = formData.get("image");
-        
-        // Create project data object for JSON submission
+
+        // Create project data object for submission with file
         const projectData = {
             id: formData.get("name").trim(),
             name: formData.get("name").trim(),
             description: description.trim(),
             supervisor_id: authData.userId,
             business_id: authData.businessId,
-            created_at: new Date().toISOString(),
-            image_path: imageFile.name
+            imageFile: imageFile // Pass the actual file object
         };
-        
-        // Create a new FormData for file upload
-        const fileFormData = new FormData();
-        fileFormData.append("file", imageFile);
-        
-        // First upload the image file
-        fetch(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/test"}/upload`, {
-            method: "POST",
-            body: fileFormData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("Failed to upload image");
-            }
-            return response.json();
-        })
-        .then(() => {
-            // Then create the project with the image path
-            onSubmit(projectData);
-        })
-        .catch(error => {
-            console.error("Error uploading image:", error);
-            // Set server error message
-            if (typeof onSubmit === "function") {
-                onSubmit({ error: error.message });
-            }
-        });
+
+        // Submit both project data and image in a single call
+        onSubmit(projectData);
     }
 
     return (
@@ -90,7 +77,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     error={descriptionError}
                     setError={setDescriptionError}
                 />
-                <DragDrop multiple={false} name="image" />
+                <DragDrop onFileChanged={handleImageChange} multiple={false} name="image" />
+                {imageError && <p className="text-red-500">{imageError}</p>}
                 <div className="grid grid-cols-2 gap-2">
                     <button type="button" className="btn-secondary w-full" onClick={() => navigation(-1)}>Annuleren</button>
                     <button type="submit" className="btn-primary w-full">Opslaan</button>
