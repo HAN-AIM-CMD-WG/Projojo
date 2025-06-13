@@ -51,7 +51,8 @@ export default function ProjectCard({ project, index=0, isExpanded=false }) {
                     taskId: task.id,
                     title: task.name,
                     description: task.description,
-                    totalNeeded: task.total_needed
+                    totalNeeded: task.total_needed,
+                    skills: task.skills || []
                   }}
                 />
               </div>
