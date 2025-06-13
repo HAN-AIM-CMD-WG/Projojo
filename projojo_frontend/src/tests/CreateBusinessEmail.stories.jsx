@@ -1,6 +1,6 @@
 import CreateBusinessEmail from "../components/CreateBusinessEmail";
 import { useAuth } from "../components/AuthProvider";
-import { within, fn, expect, userEvent } from "@storybook/test";
+import { within, fn, expect, userEvent } from "storybook/test";
 
 
 export default {

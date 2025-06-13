@@ -1,4 +1,4 @@
-import { expect, userEvent, fn, within } from '@storybook/test';
+import { expect, userEvent, fn, within } from 'storybook/test';
 import Filter from '../components/Filter';
 
 const onFilterMock = fn();

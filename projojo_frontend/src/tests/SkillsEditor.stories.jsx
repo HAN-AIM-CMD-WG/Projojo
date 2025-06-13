@@ -1,4 +1,4 @@
-import { expect, fn, userEvent, within } from '@storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import { AuthProvider, useAuth } from '../components/AuthProvider';
 import SkillsEditor from '../components/SkillsEditor';
 
