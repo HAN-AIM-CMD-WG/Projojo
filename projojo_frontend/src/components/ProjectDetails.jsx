@@ -100,15 +100,15 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             </div>
 
             <h2 className="text-lg font-semibold text-black-700 pt-3 px-4">
-                Top {5} skills van het project
+                Top {project.topSkills?.length || 0} skills van het project
             </h2>
             <div className="flex flex-row justify-between">
                 <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
-                    {/* {project.skills.map((skill) => (
-                        <li key={skill.skillId}>
-                            <SkillBadge skillName={skill.name} isPending={skill.isPending} />
+                    {project.topSkills?.map((skill) => (
+                        <li key={skill.name}>
+                            <SkillBadge skillName={skill.name} isPending={skill.is_pending} />
                         </li>
-                    ))} */}
+                    ))}
                 </ul>
                 {isOwner && (
                     <div className="w-fit p-4 pt-0 flex">
