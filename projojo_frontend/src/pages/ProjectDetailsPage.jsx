@@ -18,19 +18,25 @@ export default function ProjectDetailsPage() {
     const fetchProjectAndTasks = () => {
         getProject(projectId)
             .then(data => {
-                // Ensure project has the expected format for the components
-                data.id = data.id;
-                data.name = data.name;
-                setProject(data);
-                
+                const allSkills = data.tasks?.flatMap(task => task.skills) || [];
+
+                const skillCounts = allSkills.reduce((acc, skill) => {
+                    if (!acc[skill.name]) {
+                        acc[skill.name] = { count: 0, is_pending: skill.is_pending };
+                    }
+                    acc[skill.name].count++;
+                    return acc;
+                }, {});
+
+                const topSkills = Object.entries(skillCounts)
+                    .sort(([, a], [, b]) => b.count - a.count)
+                    .slice(0, 5)
+                    .map(([name, { is_pending }]) => ({ name, is_pending }));
+
+                setProject({ ...data, topSkills });
+                setTasks(data.tasks);
             })
             .catch(() => setShowNotFound(true));
-        
-        getTasks(projectId)
-            .then(data => {
-                setTasks(data);
-            })
-            .catch(() => setShowNotFound(false));
     };
 
     useEffect(() => {
