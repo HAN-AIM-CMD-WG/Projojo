@@ -28,6 +28,16 @@ async def get_project(name: str = Path(..., description="Project name")):
     return project
 
 
+@router.get("/{name}/complete")
+async def get_project_full(name: str = Path(..., description="Project name")):
+    """
+    Get a specific project by name with all tasks and skills
+    """
+    project = project_repo.get_by_id(name)
+    project.tasks = task_service.get_tasks_with_skills_by_project(name)
+    return project
+
+
 @router.get("/{name}/tasks")
 async def get_project_tasks(name: str = Path(..., description="Project name")):
     """
