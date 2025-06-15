@@ -171,11 +171,10 @@ Use `./create_typedb.sh` to download the latest TypeDB as a container and set it
 
 The script will:
 1. Create a Docker volume for TypeDB data persistence (if needed or requested)
-2. Pull the latest TypeDB Docker image
+2. Pull the TypeDB Docker image
 3. Create a TypeDB container with port 1729 exposed
 4. Mount the data volume to maintain data between container restarts
 
-The script is also useful to upgrade TypeDB to a higher version.
 Use the `reset-volume` option when you need to clear all existing TypeDB data and start fresh.
 
 ### Running the project

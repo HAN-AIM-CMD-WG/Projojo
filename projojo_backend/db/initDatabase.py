@@ -44,7 +44,14 @@ class Db:
     @staticmethod
     def close():
         Db.driver.close()
-        
+        Db.db = None
+
+    @staticmethod
+    def reopen():
+        Db.driver = TypeDB.driver( Db.address, Credentials( Db.username, Db.password), DriverOptions(False, None))
+        Db.db = Db.driver.databases.get(Db.name) if Db.driver.databases.contains(Db.name) else None
+        create_database_if_needed()    
+
 
 print( f"Using database: {Db.name}")
 
