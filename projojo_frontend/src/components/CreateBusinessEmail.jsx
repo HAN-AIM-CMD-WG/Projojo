@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { /*getColleaguesEmailAdresses, getStudentEmailAdresses*/ } from "../services";
+import { useState } from "react";
+import { getColleaguesEmailAddresses, getStudentEmailAddresses } from "../services";
 import FormInput from "./FormInput";
 import Loading from "./Loading";
 import Modal from "./Modal";
@@ -10,7 +10,6 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
     const [fetchError, setFetchError] = useState(undefined);
     const [checkboxError, setCheckboxError] = useState(undefined);
     const [sendCCToColleagues, setSendCCToColleagues] = useState(false);
-    const checkboxInputRef = useRef();
 
     function onCreateMailButtonClick() {
         setIsCreateMailModalOpen(true);
@@ -22,58 +21,69 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
         const formData = new FormData(event.target);
         const subject = formData.get("subject");
 
-        const selection = [...checkboxInputRef.current.children]
-            .reduce((prev, el) => el.firstElementChild.checked ? prev | Number(el.firstElementChild.name) : prev, 0);
+        // Collect selected student statuses from form data
+        const selection = [];
+        const studentStatuses = ['registered', 'accepted', 'rejected'];
 
-        if (selection === 0) {
-            setCheckboxError("Er moet een keuze gemaakt worden.")
+        studentStatuses.forEach(status => {
+            if (formData.get(status)) {
+                selection.push(status);
+            }
+        });
+
+        if (selection.length === 0) {
+            setCheckboxError("Selecteer ten minste één type student.");
             return;
         }
 
+        setCheckboxError(undefined);
         setIsMailLoading(true);
-        // getStudentEmailAdresses(selection, taskId)
-        //     .then(adresses => {
-        //         if (!adresses || adresses.length === 0) {
-        //             setFetchError("Geen e-mailadressen gevonden.");
-        //             return;
-        //         }
-        //         const joined = encodeURI(adresses.join(","));
-        //         if (!dontSetLocation) {
-        //             if (sendCCToColleagues) {
-        //                 getColleaguesEmailAdresses()
-        //                 .then(colleagues => {
-        //                     const cc = encodeURI(colleagues.join(","));
-        //                     document.location = `mailto:?subject=${encodeURI(subject.toString())}&cc=${cc}&bcc=${joined}`;
-        //                 })
-        //             } else {
-        //                 document.location = `mailto:?subject=${encodeURI(subject.toString())}&bcc=${joined}`;
-        //             }
-        //         }
+        getStudentEmailAddresses(selection, taskId)
+            .then(addresses => {
+                if (!addresses || addresses.length === 0) {
+                    setFetchError("Geen e-mailadressen gevonden.");
+                    return;
+                }
+                const joined = encodeURI(addresses.join(","));
+                if (!dontSetLocation) {
+                    if (sendCCToColleagues) {
+                        getColleaguesEmailAddresses()
+                            .then(colleagues => {
+                                const cc = encodeURI(colleagues.join(","));
+                                document.location = `mailto:?subject=${encodeURI(subject.toString())}&cc=${cc}&bcc=${joined}`;
+                            })
+                            .catch(error => {
+                                // If colleague emails fail, still send to students
+                                document.location = `mailto:?subject=${encodeURI(subject.toString())}&bcc=${joined}`;
+                            });
+                    } else {
+                        document.location = `mailto:?subject=${encodeURI(subject.toString())}&bcc=${joined}`;
+                    }
+                }
 
-        //         setIsCreateMailModalOpen(false);
-        //     })
-        //     .catch(error => setFetchError(error.message))
-        //     .finally(() => setIsMailLoading(false));
+                setIsCreateMailModalOpen(false);
+            })
+            .catch(error => setFetchError(error.message))
+            .finally(() => setIsMailLoading(false));
     }
 
     return (
         <>
             <button data-testid="open-create-mail-button" className="btn-primary w-full" onClick={onCreateMailButtonClick}>Creeër email</button>
-            <Modal modalHeader="Genereer email" isModalOpen={isCreateMailModalOpen} setIsModalOpen={setIsCreateMailModalOpen}>
-                <form onSubmit={onMailtoButtonClick} className="flex flex-col gap-3">
-                    <div ref={checkboxInputRef}>
-                        <FormInput label="Mail naar aangemelde studenten" type="checkbox" name="1" />
-                        <FormInput label="Mail naar geaccepteerde studenten" type="checkbox" name="2" />
-                        <FormInput label="Mail naar afgewezen studenten" type="checkbox" name="4" />
-                        <FormInput label="CC naar collega's" type="checkbox" onChange={value => setSendCCToColleagues(value)} />
-                        {checkboxError && <span className="text-primary">{checkboxError}</span>}
-                    </div>
+            <Modal modalHeader="Genereer email" isModalOpen={isCreateMailModalOpen} setIsModalOpen={setIsCreateMailModalOpen}>                <form onSubmit={onMailtoButtonClick} className="flex flex-col gap-3">
+                <div>
+                    <FormInput label="Mail naar aangemelde studenten" type="checkbox" name="registered" />
+                    <FormInput label="Mail naar geaccepteerde studenten" type="checkbox" name="accepted" />
+                    <FormInput label="Mail naar afgewezen studenten" type="checkbox" name="rejected" />
+                    <FormInput label="CC naar collega's" type="checkbox" name="colleagues" onChange={value => setSendCCToColleagues(value)} />
+                    {checkboxError && <span className="text-primary">{checkboxError}</span>}
+                </div>
 
-                    <FormInput label="Onderwerp" type="text" name="subject" required />
+                <FormInput label="Onderwerp" type="text" name="subject" required />
 
-                    <button className="btn-primary" type="submit" disabled={isMailLoading}>{!isMailLoading ? "Genereer mail" : <Loading />}</button>
-                    {fetchError && <span className="text-primary font-bold">{fetchError}</span>}
-                </form>
+                <button className="btn-primary" type="submit" disabled={isMailLoading}>{!isMailLoading ? "Genereer mail" : <Loading />}</button>
+                {fetchError && <span className="text-primary font-bold">{fetchError}</span>}
+            </form>
             </Modal>
         </>
     )

@@ -22,10 +22,10 @@ export default function ProjectDetailsPage() {
                 data.id = data.id;
                 data.name = data.name;
                 setProject(data);
-                
+
             })
             .catch(() => setShowNotFound(true));
-        
+
         getTasks(projectId)
             .then(data => {
                 setTasks(data);
@@ -47,8 +47,8 @@ export default function ProjectDetailsPage() {
             }, 1500);
         }, 300);
     };
-    //if (!projectId || isNaN(projectId) || projectId <= 0 || !Number.isInteger(parseFloat(projectId))) return <NotFoundPage />
-    // if (showNotFound) return <NotFoundPage />
+
+    if (!projectId || showNotFound) return <NotFoundPage />
 
     return (
         <>

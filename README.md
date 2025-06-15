@@ -36,6 +36,17 @@ These scripts will:
 | **Backend**  | projojo_backend  | FastAPI application    | 8000 |
 | **Frontend** | projojo_frontend | Vite/React application | 5173 |
 
+### Accessing TypeDB Studio
+
+As of TypeDB version 3.3.0, TypeDB Studio is a web-based application. Our project is already configured to use TypeDB v3.3.0.
+
+To access TypeDB Studio:
+1. Go to [studio.typedb.com/connect](https://studio.typedb.com/connect) in your web browser.
+2. In the "Server Address" field, enter: `http://localhost:1728`
+3. Click "Connect".
+
+This will connect you to the TypeDB instance running in your local Docker container.
+
 ### Managing the Database
 
 To reset the TypeDB database and start fresh:
