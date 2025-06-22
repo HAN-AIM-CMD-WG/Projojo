@@ -34,14 +34,7 @@ async def get_all_businesses_with_full_nesting():
     """
     Get all businesses with projects, tasks, and skills nested.
     """
-    businesses = business_repo.get_all()
-    for business in businesses:
-        business.projects = project_repo.get_projects_by_business(business.name)
-        for project in business.projects:
-            project.tasks = task_repo.get_tasks_by_project(project.name)
-            for task in project.tasks:
-                task.skills = skill_repo.get_task_skills(task.name)
-    return businesses
+    return business_repo.get_all_with_full_nesting()
 
 @router.get("/{name}")
 async def get_business(name: str = Path(..., description="Business name")):

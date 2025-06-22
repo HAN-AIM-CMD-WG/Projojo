@@ -29,7 +29,7 @@ export default function TaskCard({ task }) {
                         <span className="text-lg font-semibold text-slate-700">Skills:</span>
                         {skills.map((skill) => (
                             <SkillBadge
-                                key={skill.skillId || skill.id}
+                                key={skill.skillId || skill.name}
                                 skillName={skill.name}
                                 isPending={skill.isPending || skill.is_pending}
                             />
