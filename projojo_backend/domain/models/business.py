@@ -9,6 +9,7 @@ class Business(BaseModel):
     description: str
     image_path: str
     location: list[str]
+    projects: list[Project] | None = None
 
     class Config:
         from_attributes = True

@@ -11,11 +11,6 @@ class Task(BaseModel):
     total_needed: int
     created_at: datetime
     project_id: str | None = None
-    
-    class Config:
-        from_attributes = True
-
-class TaskSkill(Task):
     skills: list[Skill] | None = None
     
     class Config:
