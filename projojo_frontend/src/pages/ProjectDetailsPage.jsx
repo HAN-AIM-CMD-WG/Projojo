@@ -53,8 +53,8 @@ export default function ProjectDetailsPage() {
             }, 1500);
         }, 300);
     };
-    //if (!projectId || isNaN(projectId) || projectId <= 0 || !Number.isInteger(parseFloat(projectId))) return <NotFoundPage />
-    // if (showNotFound) return <NotFoundPage />
+
+    if (!projectId || showNotFound) return <NotFoundPage />
 
     return (
         <>
