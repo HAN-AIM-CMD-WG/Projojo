@@ -81,7 +81,7 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                     // Ensure task has the expected format for the components
                     const formattedTask = {
                         ...task,
-                        taskId: task.id,
+                        taskId: task.name,
                         title: task.name,
                         totalNeeded: task.total_needed,
                         totalAccepted: 0, // Default value since it's not in the new API

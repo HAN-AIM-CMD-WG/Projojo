@@ -146,7 +146,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 name="projectId"
                                 type="hidden"
                                 required
-                                value={project.id}
+                                value={project.name || project.projectId || project.id}
                             />
                         </div>
                         {error && <p className="col-span-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{error}</p>}
