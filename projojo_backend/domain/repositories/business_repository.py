@@ -103,3 +103,48 @@ class BusinessRepository(BaseRepository[Business]):
             ))
         
         return associations
+
+    def get_all_with_full_nesting(self):
+        query = """
+        match
+            $business isa business;
+        fetch {
+            "name": $business.name,
+            "description": $business.description,
+            "image_path": $business.imagePath,
+            "location": [$business.location],
+            "projects": [
+                match
+                    ($business, $project) isa hasProjects;
+                    $project isa project;
+                fetch {
+                    "name": $project.name,
+                    "description": $project.description,
+                    "image_path": $project.imagePath,
+                    "created_at": $project.createdAt,
+                    "tasks": [
+                        match
+                            ($project, $task) isa containsTask;
+                            $task isa task;
+                        fetch {
+                            "name": $task.name,
+                            "description": $task.description,
+                            "total_needed": $task.totalNeeded,
+                            "created_at": $task.createdAt,
+                            "skills": [
+                                match
+                                    ($task, $skill) isa requiresSkill;
+                                    $skill isa skill;
+                                fetch {
+                                    "name": $skill.name,
+                                    "is_pending": $skill.isPending,
+                                    "created_at": $skill.createdAt
+                                };
+                            ]
+                        };
+                    ]
+                };
+            ]
+        };
+        """
+        return Db.read_transact(query)

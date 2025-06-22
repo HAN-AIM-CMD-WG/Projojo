@@ -7,7 +7,7 @@ export default function TaskCard({ task }) {
     const totalRegistered = task.totalRegistered || 0;
     const totalNeeded = task.totalNeeded || task.total_needed || 1;
     const title = task.title || task.name;
-    const skills = task.skills || [];
+    const skills = task.skills  || [];
 
     return (
         <div className="max-w-sm bg-slate-100 border border-gray-200 rounded-lg shadow-lg hover:rounded-lg hover:ring-4 hover:ring-pink-300 transition-all duration-300 ease-in-out">
@@ -29,7 +29,7 @@ export default function TaskCard({ task }) {
                         <span className="text-lg font-semibold text-slate-700">Skills:</span>
                         {skills.map((skill) => (
                             <SkillBadge
-                                key={skill.skillId || skill.id}
+                                key={skill.skillId || skill.name}
                                 skillName={skill.name}
                                 isPending={skill.isPending || skill.is_pending}
                             />
