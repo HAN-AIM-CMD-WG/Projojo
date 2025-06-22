@@ -31,7 +31,7 @@ export default function BusinessPage() {
         
         return projects.map((project) => { 
             // Ensure project has the expected format for the components
-            project.projectId = project.nmae;
+            project.projectId = project.name;
             project.title = project.name;
             return project; 
         });
