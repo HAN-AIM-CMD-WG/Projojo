@@ -16,6 +16,7 @@ from domain.models import Business
 
 router = APIRouter(prefix="/businesses", tags=["Business Endpoints"])
 
+
 # Business endpoints
 @router.get("/")
 async def get_all_businesses_with_projects():
@@ -29,12 +30,21 @@ async def get_all_businesses_with_projects():
     return businesses
 
 
+@router.get("/basic", response_model=list[Business])
+async def get_all_businesses_basic():
+    """
+    Get all businesses without projects
+    """
+    return business_repo.get_all()
+
+
 @router.get("/complete")
 async def get_all_businesses_with_full_nesting():
     """
     Get all businesses with projects, tasks, and skills nested.
     """
     return business_repo.get_all_with_full_nesting()
+
 
 @router.get("/{name}")
 async def get_business(name: str = Path(..., description="Business name")):
@@ -43,6 +53,7 @@ async def get_business(name: str = Path(..., description="Business name")):
     """
     business = business_repo.get_by_id(name)
     return business
+
 
 @router.get("/{name}/projects")
 async def get_business_projects(name: str = Path(..., description="Business name")):
