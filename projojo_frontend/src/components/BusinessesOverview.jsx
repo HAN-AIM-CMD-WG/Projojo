@@ -3,10 +3,10 @@ import BusinessProjectDashboard from './BusinessProjectDashboard';
 export default function BusinessesOverview({ businesses }) {
     return (
         <div className="flex flex-col gap-6">
-            {businesses.map((businessInformation) => (
+            {businesses.map((business) => (
                 <BusinessProjectDashboard
-                    key={businessInformation.business.businessId}
-                    business={businessInformation.business}
+                    key={business.businessId}
+                    business={business}
                     showUpdateButton={true}
                 />
             ))}
