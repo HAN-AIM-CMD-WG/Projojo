@@ -139,6 +139,13 @@ export function getBusinessesComplete() {
 }
 
 /**
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[]}[]>}
+ */
+export function getBusinessesBasic() {
+    return fetchWithError(`${API_BASE_URL}businesses/basic`);
+}
+
+/**
  *
  * @param {string} projectName
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string, tasks: any[]}>}
