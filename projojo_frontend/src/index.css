@@ -5,23 +5,16 @@
 
 /* Your custom configuration as CSS variables */
 @theme {
-    --color-primary: #e50056;
-    --color-dark-primary: #cf004e;
-
-    --radius-none: 0;
-    --radius-sm: 0.125rem;
-    --radius: 4px;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
-    --radius-full: 9999px;
-    --radius-large: 2rem;
+    
+    --primary: #e50056;
+    --dark-primary: #cf004e;
 }
 
 /* Custom keyframes and animations */
 @keyframes highlight {
     0% {
-        background-color: var(--color-primary);
-        border-color: var(--color-primary);
+        background-color: var(--primary);
+        border-color: var(--primary);
     }
 
     100% {
@@ -116,7 +109,6 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -150,7 +142,6 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
     --primary-foreground: oklch(0.205 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);

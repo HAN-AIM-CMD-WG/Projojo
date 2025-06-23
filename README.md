@@ -33,6 +33,7 @@ These scripts will:
 | Service      | Container Name   | Description            | Port |
 | ------------ | ---------------- | ---------------------- | ---- |
 | **TypeDB**   | projojo_typedb   | TypeDB database server | 1729 |
+| **TypeDB Studio**   | projojo_typedb   | endpoint for TDB studio | 1728 |
 | **Backend**  | projojo_backend  | FastAPI application    | 8000 |
 | **Frontend** | projojo_frontend | Vite/React application | 5173 |
 

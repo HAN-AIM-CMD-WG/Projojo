@@ -22,6 +22,7 @@ export default defineConfig({
     hmr: {
       clientPort: 5173,  // Ensures HMR works through Docker port mapping
       overlay: true      // Shows an overlay when errors occur
-    }
+    },
+    allowedHosts: ["frontend.projojo.orb.local", "localhost"],
   }
 })

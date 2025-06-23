@@ -19,7 +19,7 @@ import SkillBadge from "./SkillBadge";
  *  }} props
  * @returns {JSX.Element}
  */
-export default function SkillsEditor({ children, allSkills, initialSkills, isEditing, onSave, onCancel, setError, isAllowedToAddSkill = false, isAbsolute = true, maxSkillsDisplayed = 20, showOwnSkillsOption = false }) {
+export default function SkillsEditor({ children, value, allSkills, setError, isAllowedToAddSkill = false, isAbsolute = true, maxSkillsDisplayed = 20, showOwnSkillsOption = false }) {
     const { authData } = useAuth();
     const [search, setSearch] = useState('')
     const [selectedSkills, setSelectedSkills] = useState(initialSkills)

@@ -1,5 +1,9 @@
 import { useRef } from "react";
 import Tooltip from "./Tooltip";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { X } from "lucide-react";
+
 
 /**
  * @param {{
@@ -9,34 +13,41 @@ import Tooltip from "./Tooltip";
  * }} props
  * @returns {JSX.Element}
  */
-export default function SkillBadge({ children, skillName, isPending, onClick = null, ariaLabel = null }) {
+export default function SkillBadge({ children, skill, onClick = null, onClose = null, ariaLabel = null }) {
     const toolTipRef = useRef(null);
 
-    let classNames = isPending ? 'bg-gray-300 text-black border border-gray-400' : 'from-primary to-darkPrimary bg-gradient-to-r text-white';
-    classNames += ' px-3 py-1 text-nowrap text-sm font-medium rounded-full shadow-md';
+    const isPending = Math.random() < 0.5 ? true : false; // Simulate pending state for testing
+
+    let variant = isPending ? 'pending' : 'accepted';
 
     const content = (
-        <>
-            {skillName}
+        <Badge variant={variant} className="rounded-full text-nowrap text-xs font-medium shadow-md flex items-center gap-2">
+            {skill.name}
             {children}
+            {onClose && (
+                <Button variant="ghost" onClick={onClose} className="px-0 has-[>svg]:px-0 h-1 hover:bg-transparent hover:text-inherit">
+                    <X size={12} />
+                </Button>
+            )}
             {isPending && (
                 <Tooltip parentRef={toolTipRef}>
                     In afwachting van goedkeuring
                 </Tooltip>
             )}
-        </>
+        </Badge>
     );
+
 
     if (onClick) {
         return (
-            <button ref={toolTipRef} className={classNames} onClick={onClick} aria-label={ariaLabel}>
+            <Button ref={toolTipRef} variant="ghost" onClick={onClick} aria-label={ariaLabel}>
                 {content}
-            </button>
+            </Button>
         )
     }
 
     return (
-        <span ref={toolTipRef} className={classNames}>
+        <span ref={toolTipRef}>
             {content}
         </span>
     )

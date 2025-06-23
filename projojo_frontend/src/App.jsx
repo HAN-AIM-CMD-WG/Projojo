@@ -15,6 +15,9 @@ import UpdateBusinessPage from './pages/UpdateBusinessPage';
 import { getAuthorization } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
+import OneButtonForm from "./components/OneButtonForm";
+import RandomNumberButton from "./components/RandomNumberButton";
+import { Search, X } from "lucide-react";
 
 export default function App() {
   const { setAuthData } = useAuth();

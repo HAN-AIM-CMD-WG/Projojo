@@ -6,7 +6,7 @@ import TestUserSelector from "../components/TestUserSelector";
 import { useAuth } from "../components/AuthProvider";
 
 export default function LoginPage() {
-  const [searchParams] = useSearchParams();
+  
   const navigate = useNavigate();
   const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);

@@ -17,7 +17,7 @@ export default [
         sourceType: 'module',
       },
     },
-    settings: { react: { version: '18.3' } },
+    settings: { react: { version: '19.1' } },
     plugins: {
       react,
       'react-hooks': reactHooks,
@@ -35,6 +35,7 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      "no-unused-vars": "warn",
     },
   },
 ]
