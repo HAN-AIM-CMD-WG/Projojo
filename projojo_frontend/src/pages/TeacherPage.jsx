@@ -110,7 +110,8 @@ export default function TeacherPage() {
     }, [numberToReloadBusinesses]);
 
     const orderBusinessesByIdReverse = businesses => {
-        return businesses.sort((a, b) => b.business.businessId - a.business.businessId);
+        return [];
+        // return businesses.sort((a, b) => b.business.businessId - a.business.businessId);
     }
     
     return (
