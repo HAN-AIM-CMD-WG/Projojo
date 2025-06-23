@@ -2,7 +2,7 @@ from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import StudentSkills, TaskSkill, Task, Skill
+from domain.models import Skill
 import uuid
 from datetime import datetime
 

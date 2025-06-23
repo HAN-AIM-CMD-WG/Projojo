@@ -2,6 +2,9 @@ from pydantic import BaseModel, Field
 from typing import Annotated
 from datetime import datetime
 
+from .task import Task
+
+
 class Project(BaseModel):
     id: str
     name: str
@@ -11,6 +14,7 @@ class Project(BaseModel):
         examples=["2025-04-21T10:02:58"]
     )]
     business_id: str | None = None
+    tasks: list[Task] | None = None
     
     class Config:
         from_attributes = True

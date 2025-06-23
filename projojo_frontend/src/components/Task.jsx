@@ -137,10 +137,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                     >
                         <div className="flex flex-wrap gap-2 items-center">
                             
-                            {task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
-                            {task.skills.map((skill) => (
+                            {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
+                            {task.skills && task.skills.map((skill) => (
                                 <SkillBadge
-                                    key={skill.name}
+                                    key={skill.id}
                                     skillName={skill.name}
                                     isPending={skill.is_pending}
                                 />
@@ -247,4 +247,3 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
         </div>
     );
 }
-

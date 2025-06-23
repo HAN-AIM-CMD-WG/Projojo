@@ -32,18 +32,18 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
 
     const filteredSkills = allSkills
         .filter(skill =>
-            isSearchInString(formattedSearch, skill.name) && !selectedSkills.some(s => s.skillId === skill.skillId)
+            isSearchInString(formattedSearch, skill.name) &&
+            !(selectedSkills ?? []).some(s => (s.skillId || s.id) === (skill.skillId || skill.id))
         )
         .sort((a, b) => a.name.localeCompare(b.name))
         .filter(skill => !showOwnSkillsOption || authData.type !== 'student' || !onlyShowStudentsSkills || (onlyShowStudentsSkills && studentsSkills.includes(skill.skillId)))
 
-    const searchedSkillExists = allSkills.some(skill => isSearchInString(formattedSearch, skill.name)) || selectedSkills.some(skill => isSearchInString(formattedSearch, skill.name))
+    const searchedSkillExists = allSkills.map(skill => isSearchInString(formattedSearch, skill.name)) || selectedSkills.map(skill => isSearchInString(formattedSearch, skill.name))
 
     const toggleSkill = (skill) => {
         setSelectedSkills(currentSelectedSkills => {
-            // .some returns true if the condition is met for at least one element
-            if (currentSelectedSkills.some(s => s.skillId === skill.skillId)) {
-                return currentSelectedSkills.filter(s => s.skillId !== skill.skillId)
+            if (currentSelectedSkills.map(s => (s.skillId || s.id) === (skill.skillId || skill.id))) {
+                return currentSelectedSkills.filter(s => (s.skillId || s.id) !== (skill.skillId || skill.id))
             } else {
                 return [...currentSelectedSkills, skill]
             }
@@ -117,7 +117,7 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
             <div className="flex flex-wrap gap-2 items-center">
                 {selectedSkills.length === 0 && <span>Er zijn geen skills geselecteerd.</span>}
                 {selectedSkills.map((skill) => (
-                    <SkillBadge key={skill.skillId} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
+                    <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
                         <span className="ps-1 font-bold text-xl leading-3">×</span>
                     </SkillBadge>
                 ))}
@@ -163,7 +163,7 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
                     )}
                     <div className="flex flex-wrap gap-2 items-center">
                         {filteredSkills.slice(0, maxSkillsDisplayed).map((skill) => (
-                            <SkillBadge key={skill.skillId} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                            <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                 <span className="ps-1 font-bold text-xl leading-3">+</span>
                             </SkillBadge>
                         ))}
@@ -173,7 +173,7 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
                         {filteredSkills.length > maxSkillsDisplayed && showAllSkills && (
                             <>
                                 {filteredSkills.slice(maxSkillsDisplayed).map((skill) => (
-                                    <SkillBadge key={skill.skillId} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                                    <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                         <span className="ps-1 font-bold text-xl leading-3">+</span>
                                     </SkillBadge>
                                 ))}

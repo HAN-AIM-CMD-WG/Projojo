@@ -1,10 +1,18 @@
 from fastapi import APIRouter, Path
 
-from domain.repositories import BusinessRepository, ProjectRepository
+from domain.repositories import (
+    BusinessRepository,
+    ProjectRepository,
+    TaskRepository,
+    SkillRepository,
+)
+
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
+task_repo = TaskRepository()
+skill_repo = SkillRepository()
 
-from domain.models import BusinessProjects
+from domain.models import Business
 
 router = APIRouter(prefix="/businesses", tags=["Business Endpoints"])
 
@@ -14,15 +22,19 @@ async def get_all_businesses_with_projects():
     """
     Get all businesses for debugging purposes
     """
-    businesses_with_projects = []
-    for business in business_repo.get_all():
-        projects = project_repo.get_projects_by_business(business.name)
+    businesses = business_repo.get_all()
+    for business in businesses:
+        business.projects = project_repo.get_projects_by_business(business.name)
 
-        businesses_with_projects.append(
-            BusinessProjects(**business.model_dump(), projects=projects)
-        )
+    return businesses
 
-    return businesses_with_projects
+
+@router.get("/complete")
+async def get_all_businesses_with_full_nesting():
+    """
+    Get all businesses with projects, tasks, and skills nested.
+    """
+    return business_repo.get_all_with_full_nesting()
 
 @router.get("/{name}")
 async def get_business(name: str = Path(..., description="Business name")):
