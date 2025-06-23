@@ -8,7 +8,7 @@ import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import Tooltip from "../components/Tooltip";
-import { /*createColleagueInviteLink, createNewBusiness,*/ getProjects } from "../services";
+import { /*createColleagueInviteLink, createNewBusiness,*/ getBusinessesBasic } from "../services";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
@@ -89,7 +89,7 @@ export default function TeacherPage() {
         let ignore = false;
         setIsLoading(true);
 
-        getProjects()
+        getBusinessesBasic()
             .then(data => {
                 if (ignore) return;
                 setBusinesses(data);
@@ -108,11 +108,6 @@ export default function TeacherPage() {
             setIsLoading(false);
         }
     }, [numberToReloadBusinesses]);
-
-    const orderBusinessesByIdReverse = businesses => {
-        return [];
-        // return businesses.sort((a, b) => b.business.businessId - a.business.businessId);
-    }
     
     return (
         <>
@@ -121,7 +116,7 @@ export default function TeacherPage() {
                 <button onClick={() => openGenerateLinkModel()} className="btn-primary mb-4">Nodig docenten uit</button>
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="btn-primary mb-4">Bedrijf aanmaken</button>
             </div>
-            <BusinessesOverview businesses={orderBusinessesByIdReverse(businesses)} />
+            <BusinessesOverview businesses={businesses} />
             <NewSkillsManagement />
 
             <Modal
