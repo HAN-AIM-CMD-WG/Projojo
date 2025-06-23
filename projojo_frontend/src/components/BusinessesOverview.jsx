@@ -5,7 +5,7 @@ export default function BusinessesOverview({ businesses }) {
         <div className="flex flex-col gap-6">
             {businesses.map((business) => (
                 <BusinessProjectDashboard
-                    key={business.businessId}
+                    key={business.id}
                     business={business}
                     showUpdateButton={true}
                 />
