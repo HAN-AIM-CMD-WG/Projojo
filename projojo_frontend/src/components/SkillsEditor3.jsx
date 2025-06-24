@@ -87,7 +87,7 @@ const SkillsEditor = ({ value, onChange, allSkills, onAddSkill = undefined, show
                 <span className="mx-auto text-muted-foreground">De skills zijn op.</span>
               )}
             </TagsEmpty>
-            <TagsGroup>
+            <TagsGroup className="flex flex-row flex-wrap justify-start gap-2">
               {filteredSkills.map((skill) => (
                 <TagsItem key={skill.id} value={skill.id} onSelect={handleSelect} className="justify-start">
                   {!value.some((s) => s.id === skill.id) && <SkillBadge skill={skill} /> }

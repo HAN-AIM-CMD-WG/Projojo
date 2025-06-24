@@ -117,7 +117,7 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
             <div className="flex flex-wrap gap-2 items-center">
                 {selectedSkills.length === 0 && <span>Er zijn geen skills geselecteerd.</span>}
                 {selectedSkills.map((skill) => (
-                    <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
+                    <SkillBadge key={skill.skillId || skill.id} skill={skill} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
                         <span className="ps-1 font-bold text-xl leading-3">×</span>
                     </SkillBadge>
                 ))}
@@ -163,7 +163,7 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
                     )}
                     <div className="flex flex-wrap gap-2 items-center">
                         {filteredSkills.slice(0, maxSkillsDisplayed).map((skill) => (
-                            <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                            <SkillBadge key={skill.skillId || skill.id} skill={skill} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                 <span className="ps-1 font-bold text-xl leading-3">+</span>
                             </SkillBadge>
                         ))}
@@ -173,7 +173,7 @@ export default function SkillsEditor({ children, value, allSkills, setError, isA
                         {filteredSkills.length > maxSkillsDisplayed && showAllSkills && (
                             <>
                                 {filteredSkills.slice(maxSkillsDisplayed).map((skill) => (
-                                    <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                                    <SkillBadge key={skill.skillId || skill.id} skill={skill} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                         <span className="ps-1 font-bold text-xl leading-3">+</span>
                                     </SkillBadge>
                                 ))}

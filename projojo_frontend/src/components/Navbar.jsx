@@ -76,7 +76,7 @@ export default function Navbar() {
             <nav className="bg-gray-100 border-gray-200 fixed w-full z-20 top-0 start-0">
                 <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                     <Link to="/home" className="flex items-center space-x-3">
-                        <img src="/projojo-logo.png" className="h-8 mt-1" alt="Projojo Logo" />
+                        <img src="/projojo-logo.png" className="h-10 mt-1" alt="Projojo Logo" />
                         {/* <span className="self-center text-2xl font-semibold whitespace-nowrap">Opdrachtenbox</span> */}
                     </Link>
                     <button data-collapse-toggle="navbar-default" type="button" onClick={toggleCollapse} className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="navbar-default" aria-expanded={!isCollapsed}>

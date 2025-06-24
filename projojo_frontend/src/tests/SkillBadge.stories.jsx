@@ -5,8 +5,11 @@ export default {
     title: 'Components/SkillBadge',
     component: SkillBadge,
     args: {
-        skillName: 'photoshop',
-        isPending: false,
+        skill: {
+            skillId: 1,
+            name: 'photoshop',
+            isPending: false,
+        },
     },
 };
 

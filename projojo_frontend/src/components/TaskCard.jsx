@@ -30,8 +30,7 @@ export default function TaskCard({ task }) {
                         {skills.map((skill) => (
                             <SkillBadge
                                 key={skill.skillId || skill.name}
-                                skillName={skill.name}
-                                isPending={skill.isPending || skill.is_pending}
+                                skill={skill}
                             />
                         ))}
                     </div>

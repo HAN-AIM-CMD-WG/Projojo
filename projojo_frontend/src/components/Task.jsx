@@ -141,8 +141,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                             {task.skills && task.skills.map((skill) => (
                                 <SkillBadge
                                     key={skill.id}
-                                    skillName={skill.name}
-                                    isPending={skill.is_pending}
+                                    skill={skill}
                                 />
                             ))}
                             {isOwner && !isEditing && (
@@ -222,8 +221,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                                     {registration.student.skills.map((skill) => (
                                         <SkillBadge
                                             key={skill.skill.skillId}
-                                            skillName={skill.skill.name}
-                                            isPending={skill.skill.isPending}
+                                            skill={skill.skill}
                                         />
                                     ))}
                                 </div>

@@ -8,17 +8,19 @@ import { X } from "lucide-react";
 /**
  * @param {{
  * children: React.ReactNode,
- * skillName: string,
- * isPending?: boolean
+ * skill: {
+ *   id: number,
+ *   name: string,
+ *   isPending?: boolean
+ * }
  * }} props
  * @returns {JSX.Element}
  */
 export default function SkillBadge({ children, skill, onClick = null, onClose = null, ariaLabel = null }) {
     const toolTipRef = useRef(null);
 
-    const isPending = Math.random() < 0.5 ? true : false; // Simulate pending state for testing
 
-    let variant = isPending ? 'pending' : 'accepted';
+    let variant = skill.isPending ? 'pending' : 'accepted';
 
     const content = (
         <Badge variant={variant} className="rounded-full text-nowrap text-xs font-medium shadow-md flex items-center gap-2">
@@ -29,7 +31,7 @@ export default function SkillBadge({ children, skill, onClick = null, onClose = 
                     <X size={12} />
                 </Button>
             )}
-            {isPending && (
+            {skill.isPending && (
                 <Tooltip parentRef={toolTipRef}>
                     In afwachting van goedkeuring
                 </Tooltip>

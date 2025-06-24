@@ -106,7 +106,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                 <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
                     {project.topSkills?.map((skill) => (
                         <li key={skill.name}>
-                            <SkillBadge skillName={skill.name} isPending={skill.is_pending} />
+                            <SkillBadge skill={skill} />
                         </li>
                     ))}
                 </ul>
