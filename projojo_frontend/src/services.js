@@ -89,6 +89,9 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                         case 404:
                             message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
                             break;
+                        case 409:
+                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan in het systeem.";
+                            break;
                         default:
                             message = message ?? "Er is een onverwachte fout opgetreden.";
                             break;
