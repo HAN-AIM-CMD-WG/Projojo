@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Path, Body, HTTPException
 
 from domain.repositories import (
     BusinessRepository,
@@ -7,12 +7,13 @@ from domain.repositories import (
     SkillRepository,
 )
 
+from domain.models import Business
+
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
 task_repo = TaskRepository()
 skill_repo = SkillRepository()
 
-from domain.models import Business
 
 router = APIRouter(prefix="/businesses", tags=["Business Endpoints"])
 
@@ -62,3 +63,27 @@ async def get_business_projects(name: str = Path(..., description="Business name
     """
     projects = project_repo.get_projects_by_business(name)
     return projects
+
+
+@router.post("/", response_model=Business)
+async def create_business(name: str = Body(...)):
+    """
+    Create a new business with the given name.
+    """
+    business = Business(
+        id=name,
+        name=name,
+    )
+    try:
+        created_business = business_repo.create(business)
+        return created_business
+    except Exception as e:
+        if "has a key constraint violation" in str(e):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
+            )
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het aanmaken van het bedrijf",
+        )
