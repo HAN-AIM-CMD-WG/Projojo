@@ -151,3 +151,15 @@ class BusinessRepository(BaseRepository[Business]):
         };
         """
         return Db.read_transact(query)
+
+    def create(self, business: Business) -> Business:
+        query = f"""
+            insert
+                $business isa business,
+                has name "{business.name}",
+                has description "",
+                has imagePath "default.png",
+                has location "";
+        """
+        Db.write_transact(query)
+        return business
