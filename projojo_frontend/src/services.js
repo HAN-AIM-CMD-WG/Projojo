@@ -309,6 +309,16 @@ export function getTaskSkills(taskName) {
 }
 
 
+/**
+ *
+ * @param {string} newBusinessName
+ */
+export function createNewBusiness(newBusinessName) {   
+    return fetchWithError(`${API_BASE_URL}businesses/`, {
+        method: "POST",
+        body: JSON.stringify(newBusinessName),
+    });
+}
 
 
 export function login(credentials) {
