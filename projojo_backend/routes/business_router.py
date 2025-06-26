@@ -70,12 +70,8 @@ async def create_business(name: str = Body(...)):
     """
     Create a new business with the given name.
     """
-    business = Business(
-        id=name,
-        name=name,
-    )
     try:
-        created_business = business_repo.create(business)
+        created_business = business_repo.create(name)
         return created_business
     except Exception as e:
         if "has a key constraint violation" in str(e):
