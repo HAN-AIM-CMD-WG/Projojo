@@ -3,7 +3,7 @@ import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
 import Loading from '../components/Loading';
-import { getBusinesses, getProjects, getTasks, getProjectsWithBusinessId } from '../services';
+import { getBusinessesComplete } from '../services';
 import PageHeader from '../components/PageHeader';
 
 export default function OverviewPage() {
@@ -16,40 +16,30 @@ export default function OverviewPage() {
     let ignore = false;
     setIsLoading(true);
 
-    getBusinesses()
-      .then(async data => {
+    getBusinessesComplete()
+      .then(data => {
         if (ignore) return;
-        
-        // Format businesses to match the expected structure
-        const formattedBusinesses = await Promise.all(data.map(async business => {
-          // Fetch projects for this business
-          const projects = await getProjectsWithBusinessId(business.id);
-          
-          // Fetch tasks for each project
-          const projectsWithTasks = await Promise.all(projects.map(async project => {
-            const tasks = await getTasks(project.id);
-            
-            // Format project to match expected structure
-            return {
-              ...project,
-              projectId: project.id,
-              title: project.name,
-              tasks: tasks.map(task => ({
-                ...task,
-                taskId: task.id,
-                title: task.name,
-                totalNeeded: task.total_needed,
-                totalAccepted: 0, // Default value
-                totalRegistered: 0, // Default value
-                skills: task.skills // Default value
-              }))
-            };
-          }));
-          
-          // Format business to match expected structure
+
+        const formattedBusinesses = data.map(business => {
+          const allSkills = business.projects.flatMap(project =>
+            project.tasks.flatMap(task => task.skills)
+          );
+
+          const skillCounts = allSkills.reduce((acc, skill) => {
+            if (!acc[skill.name]) {
+              acc[skill.name] = { count: 0, is_pending: skill.is_pending };
+            }
+            acc[skill.name].count++;
+            return acc;
+          }, {});
+
+          const topSkills = Object.entries(skillCounts)
+            .sort(([, a], [, b]) => b.count - a.count)
+            .slice(0, 5)
+            .map(([name, { is_pending }]) => ({ name, is_pending }));
+
           return {
             ...business,
-            id: business.id,
             business: {
               businessId: business.id,
               name: business.name,
@@ -57,14 +47,27 @@ export default function OverviewPage() {
               photo: {
                 path: business.image_path
               },
-              location: business.location && business.location.length > 0 ? 
+              location: business.location && business.location.length > 0 ?
                 (Array.isArray(business.location) ? business.location[0] : business.location) : ""
             },
-            projects: projectsWithTasks,
-            topSkills: []// Default value
+            projects: business.projects.map(project => ({
+              ...project,
+              projectId: project.id,
+              title: project.name,
+            tasks: project.tasks.map(task => ({
+              ...task,
+              taskId: task.id,
+              title: task.name,
+              totalNeeded: task.total_needed,
+              totalAccepted: 0, // Default value
+              totalRegistered: 0, // Default value
+              skills: task.skills,
+            }))
+            })),
+            topSkills: topSkills
           };
-        }));
-        
+        });
+
         setInitialBusinesses(formattedBusinesses);
         setShownBusinesses(formattedBusinesses);
       })

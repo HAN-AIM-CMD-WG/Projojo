@@ -134,17 +134,17 @@ export function getProjects() {
 /**
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}[]>}
  */
-export function getBusinesses() {
-    return fetchWithError(`${API_BASE_URL}businesses`);
+export function getBusinessesComplete() {
+    return fetchWithError(`${API_BASE_URL}businesses/complete`);
 }
 
 /**
  *
  * @param {string} projectName
- * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}>}
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string, tasks: any[]}>}
  */
 export function getProject(projectName) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectName}`)
+    return fetchWithError(`${API_BASE_URL}projects/${projectName}/complete`)
 }
 
 // This function is not available in the backend

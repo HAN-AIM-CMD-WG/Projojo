@@ -80,13 +80,13 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                     const isLast = index === tasks.length - 1;
                     // Ensure task has the expected format for the components
                     const formattedTask = {
-                        taskId: task.id,
+                        ...task,
+                        taskId: task.name,
                         title: task.name,
-                        description: task.description,
                         totalNeeded: task.total_needed,
                         totalAccepted: 0, // Default value since it's not in the new API
                         totalRegistered: 0, // Default value since it's not in the new API
-                        skills: task.skills // Default value since it's not in the new API
+                        
                     };
                     return (
                         <div

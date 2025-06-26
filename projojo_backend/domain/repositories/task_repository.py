@@ -2,8 +2,7 @@ from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import Task, TaskSkill, TaskRegistration
-import uuid
+from domain.models import Task
 from datetime import datetime
 
 class TaskRepository(BaseRepository[Task]):

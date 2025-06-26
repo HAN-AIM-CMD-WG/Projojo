@@ -3,6 +3,7 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Skill
+import uuid
 from datetime import datetime
 
 from ..models.skill import StudentSkill
