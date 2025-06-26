@@ -8,7 +8,7 @@ import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import Tooltip from "../components/Tooltip";
-import { /*createColleagueInviteLink, createNewBusiness,*/ getProjects } from "../services";
+import { /*createColleagueInviteLink, */ createNewBusiness, getBusinessesBasic } from "../services";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
@@ -89,7 +89,7 @@ export default function TeacherPage() {
         let ignore = false;
         setIsLoading(true);
 
-        getProjects()
+        getBusinessesBasic()
             .then(data => {
                 if (ignore) return;
                 setBusinesses(data);
@@ -108,11 +108,6 @@ export default function TeacherPage() {
             setIsLoading(false);
         }
     }, [numberToReloadBusinesses]);
-
-    const orderBusinessesByIdReverse = businesses => {
-        return [];
-        // return businesses.sort((a, b) => b.business.businessId - a.business.businessId);
-    }
     
     return (
         <>
@@ -121,7 +116,7 @@ export default function TeacherPage() {
                 <button onClick={() => openGenerateLinkModel()} className="btn-primary mb-4">Nodig docenten uit</button>
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="btn-primary mb-4">Bedrijf aanmaken</button>
             </div>
-            <BusinessesOverview businesses={orderBusinessesByIdReverse(businesses)} />
+            <BusinessesOverview businesses={businesses} />
             <NewSkillsManagement />
 
             <Modal
@@ -197,11 +192,11 @@ export default function TeacherPage() {
                         }}
                     >
                         <div className="flex flex-col mb-4">
-                            <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Bedrijfsnaam`} placeholder={"Vul de naam van het bedrijf in.."} name={`title`} required />
+                            <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Bedrijfsnaam`} placeholder={"Vul de naam van het bedrijf in..."} name={`title`} required />
                             <p className="mt-1 text-sm italic text-gray-600">De rest van de informatie vult het bedrijf zelf in.</p>
                         </div>
                         {createNewBusinessError && <p className="col-span-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{createNewBusinessError}</p>}
-                        <button type="button" onClick={onCreateNewBusiness} name="Taak Toevoegen" className="btn-primary w-full">
+                        <button type="button" onClick={onCreateNewBusiness} name="Bedrijf aanmaken" className="btn-primary w-full">
                             Bedrijf aanmaken
                         </button>
                     </form>

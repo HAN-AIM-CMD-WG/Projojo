@@ -15,10 +15,6 @@ class Business(BaseModel):
         from_attributes = True
 
 
-
-class BusinessProjects(Business):
-    projects: list[Project] | None = None
-
 class BusinessAssociation(BaseModel):
     business_id: str
     supervisor_id: str

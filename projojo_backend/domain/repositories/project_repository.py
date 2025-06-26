@@ -2,9 +2,10 @@ from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import Project, ProjectCreation, BusinessProjects
+from domain.models import Project, ProjectCreation
 import uuid
 from datetime import datetime
+
 
 class ProjectRepository(BaseRepository[Project]):
     def __init__(self):
@@ -91,7 +92,9 @@ class ProjectRepository(BaseRepository[Project]):
         business = result.get("business", "")
 
         # Convert createdAt string to datetime
-        created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+        created_at = (
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+        )
 
         return Project(
             id=name,  # Using name as the ID
@@ -99,7 +102,7 @@ class ProjectRepository(BaseRepository[Project]):
             description=description,
             image_path=image_path,
             created_at=created_at,
-            business_id=business
+            business_id=business,
         )
 
     def check_project_exists(self, name: str, business_id: str) -> bool:
@@ -137,12 +140,12 @@ class ProjectRepository(BaseRepository[Project]):
         result = results[0]
         supervisor_email = result.get("email", "")
         created_at_str = result.get("createdAt", "")
-        created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+        created_at = (
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+        )
 
         return ProjectCreation(
-            project_id=project_id,
-            supervisor_id=supervisor_email,
-            created_at=created_at
+            project_id=project_id, supervisor_id=supervisor_email, created_at=created_at
         )
 
     def create(self, project: ProjectCreation) -> ProjectCreation:
@@ -181,5 +184,5 @@ class ProjectRepository(BaseRepository[Project]):
             image_path=project.image_path,
             created_at=project.created_at,
             business_id=project.business_id,
-            supervisor_id=project.supervisor_id
+            supervisor_id=project.supervisor_id,
         )

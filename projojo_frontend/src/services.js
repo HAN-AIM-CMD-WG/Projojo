@@ -89,6 +89,9 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                         case 404:
                             message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
                             break;
+                        case 409:
+                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan in het systeem.";
+                            break;
                         default:
                             message = message ?? "Er is een onverwachte fout opgetreden.";
                             break;
@@ -136,6 +139,13 @@ export function getProjects() {
  */
 export function getBusinessesComplete() {
     return fetchWithError(`${API_BASE_URL}businesses/complete`);
+}
+
+/**
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[]}[]>}
+ */
+export function getBusinessesBasic() {
+    return fetchWithError(`${API_BASE_URL}businesses/basic`);
 }
 
 /**
@@ -299,6 +309,16 @@ export function getTaskSkills(taskName) {
 }
 
 
+/**
+ *
+ * @param {string} newBusinessName
+ */
+export function createNewBusiness(newBusinessName) {   
+    return fetchWithError(`${API_BASE_URL}businesses/`, {
+        method: "POST",
+        body: JSON.stringify(newBusinessName),
+    });
+}
 
 
 export function login(credentials) {
