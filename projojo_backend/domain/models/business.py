@@ -6,9 +6,9 @@ from .project import Project
 class Business(BaseModel):
     id: str
     name: str
-    description: str = ""
-    image_path: str = "default.png"
-    location: list[str] = [""]
+    description: str
+    image_path: str
+    location: list[str]
     projects: list[Project] | None = None
 
     class Config:

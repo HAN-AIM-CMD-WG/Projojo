@@ -162,4 +162,6 @@ class BusinessRepository(BaseRepository[Business]):
                 has location "";
         """
         Db.write_transact(query)
-        return Business(id=name, name=name)
+        return Business(
+            id=name, name=name, description="", image_path="default.png", location=[""]
+        )
