@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Body
+from fastapi import APIRouter, Path, Body, HTTPException
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models import StudentSkills
@@ -33,11 +33,16 @@ async def get_student_skills(email: str = Path(..., description="Student email")
 @router.put("/{email}/skills")
 async def update_student_skills(
     email: str = Path(..., description="Student email"),
-    skill_ids: list[str] = Body(..., description="List of skillnames"),
+    skills: list[str] = Body(..., description="List of skillnames"),
 ):
     """
     Update skills for a student
     """
-    student = user_repo.get_student_by_id(email)
-    skill_repo.update_student_skills(student.email, skill_ids)
-    return {"message": "Student skills updated successfully"}
+    try:
+        skill_repo.update_student_skills(email, skills)
+        return {"message": "Skills succesvol bijgewerkt"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Er is iets misgegaan bij het bijwerken van de skills: {str(e)}",
+        )
