@@ -109,6 +109,7 @@ class BusinessRepository(BaseRepository[Business]):
         match
             $business isa business;
         fetch {
+            "id": $business.name,
             "name": $business.name,
             "description": $business.description,
             "image_path": $business.imagePath,
@@ -118,6 +119,7 @@ class BusinessRepository(BaseRepository[Business]):
                     ($business, $project) isa hasProjects;
                     $project isa project;
                 fetch {
+                    "id": $project.name,
                     "name": $project.name,
                     "description": $project.description,
                     "image_path": $project.imagePath,

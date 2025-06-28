@@ -45,7 +45,6 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
             </div>
 
             {project.tasks && project.tasks.map((task) => (
-              console.log("Rendering task:", task),
               <div key={task.id} onClick={handleTaskClick(task.id)}>
                 <TaskCard task={task} />
               </div>
