@@ -199,7 +199,6 @@ export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
-// TODO: Implement this in the backend
 /**
  * @param {string} taskId
  * @returns {Promise<{student: {id: string, full_name: string, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}, reason: string}[]>}
@@ -255,7 +254,6 @@ export function createTask(task) {
     });
 }
 
-// TODO: not implemented in the backend yet
 /**
  * @param {string} taskId
  * @param {string} motivation
@@ -264,11 +262,10 @@ export function createTask(task) {
 export function createRegistration(taskId, motivation) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`, {
         method: "POST",
-        body: JSON.stringify(motivation),
+        body: JSON.stringify({ motivation: motivation }),
     });
 }
 
-// TODO: Not implemented in the backend yet
 /**
  * @param {Object} registration - The registration object to update
  * @param {string} registration.taskId - The ID of the task
@@ -280,7 +277,10 @@ export function createRegistration(taskId, motivation) {
 export function updateRegistration(registration) {
     return fetchWithError(`${API_BASE_URL}tasks/${registration.taskId}/registrations/${registration.userId}`, {
         method: "PUT",
-        body: JSON.stringify(registration),
+        body: JSON.stringify({
+            accepted: registration.accepted,
+            response: registration.response || ""
+        }),
     });
 }
 
