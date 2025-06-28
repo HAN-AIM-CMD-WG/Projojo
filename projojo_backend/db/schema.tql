@@ -104,16 +104,6 @@ relation registersForTask,
     owns response @card(0..1),
     owns createdAt @card(1);
 
-#Werkt helaas nog niet :(
-# TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
-# nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
-#rule access: when {
-#    (supervisor: $s, project: $p) isa projectCreation;
-#} then {
-#    (supervisorRole: $s, projectRole: $p) isa accessPermission;
-#};
-
-
 attribute email value string;
 attribute name value string;
 attribute fullName value string;
