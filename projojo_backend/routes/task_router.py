@@ -73,3 +73,4 @@ async def get_task_skills(name: str = Path(..., description="Task name")):
     """
     task_skills = task_service.get_task_with_skills(name)
     return task_skills
+
