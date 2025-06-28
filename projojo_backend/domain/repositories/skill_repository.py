@@ -69,18 +69,24 @@ class SkillRepository(BaseRepository[Skill]):
 
         return [self._map_to_model(result) for result in results]
 
-    def update_student_skills(self, student_id: str, skill_ids: list[str]) -> None:
-        escaped_student_id = student_id.replace('"', '\\"')
+    def update_student_skills(self, email: str, updated_skills: list[str]) -> None:
+        escaped_student_email = email.replace('"', '\\"')
+        current_skills = self.get_student_skills(escaped_student_email)
+        current_skill_names = {skill.name for skill in current_skills}
 
-        # get the current skills of the student
+        to_add = set(updated_skills) - (current_skill_names)
+        to_remove = (current_skill_names) - set(updated_skills)
 
-        # check which skills are removed from original skills
+        for skill in to_add:
+            query = f"""
+                match
+                    $user isa student, has email "{escaped_student_email}";
+                    $skill isa skill, has name "{skill}";
+                insert
+                    (student: $user, skill: $skill) isa hasSkill;
+            """
+            Db.write_transact(query)
 
-        # check which skills are added to original skills
-
-        # remove the removed skills
-
-        # add the added skills
 
     def create(self, skill: Skill) -> Skill:
         # Generate a creation timestamp if not provided
