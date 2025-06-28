@@ -50,20 +50,14 @@ export default function OverviewPage() {
               location: business.location && business.location.length > 0 ?
                 (Array.isArray(business.location) ? business.location[0] : business.location) : ""
             },
-            projects: business.projects.map(project => ({
-              ...project,
-              projectId: project.id,
-              title: project.name,
-            tasks: project.tasks.map(task => ({
-              ...task,
-              taskId: task.id,
-              title: task.name,
-              totalNeeded: task.total_needed,
-              totalAccepted: 0, // Default value
-              totalRegistered: 0, // Default value
-              skills: task.skills,
-            }))
-            })),
+            projects: business.projects.map(project => {
+              return {
+                ...project,
+                projectId: project.id,
+                title: project.name,
+                tasks: project.tasks
+              };
+            }),
             topSkills: topSkills
           };
         });

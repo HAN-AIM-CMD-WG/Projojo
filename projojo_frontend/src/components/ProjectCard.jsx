@@ -3,7 +3,7 @@ import { IMAGE_BASE_URL } from '../services';
 import RichTextViewer from "./RichTextViewer";
 import TaskCard from "./TaskCard";
 
-export default function ProjectCard({ project, index=0, isExpanded=false }) {
+export default function ProjectCard({ project, index = 0, isExpanded = false }) {
   const navigate = useNavigate();
 
   const handleTaskClick = (taskId) => (e) => {
@@ -14,7 +14,7 @@ export default function ProjectCard({ project, index=0, isExpanded=false }) {
   return (
     <div className={`h-[350px] w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden transition-all transform hover:scale-102 hover:shadow-2xl ${!isExpanded && (index == 2 ? 'hidden [@media(min-width:1195px)]:block' : index == 1 && 'hidden [@media(min-width:813px)]:block')}`}>
       <Link
-        to={`/projects/${ project.name}`}
+        to={`/projects/${project.name}`}
         className="block h-full focus:outline-none group"
       >
         <div className="relative h-full bg-slate-200">
@@ -45,16 +45,9 @@ export default function ProjectCard({ project, index=0, isExpanded=false }) {
             </div>
 
             {project.tasks && project.tasks.map((task) => (
-              <div key={task.name} onClick={handleTaskClick(task.name)}>
-                <TaskCard
-                  task={{
-                    taskId: task.name,
-                    title: task.name,
-                    description: task.description,
-                    totalNeeded: task.total_needed,
-                    skills: task.skills || []
-                  }}
-                />
+              console.log("Rendering task:", task),
+              <div key={task.id} onClick={handleTaskClick(task.id)}>
+                <TaskCard task={task} />
               </div>
             ))}
           </div>
