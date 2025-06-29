@@ -8,6 +8,7 @@ from domain.repositories import (
 )
 
 from domain.models import Business
+from datetime import datetime, timezone
 
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
@@ -63,6 +64,24 @@ async def get_business_projects(name: str = Path(..., description="Business name
     """
     projects = project_repo.get_projects_by_business(name)
     return projects
+
+
+@router.post("/{id}/invite")
+async def create_supervisor_invite_key(id: str = Path(..., description="Business ID")):
+    """
+    Create an invite key for a supervisor
+    """
+    # TODO: check if user is authorized to create invite keys (supervisor or teacher, and in case of supervisor same business id)
+
+    # invite_key = business_repo.create_supervisor_invite_key(id)
+    # return invite_key
+    return {
+        "key": "example-invite-key",
+        "inviteType": "business",
+        "isUsed": False,
+        "createdAt": datetime.now(timezone.utc),
+        "businessId": id
+    }
 
 
 @router.post("/", response_model=Business)
