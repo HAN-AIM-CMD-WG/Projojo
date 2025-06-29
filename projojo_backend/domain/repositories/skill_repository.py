@@ -75,7 +75,7 @@ class SkillRepository(BaseRepository[Skill]):
         current_skill_names = {skill.name for skill in current_skills}
 
         to_add = set(updated_skills) - (current_skill_names)
-        # to_remove = (current_skill_names) - set(updated_skills)
+        to_remove = (current_skill_names) - set(updated_skills)
 
         for skill in to_add:
             query = f"""
@@ -88,6 +88,16 @@ class SkillRepository(BaseRepository[Skill]):
             """
             Db.write_transact(query)
 
+        for skill in to_remove:
+            query = f"""
+                match
+                    $student isa student, has email "{escaped_student_email}";
+                    $skill isa skill, has name "{skill}";
+                    $hasSkill isa hasSkill (student: $student, skill: $skill);
+                delete
+                    $hasSkill;
+            """
+            Db.write_transact(query)
 
     def create(self, skill: Skill) -> Skill:
         # Generate a creation timestamp if not provided
