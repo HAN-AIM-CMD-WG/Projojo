@@ -12,7 +12,7 @@ import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
 
-export default function Task({ task, setFetchAmount, businessId, allSkills, isNotAllowedToRegister }) {
+export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
     const { authData } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
@@ -25,6 +25,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
     const [canSubmit, setCanSubmit] = useState(true);
 
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
+
+    const isFull = task.total_accepted >= task.total_needed;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -167,7 +169,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                         openstaande aanmeldingen
                     </InfoBox>
                     {authData.type === "student" && (
-                        <button className={`btn-primary w-full ${isNotAllowedToRegister ? "cursor-not-allowed opacity-50" : ""}`} disabled={isNotAllowedToRegister} onClick={() => setIsModalOpen(true)}>{isNotAllowedToRegister ? "Aanmelding ontvangen" : "Aanmelden"}</button>
+                        <button className={`btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "cursor-not-allowed opacity-50" : ""}`} disabled={(studentAlreadyRegistered || isFull)} onClick={() => setIsModalOpen(true)}>{studentAlreadyRegistered ? "Aanmelding ontvangen" : isFull ? "Taak is vol" : "Aanmelden"}</button>
                     )}
                     {isOwner && (<>
                         <button className="btn-primary w-full" onClick={() => setIsRegistrationsModalOpen(true)}>Bekijk aanmeldingen</button>
@@ -176,7 +178,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                     )}
                 </div>
             </div>
-            {!isNotAllowedToRegister && (
+            {!(studentAlreadyRegistered || isFull) && (
                 <Modal
                     modalHeader={`Aanmelden voor ${task.name}`}
                     isModalOpen={isModalOpen}
@@ -203,10 +205,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
 
             {isOwner && (
                 <Modal maxWidth={"max-w-2xl"} modalHeader={`Aanmeldingen voor "${task.name}"`} isModalOpen={isRegistrationsModalOpen} setIsModalOpen={setIsRegistrationsModalOpen}>
-                    {registrations.length === 0 && (
-                        <p>Er zijn nog geen aanmeldingen voor deze taak</p>
-                    )}
                     <div className="flex flex-col gap-4">
+                        {registrations.length === 0 && (
+                            <p>Er zijn geen open aanmeldingen voor deze taak</p>
+                        )}
+                        {isFull && (
+                            <Alert isCloseable={false} text="Deze taak is vol, er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
+                        )}
                         {registrations.map((registration) => (
                             <InfoBox key={registration.student.id} className="flex flex-col gap-2 px-4 py-4">
                                 <div>
@@ -231,7 +236,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                                     <FormInput label={`Reden (optioneel)`} max={400} min={0} type="textarea" name={`response`} rows={1} />
                                     <input type="hidden" name="userId" value={registration.student.id} />
                                     <div className="flex gap-2 flex-wrap mt-3">
-                                        <button type="submit" value={true} className="btn px-3 bg-green-700 hover:bg-green-800 focus:ring-green-500 text-white">Accepteren</button>
+                                        <button type="submit" value={true} disabled={isFull} className={`btn px-3 ${isFull ? "bg-gray-400" : "bg-green-700 hover:bg-green-800 focus:ring-green-500"} text-white`}>Accepteren</button>
                                         <button type="submit" value={false} className="btn px-3 bg-red-600 hover:bg-red-700 focus:ring-red-200 text-white">Weigeren</button>
                                     </div>
                                 </form>

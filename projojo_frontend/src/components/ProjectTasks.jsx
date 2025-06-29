@@ -87,7 +87,7 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                             }}
                             key={task.id}
                             id={`task-${task.id}`}>
-                            <Task task={task} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} isNotAllowedToRegister={currentRegistrations.includes(task.id)} />
+                            <Task task={task} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} studentAlreadyRegistered={currentRegistrations.includes(task.id)} />
                         </div >
                     )
                 })}

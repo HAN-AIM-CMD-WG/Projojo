@@ -134,7 +134,7 @@ async def update_registration(
     if not task:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
-    if task.total_accepted >= task.total_needed:
+    if registration.accepted and task.total_accepted >= task.total_needed:
         raise HTTPException(status_code=400, detail="Deze taak heeft geen beschikbare plekken meer")
 
     try:
