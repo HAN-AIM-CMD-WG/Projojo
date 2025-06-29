@@ -5,6 +5,7 @@ from .project_repository import ProjectRepository as project_repo
 from .base import BaseRepository
 from domain.models import Business, BusinessAssociation
 
+
 class BusinessRepository(BaseRepository[Business]):
     def __init__(self):
         super().__init__(Business, "business")
@@ -96,11 +97,13 @@ class BusinessRepository(BaseRepository[Business]):
             if not isinstance(locations, list):
                 locations = [locations]
 
-            associations.append(BusinessAssociation(
-                business_id=business_id,
-                supervisor_id=supervisor_email,
-                location=locations
-            ))
+            associations.append(
+                BusinessAssociation(
+                    business_id=business_id,
+                    supervisor_id=supervisor_email,
+                    location=locations,
+                )
+            )
 
         return associations
 
@@ -164,3 +167,17 @@ class BusinessRepository(BaseRepository[Business]):
         };
         """
         return Db.read_transact(query)
+
+    def create(self, name: str) -> Business:
+        query = f"""
+            insert
+                $business isa business,
+                has name "{name}",
+                has description "",
+                has imagePath "default.png",
+                has location "";
+        """
+        Db.write_transact(query)
+        return Business(
+            id=name, name=name, description="", image_path="default.png", location=[""]
+        )
