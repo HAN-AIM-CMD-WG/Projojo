@@ -313,10 +313,29 @@ export function getTaskSkills(taskName) {
  *
  * @param {string} newBusinessName
  */
-export function createNewBusiness(newBusinessName) {   
+export function createNewBusiness(newBusinessName) {
     return fetchWithError(`${API_BASE_URL}businesses/`, {
         method: "POST",
         body: JSON.stringify(newBusinessName),
+    });
+}
+
+/**
+ * @param {string} businessId
+ * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
+ */
+export function createSupervisorInviteKey(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/invite`, {
+        method: "POST",
+    });
+}
+
+/**
+ * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ */
+export function createTeacherInviteKey() {
+    return fetchWithError(`${API_BASE_URL}teachers/invite`, {
+        method: "POST",
     });
 }
 
