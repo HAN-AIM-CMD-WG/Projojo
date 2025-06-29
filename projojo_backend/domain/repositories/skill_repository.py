@@ -35,10 +35,10 @@ class SkillRepository(BaseRepository[Skill]):
 
     def get_all(self) -> list[Skill]:
         query = """
-            match 
+            match
                 $skill isa skill;
-            fetch { 
-                'name': $skill.name,	
+            fetch {
+                'name': $skill.name,
                 'isPending': $skill.isPending,
                 'createdAt': $skill.createdAt,
             };
@@ -51,7 +51,7 @@ class SkillRepository(BaseRepository[Skill]):
         escaped_student_id = student_id.replace('"', '\\"')
         query = f"""
             match
-                $student isa student, 
+                $student isa student,
                 has email "{escaped_student_id}";
                 $hasSkill isa hasSkill( $student, $skill),
                 has description $description;
@@ -98,6 +98,21 @@ class SkillRepository(BaseRepository[Skill]):
                     $hasSkill;
             """
             Db.write_transact(query)
+
+    def update_student_skill_description(self, student_id: str, skill_id: str, description: str):
+        escaped_student_id = student_id.replace('"', '\\"')
+        escaped_skill_id = skill_id.replace('"', '\\"')
+        escaped_description = description.replace('"', '\\"')
+
+        query = f"""
+            match
+                $student isa student, has email "{escaped_student_id}";
+                $skill isa skill, has name "{escaped_skill_id}";
+                $hasSkill isa hasSkill (student: $student, skill: $skill);
+            update
+                $hasSkill has description "{escaped_description}";
+        """
+        Db.write_transact(query)
 
     def create(self, skill: Skill) -> Skill:
         # Generate a creation timestamp if not provided

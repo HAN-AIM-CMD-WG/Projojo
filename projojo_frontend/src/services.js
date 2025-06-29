@@ -220,6 +220,13 @@ export function updateStudentSkills(email, skills) {
     });
 }
 
+export function updateStudentSkillDescription(email, skill) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/${skill.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(skill),
+    });
+}
+
 export function getRegistrations() {
     return fetchWithError(`${API_BASE_URL}registrations`);
 }
