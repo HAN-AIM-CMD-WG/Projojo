@@ -12,7 +12,7 @@ from ..models.skill import StudentSkill
 class SkillRepository(BaseRepository[Skill]):
     def __init__(self):
         super().__init__(Skill, "skill")
-    
+
     def get_by_id(self, id: str) -> Skill | None:
         escaped_id = id.replace('"', '\\"')
         query = f"""
@@ -32,7 +32,7 @@ class SkillRepository(BaseRepository[Skill]):
         if not results:
             raise ItemRetrievalException(Skill, f"Skill with ID {id} not found.")
         return self._map_to_model(results[0])
-    
+
     def get_all(self) -> list[Skill]:
         query = """
             match 
@@ -106,9 +106,11 @@ class SkillRepository(BaseRepository[Skill]):
         else:
             is_pending = str(is_pending_value).lower() == "true"
         created_at_str = result.get("createdAt", "")
-        
+
         # Convert createdAt string to datetime
-        created_at = datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+        created_at = (
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+        )
 
         description = result.get("description")
         if description:
@@ -117,14 +119,14 @@ class SkillRepository(BaseRepository[Skill]):
                 name=name,
                 description=description,
                 is_pending=is_pending,
-                created_at=created_at
+                created_at=created_at,
             )
-        
+
         return Skill(
             id=name,  # Using name as the ID since it's marked as @key
             name=name,
             is_pending=is_pending,
-            created_at=created_at
+            created_at=created_at,
         )
 
     def get_task_skills(self, task_id: str) -> list[Skill]:
@@ -145,14 +147,12 @@ class SkillRepository(BaseRepository[Skill]):
             skill_name = result.get("skill_name", "")
             is_pending_value = result.get("isPending", True)
 
-            skills.append(Skill(
-                id=skill_name,  # Using name as the ID since it's marked as @key
-                name=skill_name,
-                is_pending=is_pending_value,
-                created_at=datetime.now()  # Assuming created_at is not needed here
-            ))
+            skills.append(
+                Skill(
+                    id=skill_name,  # Using name as the ID since it's marked as @key
+                    name=skill_name,
+                    is_pending=is_pending_value,
+                    created_at=datetime.now(),  # Assuming created_at is not needed here
+                )
+            )
         return skills
-    
-
-
-
