@@ -208,6 +208,13 @@ export function getRegistrations(taskId) {
 }
 
 /**
+ * @returns {Promise<string[]>}
+ */
+export function getStudentRegistrations() {
+    return fetchWithError(`${API_BASE_URL}students/registrations`);
+}
+
+/**
  *
  * @param {Skill} skill - The skill object to create
  * @returns {Promise<{id: string, name: string, is_pending: boolean}>}

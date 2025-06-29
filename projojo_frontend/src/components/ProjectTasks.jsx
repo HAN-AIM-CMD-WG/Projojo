@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
-import { getSkills, /*getUserRegistrations*/ } from '../services';
+import { getSkills, getStudentRegistrations } from '../services';
 import Alert from './Alert';
 import { useAuth } from "./AuthProvider";
 import Task from "./Task";
@@ -25,17 +25,15 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
         }
         let ignore = false;
 
-        // TODO: implement this to prevent students from registering for tasks they are already registered for
-
-        // getUserRegistrations()
-        //     .then((data) => {
-        //         if (ignore) return;
-        //         setCurrentRegistrations(data);
-        //     })
-        //     .catch(error => {
-        //         if (ignore) return;
-        //         setError(error.message)
-        //     });
+        getStudentRegistrations()
+            .then((data) => {
+                if (ignore) return;
+                setCurrentRegistrations(data);
+            })
+            .catch(error => {
+                if (ignore) return;
+                setError(error.message)
+            });
 
     }, [fetchAmount, authData.type]);
 

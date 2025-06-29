@@ -91,9 +91,9 @@ async def get_registrations(name: str = Path(..., description="Task name")):
     registrations = task_repo.get_registrations(name)
     return registrations
 
-@router.post("/{name}/registrations")
+@router.post("/{id}/registrations")
 async def create_registration(
-    name: str = Path(..., description="Task name"),
+    id: str = Path(..., description="Task ID"),
     registration: RegistrationCreate = ...,
     payload: dict = Depends(get_token_payload)
 ):
@@ -106,8 +106,13 @@ async def create_registration(
 
     student_email = payload["sub"]  # Extract email from JWT sub field
 
+    # check if the student is already registered for this task
+    existing_registration = user_repo.get_student_registrations(student_email)
+    if id in existing_registration:
+        raise HTTPException(status_code=400, detail="Je bent al geregistreerd voor deze taak")
+
     try:
-        task_repo.create_registration(name, student_email, registration.motivation)
+        task_repo.create_registration(id, student_email, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
     except Exception:
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
