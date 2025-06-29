@@ -90,8 +90,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     if (ignore) return
                     // Handle the new API response format
                     if (data.skill_ids) {
-                        // If we have skill_ids directly in the user object
-                        setStudentsSkills(data.skill_ids)
+                        setStudentsSkills(data.skill_ids.map(skill => skill.skill_name))
                     } else if (data.skills) {
                         // If we have a skills array
                         setStudentsSkills(data.skills.map(skill => skill.id))

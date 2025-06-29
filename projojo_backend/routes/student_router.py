@@ -25,9 +25,10 @@ async def get_student_skills(email: str = Path(..., description="Student email")
     Get all skills for a student
     """
     student = user_repo.get_student_by_id(email)
-    skills = skill_repo.get_student_skills(student.email)
 
-    return StudentSkills(**student.model_dump(), Skills=skills)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
 
 
 @router.put("/{email}/skills")

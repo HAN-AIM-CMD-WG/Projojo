@@ -121,37 +121,53 @@ class UserRepository(BaseRepository[User]):
 
         return self._map_supervisor(next(iter(grouped.values())))
 
-    def get_student_by_id(self, email: str) -> Student | None:
+    def get_student_by_id(self, email: str) -> dict | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
 
         query = f"""
             match
                 $student isa student,
-                has email "{escaped_email}",
-                has email $email,
-                has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
-                $skill isa skill;
-                hasSkill( $skill, $student );
+                has email "{escaped_email}";
             fetch {{
-                'email': $email,
-                'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash,
-                'skill_ids': $skill.name
+                'id': $student.email,
+                'email': $student.email,
+                'full_name': $student.fullName,
+                'image_path': $student.imagePath,
+                'school_account_name': $student.schoolAccountName,
+                'type': 'student',
+                'password_hash': $student.password_hash,
+                'registered_task_ids': [
+                    match
+                        $task isa task;
+                        $registration isa registersForTask( $student, $task );
+                    fetch {{ 'task_name': $task.name }};
+                ],
+                'skill_ids': [
+                    match
+                        $skill isa skill;
+                        $hasSkill isa hasSkill( $skill, $student );
+                    fetch {{ 'skill_name': $skill.name }};
+                ],
+                'Skills': [
+                    match
+                        $skill isa skill;
+                        $hasSkill isa hasSkill( $skill, $student );
+                    fetch {{
+                        'id': $skill.name,
+                        'name': $skill.name,
+                        'is_pending': $skill.isPending,
+                        'created_at': $skill.createdAt,
+                        'description': $hasSkill.description
+                    }};
+                ]
             }};
         """
-        results = Db.read_transact(query)
-        if not results:
+        result = Db.read_transact(query)
+        if not result:
             return None
 
-        grouped = self.group_student_by_email(results)
-
-        return self._map_student(next(iter(grouped.values())))
+        return result[0]
 
 
     def get_teacher_by_id(self, email: str) -> Teacher | None:
