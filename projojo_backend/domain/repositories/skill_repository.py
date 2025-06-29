@@ -75,15 +75,16 @@ class SkillRepository(BaseRepository[Skill]):
         current_skill_names = {skill.name for skill in current_skills}
 
         to_add = set(updated_skills) - (current_skill_names)
-        to_remove = (current_skill_names) - set(updated_skills)
+        # to_remove = (current_skill_names) - set(updated_skills)
 
         for skill in to_add:
             query = f"""
                 match
-                    $user isa student, has email "{escaped_student_email}";
+                    $student isa student, has email "{escaped_student_email}";
                     $skill isa skill, has name "{skill}";
                 insert
-                    (student: $user, skill: $skill) isa hasSkill;
+                    $hasSkill isa hasSkill (student: $student, skill: $skill),
+                    has description "";
             """
             Db.write_transact(query)
 
