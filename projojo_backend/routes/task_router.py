@@ -98,6 +98,13 @@ async def create_registration(
 
     student_email = payload["sub"]
 
+    task = task_repo.get_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    if task.total_accepted >= task.total_needed:
+        raise HTTPException(status_code=400, detail="Deze taak heeft geen beschikbare plekken meer")
+
     # check if the student is already registered for this task
     existing_registration = user_repo.get_student_registrations(student_email)
     if task_id in existing_registration:
@@ -122,6 +129,13 @@ async def update_registration(
     # Check if user is a supervisor or teacher
     if payload.get("role") not in ["supervisor", "teacher"]:
         raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen registraties bijwerken")
+
+    task = task_repo.get_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    if task.total_accepted >= task.total_needed:
+        raise HTTPException(status_code=400, detail="Deze taak heeft geen beschikbare plekken meer")
 
     try:
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
