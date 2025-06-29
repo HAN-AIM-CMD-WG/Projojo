@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSkills, /*updateStudentSkills*/ } from "../services";
+import { getSkills, updateStudentSkills } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 import SkillsEditor from "./SkillsEditor";
@@ -15,12 +15,12 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     const isOwnProfile = authData.type === "student" && authData.userId === student.id;
 
     const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId);
+        const skillNames = skills.map((skill) => skill.name);
 
         setStudentSkillsError("");
 
         try {
-            //await updateStudentSkills(skillIds);
+            await updateStudentSkills(student.email, skillNames);
             setIsEditing(false)
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
@@ -48,7 +48,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     // Map student skills to the format expected by SkillsEditor
     const currentSkills = student?.Skills?.map((skill) => {
         return {
-            skillId: skill.id,
+            skillId: skill.name,
             name: skill.name,
             isPending: skill.is_pending,
             description: skill.description,
@@ -75,7 +75,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                         setError={setStudentSkillsError}
                         isAbsolute={false}
                     >
-                        {student?.Skills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
+                        {student?.Skills?.map(skill => <StudentProfileSkill key={skill.name} skill={skill} isOwnProfile={isOwnProfile} />)}
                     </SkillsEditor>
                 </div>
             </div>
