@@ -87,7 +87,7 @@ relation requiresSkill,
 relation hasSkill,
     relates student @card(1),
     relates skill @card(1),
-    owns description @card(1);
+    owns description @card(0..1);
 
 relation registersForTask,
     relates student @card(1),
