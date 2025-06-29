@@ -1,20 +1,12 @@
-from fastapi import APIRouter, Path, Query, HTTPException, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends
 
 from domain.repositories import TaskRepository, UserRepository
 from auth.jwt_utils import get_token_payload
 from service import task_service
+from domain.models.task import RegistrationCreate, RegistrationUpdate
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
-
-# Request models
-class RegistrationCreate(BaseModel):
-    motivation: str
-
-class RegistrationUpdate(BaseModel):
-    accepted: bool
-    response: str = ""
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -91,10 +83,10 @@ async def get_registrations(name: str = Path(..., description="Task name")):
     registrations = task_repo.get_registrations(name)
     return registrations
 
-@router.post("/{id}/registrations")
+@router.post("/{task_id}/registrations")
 async def create_registration(
-    id: str = Path(..., description="Task ID"),
-    registration: RegistrationCreate = ...,
+    task_id: str = Path(..., description="Task ID"),
+    registration: RegistrationCreate = Body(..., description="The motivation for registration"),
     payload: dict = Depends(get_token_payload)
 ):
     """
@@ -104,15 +96,15 @@ async def create_registration(
     if payload.get("role") != "student":
         raise HTTPException(status_code=403, detail="Alleen studenten kunnen zich registreren voor taken")
 
-    student_email = payload["sub"]  # Extract email from JWT sub field
+    student_email = payload["sub"]
 
     # check if the student is already registered for this task
     existing_registration = user_repo.get_student_registrations(student_email)
-    if id in existing_registration:
+    if task_id in existing_registration:
         raise HTTPException(status_code=400, detail="Je bent al geregistreerd voor deze taak")
 
     try:
-        task_repo.create_registration(id, student_email, registration.motivation)
+        task_repo.create_registration(task_id, student_email, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
     except Exception:
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
@@ -121,7 +113,7 @@ async def create_registration(
 async def update_registration(
     task_id: str = Path(..., description="Task ID"),
     student_id: str = Path(..., description="Student ID"),
-    registration: RegistrationUpdate = ...,
+    registration: RegistrationUpdate = Body(..., description="Wether the registration is accepted or rejected, and optional response"),
     payload: dict = Depends(get_token_payload)
 ):
     """

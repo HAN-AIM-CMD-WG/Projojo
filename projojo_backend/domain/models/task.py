@@ -28,3 +28,10 @@ class TaskRegistration(BaseModel):
 
     class Config:
         from_attributes = True
+
+class RegistrationCreate(BaseModel):
+    motivation: str
+
+class RegistrationUpdate(BaseModel):
+    accepted: bool
+    response: str = ""
