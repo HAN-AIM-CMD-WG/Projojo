@@ -209,6 +209,17 @@ export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
+/**
+ * @param {string} email
+ * @param {string[]} skills
+ */
+export function updateStudentSkills(email, skills) {   
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+        method: "PUT",
+        body: JSON.stringify(skills),
+    });
+}
+
 export function getRegistrations() {
     return fetchWithError(`${API_BASE_URL}registrations`);
 }
