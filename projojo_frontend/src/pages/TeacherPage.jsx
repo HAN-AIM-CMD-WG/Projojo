@@ -62,7 +62,7 @@ export default function TeacherPage() {
         createTeacherInviteKey()
             .then(data => {
                 const link = `${window.location.origin}/invite?key=${data.key}`;
-                const timestamp = new Date(new Date(data.created_at).getTime() + 7 * 24 * 60 * 60 * 1000);
+                const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
 
                 setInviteLink(link);
                 setExpiry(timestamp);

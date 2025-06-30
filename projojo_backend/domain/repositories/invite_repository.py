@@ -48,7 +48,7 @@ class InviteRepository:
             "key": key,
             "inviteType": invite_type,
             "isUsed": False,
-            "createdAt": created_at.isoformat()
+            "createdAt": created_at.isoformat() + "+00:00"
         }
 
         if business_id:
