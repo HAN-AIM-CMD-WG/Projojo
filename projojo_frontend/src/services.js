@@ -209,8 +209,19 @@ export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
-export function getRegistrations() {
-    return fetchWithError(`${API_BASE_URL}registrations`);
+/**
+ * @param {string} taskId
+ * @returns {Promise<{student: {id: string, full_name: string, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}, reason: string}[]>}
+ */
+export function getRegistrations(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`);
+}
+
+/**
+ * @returns {Promise<string[]>}
+ */
+export function getStudentRegistrations() {
+    return fetchWithError(`${API_BASE_URL}students/registrations`);
 }
 
 /**
@@ -251,6 +262,7 @@ export function createProject(project_data) {
         body: formData,
     });
 }
+
 //not implemented in the backend yet
 export function createTask(task) {
     return fetchWithError(`${API_BASE_URL}projects`, {
@@ -258,18 +270,34 @@ export function createTask(task) {
         body: JSON.stringify(task),
     });
 }
-//not implemented in the backend yet
-export function createRegistration(registration) {
-    return fetchWithError(`${API_BASE_URL}registrations`, {
+
+/**
+ * @param {string} taskId
+ * @param {string} motivation
+ * @returns {Promise<void>}
+ */
+export function createRegistration(taskId, motivation) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`, {
         method: "POST",
-        body: JSON.stringify(registration),
+        body: JSON.stringify({ motivation: motivation }),
     });
 }
-//Not implemented in the backend yet
+
+/**
+ * @param {Object} registration - The registration object to update
+ * @param {string} registration.taskId - The ID of the task
+ * @param {string} registration.userId - The ID of the user
+ * @param {boolean} registration.accepted - Whether the registration is accepted
+ * @param {string} registration.response - The response to the registration
+ * @return {Promise<void>}
+ */
 export function updateRegistration(registration) {
-    return fetchWithError(`${API_BASE_URL}registrations`, {
+    return fetchWithError(`${API_BASE_URL}tasks/${registration.taskId}/registrations/${registration.userId}`, {
         method: "PUT",
-        body: JSON.stringify(registration),
+        body: JSON.stringify({
+            accepted: registration.accepted,
+            response: registration.response || ""
+        }),
     });
 }
 

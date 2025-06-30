@@ -15,7 +15,7 @@ class BusinessRepository(BaseRepository[Business]):
 
         query = f"""
             match
-                $business isa business, 
+                $business isa business,
                 has name "{id}",
                 has name $name,
                 has description $description,
@@ -41,10 +41,10 @@ class BusinessRepository(BaseRepository[Business]):
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
-            fetch { 
-                'name': $name, 
-                'description': $description, 
-                'imagePath': $imagePath, 
+            fetch {
+                'name': $name,
+                'description': $description,
+                'imagePath': $imagePath,
                 'location': $location,
             };
         """
@@ -112,6 +112,7 @@ class BusinessRepository(BaseRepository[Business]):
         match
             $business isa business;
         fetch {
+            "id": $business.name,
             "name": $business.name,
             "description": $business.description,
             "image_path": $business.imagePath,
@@ -121,6 +122,7 @@ class BusinessRepository(BaseRepository[Business]):
                     ($business, $project) isa hasProjects;
                     $project isa project;
                 fetch {
+                    "id": $project.name,
                     "name": $project.name,
                     "description": $project.description,
                     "image_path": $project.imagePath,
@@ -130,10 +132,24 @@ class BusinessRepository(BaseRepository[Business]):
                             ($project, $task) isa containsTask;
                             $task isa task;
                         fetch {
+                            "id": $task.name,
                             "name": $task.name,
                             "description": $task.description,
                             "total_needed": $task.totalNeeded,
                             "created_at": $task.createdAt,
+                            "project_id": $project.name,
+                            "total_registered": (
+                                match
+                                    $registration isa registersForTask (task: $task, student: $student);
+                                not { $registration has isAccepted $any_value; };
+                                return count;
+                            ),
+                            "total_accepted": (
+                                match
+                                    $registration isa registersForTask (task: $task, student: $student),
+                                    has isAccepted true;
+                                return count;
+                            ),
                             "skills": [
                                 match
                                     ($task, $skill) isa requiresSkill;
