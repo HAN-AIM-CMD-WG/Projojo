@@ -3,10 +3,10 @@ from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
+from domain.models import StudentSkills
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
-
 
 router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
@@ -79,3 +79,15 @@ async def update_student_skill_description(
             status_code=500,
             detail="Er is iets misgegaan bij het opslaan van de beschrijving",
         )
+
+@router.get("/registrations")
+async def get_student_registrations(payload: dict = Depends(get_token_payload)) -> list[str]:
+    """
+    Get all student registrations for debugging purposes
+    """
+    if payload.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Alleen studenten kunnen hun registraties bekijken")
+
+    student_email = payload.get("sub")
+    registrations = user_repo.get_student_registrations(student_email)
+    return registrations

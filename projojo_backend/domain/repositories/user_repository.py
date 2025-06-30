@@ -436,6 +436,29 @@ class UserRepository(BaseRepository[User]):
 
         return students
 
+    def get_student_registrations(self, studentId) -> list[str]:
+        """
+        Get all registrations for a student
+        """
+        escaped_student_id = studentId.replace('"', '\\"')
+
+        query = f"""
+            match
+                $student isa student, has email "{escaped_student_id}";
+                $registration isa registersForTask (student: $student, task: $task);
+            fetch {{
+                'id': $task.name,
+            }};
+        """
+
+        results = Db.read_transact(query)
+        if not results:
+            return []
+
+        # Extract task IDs from results
+        task_ids = [result['id'] for result in results]
+        return task_ids
+
     def get_colleagues(self, supervisor_email: str) -> list[User]:
         """
         Get supervisors who work in the same business as the authenticated supervisor
