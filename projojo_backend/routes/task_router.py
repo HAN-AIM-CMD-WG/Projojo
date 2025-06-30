@@ -120,7 +120,7 @@ async def create_registration(
 async def update_registration(
     task_id: str = Path(..., description="Task ID"),
     student_id: str = Path(..., description="Student ID"),
-    registration: RegistrationUpdate = Body(..., description="Wether the registration is accepted or rejected, and optional response"),
+    registration: RegistrationUpdate = Body(..., description="Whether the registration is accepted or rejected, and optional response"),
     payload: dict = Depends(get_token_payload)
 ):
     """
