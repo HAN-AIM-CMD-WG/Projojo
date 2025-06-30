@@ -8,7 +8,7 @@ load_dotenv()
 
 class Db:
     address = os.getenv("TYPEDB_SERVER_ADDR", "127.0.0.1:1729")
-    name = os.getenv("TYPEDB_NAME", "projojo_db")
+    name = os.getenv("TYPEDB_DB_NAME", "projojo_db")
     username = os.getenv("TYPEDB_USERNAME", "admin")
     password = os.getenv("TYPEDB_PASSWORD", "password")
     reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False

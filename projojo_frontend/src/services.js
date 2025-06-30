@@ -1,6 +1,31 @@
-export const API_BASE_URL = "http://localhost:8000/";
-export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
-export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
+// Dynamically determine API URL based on current browser location
+const getApiBaseUrl = () => {
+  const backendPort = import.meta.env.VITE_BACKEND_PORT || "8000"
+
+  console.log(
+    `##### Using backend port: [${import.meta.env.VITE_BACKEND_PORT}]`
+  )
+
+  // Check if VITE_BACKEND_HOST is set in environment variables
+  // This allows overriding the default host in development or production builds
+  // Useful for different environments like staging or production
+  // If not set, fallback to the current window location
+  // or a default url for server-side rendering
+
+  if (import.meta.env.VITE_BACKEND_HOST) {
+    return `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
+  }
+  if (typeof window !== "undefined") {
+    const { protocol, hostname } = window.location
+    return `${protocol}//${hostname}:${backendPort}/`
+  }
+  // Fallback for server-side rendering or non-browser environments
+  return `http://localhost:${backendPort}/`
+}
+
+export const API_BASE_URL = getApiBaseUrl()
+export const IMAGE_BASE_URL = `${API_BASE_URL}image/`
+export const PDF_BASE_URL = `${API_BASE_URL}pdf/`
 
 export class HttpError extends Error {
     #statusCode;

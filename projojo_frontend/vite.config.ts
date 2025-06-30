@@ -3,9 +3,8 @@ import react from '@vitejs/plugin-react-swc'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-  ],
+  plugins: [react()],
+  envDir: "../", // Look for .env files in the project root directory
   server: {
     watch: {
       usePolling: true,  // Required for file changes to be detected in Docker on Windows
