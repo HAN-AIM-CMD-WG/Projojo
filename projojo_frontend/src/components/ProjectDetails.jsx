@@ -7,6 +7,7 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
+import Alert from "./Alert";
 
 export default function ProjectDetails({ project, businessId, refreshData }) {
     const isLoading = !project;
@@ -23,12 +24,15 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             formDataObj[key] = value;
         });
         setError("");
-        createTask(project.id, formDataObj)
-            .then(() => {
-                handleCloseModal();
-                refreshData();
-            })
-            .catch(error => setError(error.message));
+
+        // Remove the temp error message when this functionality is implemented
+        setError("Deze functionaliteit is nog niet beschikbaar");
+        // createTask(project.id, formDataObj)
+        //     .then(() => {
+        //         handleCloseModal();
+        //         refreshData();
+        //     })
+        //     .catch(error => setError(error.message));
     }
 
     const handleOpenModal = () => setIsModalOpen(true);
@@ -132,6 +136,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         }}
                     >
                         <div className="flex flex-col gap-4 mb-4">
+                            {error && <Alert text={error} onClose={() => setError("")} />}
                             <FormInput type="text" label={`Titel voor nieuwe taak`} placeholder={"Titel"} name={`title`} required />
                             <RichTextEditor
                                 onSave={setNewTaskDescription}
@@ -149,7 +154,6 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 value={project.name || project.projectId || project.id}
                             />
                         </div>
-                        {error && <p className="col-span-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{error}</p>}
                         <button type="submit" name="Taak Toevoegen" className="btn-primary w-full">
                             Taak Toevoegen
                         </button>
