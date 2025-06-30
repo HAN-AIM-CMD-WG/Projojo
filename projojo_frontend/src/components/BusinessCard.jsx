@@ -35,7 +35,8 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         createSupervisorInviteKey(businessId)
             .then(data => {
                 const link = `${window.location.origin}/invite?key=${data.key}`;
-                const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+                // TODO: timestamp is 2025-06-29T23:55:46.505503 while it should be 6-30 at 01:55 (convert to amsterdam time / utc+2)
+                const timestamp = new Date(new Date(data.created_at).getTime() + 7 * 24 * 60 * 60 * 1000);
 
                 setInviteLink(link);
                 setExpiry(timestamp);

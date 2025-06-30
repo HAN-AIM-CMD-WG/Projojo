@@ -10,6 +10,7 @@ from exceptions.global_exception_handler import generic_handler
 # Import routers
 from routes.auth_router import router as auth_router
 from routes.business_router import router as business_router
+from routes.invite_router import router as invite_router
 from routes.project_router import router as project_router
 from routes.skill_router import router as skill_router
 from routes.student_router import router as student_router
@@ -53,6 +54,7 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router)
 app.include_router(business_router)
+app.include_router(invite_router)
 app.include_router(project_router)
 app.include_router(skill_router)
 app.include_router(student_router)

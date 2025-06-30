@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Depends
-from auth.jwt_utils import get_token_payload
+from fastapi import APIRouter, Path, Body, HTTPException
 
 from domain.repositories import (
     BusinessRepository,
@@ -9,7 +8,6 @@ from domain.repositories import (
 )
 
 from domain.models import Business
-from datetime import datetime, timezone
 
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
@@ -65,32 +63,6 @@ async def get_business_projects(name: str = Path(..., description="Business name
     """
     projects = project_repo.get_projects_by_business(name)
     return projects
-
-
-@router.post("/{id}/invite")
-async def create_supervisor_invite_key(id: str = Path(..., description="Business ID"), payload: dict = Depends(get_token_payload)):
-    """
-    Create an invite key for a supervisor
-    """
-    if payload.get("role") not in ["supervisor", "teacher"]:
-        raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen andere supervisors uitnodigen")
-
-    if payload.get("role") == "supervisor" and payload.get("business") != id:
-        raise HTTPException(status_code=403, detail="Supervisors kunnen alleen andere supervisors uitnodigen binnen hun eigen bedrijf")
-
-    business = business_repo.get_by_id(id)
-    if not business:
-        raise HTTPException(status_code=404, detail="Bedrijf is niet gevonden")
-
-    # invite_key = business_repo.create_supervisor_invite_key(id)
-    # return invite_key
-    return {
-        "key": "example-invite-key",
-        "inviteType": "business",
-        "isUsed": False,
-        "createdAt": datetime.now(timezone.utc),
-        "businessId": id
-    }
 
 
 @router.post("/", response_model=Business)
