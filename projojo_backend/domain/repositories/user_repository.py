@@ -267,22 +267,31 @@ class UserRepository(BaseRepository[User]):
                 has imagePath $imagePath,
                 has schoolAccountName $schoolAccountName,
                 has password_hash $password_hash;
-                $skill isa skill;
-                hasSkill( $skill, $student );
             fetch {
+                'id': $email,
                 'email': $email,
-                'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
+                'full_name': $fullName,
+                'type': 'student',
+                'image_path': $imagePath,
+                'school_account_name': $schoolAccountName,
                 'password_hash': $password_hash,
-                'skill_ids': $skill.name
+                'registered_task_ids': [
+                    match
+                        $task isa task;
+                        $registersForTask isa registersForTask( $student, $task );
+                    fetch { 'task_id': $task.name };
+                ],
+                'skill_ids': [
+                    match
+                        $skill isa skill;
+                        $hasSkill isa hasSkill( $student, $skill );
+                    fetch { 'skill_id': $skill.name };
+                ]
             };
         """
         results = Db.read_transact(query)
 
-        grouped = self.group_student_by_email(results)
-
-        return [self._map_student(data) for data in grouped.values()]
+        return results
 
     def get_all_teachers(self) -> list[Teacher]:
         query = """
@@ -365,25 +374,6 @@ class UserRepository(BaseRepository[User]):
             project_id = result["created_project_id"]
             if project_id is not None:
                 grouped[email]["created_project_ids"].append(project_id)
-        return grouped
-
-    @staticmethod
-    def group_student_by_email(results):
-        grouped = defaultdict(lambda: {
-            "email": None,
-            "fullName": None,
-            "imagePath": None,
-            "schoolAccountName": None,
-            "skill_ids": [],
-        })
-        for result in results:
-            email = result["email"]
-            grouped[email]["email"] = email
-            grouped[email]["fullName"] = result["fullName"]
-            grouped[email]["imagePath"] = result["imagePath"]
-            grouped[email]["password_hash"] = result["password_hash"]
-            grouped[email]["schoolAccountName"] = result["schoolAccountName"]
-            grouped[email]["skill_ids"].append(result["skill_ids"])
         return grouped
 
     def get_students_by_task_status(self, task_name: str, status: str) -> list[Student]:
