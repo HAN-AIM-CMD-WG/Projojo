@@ -67,25 +67,27 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                             {project.name}
                         </h1>
                         <div className="flex flex-row gap-4 ms-4">
-                            <Link to={`/business/${project.business_id}`} className="group">
-                                <img
-                                    className="h-14 w-14 sm:h-16 sm:w-16 aspect-square object-cover rounded-full border border-gray-300 shadow-sm"
-                                    src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                                    alt={isLoading ? "Aan het laden" : "Bedrijfslogo"}
-                                />
-                            </Link>
-                            <div className="max-w-[75%]">
-                                <Link
-                                    to={`/business/${project.business_id}`}
-                                    className="font-bold text-lg break-words text-black-800 hover:text-primary transition"
-                                >
-                                    {project.business_id}
+                            {!isLoading && <>
+                                <Link to={`/business/${project.business.id}`} className="group">
+                                    <img
+                                        className="h-14 w-14 sm:h-16 sm:w-16 aspect-square object-cover rounded-full border border-gray-300 shadow-sm"
+                                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.business.image_path}`}
+                                        alt={isLoading ? "Aan het laden" : "Bedrijfslogo"}
+                                    />
                                 </Link>
-                                <p className="text-black-600 text-sm flex gap-1">
-                                    <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                    {project.location}
-                                </p>
-                            </div>
+                                <div className="max-w-[75%]">
+                                    <Link
+                                        to={`/business/${project.business.id}`}
+                                        className="font-bold text-lg break-words text-black-800 hover:text-primary transition"
+                                    >
+                                        {project.business.name}
+                                    </Link>
+                                    <p className="text-black-600 text-sm flex gap-1">
+                                        <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                        {project.business.location.join(", ")}
+                                    </p>
+                                </div>
+                            </>}
                         </div>
                     </div>
                 </div>

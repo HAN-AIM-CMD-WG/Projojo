@@ -71,7 +71,8 @@ class ProjectRepository(BaseRepository[Project]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
-                'business': $business.name
+                'business': $business.name,
+                'tets': "asdf",
             }};
         """
         results = Db.read_transact(query)
@@ -82,6 +83,25 @@ class ProjectRepository(BaseRepository[Project]):
             project.business_id = business_id
 
         return projects
+
+    def get_business_by_project(self, project_id: str) -> dict | None:
+        query = f"""
+            match
+                $project isa project,
+                has name "{project_id}";
+                $hasProjects isa hasProjects(business: $business, project: $project);
+            fetch {{
+                'id': $business.name,
+                'name': $business.name,
+                'description': $business.description,
+                'image_path': $business.imagePath,
+                'location': [$business.location],
+            }};
+        """
+        results = Db.read_transact(query)
+        if not results:
+            return None
+        return results[0]
 
     def _map_to_model(self, result: dict[str, Any]) -> Project:
         # Extract relevant information from the query result
