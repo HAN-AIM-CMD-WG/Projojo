@@ -184,7 +184,7 @@ export function getTasks(projectName) {
 /**
  *
  * @param {string} email
- * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: string[], registered_task_ids: string[]}>}
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
 export function getUser(email) {
     return fetchWithError(`${API_BASE_URL}users/${email}`);
@@ -209,6 +209,25 @@ export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
+
+/**
+ * @param {string} email
+ * @param {string[]} skills
+ */
+export function updateStudentSkills(email, skills) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+        method: "PUT",
+        body: JSON.stringify(skills),
+    });
+}
+
+export function updateStudentSkillDescription(email, skill) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/${skill.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(skill),
+    });
+}
+
 /**
  * @param {string} taskId
  * @returns {Promise<{student: {id: string, full_name: string, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}, reason: string}[]>}
@@ -223,6 +242,7 @@ export function getRegistrations(taskId) {
 export function getStudentRegistrations() {
     return fetchWithError(`${API_BASE_URL}students/registrations`);
 }
+
 
 /**
  *
@@ -341,7 +361,7 @@ export function getTaskSkills(taskName) {
  *
  * @param {string} newBusinessName
  */
-export function createNewBusiness(newBusinessName) {   
+export function createNewBusiness(newBusinessName) {
     return fetchWithError(`${API_BASE_URL}businesses/`, {
         method: "POST",
         body: JSON.stringify(newBusinessName),

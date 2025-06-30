@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional
+from typing import Annotated
 from datetime import datetime
 
 class Skill(BaseModel):
@@ -10,7 +10,6 @@ class Skill(BaseModel):
         examples=["2025-04-21T10:02:58"]
     )]
 
-    
     class Config:
         from_attributes = True
         json_encoders = {
@@ -19,7 +18,7 @@ class Skill(BaseModel):
 
 
 class StudentSkill(Skill):
-    description: Optional[str] = None
-    
+    description: str | None = None
+
     class Config:
         from_attributes = True
