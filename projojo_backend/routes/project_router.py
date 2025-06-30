@@ -35,7 +35,10 @@ async def get_project_full(name: str = Path(..., description="Project name")):
     """
     project = project_repo.get_by_id(name)
     project.tasks = task_service.get_tasks_with_skills_by_project(name)
-    return project
+
+    project_dict = project.__dict__
+    project_dict["business"] = project_repo.get_business_by_project(name)
+    return project_dict
 
 
 @router.get("/{name}/tasks")

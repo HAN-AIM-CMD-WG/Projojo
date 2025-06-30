@@ -46,25 +46,27 @@ export default function UpdateBusinessPage() {
 
         formData.append("description", description);
 
-        updateBusiness(formData)
-            .then(() => {
-                navigation(`/business/${authData.businessId}`);
-            }).catch(error =>
-                setError(createErrorMessage(
-                    error,
-                    {
-                        401: "Je bent niet ingelogd om de bedrijfspagina aan te passen",
-                        403: "Je bent niet geauthoriseerd om de bedrijfspagina aan te passen",
-                        404: "De bedrijfspagina kan niet gevonden worden",
-                    }
-                ))
-            );
+        // Remove the temp error message when this functionality is implemented
+        setError("Deze functionaliteit is nog niet beschikbaar");
+        // updateBusiness(formData)
+        //     .then(() => {
+        //         navigation(`/business/${authData.businessId}`);
+        //     }).catch(error =>
+        //         setError(createErrorMessage(
+        //             error,
+        //             {
+        //                 401: "Je bent niet ingelogd om de bedrijfspagina aan te passen",
+        //                 403: "Je bent niet geauthoriseerd om de bedrijfspagina aan te passen",
+        //                 404: "De bedrijfspagina kan niet gevonden worden",
+        //             }
+        //         ))
+        //     );
     }
 
     return (
         <form onSubmit={onSubmit} className="max-w-2xl mx-auto">
             <Card header="Bedrijf aanpassen" className="flex flex-col gap-3 px-6 py-12 sm:rounded-lg sm:px-12 shadow-xl border border-gray-300">
-                <Alert text={error} />
+                <Alert text={error} onClose={() => setError("")} />
                 <FormInput
                     label="Bedrijfsnaam"
                     type="text"
