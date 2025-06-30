@@ -368,6 +368,25 @@ export function createNewBusiness(newBusinessName) {
     });
 }
 
+/**
+ * @param {string} businessId
+ * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
+ */
+export function createSupervisorInviteKey(businessId) {
+    return fetchWithError(`${API_BASE_URL}invites/supervisor/${businessId}`, {
+        method: "POST",
+    });
+}
+
+/**
+ * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ */
+export function createTeacherInviteKey() {
+    return fetchWithError(`${API_BASE_URL}invites/teacher`, {
+        method: "POST",
+    });
+}
+
 
 export function login(credentials) {
     return fetchWithError(`${API_BASE_URL}login`, {

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from domain.repositories import UserRepository
+
 user_repo = UserRepository()
 
 router = APIRouter(prefix="/teachers", tags=["Teacher Endpoints"])

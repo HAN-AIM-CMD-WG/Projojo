@@ -29,7 +29,8 @@ entity business,
     owns imagePath @card(1),
     owns location @card(1..),
     plays manages:business @card(0..),
-    plays hasProjects:business @card(0..);
+    plays hasProjects:business @card(0..),
+    plays businessInvite:business @card(0..);
 
 entity project,
     owns name @card(1),
@@ -55,6 +56,13 @@ entity skill,
     owns createdAt @card(1),
     plays requiresSkill:skill @card(0..),
     plays hasSkill:skill @card(0..);
+
+entity inviteKey,
+    owns key @key,
+    owns inviteType @card(1),
+    owns isUsed @card(1),
+    owns createdAt @card(1),
+    plays businessInvite:key @card(0..1);
 
 relation authenticates,
     relates authenticator,
@@ -97,6 +105,10 @@ relation registersForTask,
     owns response @card(0..1),
     owns createdAt @card(1);
 
+relation businessInvite,
+    relates business @card(1),
+    relates key @card(1);
+
 #Werkt helaas nog niet :(
 # TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
 # nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
@@ -122,3 +134,6 @@ attribute createdAt value datetime;
 attribute totalNeeded value integer;
 attribute isAccepted value boolean;
 attribute response value string;
+attribute key value string;
+attribute inviteType value string @values("business", "teacher");
+attribute isUsed value boolean;

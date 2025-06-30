@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IMAGE_BASE_URL } from '../services';
+import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
 import { useAuth } from './AuthProvider';
 import FormInput from './FormInput';
 import Loading from "./Loading";
@@ -32,15 +32,18 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         setIsModalOpen(true);
 
         setIsLoading(true);
-        createBusinessInviteLink(businessId)
-            .then(({ link, timestamp }) => {
+        createSupervisorInviteKey(businessId)
+            .then(data => {
+                const link = `${window.location.origin}/invite?key=${data.key}`;
+                const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
+
                 setInviteLink(link);
                 setExpiry(timestamp);
-
-                setIsLoading(false);
             })
             .catch(error => {
                 setError(error.message);
+            })
+            .finally(() => {
                 setIsLoading(false);
             });
     }
@@ -65,7 +68,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                 <h2 className="mb-1 text-4xl font-bold tracking-tight text-gray-900">{name}</h2>
                 <h3 className="mb-1 text-xl font-bold tracking-tight text-gray-900 flex gap-1">
                     <svg className="w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                    {location && location.length > 0 ? 
+                    {location && location.length > 0 ?
                         (Array.isArray(location) ? location[0] : location) :
                         <p className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</p>
                     }
@@ -99,28 +102,28 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                             <p>Bedrijf aanpassen</p>
                         </Link>
                     </>
-                  )}
-                        {(showUpdateButton && (authData.type === "teacher" || authData.businessId === businessId)) && (
-                            <button className='btn-primary ps-4 flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
-                                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 640 512" className='h-5 w-5'>
-                                    <path fill="#ffffff" d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/>
-                                </svg>
-                                <p>Collega toevoegen</p>
-                            </button>
-                        )}
-                </div>
-            
-                <Modal
-                    modalHeader={`Collega toevoegen aan ${name}`}
-                    isModalOpen={isModalOpen}
-                    setIsModalOpen={setIsModalOpen}
-                >
-                    <div className="p-4">
-                        {isLoading ?
-                            <div className='flex flex-col items-center gap-4'>
-                                <p className='font-semibold'>Aan het laden...</p>
-                                <Loading size="48px" />
-                            </div>
+                )}
+                {(showUpdateButton && (authData.type === "teacher" || authData.businessId === businessId)) && (
+                    <button className='btn-primary ps-4 flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
+                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 640 512" className='h-5 w-5'>
+                            <path fill="#ffffff" d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
+                        </svg>
+                        <p>Collega toevoegen</p>
+                    </button>
+                )}
+            </div>
+
+            <Modal
+                modalHeader={`Collega toevoegen aan ${name}`}
+                isModalOpen={isModalOpen}
+                setIsModalOpen={setIsModalOpen}
+            >
+                <div className="p-4">
+                    {isLoading ?
+                        <div className='flex flex-col items-center gap-4'>
+                            <p className='font-semibold'>Aan het laden...</p>
+                            <Loading size="48px" />
+                        </div>
                         : error ?
                             <div className="flex flex-col items-center gap-2 text-red-600">
                                 <p className='font-semibold'>Er is iets misgegaan.</p>
@@ -135,7 +138,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                             </div>
                             : inviteLink &&
                             <div className="flex flex-col items-center">
-                                <p className='font-semibold'>Deel de volgende link met je collega:</p>
+                                <p className='font-semibold'>Deel de volgende link met een collega:</p>
                                 <div className='w-full flex flex-row gap-2 mt-2'>
                                     <div className="basis-full">
                                         <FormInput
