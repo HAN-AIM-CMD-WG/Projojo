@@ -228,10 +228,6 @@ export function updateStudentSkillDescription(email, skill) {
     });
 }
 
-export function getRegistrations() {
-    return fetchWithError(`${API_BASE_URL}registrations`);
-}
-
 /**
  * @param {string} taskId
  * @returns {Promise<{student: {id: string, full_name: string, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}, reason: string}[]>}
