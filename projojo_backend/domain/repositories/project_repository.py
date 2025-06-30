@@ -71,8 +71,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
-                'business': $business.name,
-                'tets': "asdf",
+                'business': $business.name
             }};
         """
         results = Db.read_transact(query)
