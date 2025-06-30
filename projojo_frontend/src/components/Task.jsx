@@ -210,7 +210,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             <p>Er zijn geen open aanmeldingen voor deze taak</p>
                         )}
                         {isFull && (
-                            <Alert isCloseable={false} text="Deze taak is vol, er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
+                            <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
                         )}
                         {registrations.map((registration) => (
                             <InfoBox key={registration.student.id} className="flex flex-col gap-2 px-4 py-4">
