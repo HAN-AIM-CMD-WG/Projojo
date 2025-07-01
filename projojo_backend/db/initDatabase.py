@@ -1,31 +1,89 @@
 from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
 import pprint
-from dotenv import load_dotenv
+from environs import Env
+from typing import Any
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file with variable expansion
+env = Env(expand_vars=True)
+env.read_env()
 
 class Db:
-    address = os.getenv("TYPEDB_SERVER_ADDR", "127.0.0.1:1729")
-    name = os.getenv("TYPEDB_DB_NAME", "projojo_db")
-    username = os.getenv("TYPEDB_USERNAME", "admin")
-    password = os.getenv("TYPEDB_PASSWORD", "password")
-    reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False
+    address = env.str("TYPEDB_SERVER_ADDR")
+    name = env.str("TYPEDB_DB_NAME")
+    username = env.str("TYPEDB_USERNAME")
+    default_password = env.str("TYPEDB_DEFAULT_PASSWORD")
+    new_password = env.str("TYPEDB_NEW_PASSWORD")
+    reset = env.bool("RESET_DB", default=False)
     base_path = os.path.dirname(os.path.abspath(__file__))
     schema_path = os.path.join(base_path, "schema.tql")
     seed_path = os.path.join(base_path, "seed.tql")
-    driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))
-    db = driver.databases.get(name) if driver.databases.contains(name) else None
+    driver: Any | None = None
+    db: Any | None = None
+    
+    @classmethod
+    def initialize_connection(cls):
+        """Initialize the TypeDB connection, updating password if needed"""
+        if cls.driver is not None:
+            return
+            
+        print(f"Connecting to TypeDB at {cls.address}")
+        print(f"Target user: {cls.username}")
+        
+        # Try new credentials first
+        try:
+            print("Trying new credentials...")
+            cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.new_password), DriverOptions(False, None))
+            print("✓ Connected with new credentials - password is already correct")
+            
+        except Exception as new_cred_error:
+            print(f"⚠ New credentials failed: {new_cred_error}")
+            print("Trying default credentials...")
+            
+            try:
+                cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.default_password), DriverOptions(False, None))
+                print("✓ Connected with default credentials")
+                
+                # Update password if default and new are different
+                if cls.default_password != cls.new_password:
+                    print("Updating password...")
+                    try:
+                        current_user = cls.driver.users.get_current_user()
+                        if current_user:
+                            current_user.update_password(cls.new_password)
+                            print("✓ Password updated successfully")
+                            
+                            # Reconnect with new password
+                            cls.driver.close()
+                            cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.new_password), DriverOptions(False, None))
+                            print("✓ Reconnected with new credentials")
+                        else:
+                            print("⚠ Could not get current user for password update")
+                    except Exception as password_error:
+                        print(f"⚠ Password update failed: {password_error}")
+                        print("⚠ Continuing with default credentials")
+                else:
+                    print("Default and new passwords are the same - no update needed")
+                    
+            except Exception as default_cred_error:
+                print(f"✗ Could not connect with default credentials either: {default_cred_error}")
+                raise Exception(f"Could not establish TypeDB connection with either default or new credentials for user '{cls.username}'")
+        
+        # Set up database reference
+        cls.db = cls.driver.databases.get(cls.name) if cls.driver.databases.contains(cls.name) else None
     
     @staticmethod
     def schema_transact(query):
+        Db.initialize_connection()
+        assert Db.driver is not None, "Driver should be initialized"
         with Db.driver.transaction(Db.name, TransactionType.SCHEMA) as tx:
             tx.query(query).resolve()
             tx.commit()
 
     @staticmethod
     def read_transact(query, sort_fields=True):
+        Db.initialize_connection()
+        assert Db.driver is not None, "Driver should be initialized"
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
             results = list(tx.query(query).resolve())
 
@@ -37,13 +95,16 @@ class Db:
 
     @staticmethod
     def write_transact(query):
+        Db.initialize_connection()
+        assert Db.driver is not None, "Driver should be initialized"
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
             tx.commit()
 
     @staticmethod
     def close():
-        Db.driver.close()
+        if Db.driver:
+            Db.driver.close()
         
 
 print( f"Using database: {Db.name}")
@@ -53,6 +114,8 @@ def get_database():
     return Db
 
 def create_database_if_needed():
+    Db.initialize_connection()
+    assert Db.driver is not None, "Driver should be initialized"
     if Db.reset and Db.db is not None:
         Db.db.delete()
         Db.db = None
