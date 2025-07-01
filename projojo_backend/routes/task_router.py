@@ -1,11 +1,20 @@
 from fastapi import APIRouter, Path, Query, HTTPException, Depends
+from pydantic import BaseModel
 
 from domain.repositories import TaskRepository, UserRepository
 from auth.jwt_utils import get_token_payload
+from service import task_service
+
 task_repo = TaskRepository()
 user_repo = UserRepository()
 
-from service import task_service
+# Request models
+class RegistrationCreate(BaseModel):
+    motivation: str
+
+class RegistrationUpdate(BaseModel):
+    accepted: bool
+    response: str = ""
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -27,7 +36,7 @@ async def get_colleague_email_addresses(payload: dict = Depends(get_token_payloa
     """
     # Check if user is a supervisor
     if payload.get("role") != "supervisor":
-        raise HTTPException(status_code=403, detail="Supervisor access required")
+        raise HTTPException(status_code=403, detail="Alleen supervisors kunnen collega's opvragen")
 
     supervisor_email = payload["sub"]  # Extract email from JWT sub field
 
@@ -73,3 +82,58 @@ async def get_task_skills(name: str = Path(..., description="Task name")):
     """
     task_skills = task_service.get_task_with_skills(name)
     return task_skills
+
+@router.get("/{name}/registrations")
+async def get_registrations(name: str = Path(..., description="Task name")):
+    """
+    Get all open registrations for a task with student details and skills
+    """
+    registrations = task_repo.get_registrations(name)
+    return registrations
+
+@router.post("/{id}/registrations")
+async def create_registration(
+    id: str = Path(..., description="Task ID"),
+    registration: RegistrationCreate = ...,
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Create a new registration for a student to a task
+    """
+    # Check if user is a student
+    if payload.get("role") != "student":
+        raise HTTPException(status_code=403, detail="Alleen studenten kunnen zich registreren voor taken")
+
+    student_email = payload["sub"]  # Extract email from JWT sub field
+
+    # check if the student is already registered for this task
+    existing_registration = user_repo.get_student_registrations(student_email)
+    if id in existing_registration:
+        raise HTTPException(status_code=400, detail="Je bent al geregistreerd voor deze taak")
+
+    try:
+        task_repo.create_registration(id, student_email, registration.motivation)
+        return {"message": "Registratie succesvol aangemaakt"}
+    except Exception:
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
+
+@router.put("/{task_id}/registrations/{student_id}")
+async def update_registration(
+    task_id: str = Path(..., description="Task ID"),
+    student_id: str = Path(..., description="Student ID"),
+    registration: RegistrationUpdate = ...,
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update a registration status (accept/reject) with optional response
+    """
+    # Check if user is a supervisor or teacher
+    if payload.get("role") not in ["supervisor", "teacher"]:
+        raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen registraties bijwerken")
+
+    try:
+        task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
+        return {"message": "Registratie succesvol bijgewerkt"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie." + str(e))
+

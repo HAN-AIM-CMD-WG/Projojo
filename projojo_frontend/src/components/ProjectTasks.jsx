@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
-import { getSkills, /*getUserRegistrations*/ } from '../services';
+import { getSkills, getStudentRegistrations } from '../services';
 import Alert from './Alert';
 import { useAuth } from "./AuthProvider";
 import Task from "./Task";
 
 /**
- * 
- * @param {{ tasks: { name: string }[] }} param0 
- * @returns 
+ *
+ * @param {{ tasks: { name: string }[] }} param0
+ * @returns
  */
 export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, businessId, lastTaskRef }) {
     const isEmpty = !tasks;
@@ -25,15 +25,15 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
         }
         let ignore = false;
 
-        // getUserRegistrations()
-        //     .then((data) => {
-        //         if (ignore) return;
-        //         setCurrentRegistrations(data);
-        //     })
-        //     .catch(error => {
-        //         if (ignore) return;
-        //         setError(error.message)
-        //     });
+        getStudentRegistrations()
+            .then((data) => {
+                if (ignore) return;
+                setCurrentRegistrations(data);
+            })
+            .catch(error => {
+                if (ignore) return;
+                setError(error.message)
+            });
 
     }, [fetchAmount, authData.type]);
 
@@ -79,24 +79,15 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                 : tasks.map((task, index) => {
                     const isLast = index === tasks.length - 1;
                     // Ensure task has the expected format for the components
-                    const formattedTask = {
-                        ...task,
-                        taskId: task.name,
-                        title: task.name,
-                        totalNeeded: task.total_needed,
-                        totalAccepted: 0, // Default value since it's not in the new API
-                        totalRegistered: 0, // Default value since it's not in the new API
-                        
-                    };
                     return (
                         <div
                             ref={(el) => {
-                                taskRefs.current[formattedTask.taskId] = el;
+                                taskRefs.current[task.id] = el;
                                 if (isLast && lastTaskRef) lastTaskRef.current = el;
                             }}
-                            key={formattedTask.taskId}
-                            id={`task-${formattedTask.taskId}`}>
-                            <Task task={formattedTask} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} isNotAllowedToRegister={currentRegistrations.includes(formattedTask.taskId)} />
+                            key={task.id}
+                            id={`task-${task.id}`}>
+                            <Task task={task} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} isNotAllowedToRegister={currentRegistrations.includes(task.id)} />
                         </div >
                     )
                 })}
