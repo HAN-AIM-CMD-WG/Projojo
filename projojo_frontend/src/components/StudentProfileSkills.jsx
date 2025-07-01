@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSkills, /*updateStudentSkills*/ } from "../services";
+import { getSkills, updateStudentSkills } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 import SkillsEditor from "./SkillsEditor";
@@ -15,12 +15,12 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     const isOwnProfile = authData.type === "student" && authData.userId === student.id;
 
     const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId);
+        const skillNames = skills.map((skill) => skill.name);
 
         setStudentSkillsError("");
 
         try {
-            //await updateStudentSkills(skillIds);
+            await updateStudentSkills(student.email, skillNames);
             setIsEditing(false)
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {

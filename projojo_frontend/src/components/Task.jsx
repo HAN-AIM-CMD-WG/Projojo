@@ -12,7 +12,7 @@ import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
 
-export default function Task({ task, setFetchAmount, businessId, allSkills, isNotAllowedToRegister }) {
+export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
     const { authData } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
@@ -24,8 +24,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
 
-
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
+
+    const isFull = task.total_accepted >= task.total_needed;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,7 +38,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
         setError("");
 
         try {
-            createRegistration(task.taskId, motivation.trim())
+            createRegistration(task.id, motivation.trim())
                 .then(() => {
                     setIsModalOpen(false);
                     if (setFetchAmount) {
@@ -56,7 +57,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
         }
         let ignore = false;
 
-        getRegistrations(task.taskId)
+        getRegistrations(task.id)
             .then(data => {
                 if (ignore) return;
                 setRegistrations(data);
@@ -69,12 +70,12 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
         return () => {
             ignore = true;
         };
-    }, [isOwner, task.taskId]);
+    }, [isOwner, task.id]);
 
     const handleRegistrationResponse = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
-        const userId = parseInt(formData.get("userId"));
+        const userId = formData.get("userId");
         const response = formData.get("response").trim();
         const accepted = e.nativeEvent.submitter.value === "true";
 
@@ -83,7 +84,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
         }));
 
         updateRegistration({
-            taskId: task.taskId,
+            taskId: task.id,
             userId: userId,
             accepted,
             response,
@@ -91,7 +92,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
             .then(() => {
                 setRegistrations((currentRegistrations) => {
                     return currentRegistrations.filter((registration) => {
-                        return registration.student.userId !== userId;
+                        return registration.student.id !== userId;
                     });
                 });
                 setFetchAmount((currentAmount) => currentAmount + 1);
@@ -107,7 +108,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
         setTaskSkillsError("");
 
         try {
-            await updateTaskSkills(task.taskId, skillIds);
+            await updateTaskSkills(task.id, skillIds);
             setIsEditing(false)
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
@@ -116,11 +117,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
     };
 
     return (
-        <div id={`task-${task.taskId}`} className="group">
+        <div id={`task-${task.id}`} className="group">
             <div className="target flex flex-col sm:flex-row gap-4 justify-between items-center w-full p-5 bg-white rounded-lg shadow-md border border-gray-300 transition hover:shadow-lg">
                 <div className="space-y-3 flex-grow">
                     <h2 className="text-2xl font-bold text-gray-800">
-                        {task.title}
+                        {task.name}
                     </h2>
                     <RichTextViewer
                         text={task.description}
@@ -136,7 +137,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                         isAllowedToAddSkill={isOwner}
                     >
                         <div className="flex flex-wrap gap-2 items-center">
-                            
                             {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
                             {task.skills && task.skills.map((skill) => (
                                 <SkillBadge
@@ -145,11 +145,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                                     isPending={skill.is_pending}
                                 />
                             ))}
-                            {isOwner && !isEditing && (
+                            {/* {isOwner && !isEditing && (
                                 <button className="btn-secondary py-1 px-3" onClick={() => setIsEditing(true)}>
                                     Aanpassen ✏️
                                 </button>
-                            )}
+                            )} */}
                         </div>
                     </SkillsEditor>
                 </div>
@@ -157,29 +157,29 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                 <div className="flex flex-col min-w-fit items-end gap-3 mb-auto">
                     <InfoBox>
                         <strong className="text-primary mr-1">
-                            {task.totalNeeded - task.totalAccepted}
+                            {task.total_needed - task.total_accepted}
                         </strong>
-                        van de {task.totalNeeded} plekken beschikbaar
+                        van de {task.total_needed} plekken beschikbaar
                     </InfoBox>
                     <InfoBox>
                         <strong className="text-primary mr-1">
-                            {task.totalRegistered}
+                            {task.total_registered}
                         </strong>
                         openstaande aanmeldingen
                     </InfoBox>
                     {authData.type === "student" && (
-                        <button className={`btn-primary w-full ${isNotAllowedToRegister ? "cursor-not-allowed opacity-50" : ""}`} disabled={isNotAllowedToRegister} onClick={() => setIsModalOpen(true)}>{isNotAllowedToRegister ? "Aanmelding ontvangen" : "Aanmelden"}</button>
+                        <button className={`btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "cursor-not-allowed opacity-50" : ""}`} disabled={(studentAlreadyRegistered || isFull)} onClick={() => setIsModalOpen(true)}>{studentAlreadyRegistered ? "Aanmelding ontvangen" : isFull ? "Taak is vol" : "Aanmelden"}</button>
                     )}
                     {isOwner && (<>
                         <button className="btn-primary w-full" onClick={() => setIsRegistrationsModalOpen(true)}>Bekijk aanmeldingen</button>
-                        <CreateBusinessEmail taskId={task.taskId} />
+                        <CreateBusinessEmail taskId={task.id} />
                     </>
                     )}
                 </div>
             </div>
-            {!isNotAllowedToRegister && (
+            {!(studentAlreadyRegistered || isFull) && (
                 <Modal
-                    modalHeader={`Aanmelden voor ${task.title}`}
+                    modalHeader={`Aanmelden voor ${task.name}`}
                     isModalOpen={isModalOpen}
                     setIsModalOpen={setIsModalOpen}
                 >
@@ -203,17 +203,20 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
             )}
 
             {isOwner && (
-                <Modal maxWidth={"max-w-2xl"} modalHeader={`Aanmeldingen voor "${task.title}"`} isModalOpen={isRegistrationsModalOpen} setIsModalOpen={setIsRegistrationsModalOpen}>
-                    {registrations.length === 0 && (
-                        <p>Er zijn nog geen aanmeldingen voor deze taak</p>
-                    )}
+                <Modal maxWidth={"max-w-2xl"} modalHeader={`Aanmeldingen voor "${task.name}"`} isModalOpen={isRegistrationsModalOpen} setIsModalOpen={setIsRegistrationsModalOpen}>
                     <div className="flex flex-col gap-4">
+                        {registrations.length === 0 && (
+                            <p>Er zijn geen open aanmeldingen voor deze taak</p>
+                        )}
+                        {isFull && (
+                            <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
+                        )}
                         {registrations.map((registration) => (
-                            <InfoBox key={registration.student.userId} className="flex flex-col gap-2 px-4 py-4">
+                            <InfoBox key={registration.student.id} className="flex flex-col gap-2 px-4 py-4">
                                 <div>
-                                    <Link to={`/profile/${registration.student.userId}`} className="inline-flex gap-2 text-lg font-bold underline text-black hover:text-primary" target="_blank" rel="noopener noreferrer">
+                                    <Link to={`/student/${registration.student.id}`} className="inline-flex gap-2 text-lg font-bold underline text-black hover:text-primary" target="_blank" rel="noopener noreferrer">
                                         <svg className="w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z" /></svg>
-                                        {registration.student.username}
+                                        {registration.student.full_name}
                                     </Link>
                                     <RichTextViewer text={registration.reason} />
                                 </div>
@@ -221,18 +224,18 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, isNo
                                     <span>Skills:</span>
                                     {registration.student.skills.map((skill) => (
                                         <SkillBadge
-                                            key={skill.skill.skillId}
-                                            skillName={skill.skill.name}
-                                            isPending={skill.skill.isPending}
+                                            key={skill.id}
+                                            skillName={skill.name}
+                                            isPending={skill.is_pending}
                                         />
                                     ))}
                                 </div>
-                                <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.userId)?.error} />
+                                <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
                                 <form onSubmit={handleRegistrationResponse}>
                                     <FormInput label={`Reden (optioneel)`} max={400} min={0} type="textarea" name={`response`} rows={1} />
-                                    <input type="hidden" name="userId" value={registration.student.userId} />
+                                    <input type="hidden" name="userId" value={registration.student.id} />
                                     <div className="flex gap-2 flex-wrap mt-3">
-                                        <button type="submit" value={true} className="btn px-3 bg-green-700 hover:bg-green-800 focus:ring-green-500 text-white">Accepteren</button>
+                                        <button type="submit" value={true} disabled={isFull} className={`btn px-3 ${isFull ? "bg-gray-400" : "bg-green-700 hover:bg-green-800 focus:ring-green-500"} text-white`}>Accepteren</button>
                                         <button type="submit" value={false} className="btn px-3 bg-red-600 hover:bg-red-700 focus:ring-red-200 text-white">Weigeren</button>
                                     </div>
                                 </form>

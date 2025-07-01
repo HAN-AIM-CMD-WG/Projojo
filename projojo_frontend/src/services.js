@@ -114,6 +114,9 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                         case 404:
                             message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
                             break;
+                        case 409:
+                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan in het systeem.";
+                            break;
                         default:
                             message = message ?? "Er is een onverwachte fout opgetreden.";
                             break;
@@ -164,6 +167,13 @@ export function getBusinessesComplete() {
 }
 
 /**
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[]}[]>}
+ */
+export function getBusinessesBasic() {
+    return fetchWithError(`${API_BASE_URL}businesses/basic`);
+}
+
+/**
  *
  * @param {string} projectName
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string, tasks: any[]}>}
@@ -199,7 +209,7 @@ export function getTasks(projectName) {
 /**
  *
  * @param {string} email
- * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: string[], registered_task_ids: string[]}>}
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
 export function getUser(email) {
     return fetchWithError(`${API_BASE_URL}users/${email}`);
@@ -224,9 +234,40 @@ export function getSkillsFromStudent(email) {
     return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
 }
 
-export function getRegistrations() {
-    return fetchWithError(`${API_BASE_URL}registrations`);
+
+/**
+ * @param {string} email
+ * @param {string[]} skills
+ */
+export function updateStudentSkills(email, skills) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+        method: "PUT",
+        body: JSON.stringify(skills),
+    });
 }
+
+export function updateStudentSkillDescription(email, skill) {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/${skill.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(skill),
+    });
+}
+
+/**
+ * @param {string} taskId
+ * @returns {Promise<{student: {id: string, full_name: string, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}, reason: string}[]>}
+ */
+export function getRegistrations(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`);
+}
+
+/**
+ * @returns {Promise<string[]>}
+ */
+export function getStudentRegistrations() {
+    return fetchWithError(`${API_BASE_URL}students/registrations`);
+}
+
 
 /**
  *
@@ -273,18 +314,34 @@ export function createTask(task) {
         body: JSON.stringify(task),
     });
 }
-//not implemented in the backend yet
-export function createRegistration(registration) {
-    return fetchWithError(`${API_BASE_URL}registrations`, {
+
+/**
+ * @param {string} taskId
+ * @param {string} motivation
+ * @returns {Promise<void>}
+ */
+export function createRegistration(taskId, motivation) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`, {
         method: "POST",
-        body: JSON.stringify(registration),
+        body: JSON.stringify({ motivation: motivation }),
     });
 }
-//Not implemented in the backend yet
+
+/**
+ * @param {Object} registration - The registration object to update
+ * @param {string} registration.taskId - The ID of the task
+ * @param {string} registration.userId - The ID of the user
+ * @param {boolean} registration.accepted - Whether the registration is accepted
+ * @param {string} registration.response - The response to the registration
+ * @return {Promise<void>}
+ */
 export function updateRegistration(registration) {
-    return fetchWithError(`${API_BASE_URL}registrations`, {
+    return fetchWithError(`${API_BASE_URL}tasks/${registration.taskId}/registrations/${registration.userId}`, {
         method: "PUT",
-        body: JSON.stringify(registration),
+        body: JSON.stringify({
+            accepted: registration.accepted,
+            response: registration.response || ""
+        }),
     });
 }
 
@@ -324,6 +381,35 @@ export function getTaskSkills(taskName) {
 }
 
 
+/**
+ *
+ * @param {string} newBusinessName
+ */
+export function createNewBusiness(newBusinessName) {
+    return fetchWithError(`${API_BASE_URL}businesses/`, {
+        method: "POST",
+        body: JSON.stringify(newBusinessName),
+    });
+}
+
+/**
+ * @param {string} businessId
+ * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
+ */
+export function createSupervisorInviteKey(businessId) {
+    return fetchWithError(`${API_BASE_URL}invites/supervisor/${businessId}`, {
+        method: "POST",
+    });
+}
+
+/**
+ * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ */
+export function createTeacherInviteKey() {
+    return fetchWithError(`${API_BASE_URL}invites/teacher`, {
+        method: "POST",
+    });
+}
 
 
 export function login(credentials) {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getSkillsFromStudent } from "../services";
+import { updateStudentSkillDescription } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "./AuthProvider";
 
@@ -14,23 +14,18 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
         setError("");
 
         const dataFormat = {
-            skills: {
-                id: skill.id,
-                name: skill.name,
-                is_pending: skill.is_pending,
-                description: description
-            }
+            ...skill,
+            description: description
         };
 
-        try {
-            const response = await getSkillsFromStudent(authData.userId);
-
-            // For now, we're just updating the local state since the update endpoint is commented out
-            skill.description = description;
-            setIsEditing(false);
-        } catch (error) {
-            setError("Er is iets misgegaan bij het opslaan van de beschrijving.");
-        }
+        updateStudentSkillDescription(authData.userId, dataFormat)
+            .then(() => {
+                skill.description = description;
+                setIsEditing(false);
+            })
+            .catch((error) => {
+                setError(error.message);
+            });
     };
 
     const handleClose = () => {

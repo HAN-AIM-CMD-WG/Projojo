@@ -83,7 +83,6 @@ export default function NewSkillsManagement() {
         <div className="flex flex-col gap-4">
             <Alert text={error} />
             <div className="mt-3">
-                <hr />
                 <h1 className="text-2xl text-gray-900 font-semibold">Skill beheer</h1>
                 <p>Er zijn <strong>{pendingSkills.length}</strong> skills om te verwerken.</p>
             </div>
