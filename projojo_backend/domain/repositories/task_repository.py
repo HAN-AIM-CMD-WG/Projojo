@@ -154,7 +154,6 @@ class TaskRepository(BaseRepository[Task]):
         # First delete the old task
         # Escape any double quotes in the ID
         escaped_id = id.replace('"', '\\"')
-
         delete_query = f"""
             match
                 $task isa task,

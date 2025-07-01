@@ -32,7 +32,6 @@ class BusinessRepository(BaseRepository[Business]):
         if not results:
             raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
-
     def get_all(self) -> list[Business]:
         query = """
             match
@@ -56,7 +55,6 @@ class BusinessRepository(BaseRepository[Business]):
         name = result.get("name", "")
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
-
         # Handle locations as a list
         locations = result.get("location", [])
         if not isinstance(locations, list):

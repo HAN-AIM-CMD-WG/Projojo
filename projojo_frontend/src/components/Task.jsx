@@ -137,7 +137,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         isAllowedToAddSkill={isOwner}
                     >
                         <div className="flex flex-wrap gap-2 items-center">
-
                             {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
                             {task.skills && task.skills.map((skill) => (
                                 <SkillBadge

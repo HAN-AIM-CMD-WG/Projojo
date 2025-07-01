@@ -25,7 +25,6 @@ class TaskRegistration(BaseModel):
     is_accepted: bool | None = None
     response: str | None = None
     created_at: datetime
-
     class Config:
         from_attributes = True
 

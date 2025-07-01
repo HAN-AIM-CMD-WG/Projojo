@@ -282,7 +282,6 @@ export function createProject(project_data) {
         body: formData,
     });
 }
-
 //not implemented in the backend yet
 export function createTask(task) {
     return fetchWithError(`${API_BASE_URL}projects`, {

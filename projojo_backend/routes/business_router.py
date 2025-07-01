@@ -46,7 +46,6 @@ async def get_all_businesses_with_full_nesting():
     """
     return business_repo.get_all_with_full_nesting()
 
-
 @router.get("/{name}")
 async def get_business(name: str = Path(..., description="Business name")):
     """
@@ -54,7 +53,6 @@ async def get_business(name: str = Path(..., description="Business name")):
     """
     business = business_repo.get_by_id(name)
     return business
-
 
 @router.get("/{name}/projects")
 async def get_business_projects(name: str = Path(..., description="Business name")):
