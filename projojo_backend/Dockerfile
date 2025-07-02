@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13-slim as base
 
 WORKDIR /app
 
@@ -14,8 +14,17 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Document the port that will be exposed
+# Development stage - expects volume mount for live reloading
+FROM base AS development
 EXPOSE 8000
+# Print environment variables for debugging
+RUN echo "=== DEVELOPMENT STAGE ENVIRONMENT ===" && env | grep -E "(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)" | sort || true
+CMD ["sh", "-c", "echo 'Starting development server...' && echo 'Environment:' && env | grep -E '(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)' | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
 
-# Run on container start (using uvicorn directly is more efficient than using `python main.py`)
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Preview stage - copies source code for production
+FROM base AS preview
+COPY . .
+EXPOSE 8000
+# Print environment variables for debugging
+RUN echo "=== PREVIEW STAGE ENVIRONMENT ===" && env | grep -E "(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)" | sort || true
+CMD ["sh", "-c", "echo 'Starting production server...' && echo 'Environment:' && env | grep -E '(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)' | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info"]
