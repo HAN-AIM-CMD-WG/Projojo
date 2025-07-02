@@ -22,14 +22,15 @@ services:
       - typedb
     build:
       context: ./projojo_backend
-      dockerfile: Dockerfile # Could be changed to Dockerfile.dev or Dockerfile.prod for different environments
+      target: development  # Use development stage
     env_file:
       - settings.env
       - .env
     ports:
       - "${BACKEND_PORT}:8000"
     volumes:
-      - ./projojo_backend:/app
+      - ./projojo_backend:/app  # Volume mount for development
+      - /app/__pycache__        # Anonymous volume to prevent host __pycache__ from mounting (avoids Python version/platform conflicts)
     environment:
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
@@ -41,15 +42,15 @@ services:
     container_name: projojo_frontend
     build:
       context: ./projojo_frontend
-      dockerfile: Dockerfile # Could be changed to Dockerfile.dev or Dockerfile.prod for different environments
+      target: development  # Use development stage
     env_file:
       - settings.env
       - .env
     ports:
       - "${FRONTEND_PORT}:5173"
     volumes:
-      - ./projojo_frontend:/app
-      - /app/node_modules # Anonymous volume to prevent host node_modules from mounting
+      - ./projojo_frontend:/app  # Volume mount for development
+      - /app/node_modules        # Anonymous volume to prevent host node_modules from mounting
     networks:
       - projojo-network
 

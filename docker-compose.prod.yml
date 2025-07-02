@@ -1,0 +1,23 @@
+services:
+  typedb:
+    env_file:
+      - settings.env  # Remove .env file in production
+
+  backend:
+    build:
+      target: preview  # Use preview stage
+    volumes: []  # Remove volume mounts for production
+    env_file:
+      - settings.env  # Remove .env file in production
+    environment:
+      # TypeDB password from Coolify environment
+      - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}
+
+  frontend:
+    build:
+      target: preview  # Use preview stage
+    volumes: []  # Remove volume mounts for production
+    ports:
+      - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
+    env_file:
+      - settings.env  # Remove .env file in production
