@@ -42,6 +42,8 @@ Contains **non-secret** configuration shared between environments:
 - Default database settings
 - Frontend variables (prefixed with `VITE_`)
 
+**Important**: Environment files DO support variable interpolation when used with Docker Compose CLI. Variables like `${VARIABLE_NAME}` are properly expanded to their values. For example, `TYPEDB_SERVER_ADDR=${TYPEDB_HOST_NAME}:${TYPEDB_PORT}` correctly expands to `typedb:1729`.
+
 ### .env (Local Only)
 Contains **secrets** for local development:
 - Database passwords
@@ -53,8 +55,13 @@ Contains **secrets** for local development:
 ### Coolify Environment Variables
 Set directly in Coolify UI for production:
 - `TYPEDB_NEW_PASSWORD`: Production database password
-- `COMPOSE_FILE`: Specifies compose file composition
+- `FRONTEND_PORT`: Frontend port (needed for Docker Compose interpolation)
+- `BACKEND_PORT`: Backend port (needed for Docker Compose interpolation)
+- `TYPEDB_PORT`: TypeDB port (needed for Docker Compose interpolation)
+- `TYPEDB_STUDIO_PORT`: TypeDB Studio port (needed for Docker Compose interpolation)
 - Any other production-specific secrets
+
+**Note**: Port variables must be set in Coolify UI for Docker Compose interpolation, even though they're also in settings.env for container environments.
 
 ## Service Configuration
 
