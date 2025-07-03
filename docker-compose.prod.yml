@@ -12,8 +12,8 @@ services:
     volumes:
       - typedb-data:/opt/typedb-all-linux-x86_64/server/data
     platform: linux/amd64
-    networks:
-      - projojo-network
+    # networks:
+    #   - projojo-network
 
   backend:
     container_name: projojo_backend
@@ -37,8 +37,8 @@ services:
       - TYPEDB_DEFAULT_PASSWORD=password
       - TYPEDB_HOST_NAME=typedb
       - TYPEDB_PORT=1729
-    networks:
-      - projojo-network
+    # networks:
+    #   - projojo-network
     # No volumes for production (source code copied into container)
 
   frontend:
@@ -54,13 +54,13 @@ services:
       - VITE_APP_VERSION=0.7.0
     ports:
       - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
-    networks:
-      - projojo-network
+    # networks:
+    #   - projojo-network
     # No volumes for production (source code copied into container)
 
-networks:
-  projojo-network:
-    driver: bridge
+# networks:
+#   projojo-network:
+#     driver: bridge
 
 volumes:
   typedb-data:

@@ -6,6 +6,8 @@ services:
     env_file:
       - settings.env
       - .env
+    networks:
+      - projojo-network
 
   backend:
     extends:
@@ -20,6 +22,8 @@ services:
     volumes:
       - ./projojo_backend:/app  # Volume mount for development
       - /app/__pycache__        # Anonymous volume to prevent host __pycache__ from mounting (avoids Python version/platform conflicts)
+    networks:
+      - projojo-network
 
   frontend:
     extends:
@@ -36,6 +40,8 @@ services:
     volumes:
       - ./projojo_frontend:/app  # Volume mount for development
       - /app/node_modules        # Anonymous volume to prevent host node_modules from mounting
+    networks:
+      - projojo-network
 
 networks:
   projojo-network:
