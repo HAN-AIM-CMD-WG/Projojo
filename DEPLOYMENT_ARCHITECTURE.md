@@ -13,13 +13,13 @@ Both frontend and backend use multi-stage Dockerfiles with two targets:
 
 ### 2. Docker Compose Strategy
 
-We use Docker Compose `extends` functionality to handle different environments:
+We use a hybrid Docker Compose approach to handle different environments:
 
 - **`docker-compose.base.yml`**: Common configuration shared between environments
 - **`docker-compose.yml`**: Development configuration (extends base + dev overrides)
-- **`docker-compose.prod.yml`**: Production configuration (extends base + prod overrides, standalone)
+- **`docker-compose.prod.yml`**: Production configuration (self-contained, standalone)
 
-Each environment file extends the base service configurations and adds environment-specific overrides. This eliminates the need for `COMPOSE_FILE` environment variable composition.
+Development uses `extends` for DRY configuration, while production is fully self-contained to ensure maximum compatibility with deployment platforms like Coolify. This eliminates the need for `COMPOSE_FILE` environment variable composition.
 
 ### 3. Environment Variable Hierarchy
 
@@ -99,7 +99,7 @@ docker compose down; docker compose build && docker compose up
 1. Set Coolify to use `docker-compose.prod.yml` as the main compose file
 2. Set environment variables in Coolify UI:
    - `TYPEDB_NEW_PASSWORD=your_production_password`
-3. Coolify automatically extends the base configuration via `extends` directive
+3. Coolify uses the self-contained production configuration
 4. Builds preview targets with copied source code
 5. No local secrets included
 
