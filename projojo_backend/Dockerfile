@@ -18,13 +18,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM base AS development
 EXPOSE 8000
 # Print environment variables for debugging
-RUN echo "=== B: DEVELOPMENT STAGE ENVIRONMENT ===" && env | grep -E "(TYPEDB_|PYTHON|FRONTEND_|BACKEND_|COMPOSE_)" | sort || true
-CMD ["sh", "-c", "echo 'B: Starting development server...' && echo 'Environment:' && env | grep -E '(TYPEDB_|PYTHON|FRONTEND_|BACKEND_|COMPOSE_)' | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
+RUN echo "=== B: DEVELOPMENT STAGE ENVIRONMENT ===" && env | sort || true
+CMD ["sh", "-c", "echo 'B: Starting development server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
 
 # Preview stage - copies source code for production
 FROM base AS preview
 COPY . .
 EXPOSE 8000
 # Print environment variables for debugging
-RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | grep -E "(TYPEDB_|PYTHON|FRONTEND_|BACKEND_|COMPOSE_)" | sort || true
-CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | grep -E '(TYPEDB_|PYTHON|FRONTEND_|BACKEND_|COMPOSE_)' | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info"]
+RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
+CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info"]
