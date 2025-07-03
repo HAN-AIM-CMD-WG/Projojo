@@ -13,12 +13,13 @@ Both frontend and backend use multi-stage Dockerfiles with two targets:
 
 ### 2. Docker Compose Strategy
 
-We use Docker Compose file composition to handle different environments:
+We use Docker Compose `extends` functionality to handle different environments:
 
-- **`docker-compose.yml`**: Base configuration for local development
-- **`docker-compose.prod.yml`**: Production overrides for Coolify deployment
+- **`docker-compose.base.yml`**: Common configuration shared between environments
+- **`docker-compose.yml`**: Development configuration (extends base + dev overrides)
+- **`docker-compose.prod.yml`**: Production configuration (extends base + prod overrides, standalone)
 
-To make sure the overrides are applied, set in Coolify: `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`
+Each environment file extends the base service configurations and adds environment-specific overrides. This eliminates the need for `COMPOSE_FILE` environment variable composition.
 
 ### 3. Environment Variable Hierarchy
 
@@ -95,12 +96,12 @@ docker compose down; docker compose build && docker compose up
 ```
 
 ### Production (Coolify)
-1. Set environment variables in Coolify UI:
-   - `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`
+1. Set Coolify to use `docker-compose.prod.yml` as the main compose file
+2. Set environment variables in Coolify UI:
    - `TYPEDB_NEW_PASSWORD=your_production_password`
-2. Coolify automatically uses both compose files
-3. Builds preview targets with copied source code
-4. No local secrets included
+3. Coolify automatically extends the base configuration via `extends` directive
+4. Builds preview targets with copied source code
+5. No local secrets included
 
 ## Volume Strategy
 
@@ -132,7 +133,8 @@ docker compose down; docker compose build && docker compose up
 
 ### Production Issues
 - Verify Coolify environment variables are set correctly
-- Check that `COMPOSE_FILE` variable includes both files
+- Ensure Coolify is using `docker-compose.prod.yml` as the main compose file
+- Confirm that `docker-compose.base.yml` is accessible for the extends directive
 - Ensure production secrets are configured in Coolify UI
 - Confirm preview targets build successfully
 - Review environment debug output for missing variables
