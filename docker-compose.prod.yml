@@ -31,6 +31,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
       - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}  # TypeDB password from Coolify environment
+      - TYPEDB_SERVER_ADDR=${TYPEDB_HOST_NAME}:${TYPEDB_PORT}  # Explicit interpolation for Coolify compatibility
     networks:
       - projojo-network
     # No volumes for production (source code copied into container)
@@ -42,6 +43,10 @@ services:
       target: preview  # Use preview stage
     env_file:
       - settings.env  # Remove .env file in production
+    environment:
+      - VITE_BACKEND_PORT=${BACKEND_PORT}  # Explicit interpolation for Coolify compatibility
+      - VITE_APP_NAME=Projojo - student assignment portal
+      - VITE_APP_VERSION=0.7.0
     ports:
       - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
     networks:
