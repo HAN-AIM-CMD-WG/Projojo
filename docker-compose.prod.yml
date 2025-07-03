@@ -32,6 +32,11 @@ services:
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
       - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}  # TypeDB password from Coolify environment
       - TYPEDB_SERVER_ADDR=${TYPEDB_HOST_NAME}:${TYPEDB_PORT}  # Explicit interpolation for Coolify compatibility
+      - TYPEDB_DB_NAME=projojo_db
+      - TYPEDB_USERNAME=admin
+      - TYPEDB_DEFAULT_PASSWORD=password
+      - TYPEDB_HOST_NAME=typedb
+      - TYPEDB_PORT=1729
     networks:
       - projojo-network
     # No volumes for production (source code copied into container)
