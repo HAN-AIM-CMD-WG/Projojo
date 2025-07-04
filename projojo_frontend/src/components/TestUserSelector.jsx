@@ -8,7 +8,7 @@ export default function TestUserSelector({ onUserSelect }) {
 	const [selectedUser, setSelectedUser] = useState(null);
 
 	// Only show test functionality on localhost
-	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.endsWith("demopreview.nl");
 
 	// Fetch test users when component mounts (only on localhost)
 	useEffect(() => {
