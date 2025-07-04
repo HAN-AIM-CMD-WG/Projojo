@@ -38,6 +38,14 @@ class Db:
             
         except Exception as new_cred_error:
             print(f"⚠ New credentials failed: {new_cred_error}")
+            print(f"server address: {cls.address}")
+            print("All environment variables:")
+            print("Loaded by environs:")
+            for key in env.dump():
+                print(f"{key}={env.dump()[key]}")
+            print("-----")
+            for key, value in os.environ.items():
+                print(f"{key}={value}")
             print("Trying default credentials...")
             
             try:
