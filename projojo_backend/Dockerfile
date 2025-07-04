@@ -27,4 +27,4 @@ COPY . .
 EXPOSE 8000
 # Print environment variables for debugging
 RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
-CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info"]
+CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level info"]
