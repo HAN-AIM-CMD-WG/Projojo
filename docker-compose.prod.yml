@@ -15,7 +15,7 @@ services:
     restart: unless-stopped
     env_file:
       - settings.env  # Remove .env file in production
-    environment:
+#    environment:
     ports:
       - "${TYPEDB_PORT}:1729"
       - "${TYPEDB_STUDIO_PORT}:8000" # this is the port used for the new TypeDB Studio
