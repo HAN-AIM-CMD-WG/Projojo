@@ -1,75 +1,48 @@
 # This is the production Docker Compose file for Projojo, which uses environment variables set in Dokploy's UI.
 # It includes the base Docker Compose file and overrides some settings for production use.
-# The following environment variables must be set in Dokploy's Environment Variables UI:
-# - TYPEDB_NEW_PASSWORD: The new password for the TypeDB server.
-# - TYPEDB_HOST_NAME: The hostname of the TypeDB server (must be same as the service name in these compose files).
-# - TYPEDB_PORT: The port on which the TypeDB server's gRPC port is mapped.
-# - TYPEDB_STUDIO_PORT: The port on which the TypeDB server's HTTP port is mapped.
-# - BACKEND_PORT: The port on which the backend service's HTTP port is mapped.
-# - FRONTEND_PORT: The port on which the frontend service's HTTP port is mapped.
-# - VITE_BACKEND_HOST: The hostname of the backend service as seen by the outside world.
 services:
   typedb:
-    # https://github.com/typedb/typedb/releases/tag/3.4.0
-    image: typedb/typedb:3.4.0
-    restart: unless-stopped
+    extends:
+      file: docker-compose.base.yml
+      service: typedb
     env_file:
-      - settings.env  # Remove .env file in production
-#    environment:
-    ports:
-      - "${TYPEDB_PORT}:1729"
-      - "${TYPEDB_STUDIO_PORT}:8000" # this is the port used for the new TypeDB Studio
-    volumes:
-      - typedb-data:/opt/typedb-all-linux-x86_64/server/data
-    platform: linux/amd64
+      - .env.production  
     networks:
       - projojo-network
 
   backend:
-    depends_on:
-      - typedb
+    extends:
+      file: docker-compose.base.yml
+      service: backend
     build:
-      context: ./projojo_backend
       target: preview  # Use preview stage
     env_file:
-      - settings.env  # Remove .env file in production
-    ports:
-      - "${BACKEND_PORT}:8000"
+      - .env.production  
     environment:
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
-      - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}  # TypeDB password from Dokpploy environment
-      - TYPEDB_SERVER_ADDR=${TYPEDB_HOST_NAME}:${TYPEDB_PORT}  
-      - TYPEDB_DB_NAME=projojo_db
-      - TYPEDB_USERNAME=admin
-      - TYPEDB_DEFAULT_PASSWORD=password
-      - TYPEDB_HOST_NAME=typedb
-      - TYPEDB_PORT=1729
+    # No volumes for production (source code copied into container)
     networks:
       - projojo-network
-    # No volumes for production (source code copied into container)
 
   frontend:
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
     build:
-      context: ./projojo_frontend
       target: preview  # Use preview stage
     env_file:
-      - settings.env  # Remove .env file in production
-    environment:
-      - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}  # Backend host for frontend to connect to
-      - VITE_BACKEND_PORT=${BACKEND_PORT}  # Explicit interpolation for Coolify compatibility
-      - VITE_APP_NAME=Projojo - student assignment portal
-      - VITE_APP_VERSION=0.7.0
+      - .env.production  
     ports:
       - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
+    # No volumes for production (source code copied into container)
     networks:
       - projojo-network
-    # No volumes for production (source code copied into container)
-
-networks:
-  projojo-network:
-    driver: bridge
 
 volumes:
   typedb-data:
+
+networks:
+  projojo-network:
+    driver: bridge    

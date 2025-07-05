@@ -7,7 +7,6 @@ services:
       file: docker-compose.base.yml
       service: typedb
     env_file:
-      - settings.env
       - .env
     networks:
       - projojo-network
@@ -17,10 +16,8 @@ services:
       file: docker-compose.base.yml
       service: backend
     build:
-      context: ./projojo_backend
       target: development  # Use development stage
     env_file:
-      - settings.env
       - .env
     volumes:
       - ./projojo_backend:/app  # Volume mount for development
@@ -33,10 +30,8 @@ services:
       file: docker-compose.base.yml
       service: frontend
     build:
-      context: ./projojo_frontend
       target: development  # Use development stage
     env_file:
-      - settings.env
       - .env
     ports:
       - "${FRONTEND_PORT}:5173"
@@ -46,9 +41,9 @@ services:
     networks:
       - projojo-network
 
+volumes:
+  typedb-data:
+
 networks:
   projojo-network:
     driver: bridge
-
-volumes:
-  typedb-data:

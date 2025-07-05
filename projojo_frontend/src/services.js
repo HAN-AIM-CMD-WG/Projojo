@@ -1,10 +1,7 @@
 // Dynamically determine API URL based on current browser location
 const getApiBaseUrl = () => {
-  const backendPort = import.meta.env.VITE_BACKEND_PORT || "8000"
-
-  console.log(
-    `##### Using backend port: [${import.meta.env.VITE_BACKEND_PORT}]`
-  )
+  const backendPort = import.meta.env.VITE_BACKEND_PORT
+  let result
 
   // Check if VITE_BACKEND_HOST is set in environment variables
   // This allows overriding the default host in development or production builds
@@ -13,14 +10,16 @@ const getApiBaseUrl = () => {
   // or a default url for server-side rendering
 
   if (import.meta.env.VITE_BACKEND_HOST) {
-    return `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
-  }
-  if (typeof window !== "undefined") {
+    result = `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
+  } else if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location
-    return `${protocol}//${hostname}:${backendPort}/`
+    result = `${protocol}//${hostname}:${backendPort}/`
+  } else {
+    // Fallback for server-side rendering or non-browser environments
+    return `http://localhost:${backendPort}/`
   }
-  // Fallback for server-side rendering or non-browser environments
-  return `http://localhost:${backendPort}/`
+  console.log(`######   getApiBaseUrl(): ${result}    #######`)
+  return result
 }
 
 export const API_BASE_URL = getApiBaseUrl()
