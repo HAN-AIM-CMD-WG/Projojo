@@ -1,3 +1,5 @@
+# This is the base Docker Compose file for Projojo, used in both development and production.
+
 services:
   typedb:
     # https://github.com/typedb/typedb/releases/tag/3.4.0

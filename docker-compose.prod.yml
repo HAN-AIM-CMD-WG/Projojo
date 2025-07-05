@@ -1,3 +1,13 @@
+# This is the production Docker Compose file for Projojo, which uses environment variables set in Dokploy's UI.
+# It includes the base Docker Compose file and overrides some settings for production use.
+# The following environment variables must be set in Dokploy's Environment Variables UI:
+# - TYPEDB_NEW_PASSWORD: The new password for the TypeDB server.
+# - TYPEDB_HOST_NAME: The hostname of the TypeDB server (must be same as the service name in these compose files).
+# - TYPEDB_PORT: The port on which the TypeDB server's gRPC port is mapped.
+# - TYPEDB_STUDIO_PORT: The port on which the TypeDB server's HTTP port is mapped.
+# - BACKEND_PORT: The port on which the backend service's HTTP port is mapped.
+# - FRONTEND_PORT: The port on which the frontend service's HTTP port is mapped.
+# - VITE_BACKEND_HOST: The hostname of the backend service as seen by the outside world.
 services:
   typedb:
     # https://github.com/typedb/typedb/releases/tag/3.4.0
