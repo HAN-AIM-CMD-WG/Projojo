@@ -15,6 +15,8 @@ services:
     restart: unless-stopped
     env_file:
       - settings.env  # Remove .env file in production
+    environment:
+      - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}  # Backend host for frontend to connect to
     ports:
       - "${TYPEDB_PORT}:1729"
       - "${TYPEDB_STUDIO_PORT}:8000" # this is the port used for the new TypeDB Studio
@@ -38,8 +40,8 @@ services:
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
-      - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}  # TypeDB password from Coolify environment
-      - TYPEDB_SERVER_ADDR=${TYPEDB_HOST_NAME}:${TYPEDB_PORT}  # Explicit interpolation for Coolify compatibility
+      - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}  # TypeDB password from Dokpploy environment
+      - TYPEDB_SERVER_ADDR=${TYPEDB_HOST_NAME}:${TYPEDB_PORT}  
       - TYPEDB_DB_NAME=projojo_db
       - TYPEDB_USERNAME=admin
       - TYPEDB_DEFAULT_PASSWORD=password
