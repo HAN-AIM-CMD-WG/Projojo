@@ -224,7 +224,7 @@ export function getUser(email) {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getSkills() {
-    return fetchWithError(`${API_BASE_URL}skills`);
+    return fetchWithError(`${API_BASE_URL}skills/`);
 }
 /**
  * @param {string} email
