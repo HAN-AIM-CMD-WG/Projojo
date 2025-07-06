@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
@@ -50,6 +50,18 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+@app.middleware("http")
+async def print_headers(request: Request, call_next):
+    print("Request headers:")
+    for header, value in request.headers.items():
+        print(f"  {header}: {value}")
+    response = await call_next(request)
+    print("Response headers:")
+    for header, value in response.headers.items():
+        print(f"  {header}: {value}")
+    return response
+
 
 # Include routers
 app.include_router(auth_router)
