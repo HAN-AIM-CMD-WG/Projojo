@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+import logging
 from contextlib import asynccontextmanager
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
@@ -21,6 +22,9 @@ from routes.user_router import router as user_router
 
 # Import the TypeDB connection module
 from db.initDatabase import get_database
+
+# Set up logger
+logger = logging.getLogger('uvicorn.error')
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -53,13 +57,13 @@ app.add_middleware(
 
 @app.middleware("http")
 async def print_headers(request: Request, call_next):
-    print("Request headers:")
+    logger.info("Request headers:")
     for header, value in request.headers.items():
-        print(f"  {header}: {value}")
+        logger.info(f"  {header}: {value}")
     response = await call_next(request)
-    print("Response headers:")
+    logger.info("Response headers:")
     for header, value in response.headers.items():
-        print(f"  {header}: {value}")
+        logger.info(f"  {header}: {value}")
     return response
 
 
