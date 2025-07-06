@@ -58,12 +58,16 @@ app.add_middleware(
 @app.middleware("http")
 async def print_headers(request: Request, call_next):
     logger.info("Request headers:")
+    print("Request headers:")
     for header, value in request.headers.items():
         logger.info(f"  {header}: {value}")
+        print(f"  {header}: {value}")
     response = await call_next(request)
     logger.info("Response headers:")
+    print("Response headers:")
     for header, value in response.headers.items():
         logger.info(f"  {header}: {value}")
+        print(f"  {header}: {value}")
     return response
 
 
