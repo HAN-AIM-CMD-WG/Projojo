@@ -32,6 +32,11 @@ services:
     container_name: projojo_frontend
     build:
       context: ./projojo_frontend
+    environment:
+      - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}  
+      - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
+      - VITE_APP_NAME=${VITE_APP_NAME}
+      - VITE_APP_VERSION=${VITE_APP_VERSION}
     networks:
       - projojo-network
 

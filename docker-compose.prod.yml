@@ -26,7 +26,7 @@ services:
     # No volumes for production (source code copied into container)
     networks:
       - projojo-network
-
+    
   frontend:
     extends:
       file: docker-compose.base.yml
@@ -34,7 +34,7 @@ services:
     build:
       target: preview  # Use preview stage
     env_file:
-      - .env.production  
+      - .env.production 
     ports:
       - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
     # No volumes for production (source code copied into container)
