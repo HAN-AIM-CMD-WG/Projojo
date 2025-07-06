@@ -19,7 +19,7 @@ const getApiBaseUrl = () => {
     // Fallback for server-side rendering or non-browser environments
     return `http://localhost:${backendPort}/`
   }
-  console.log(`####2##   getApiBaseUrl(): ${result}    #######`)
+  console.log(`######   getApiBaseUrl(): ${result}    #######`)
   return result
 }
 
