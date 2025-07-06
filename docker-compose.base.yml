@@ -24,7 +24,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
     ports:
-      - ${BACKEND_PORT}:8000
+      - ${BACKEND_PORT}:${BACKEND_PORT}
     networks:
       - projojo-network
 

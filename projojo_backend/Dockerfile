@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Development stage - expects volume mount for live reloading
 FROM base AS development
-EXPOSE 8000
+EXPOSE ${BACKEND_PORT}
 # Print environment variables for debugging
 RUN echo "=== B: DEVELOPMENT STAGE ENVIRONMENT ===" && env | sort || true
 CMD ["sh", "-c", "echo 'B: Starting development server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
@@ -26,7 +26,7 @@ CMD ["sh", "-c", "echo 'B: Starting development server...' && echo 'Environment:
 # Preview stage - copies source code for production
 FROM base AS preview
 COPY . .
-EXPOSE 8000
+EXPOSE ${BACKEND_PORT}
 # Print environment variables for debugging
 RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
-CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 1 --log-level debug"]
+CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT} --workers 1 --log-level debug"]
