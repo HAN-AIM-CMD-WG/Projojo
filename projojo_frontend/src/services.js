@@ -231,7 +231,7 @@ export function getSkills() {
  * @returns {Promise<{student: any, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
 export function getSkillsFromStudent(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`);
 }
 
 
@@ -240,7 +240,7 @@ export function getSkillsFromStudent(email) {
  * @param {string[]} skills
  */
 export function updateStudentSkills(email, skills) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`, {
         method: "PUT",
         body: JSON.stringify(skills),
     });
@@ -347,7 +347,7 @@ export function updateRegistration(registration) {
 
 //Not implemented in the backend yet
 export function updateTaskSkills(name, taskSkills) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills`, {
+    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills/`, {
         method: "PUT",
         body: JSON.stringify(taskSkills),
     });
@@ -358,7 +358,7 @@ export function updateTaskSkills(name, taskSkills) {
  * @returns {Promise<void>}
  */
 export function getSkill(name) {
-    return fetchWithError(`${API_BASE_URL}task/${name}/skills`);
+    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills/`);
 }
 
 /**
@@ -366,7 +366,7 @@ export function getSkill(name) {
  * @returns {Promise<void>}
  */
 export function getStudentSkills(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`);
 }
 
 // This function is not available in the backend
@@ -377,7 +377,7 @@ export function getStudentSkills(email) {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getTaskSkills(taskName) {
-    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills`)
+    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills/`)
 }
 
 
