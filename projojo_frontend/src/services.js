@@ -4,7 +4,7 @@ const getApiBaseUrl = () => {
   const backendPort = import.meta.env.VITE_BACKEND_PORT
   let result
 
-  // Check if VITE_BACKEND_HOST is set in environment variables
+// Check if VITE_BACKEND_HOST is set in environment variables
   // This allows overriding the default host in development or production builds
   // Useful for different environments like staging or production
   // If not set, fallback to the current window location
