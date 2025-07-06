@@ -33,6 +33,9 @@ services:
       service: frontend
     build:
       target: preview  # Use preview stage
+      args:
+        - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
+        - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
     env_file:
       - .env.production 
     ports:
