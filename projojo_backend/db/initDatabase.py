@@ -4,9 +4,12 @@ import pprint
 from environs import Env
 from typing import Any
 
-# Load environment variables from .env file with variable expansion
+# Load environment variables.
+# This will read from .env.production first, then .env
+# .env is only available for local development, and overrides settings from .env.production
 env = Env(expand_vars=True)
-env.read_env()
+env.read_env(".env.production", recurse=True, override=True)
+env.read_env(".env", recurse=True, override=True) 
 
 class Db:
     address = env.str("TYPEDB_SERVER_ADDR")
