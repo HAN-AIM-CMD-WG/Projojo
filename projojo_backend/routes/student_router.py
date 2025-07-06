@@ -20,7 +20,7 @@ async def get_all_students():
     return students
 
 
-@router.get("/{email}/skills")
+@router.get("/{email}/skills/")
 async def get_student_skills(email: str = Path(..., description="Student email")):
     """
     Get all skills for a student
@@ -32,7 +32,7 @@ async def get_student_skills(email: str = Path(..., description="Student email")
     return student
 
 
-@router.put("/{email}/skills")
+@router.put("/{email}/skills/")
 async def update_student_skills(
     email: str = Path(..., description="Student email"),
     skills: list[str] = Body(..., description="List of skillnames"),

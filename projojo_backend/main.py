@@ -43,7 +43,8 @@ app = FastAPI(
     title="Projojo Backend",
     description="Backend API for Projojo application",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False
 )
 
 # Add CORS middleware
