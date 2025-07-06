@@ -17,7 +17,7 @@ CMD ["sh", "-c", "echo 'F: Starting development server...' && echo 'Environment:
 # Preview stage - copies source code and builds for production
 FROM base AS preview
 COPY . .
-RUN source .env.production && npm run build
+RUN npm run build
 EXPOSE 4173
 # Print environment variables for debugging
 RUN echo "=== F: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
