@@ -1,6 +1,6 @@
 # This is the Dockerifile for the Projojo backend service.
 
-FROM python:3.13-slim AS base
+FROM python:3.13-bullseye AS base
 
 WORKDIR /app
 
