@@ -275,7 +275,7 @@ export function getStudentRegistrations() {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}>}
  */
 export function createSkill(skill) {
-    return fetchWithError(`${API_BASE_URL}skills`, {
+    return fetchWithError(`${API_BASE_URL}skills/`, {
         method: "POST",
         body: JSON.stringify(skill),
     });

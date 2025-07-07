@@ -43,8 +43,7 @@ app = FastAPI(
     title="Projojo Backend",
     description="Backend API for Projojo application",
     version="0.1.0",
-    lifespan=lifespan,
-    redirect_slashes=False
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -89,7 +88,8 @@ def get_db():
     return get_database()
 
 app.mount("/image", StaticFiles(directory="static/images"), name="image")
-# app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}
