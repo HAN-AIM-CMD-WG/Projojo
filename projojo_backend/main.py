@@ -89,7 +89,7 @@ def get_db():
     return get_database()
 
 app.mount("/image", StaticFiles(directory="static/images"), name="image")
-app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+# app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 
 @app.get("/")
 async def root():
