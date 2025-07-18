@@ -1,4 +1,4 @@
-import { expect, fn, userEvent, within } from '@storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import NewSkillsManagement from '../components/NewSkillsManagement';
 
 export default {

@@ -1,4 +1,4 @@
-import { expect, fn, userEvent, within } from '@storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 import Card from '../components/Card';
 import Page from '../components/paged_component/page';
 import PagedComponent from '../components/paged_component/paged_component';

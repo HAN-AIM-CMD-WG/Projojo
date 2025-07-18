@@ -1,4 +1,4 @@
-import { expect, within } from '@storybook/test';
+import { expect, within } from 'storybook/test';
 import Page from '../components/paged_component/page';
 
 export default {

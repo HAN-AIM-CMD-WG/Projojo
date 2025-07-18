@@ -1,4 +1,4 @@
-import { expect, userEvent, within } from '@storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 import DragDrop from '../components/DragDrop';
 
 export default {

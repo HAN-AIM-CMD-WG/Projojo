@@ -1,4 +1,4 @@
-import { expect, within } from '@storybook/test';
+import { expect, within } from 'storybook/test';
 import ProjectTasks from '../components/ProjectTasks';
 
 export default {
