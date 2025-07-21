@@ -20,7 +20,7 @@ dependencies = [
     "typedb-driver==3.4.0",
     "typing_extensions==4.12.2",
     "uvicorn==0.34.0",
-    "uvloop==0.21.0; sys_platform != 'win32'",
+    "uvloop==0.21.0; sys_platform != 'win32'",  # uvloop not supported on Windows, ensures uv sync works on all platforms
     "watchfiles==1.0.4",
     "websockets==15.0",
     "python-multipart==0.0.20",
