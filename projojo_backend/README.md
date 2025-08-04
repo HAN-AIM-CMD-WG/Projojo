@@ -8,14 +8,15 @@ API documentation will be available at:
 
 FastAPI backend service for the Projojo application.
 
+## Development Setup
+
 ## Prerequisites
 
 1. **[Docker & Docker Compose](https://www.docker.com/get-started/)**
 2. **[Python 3.13](https://www.python.org/downloads/)** (optional - only needed for IDE support and dependency management)
 3. **[uv](https://docs.astral.sh/uv/getting-started/installation/)** (optional - only needed for IDE support and dependency management)
 
-## Development Setup
-
+## Quick Start
 ```bash
 # Optional: Install dependencies locally for IDE support and dependency management
 cd projojo_backend
@@ -33,12 +34,16 @@ docker compose up --build backend
 uv add fastapi pandas redis
 
 # Development dependencies
-uv add --dev pytest black flake8
+uv add pytest black flake8 --dev
 ```
 
 ### Removing Dependencies
 ```bash
+# Production dependencies
 uv remove pandas redis
+
+# Development dependencies
+uv remove pytest black flake8 --dev
 ```
 
 ### After Adding/Removing Dependencies:
