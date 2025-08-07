@@ -20,13 +20,15 @@ FastAPI backend service for the Projojo application.
 ```bash
 # Optional: Install dependencies locally for IDE support and dependency management
 cd projojo_backend
-uv sync  # Creates .venv (like npm install)
+uv sync
 
 # Run with Docker (from project root)
-docker compose up --build backend
+docker compose up backend
 ```
 
 ## Dependency Management
+
+All commands below should be run locally, not inside the Docker container. This ensures dependency changes are immediately available for version control.
 
 ### Adding Dependencies
 ```bash
@@ -35,6 +37,9 @@ uv add fastapi pandas redis
 
 # Development dependencies
 uv add pytest black flake8 --dev
+
+# Rebuild Docker to apply changes
+docker compose up --build backend
 ```
 
 ### Removing Dependencies
@@ -44,10 +49,7 @@ uv remove pandas redis
 
 # Development dependencies
 uv remove pytest black flake8 --dev
-```
 
-### After Adding/Removing Dependencies:
-```bash
 # Rebuild Docker to apply changes
 docker compose up --build backend
 ```
