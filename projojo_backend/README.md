@@ -64,5 +64,4 @@ uv sync --upgrade
 
 - **`pyproject.toml`** - Project metadata and dependencies
 - **`uv.lock`** - Lock file with exact versions
-- **`requirements.txt`** - Legacy file (*can be removed*)
 - **`.venv/`** - Virtual environment
