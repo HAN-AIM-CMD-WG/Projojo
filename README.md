@@ -15,11 +15,17 @@ That's it! No direct Node.js or Python installation required as everything runs 
 For Windows (PowerShell):
 ```powershell
 .\docker-start.ps1
+
+# For a complete reset, use the -reset flag
+.\docker-start.ps1 -reset
 ```
 
 For Mac/Linux (Bash):
-```bash
+```shell
 ./docker-start.sh
+
+# For a complete reset, use the -reset flag
+./docker-start.sh -reset
 ```
 
 These scripts will:
@@ -28,11 +34,14 @@ These scripts will:
 3. Open your browser to the frontend application
 4. Display container logs in the terminal
 
+The `-reset` flag will completely reset all containers (including volumes) for when you want a fresh start. i.e. when the image versions change or you want to clear all data.
+
 ### Docker Services
 
 | Service      | Container Name   | Description            | Port |
 | ------------ | ---------------- | ---------------------- | ---- |
 | **TypeDB**   | projojo_typedb   | TypeDB database server | 1729 |
+|              |                  | TypeDB Studio          | 1728 |
 | **Backend**  | projojo_backend  | FastAPI application    | 8000 |
 | **Frontend** | projojo_frontend | Vite/React application | 5173 |
 
@@ -42,14 +51,16 @@ As of TypeDB version 3.3.0, TypeDB Studio is a web-based application. Our projec
 
 To access TypeDB Studio:
 1. Go to [studio.typedb.com/connect](https://studio.typedb.com/connect) in your web browser.
-2. In the "Server Address" field, enter: `http://localhost:1728`
-3. Click "Connect".
+2. In the "Address" field, enter: `http://localhost:1728`
+4. Click "Connect".
+
+You can also switch to "**Use connection URL**" mode and enter: `typedb://admin:password@http://localhost:1728` to log in with the default credentials.
 
 This will connect you to the TypeDB instance running in your local Docker container.
 
 ### Managing the Database
 
-To reset the TypeDB database and start fresh:
+To reset the TypeDB database and start fresh, you can use the `-reset` flag with the `docker-start` scripts, or manually run the following commands:
 
 ```bash
 # Stop all containers
@@ -99,34 +110,23 @@ npm install package-name --save-dev     # For dev dependencies
 # Exit container
 exit
 ```
-> Note: Changes made using Method 2 **will persist** because we're using Docker volumes. The package.json file is synchronized between your host and the container. However, only the frontend/package.json file will be updated, not frontend/node_modules (which is an anonymous volume).
+> **Note:** When you install packages directly in the container (Method 2), your changes **will persist** after container restarts. The `package.json` file gets updated on both your host machine and in the container due to Docker volume mapping, so Git will track these dependency changes and you can commit them to version control. However, the `node_modules` folder uses an anonymous Docker volume, therefore this folder will not sync between your host machine and the container.
 
 ### Backend Dependencies Management
 
-When adding or updating Python packages:
+The backend uses **uv** for modern Python dependency management.
 
-#### Method 1: Rebuild after requirements.txt changes
+**Quick Start:**
 ```bash
-# After manually editing requirements.txt
-docker-compose build backend
-docker-compose up -d backend
+# Add a dependency locally
+cd projojo_backend
+uv add fastapi-users
+
+# Apply to Docker
+docker-compose up --build backend
 ```
 
-#### Method 2: Install inside the container
-```bash
-# Access backend container shell
-docker-compose exec backend bash
-
-# Install package
-pip install package-name
-
-# Update requirements.txt
-pip freeze > requirements.txt
-
-# Exit container
-exit
-```
-> Note: Changes made using Method 2 **will persist** because we're using Docker volumes. The requirements.txt file is synchronized between your host and the container through the volume mapping in docker-compose.yml.
+For complete documentation on backend dependency management, see the [Backend README](./projojo_backend/README.md#dependency-management).
 
 ### Troubleshooting
 
@@ -157,10 +157,7 @@ watch: {
 
 ## Legacy Setup (Not Recommended)
 
-Below is the legacy setup process, which is kept for reference but is not recommended for new developers. The Docker setup is preferred for its simplicity and ease of use.
-
-<!-- Legacy readme -->
-## Projojo
+> Below is the legacy setup process, which is kept for reference but is not recommended for new developers. The Docker setup is preferred for its simplicity and ease of use.
 
 To make this work, you need:
 * a Mac or Linux shell. (Perhaps Git-Bash can run this on Windows? Or WSL?)
@@ -191,7 +188,7 @@ Use the `reset-volume` option when you need to clear all existing TypeDB data an
 
 ### Running the project
 
-Use `./start.sh` (Mac/Linux) to run the app. The script will: 
+Use `./start.sh` (Mac/Linux) to run the app. The script will:
 1. The frontend server
 2. The backend server
 3. The TypeDB container.
