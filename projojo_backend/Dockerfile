@@ -3,7 +3,7 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # System dependencies needed for typedb-driver native extensions
 # - build-essential: Provides compilers and build tools for C/C++ extension compilation
@@ -15,10 +15,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy uv dependency files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 
-# Install dependencies using uv's modern dependency management
-RUN uv sync --frozen --no-dev
+# Install the application dependencies.
+RUN uv sync --frozen --no-cache
 
 # Copy application code
 COPY . .
