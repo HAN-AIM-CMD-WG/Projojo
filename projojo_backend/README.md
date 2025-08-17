@@ -55,7 +55,7 @@ docker compose up --build backend
 ```
 
 ### Upgrading Dependencies
-To upgrade all dependencies in `uv.lock` to their latest compatible versions:
+To upgrade all dependencies to their latest compatible versions, use:
 ```bash
 uv sync --upgrade
 ```
