@@ -101,7 +101,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/b8/49/85f19d9ff908817b8
 [[package]]
 name = "projojo-backend"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "annotated-types" },
     { name = "anyio" },
