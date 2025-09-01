@@ -253,25 +253,29 @@ graph TB
 
 ### 1.6 Technologie Stack & Rationale
 
-**Frontend (``13:62:projojo_frontend/package.json``)**
+**Frontend**
 - **React 18.3.1** - Modern UI library met hooks en concurrent features
-- **Vite 5.4.1** - Snelle build tool met HMR, configuratie in ``54:vite.config.ts``
-- **React Router DOM 6.28.0** - Client-side routing (``36:54:src/App.jsx``)
-- **TailwindCSS 3.4.15** - Utility-first CSS, configuratie in ``tailwind.config.js``
+- **Vite 5.4.1** - Snelle build tool met HMR
+- **React Router DOM 6.28.0** - Client-side routing  
+- **TailwindCSS 3.4.15** - Utility-first CSS framework
 - **TipTap 2.10.3** - Rich text editor voor content management
+
+**Sources:** 📦 [@package.json#L13-L62](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/package.json#L13-L62) | ⚙️ [@vite.config.ts](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/vite.config.ts) | 🛤️ [@App.jsx#L36-L54](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/src/App.jsx#L36-L54) | 🎨 [@tailwind.config.js](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/tailwind.config.js)
 
 *Waarom deze keuzes?*
 - React's component model past perfect bij modulaire UI requirements
 - Vite biedt superieure developer experience versus Webpack
 - TailwindCSS zorgt voor consistent design system
 
-**Backend (``1:22:projojo_backend/requirements.txt``)**
+**Backend**
 - **FastAPI 0.115.8** - Moderne, snelle Python web framework met automatische OpenAPI
 - **Python 3.13** - Latest stable versie met performance verbeteringen
-- **Pydantic 2.10.6** - Data validatie en serialisatie (``6:37:domain/models/user.py``)
+- **Pydantic 2.10.6** - Data validatie en serialisatie
 - **TypeDB Driver 3.4.0** - Graph database connectiviteit 
-- **PyJWT 2.10.1** - JSON Web Token authenticatie (``auth/jwt_utils.py``)
+- **PyJWT 2.10.1** - JSON Web Token authenticatie
 - **Uvicorn 0.34.0** - High-performance ASGI server
+
+**Sources:** 📋 [@requirements.txt#L1-L22](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/requirements.txt#L1-L22) | 👤 [@user.py#L6-L37](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/domain/models/user.py#L6-L37) | 🔐 [@jwt_utils.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/auth/jwt_utils.py)
 
 *Waarom deze keuzes?*
 - FastAPI biedt automatic API documentation en excellent performance
@@ -287,14 +291,16 @@ graph TB
 - Graph queries zijn intuïtiever dan JOIN-heavy SQL
 - Schema evolution support voor groeiende requirements
 
-**Infrastructure (``docker-compose.yml``)**
-- **Docker & Docker Compose** - Container orchestratie (``1:55:docker-compose.yml``)
-- **Docker Networks** - Service isolation en communicatie (``49:51:docker-compose.yml``)
-- **Volume Management** - Data persistentie (``53:55:docker-compose.yml``)
+**Infrastructure**
+- **Docker & Docker Compose** - Container orchestratie
+- **Docker Networks** - Service isolation en communicatie  
+- **Volume Management** - Data persistentie
+
+**Sources:** 🐳 [@docker-compose.yml#L1-L55](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml#L1-L55) | 🌐 [@docker-compose.yml#L49-L51](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml#L49-L51) | 💾 [@docker-compose.yml#L53-L55](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml#L53-L55)
 
 ### 1.7 Deployment Architectuur
 
-**Container Orchestratie (``docker-compose.yml``)**
+**Container Orchestratie ([docker-compose.yml](docker-compose.yml))**
 ```yaml
 # Referentie: lijnen 1-55 in docker-compose.yml
 services:
@@ -305,25 +311,25 @@ services:
 
 **Service Configuration Details:**
 
-**TypeDB Service (``2:14:docker-compose.yml``)**
+**TypeDB Service ([docker-compose.yml](docker-compose.yml#L2-L14))**
 - Image: `typedb/typedb:3.4.0` voor stabiele graph database
 - Ports: `1729` (TypeDB), `1728` (Studio web interface)
 - Volume: Persistent data storage via `typedb-data` volume
 - Platform: Specifieke Linux/AMD64 voor consistentie
 
-**Backend Service (``16:34:docker-compose.yml``)**
+**Backend Service ([docker-compose.yml](docker-compose.yml#L16-L34))**
 - Build context: `./projojo_backend` met custom Dockerfile
 - Environment variables voor TypeDB connectie en Python optimalisaties
 - Volume mounting voor hot-reload tijdens development
 - Afhankelijkheid van TypeDB service
 
-**Frontend Service (``36:47:docker-compose.yml``)**
+**Frontend Service ([docker-compose.yml](docker-compose.yml#L36-L47))**
 - Build context: `./projojo_frontend` met Nginx voor productie
 - Anonymous volume voor node_modules isolatie
 - Development-friendly volume mounting
 
 **Networking Strategy:**
-- Dedicated bridge network `projojo-network` (``49:51:docker-compose.yml``)
+- Dedicated bridge network `projojo-network` ([docker-compose.yml](docker-compose.yml#L49-L51))
 - Services zijn alleen intern toegankelijk behalve via exposed ports
 - Backend communiceert met TypeDB via service name resolution
 
@@ -331,15 +337,15 @@ services:
 
 **JWT-Based Authentication Implementation**
 
-De authenticatie is geïmplementeerd in ``auth/jwt_utils.py`` en ``routes/auth_router.py``:
-
 ```python
-# 38:47:routes/auth_router.py - Token creatie proces
+# routes/auth_router.py - Token creatie proces (lijnen 38-47)
 token = create_jwt_token(user, supervisor_data)
 return LoginResponse(token=token, debug_payload=debug_payload)
 ```
 
-**Frontend Token Management (``50:56:src/services.js``)**
+**Sources:** 🔐 [@jwt_utils.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/auth/jwt_utils.py) | 🛡️ [@auth_router.py#L38-L47](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/routes/auth_router.py#L38-L47)
+
+**Frontend Token Management**
 ```javascript
 // Automatische token injection in alle API calls
 const token = localStorage.getItem("token");
@@ -348,15 +354,19 @@ if (token) {
 }
 ```
 
+**Sources:** 🌐 [@services.js#L50-L56](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/src/services.js#L50-L56)
+
 **Authorization Levels & Role-Based Access:**
-- **Student**: Task registraties en skill management (``routes/student_router.py``)
-- **Supervisor**: Project creation en student approval (``routes/supervisor_router.py``)  
-- **Teacher**: Platform administratie en invite management (``routes/teacher_router.py``)
-- **Business**: Organisational context (``routes/business_router.py``)
+- **Student**: Task registraties en skill management
+- **Supervisor**: Project creation en student approval  
+- **Teacher**: Platform administratie en invite management
+- **Business**: Organisational context
+
+**Sources:** 👨‍🎓 [@student_router.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/routes/student_router.py) | 👨‍💼 [@supervisor_router.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/routes/supervisor_router.py) | 👩‍🏫 [@teacher_router.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/routes/teacher_router.py) | 🏢 [@business_router.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/routes/business_router.py)
 
 **API Security Layers**
 
-**CORS Configuration (``45:52:main.py``)**
+**CORS Configuration**
 ```python
 app.add_middleware(
     CORSMiddleware,
@@ -367,23 +377,31 @@ app.add_middleware(
 )
 ```
 
-**Input Validation via Pydantic (``domain/models/``)**
+**Sources:** 🛡️ [@main.py#L45-L52](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/main.py#L45-L52)
+
+**Input Validation via Pydantic**
 - Alle API inputs worden gevalideerd via Pydantic models
 - Type safety en automatic documentation
 - Custom validators voor business rules
 
-**Error Handling (``66:68:main.py``)**
+**Sources:** 📐 [@domain/models/](https://github.com/HAN-AIM-CMD-WG/Projojo/tree/development/projojo_backend/domain/models)
+
+**Error Handling**
 ```python
 app.add_exception_handler(ItemRetrievalException, generic_handler)
 app.add_exception_handler(UnauthorizedException, generic_handler)
 ```
 
+**Sources:** 🚨 [@main.py#L66-L68](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/main.py#L66-L68)
+
 ### 1.9 Performance & Scalability
 
 **Database Performance**
 - TypeDB's graph traversal algorithms voor complexe relatie queries
-- Schema-gebaseerde optimalisaties (``db/schema.tql``)
+- Schema-gebaseerde optimalisaties
 - Connection pooling via TypeDB driver
+
+**Sources:** 🗄️ [@schema.tql](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/schema.tql)
 
 **Frontend Performance**
 - React's Virtual DOM voor efficiënte updates
@@ -669,7 +687,7 @@ environment:
 
 ### 2.2 Key Implementation Patterns
 
-**Repository Pattern (``7:46:domain/repositories/base.py``)**
+**Repository Pattern**
 ```python
 from typing import TypeVar, Generic, Any
 from pydantic import BaseModel
@@ -692,7 +710,9 @@ class BaseRepository(Generic[T]):
         return self._map_to_model(results[0]) if results else None
 ```
 
-**API Router Pattern (``52:93:routes/project_router.py``)**
+**Sources:** 🗃️ [@base.py#L7-L46](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/domain/repositories/base.py#L7-L46)
+
+**API Router Pattern**
 ```python
 @router.post("/", response_model=ProjectCreation, status_code=201)
 async def create_project(
@@ -723,7 +743,9 @@ async def create_project(
     return project_repo.create(project_creation)
 ```
 
-**React Component Patterns (``9:163:src/pages/OverviewPage.jsx``)**
+**Sources:** 📋 [@project_router.py#L52-L93](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/routes/project_router.py#L52-L93)
+
+**React Component Patterns**
 ```jsx
 export default function OverviewPage() {
   const [initialBusinesses, setInitialBusinesses] = useState([]);
@@ -771,7 +793,9 @@ export default function OverviewPage() {
 }
 ```
 
-**API Service Layer (``28:106:src/services.js``)**
+**Sources:** ⚛️ [@OverviewPage.jsx#L9-L163](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/src/pages/OverviewPage.jsx#L9-L163)
+
+**API Service Layer**
 ```javascript
 function fetchWithError(url, request = {}, returnsVoid = false) {
     const method = request.method?.toLowerCase() || 'get';
@@ -800,13 +824,15 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
 }
 ```
 
+**Sources:** 🌐 [@services.js#L28-L106](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/src/services.js#L28-L106)
+
 ---
 
 ## 3. Data
 
 ### 3.1 TypeDB Graph Schema Architecture
 
-ProjoJo gebruikt **TypeDB 3.4.0**, een knowledge graph database die complexe relaties tussen entiteiten kan modelleren met een expressieve query language. Het schema is gedefinieerd in ``db/schema.tql`` (140 lijnen) en implementeert een sophisticated educatieve domain model.
+ProjoJo gebruikt **TypeDB 3.4.0**, een knowledge graph database die complexe relaties tussen entiteiten kan modelleren met een expressieve query language. Het schema is gedefinieerd in [@schema.tql](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/schema.tql) (140 lijnen) en implementeert een sophisticated educatieve domain model.
 
 **Waarom TypeDB voor dit project?**
 - **Complexe Relaties**: Educatieve domeinen hebben intrinsiek complexe many-to-many relaties
@@ -889,7 +915,7 @@ graph TD
 
 ### 3.3 Entity Definitions & Implementation
 
-**User Hierarchy (``3:21:db/schema.tql``)**
+**User Hierarchy**
 ```typeql
 entity user @abstract,
     owns email @key,
@@ -911,7 +937,9 @@ entity teacher sub user,
     owns schoolAccountName @card(1);
 ```
 
-**Business Domain Entities (``26:58:db/schema.tql``)**
+**Sources:** 👥 [@schema.tql#L3-L21](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/schema.tql#L3-L21)
+
+**Business Domain Entities**
 ```typeql
 entity business,
     owns name @key,
@@ -1320,7 +1348,7 @@ De architectuur ondersteunt zowel huidige functionele requirements als toekomsti
 
 ### 5.1 Development Environment Setup
 
-**Quick Start met Docker (``docker-start.sh`` & ``docker-start.ps1``)**
+**Quick Start met Docker**
 
 Het project biedt een volledig geautomatiseerde development setup:
 
@@ -1332,6 +1360,8 @@ Het project biedt een volledig geautomatiseerde development setup:
 .\docker-start.ps1
 ```
 
+**Sources:** 🐧 [@docker-start.sh](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-start.sh) | 🪟 [@docker-start.ps1](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-start.ps1)
+
 Deze scripts voeren de volgende acties uit:
 1. Cleanup van bestaande containers
 2. Start alle services via Docker Compose
@@ -1340,7 +1370,7 @@ Deze scripts voeren de volgende acties uit:
 
 **Container Configuration Details**
 
-**TypeDB Container (``2:14:docker-compose.yml``)**
+**TypeDB Container**
 ```yaml
 typedb:
   container_name: projojo_typedb
@@ -1354,7 +1384,9 @@ typedb:
   platform: linux/amd64  # Consistentie across ontwikkel omgevingen
 ```
 
-**Backend Container (``16:34:docker-compose.yml``)**
+**Sources:** 🗄️ [@docker-compose.yml#L2-L14](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml#L2-L14)
+
+**Backend Container**
 ```yaml
 backend:
   container_name: projojo_backend
@@ -1372,7 +1404,9 @@ backend:
     - PYTHONPATH=/app  # Module import resolution
 ```
 
-**Frontend Container (``36:47:docker-compose.yml``)**
+**Sources:** 🚀 [@docker-compose.yml#L16-L34](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml#L16-L34)
+
+**Frontend Container**
 ```yaml
 frontend:
   container_name: projojo_frontend
@@ -1384,6 +1418,8 @@ frontend:
     - ./projojo_frontend:/app  # Development hot reload
     - /app/node_modules  # Anonymous volume prevents host conflicts
 ```
+
+**Sources:** ⚛️ [@docker-compose.yml#L36-L47](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml#L36-L47)
 
 ### 5.2 Database Management
 
@@ -1400,10 +1436,12 @@ docker volume rm projojo_typedb-data
 docker-compose up -d
 ```
 
-**Schema Management (``db/schema.tql``)**
+**Schema Management**
 - Schema definitie in TypeQL format
-- Seed data in ``db/seed.tql``
-- Connection management via ``db/initDatabase.py``
+- Seed data voor initiële database vulling
+- Connection management en database initialisatie
+
+**Sources:** 🗄️ [@schema.tql](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/schema.tql) | 🌱 [@seed.tql](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/seed.tql) | 🔌 [@initDatabase.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/initDatabase.py)
 
 ### 5.3 Development Workflow
 
@@ -1414,7 +1452,7 @@ docker-compose up -d
 
 **Dependency Management**
 
-**Frontend Dependencies (``package.json``)**
+**Frontend Dependencies**
 ```bash
 # Method 1: Container-based install
 docker-compose exec frontend sh
@@ -1424,7 +1462,9 @@ npm install package-name --save
 docker-compose build frontend
 ```
 
-**Backend Dependencies (``requirements.txt``)**
+**Sources:** 📦 [@package.json](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/package.json)
+
+**Backend Dependencies**
 ```bash
 # Method 1: Container-based install
 docker-compose exec backend bash
@@ -1435,13 +1475,17 @@ pip freeze > requirements.txt
 docker-compose build backend
 ```
 
+**Sources:** 📋 [@requirements.txt](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/requirements.txt)
+
 ### 5.4 Production Considerations
 
 **Security Hardening**
-- Remove CORS wildcard (`allow_origins=["*"]`) in ``main.py``
+- Remove CORS wildcard (`allow_origins=["*"]`) voor productie
 - Implement rate limiting middleware
 - Add HTTPS termination via reverse proxy
 - Environment-based configuration management
+
+**Sources:** 🛡️ [@main.py#L45-L52](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/main.py#L45-L52)
 
 **Performance Optimization**
 - Frontend build optimization via Vite
@@ -1472,10 +1516,12 @@ docker-compose build backend
 
 ### 5.6 Testing Strategy
 
-**Frontend Testing (``tests/`` directory)**
+**Frontend Testing**
 - 31 Storybook test components
 - Component isolation testing
 - Visual regression testing capabilities
+
+**Sources:** 🧪 [@tests/](https://github.com/HAN-AIM-CMD-WG/Projojo/tree/development/projojo_frontend/tests)
 
 **Backend Testing**
 - FastAPI automatic test client support
