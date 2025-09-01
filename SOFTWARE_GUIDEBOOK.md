@@ -1336,14 +1336,6 @@ def create_jwt_token(user, supervisor_data=None):
 
 ---
 
-## Conclusie
-
-ProjoJo vertegenwoordigt een moderne, schaalbare oplossing voor educatief project management die de kloof tussen academische theorie en praktische ervaring overbrugt. Door gebruik te maken van cutting-edge technologieën zoals TypeDB's graph database, React's component architectuur en FastAPI's moderne Python framework, biedt het platform een robuuste basis voor complexe relatiebeheer tussen bedrijven, studenten en educatieve instellingen.
-
-De architectuur ondersteunt zowel huidige functionele requirements als toekomstige uitbreidingen, terwijl de code organisatie en development patterns zorgen voor maintainability en team productiviteit. Het resultaat is een platform dat werkelijke waarde creëert voor alle stakeholders in het educatieve ecosysteem.
-
----
-
 ## 5. Deployment & Operations
 
 ### 5.1 Development Environment Setup
@@ -1549,10 +1541,12 @@ ProjoJo vertegenwoordigt een **moderne, schaalbare oplossing** voor educatief pr
 - **Domain-Driven Design**: Clean separation of concerns en maintainability
 
 **Code Quality Indicators:**
-- **Backend**: 99 lijnen main.py, 46 lijnen base repository, modulaire router organisatie
-- **Frontend**: 163 lijnen main dashboard, 57 lijnen project card, 477 lijnen API service
-- **Database**: 140 lijnen comprehensive schema, 31 test components
+- **Backend**: Clean architecture met modulaire router organisatie
+- **Frontend**: Component-based architecture met state management
+- **Database**: Comprehensive TypeDB schema voor complexe relaties
 - **Infrastructure**: Complete Docker orchestration met development optimizations
+
+**Sources:** 🚀 [@main.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/main.py) | 🗃️ [@base.py](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/domain/repositories/base.py) | ⚛️ [@OverviewPage.jsx](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/src/pages/OverviewPage.jsx) | 🌐 [@services.js](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_frontend/src/services.js) | 🗄️ [@schema.tql](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/projojo_backend/db/schema.tql) | 🧪 [@tests/](https://github.com/HAN-AIM-CMD-WG/Projojo/tree/development/projojo_frontend/tests) | 🐳 [@docker-compose.yml](https://github.com/HAN-AIM-CMD-WG/Projojo/blob/development/docker-compose.yml)
 
 ### Business Impact
 
