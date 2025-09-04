@@ -2,6 +2,8 @@
 
 A full-stack application with a Python backend, React frontend, and TypeDB database.
 
+## dit is een testje
+
 ## Prerequisites
 
 * Docker / Docker Desktop installed
