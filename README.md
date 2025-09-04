@@ -5,7 +5,7 @@ A full-stack application with a Python backend, React frontend, and TypeDB datab
 
 In de docs directory.
 
-## dit is een testje
+## dit is een toostje
 
 ## Prerequisites
 
