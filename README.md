@@ -1,6 +1,9 @@
 # Projojo
 
 A full-stack application with a Python backend, React frontend, and TypeDB database.
+# Softwareguidebook 
+
+In de docs directory.
 
 ## Prerequisites
 
