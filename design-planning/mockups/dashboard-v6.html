@@ -215,18 +215,146 @@
         }
         
         .progress-analytics {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #f0f0f3 0%, #e8e8eb 50%, #ddd9e0 100%);
+            border: 1px solid rgba(230, 0, 86, 0.1);
+            color: #2d3748;
+        }
+        .progress-analytics .widget-title {
+            color: #2d3748 !important;
+        }
+        .progress-analytics .widget-title h2 {
+            color: #e50056;
         }
         
         .portfolio-preview {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
+            background: linear-gradient(135deg, #f0f0f3 0%, #e8e8eb 50%, #e8d9e0 100%);
+            border: 1px solid rgba(230, 0, 86, 0.1);
+            color: #2d3748;
+        }
+        .portfolio-preview .widget-title {
+            color: #2d3748 !important;
+        }
+        .portfolio-preview .widget-title h2 {
+            color: #e50056;
         }
         
         .collaboration-panel {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            background: linear-gradient(135deg, #f0f0f3 0%, #e8e8eb 50%, #d9e0e8 100%);
+            border: 1px solid rgba(230, 0, 86, 0.1);
+            color: #2d3748;
+        }
+        .collaboration-panel .widget-title {
+            color: #2d3748 !important;
+        }
+        .collaboration-panel .widget-title h2 {
+            color: #e50056;
+        }
+
+        /* Notification Dropdown */
+        .notification-dropdown:hover .notification-panel,
+        .notification-dropdown.active .notification-panel {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .notification-panel {
+            max-height: 400px;
+        }
+
+        /* Collapsible Sections */
+        .expandable-section {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .expandable-section.collapsed .section-content {
+            display: none;
+        }
+        
+        .expandable-section.expanded .section-content {
+            display: block;
+            animation: expandIn 0.3s ease-out;
+        }
+        
+        @keyframes expandIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .section-preview {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 1rem;
+            border-radius: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .section-preview:hover {
+            box-shadow: 6px 6px 16px #d0d0d3, -6px -6px 16px #ffffff;
+        }
+        
+        .expand-icon {
+            transition: transform 0.3s ease;
+        }
+        
+        .expandable-section.expanded .expand-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Learning Path Styles */
+        .learning-step {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .learning-step::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background: linear-gradient(to bottom, #e50056, #d0d0d3);
+            z-index: 1;
+        }
+        
+        .learning-step:last-child::before {
+            display: none;
+        }
+        
+        .step-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .step-completed {
+            background: linear-gradient(135deg, #22bb33, #1e7e34);
             color: white;
+        }
+        
+        .step-current {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .step-upcoming {
+            background: #f0f0f3;
+            border: 2px solid #d0d0d3;
+            color: #a0a0a3;
         }
         
         .dashboard-grid {
@@ -272,12 +400,84 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
                 </button>
-                <button class="neuro-button rounded-full p-3 relative hover:shadow-neuro-hover transition-all">
-                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                    </svg>
-                    <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
-                </button>
+                <!-- Notification Dropdown -->
+                <div class="relative notification-dropdown">
+                    <button class="neuro-button rounded-full p-3 relative hover:shadow-neuro-hover transition-all notification-trigger">
+                        <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5-5-5h5V3"/>
+                        </svg>
+                        <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
+                    </button>
+                    
+                    <!-- Dropdown Content -->
+                    <div class="notification-panel absolute right-0 top-full mt-2 w-80 neuro-card rounded-xl p-4 opacity-0 invisible transition-all duration-300 z-50">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-gray-800">Meldingen</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs bg-primary text-white px-2 py-1 rounded-full">5 nieuw</span>
+                                <div class="info-button" data-tooltip="notifications">
+                                    <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3 max-h-80 overflow-y-auto">
+                            <!-- Urgent Notification -->
+                            <div class="p-3 rounded-xl bg-white notification-urgent">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Deadline IoT project</p>
+                                        <p class="text-xs text-gray-500">Inlevering over 2 dagen</p>
+                                        <p class="text-xs text-gray-400 mt-1">2 min geleden</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Important Notification -->
+                            <div class="p-3 rounded-xl bg-white notification-important">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Nieuwe project match</p>
+                                        <p class="text-xs text-gray-500">92% match met React development</p>
+                                        <p class="text-xs text-gray-400 mt-1">1 uur geleden</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Info Notification -->
+                            <div class="p-3 rounded-xl bg-white notification-info">
+                                <div class="flex items-start space-x-3">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-medium text-gray-900">Nieuwe achievement behaald</p>
+                                        <p class="text-xs text-gray-500">React Master badge verdiend</p>
+                                        <p class="text-xs text-gray-400 mt-1">3 uur geleden</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 pt-3 border-t border-gray-200">
+                            <button class="w-full neuro-button rounded-lg py-2 text-sm font-medium text-gray-700">Alle meldingen bekijken</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="neuro-button rounded-full p-1">
                     <img src="assets/student_female.png" alt="Profile" class="w-10 h-10 rounded-full">
                 </div>
@@ -444,7 +644,7 @@
                     <button class="neuro-button rounded-lg px-3 py-1 text-sm text-gray-700">Detailrapport</button>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4 text-white">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="text-center">
                         <div class="text-2xl font-bold">85%</div>
                         <div class="text-sm opacity-90">Succesratio</div>
@@ -610,7 +810,7 @@
                 </div>
             </div>
 
-            <!-- 6. Portfolio Builder -->
+            <!-- 5. Portfolio Builder -->
             <div class="neuro-card rounded-3xl p-6 portfolio-preview">
                 <div class="widget-header">
                     <div class="widget-title text-white">
@@ -654,7 +854,7 @@
                 </div>
             </div>
 
-            <!-- 7. Collaboration & Networking -->
+            <!-- 6. Collaboration & Networking -->
             <div class="neuro-card rounded-3xl p-6 collaboration-panel">
                 <div class="widget-header">
                     <div class="widget-title text-white">
@@ -719,7 +919,7 @@
 
     <!-- Footer -->
     <footer class="mt-16 p-6 text-center text-gray-600 text-sm">
-        <p>Projojo Dashboard V6 - Comprehensive Student Experience with Smart Features</p>
+        <p>Projojo Dashboard V7 - Skills-Focused Learning with Smart Collapsible Features</p>
     </footer>
 
     <script>
@@ -846,9 +1046,39 @@
             });
         }
 
+        // Notification dropdown functionality
+        function initializeNotificationDropdown() {
+            const dropdown = document.querySelector('.notification-dropdown');
+            const trigger = dropdown?.querySelector('.notification-trigger');
+            const panel = dropdown?.querySelector('.notification-panel');
+            
+            if (!dropdown || !trigger || !panel) return;
+            
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                dropdown.classList.toggle('active');
+            });
+            
+            // Close when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!dropdown.contains(e.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+            
+            // Close with ESC key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && dropdown.classList.contains('active')) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        }
+
         // Initialize on load
         document.addEventListener('DOMContentLoaded', function() {
             initializeTooltips();
+            initializeNotificationDropdown();
         });
     </script>
 </body>
