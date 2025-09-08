@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projojo Dashboard V7 - Skills-Focused Learning Journey</title>
+    <title>Projojo Dashboard V8 - Kanban Task Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -416,6 +416,241 @@
          .footer-widget.expandable-section.expanded {
              z-index: 10;
             position: relative;
+         }
+
+         /* Kanban Board Styling */
+         .kanban-board {
+             width: 100%;
+             overflow-x: auto;
+             padding-bottom: 1rem;
+         }
+
+         .kanban-columns {
+             display: flex;
+             gap: 1.5rem;
+             min-width: max-content;
+             padding: 0.5rem;
+         }
+
+         /* Mobile: Stack columns vertically */
+         @media (max-width: 768px) {
+             .kanban-columns {
+                 flex-direction: column;
+                 gap: 1rem;
+                 min-width: auto;
+             }
+             
+             .kanban-column {
+                 width: 100%;
+             }
+         }
+
+        /* Desktop: Horizontal scrollable columns */
+        .kanban-column {
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            min-width: 280px;
+            width: 280px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .kanban-header {
+            position: sticky;
+            top: 0;
+            background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(229, 0, 86, 0.05);
+            z-index: 2;
+         }
+
+         .kanban-cards {
+             max-height: 400px;
+             overflow-y: auto;
+             padding: 0.5rem;
+         }
+
+         .kanban-card {
+             background: #f8f9fa;
+             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+             border-radius: 16px;
+             padding: 1.5rem;
+             margin-bottom: 1rem;
+             cursor: grab;
+             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+             border: 1px solid rgba(255, 255, 255, 0.8);
+             position: relative;
+             overflow: hidden;
+         }
+
+         .kanban-card:hover {
+             transform: translateY(-3px);
+             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.08);
+             border-color: rgba(229, 0, 86, 0.1);
+         }
+
+         .kanban-card:active {
+             cursor: grabbing;
+             transform: rotate(3deg) scale(1.02);
+         }
+
+         .kanban-card-active {
+             background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+             border: 2px solid #e50056;
+             box-shadow: 0 4px 12px rgba(229, 0, 86, 0.15), 0 2px 6px rgba(229, 0, 86, 0.1);
+         }
+
+         .kanban-card-active::before {
+             content: '';
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 4px;
+             height: 100%;
+             background: linear-gradient(180deg, #e50056 0%, #cf004e 100%);
+         }
+
+         .kanban-card-completed {
+             background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+             border-color: #52c41a;
+             opacity: 0.9;
+         }
+
+         .working-indicator-small {
+             background: linear-gradient(135deg, rgba(229, 0, 86, 0.1) 0%, rgba(229, 0, 86, 0.05) 100%);
+             border: 1px solid rgba(229, 0, 86, 0.2);
+             color: #e50056;
+             font-weight: 600;
+             font-size: 0.75rem;
+             padding: 0.375rem 0.75rem;
+             border-radius: 0.5rem;
+             position: relative;
+             display: inline-flex;
+             align-items: center;
+             gap: 0.5rem;
+         }
+
+         .working-indicator-small::before {
+             content: '';
+             width: 8px;
+             height: 8px;
+             background: #e50056;
+             border-radius: 50%;
+             box-shadow: 0 0 8px rgba(229, 0, 86, 0.4);
+             animation: pulse 2s infinite;
+             flex-shrink: 0;
+         }
+
+         .progress-bar-container {
+             background: rgba(208, 208, 211, 0.3);
+             border-radius: 0.5rem;
+             padding: 0.5rem;
+         }
+
+         /* Custom scrollbar for kanban */
+         .kanban-board::-webkit-scrollbar {
+             height: 8px;
+         }
+
+         .kanban-board::-webkit-scrollbar-track {
+             background: #f0f0f3;
+             border-radius: 4px;
+         }
+
+         .kanban-board::-webkit-scrollbar-thumb {
+             background: #d0d0d3;
+             border-radius: 4px;
+         }
+
+         .kanban-board::-webkit-scrollbar-thumb:hover {
+             background: #a0a0a3;
+         }
+
+         /* Drag & Drop States */
+         .drag-over {
+             background: linear-gradient(135deg, rgba(229, 0, 86, 0.1) 0%, rgba(207, 0, 78, 0.05) 100%);
+             border: 2px dashed #e50056;
+             border-radius: 1rem;
+         }
+
+         .kanban-card.dragging {
+             transform: rotate(5deg) scale(1.05);
+             z-index: 1000;
+             box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+         }
+
+         /* Full Width Kanban Styling */
+         .kanban-section {
+             width: 100%;
+         }
+         
+         .kanban-container {
+             width: 100%;
+             max-width: none;
+             margin: 0; /* Remove any margin that might cause misalignment */
+         }
+
+         .kanban-board-fullwidth {
+             width: 100%;
+             overflow-x: auto;
+             padding-bottom: 1rem;
+         }
+
+         .kanban-columns-fullwidth {
+             display: flex;
+             gap: 2rem;
+             min-width: max-content;
+             padding: 1rem;
+         }
+
+         /* Mobile: Stack columns vertically for full width */
+         @media (max-width: 768px) {
+             .kanban-columns-fullwidth {
+                 flex-direction: column;
+                 gap: 1.5rem;
+                 min-width: auto;
+             }
+             
+             .kanban-column-fullwidth {
+                 width: 100%;
+             }
+         }
+
+         /* Desktop: Larger columns for full width */
+         .kanban-column-fullwidth {
+             min-width: 320px;
+             width: 320px;
+             flex-shrink: 0;
+         }
+
+         .kanban-cards-fullwidth {
+             max-height: 500px;
+             overflow-y: auto;
+             padding: 0.5rem;
+         }
+
+         /* Custom scrollbar for full width kanban */
+         .kanban-board-fullwidth::-webkit-scrollbar {
+             height: 10px;
+         }
+
+         .kanban-board-fullwidth::-webkit-scrollbar-track {
+             background: #f0f0f3;
+             border-radius: 5px;
+         }
+
+         .kanban-board-fullwidth::-webkit-scrollbar-thumb {
+             background: #d0d0d3;
+             border-radius: 5px;
+         }
+
+         .kanban-board-fullwidth::-webkit-scrollbar-thumb:hover {
+             background: #a0a0a3;
          }
 
          /* Primary Action Button */
@@ -927,8 +1162,8 @@
                 </div>
             </div>
 
-            <!-- Widget 4: Active Tasks with V5 Enhanced Activity Indicators -->
-            <div class="widget-container neuro-card rounded-3xl p-6 lg:col-span-2" data-widget="active-tasks">
+            <!-- Widget 4: Placeholder for removed Kanban -->
+            <div class="hidden">
                 <div class="widget-controls">
                     <button class="neuro-button rounded-full p-1 mr-1">
                         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -943,140 +1178,545 @@
                         </div>
                 
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-bold text-gray-800">Mijn Actieve Klussen</h2>
+                    <h2 class="text-xl font-bold text-gray-800">Mijn Projecten Kanban</h2>
                     <div class="flex space-x-2">
                         <button class="neuro-button rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary">
-                            Filter
+                            <svg class="w-4 h-4 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Nieuwe taak
                         </button>
                         <button class="neuro-button rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary">
-                            Sorteer
+                            Filter
                         </button>
                     </div>
                 </div>
                 
-                <div class="space-y-4">
-                     <!-- V5 ENHANCED: Active Task Card with Activity Indicators -->
-                     <div class="task-card-active neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all">
-                         <div class="flex items-center justify-between mb-4">
-                             <div class="flex items-center space-x-3">
-                                 <div class="activity-pulse">
-                                     <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-12 h-12 rounded-lg object-cover">
-                         </div>
-                                 <div>
-                                     <div class="flex items-center gap-2 mb-1">
-                                         <h3 class="font-semibold text-gray-800">IoT Sensoren Dashboard</h3>
-                                         <span class="working-indicator">Nu bezig</span>
-                     </div>
-                                     <p class="text-sm text-gray-600">SmartFarm Technologies</p>
-                                     <div class="flex items-center space-x-2 mt-1">
-                                         <span class="text-xs text-gray-500">Deadline: 15 okt</span>
-                                         <span class="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded-full">Hoge prioriteit</span>
-                                         <span class="recent-activity-indicator text-xs text-green-600 font-medium">Laatst actief: 2 min geleden</span>
-                         </div>
-                     </div>
-                         </div>
-                             <div class="text-right">
-                                 <div class="text-sm text-gray-600 mb-2">Voortgang</div>
-                                 <div class="flex items-center space-x-2">
-                                     <div class="w-20 h-2 bg-neuro-dark rounded-full overflow-hidden">
-                                         <div class="progress-bar-active w-3/4 h-full rounded-full"></div>
-                     </div>
-                                     <span class="text-sm font-semibold">75%</span>
-                         </div>
-                             </div>
-                     </div>
-                     
-                     <div class="flex flex-wrap gap-2 mb-4">
-                         <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">React</span>
-                         <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">Python</span>
-                         <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">IoT</span>
-                     </div>
-                     
-                     <div class="flex justify-between items-center">
-                         <div class="flex items-center space-x-4 text-sm text-gray-600">
-                             <div class="flex items-center space-x-1">
-                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
-                             </svg>
-                                 <span>8 dagen resterend</span>
-                         </div>
-                             <div class="flex items-center space-x-1">
-                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"/>
-                                 </svg>
-                                 <span>3 nieuwe berichten</span>
-                             </div>
-                         </div>
-                         <div class="flex space-x-2">
-                             <button onclick="openProjectDetail()" class="neuro-button px-4 py-2 rounded-lg text-sm font-medium hover:text-primary">
-                                 Bekijken
-                             </button>
-                             <button class="neuro-button-primary px-4 py-2 rounded-lg text-sm font-medium text-white">
-                                 Doorgaan
-                             </button>
-                     </div>
-                 </div>
-             </div>
-
-                    <!-- Regular Task Card -->
-                    <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all task-priority-medium">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3">
-                                <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-12 h-12 rounded-lg object-cover">
-                                <div>
-                                    <h3 class="font-semibold text-gray-800">Duurzaamheid App</h3>
-                                    <p class="text-sm text-gray-600">Groene Kassen BV</p>
-                                    <div class="flex items-center space-x-2 mt-1">
-                                        <span class="text-xs text-gray-500">Deadline: 28 okt</span>
-                                        <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Medium prioriteit</span>
-                                        <span class="text-xs text-gray-500">Laatst actief: 1 dag geleden</span>
-                        </div>
-                    </div>
+                <!-- Kanban Board Container -->
+                <div class="kanban-board">
+                    <!-- Mobile: Stacked Layout / Desktop: Horizontal Scroll -->
+                    <div class="kanban-columns">
+                        
+                        <!-- Column 1: To Do -->
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                        <h3 class="font-semibold text-gray-800">Te Doen</h3>
+                                        <span class="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium">2</span>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="text-sm text-gray-600 mb-2">Voortgang</div>
-                    <div class="flex items-center space-x-2">
-                                    <div class="w-20 h-2 bg-neuro-dark rounded-full">
-                                        <div class="w-2/5 h-full bg-blue-500 rounded-full"></div>
-                    </div>
-                                    <span class="text-sm font-semibold">40%</span>
-                </div>
+                            
+                            <div class="kanban-cards space-y-3">
+                                <!-- Task Card 1 -->
+                                <div class="kanban-card neuro-card rounded-xl p-4" draggable="true">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <img src="assets/logo_mechanisatie.png" alt="Mechanisatie Plus" class="w-8 h-8 rounded-lg object-cover">
+                                            <div>
+                                                <h4 class="font-medium text-gray-800 text-sm">AI Predictive Maintenance</h4>
+                                                <p class="text-xs text-gray-600">Mechanisatie Plus</p>
+                                            </div>
+                                        </div>
+                                        <span class="priority-high text-white text-xs px-2 py-1 rounded-full">Hoog</span>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Python</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">AI</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span>Deadline: 20 nov</span>
+                                        <span>25 ECTS</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Task Card 2 -->
+                                <div class="kanban-card neuro-card rounded-xl p-4" draggable="true">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <img src="assets/logo_agrilogistiek.png" alt="AgriLogistiek" class="w-8 h-8 rounded-lg object-cover">
+                                            <div>
+                                                <h4 class="font-medium text-gray-800 text-sm">Logistics Dashboard</h4>
+                                                <p class="text-xs text-gray-600">AgriLogistiek</p>
+                                            </div>
+                                        </div>
+                                        <span class="priority-medium text-white text-xs px-2 py-1 rounded-full">Medium</span>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">React</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Node.js</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span>Deadline: 5 nov</span>
+                                        <span>16 ECTS</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">Vue.js</span>
-                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">Sustainability</span>
-                    </div>
-                    
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-4 text-sm text-gray-600">
-                                <div class="flex items-center space-x-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
-                                    </svg>
-                                    <span>21 dagen resterend</span>
+                        <!-- Column 2: In Progress -->
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                                        <h3 class="font-semibold text-gray-800">Bezig</h3>
+                                        <span class="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded-full font-medium">1</span>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="kanban-cards space-y-3">
+                                <!-- Active Task Card -->
+                                <div class="kanban-card kanban-card-active neuro-card rounded-xl p-4" draggable="true">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="activity-pulse relative">
+                                                <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-8 h-8 rounded-lg object-cover">
+                                            </div>
+                                            <div>
+                                                <h4 class="font-medium text-gray-800 text-sm">IoT Sensoren Dashboard</h4>
+                                                <p class="text-xs text-gray-600">SmartFarm Technologies</p>
+                                            </div>
+                                        </div>
+                                        <span class="priority-high text-white text-xs px-2 py-1 rounded-full">Hoog</span>
+                                    </div>
+                                    
+                                    <div class="working-indicator-small mb-3">Nu actief</div>
+                                    
+                                    <div class="progress-bar-container mb-3">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-xs text-gray-600">Voortgang</span>
+                                            <span class="text-xs font-medium text-gray-800">75%</span>
+                                        </div>
+                                        <div class="w-full h-2 bg-neuro-dark rounded-full overflow-hidden">
+                                            <div class="progress-bar-active w-3/4 h-full rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">React</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Python</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">IoT</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between text-xs mb-3">
+                                        <span class="text-gray-500">Deadline: 15 okt</span>
+                                        <span class="text-gray-800 font-medium">15 ECTS</span>
+                                    </div>
+                                    
+                                    <div class="flex space-x-2">
+                                        <button onclick="openProjectDetail()" class="flex-1 neuro-button px-3 py-2 rounded-lg text-xs font-medium hover:text-primary">
+                                            Bekijken
+                                        </button>
+                                        <button class="flex-1 neuro-button-primary px-3 py-2 rounded-lg text-xs font-medium text-white">
+                                            Doorgaan
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                            <div class="flex space-x-2">
-                                <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium hover:text-primary">
-                                    Bekijken
-                                </button>
-                                <button class="neuro-button-primary px-4 py-2 rounded-lg text-sm font-medium text-white">
-                                    Doorgaan
-                                </button>
-                    </div>
+                        
+                        <!-- Column 3: Review -->
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-blue-400 rounded-full"></div>
+                                        <h3 class="font-semibold text-gray-800">Review</h3>
+                                        <span class="bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full font-medium">1</span>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
-                    </div>
+                            
+                            <div class="kanban-cards space-y-3">
+                                <!-- Review Task Card -->
+                                <div class="kanban-card neuro-card rounded-xl p-4" draggable="true">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-8 h-8 rounded-lg object-cover">
+                                            <div>
+                                                <h4 class="font-medium text-gray-800 text-sm">Sustainability Dashboard</h4>
+                                                <p class="text-xs text-gray-600">Groene Kassen BV</p>
+                                            </div>
+                                        </div>
+                                        <span class="priority-medium text-white text-xs px-2 py-1 rounded-full">Medium</span>
+                                    </div>
+                                    
+                                    <div class="progress-bar-container mb-3">
+                                        <div class="flex justify-between items-center mb-1">
+                                            <span class="text-xs text-gray-600">Voortgang</span>
+                                            <span class="text-xs font-medium text-gray-800">90%</span>
+                                        </div>
+                                        <div class="w-full h-2 bg-neuro-dark rounded-full overflow-hidden">
+                                            <div class="w-9/10 h-full bg-blue-500 rounded-full"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Vue.js</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">D3.js</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span>Deadline: 28 okt</span>
+                                        <span>12 ECTS</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 4: Done -->
+                        <div class="kanban-column">
+                            <div class="kanban-header">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+                                        <h3 class="font-semibold text-gray-800">Klaar</h3>
+                                        <span class="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full font-medium">1</span>
+                                    </div>
+                                    <button class="text-gray-400 hover:text-gray-600">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="kanban-cards space-y-3">
+                                <!-- Completed Task Card -->
+                                <div class="kanban-card kanban-card-completed neuro-card rounded-xl p-4" draggable="true">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <img src="assets/logo_bodemexperts.png" alt="BodemExperts" class="w-8 h-8 rounded-lg object-cover">
+                                            <div>
+                                                <h4 class="font-medium text-gray-800 text-sm">Soil Analysis App</h4>
+                                                <p class="text-xs text-gray-600">BodemExperts</p>
+                                            </div>
+                                        </div>
+                                        <span class="priority-low text-white text-xs px-2 py-1 rounded-full">Laag</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center space-x-2 mb-3">
+                                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-xs text-green-600 font-medium">Voltooid</span>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-1 mb-3">
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Angular</span>
+                                        <span class="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">Data Science</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between text-xs text-gray-500">
+                                        <span>Voltooid: 2 okt</span>
+                                        <span>20 ECTS</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
                     
 
                             </div>
+        </div>
+
+     <!-- Full Width Kanban Board Section -->
+     <div class="kanban-section mt-8">
+         <div class="kanban-container neuro-card rounded-3xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <h2 class="text-2xl font-bold text-gray-800">Mijn Projecten Kanban</h2>
+                        <div class="flex space-x-3">
+                            <button class="neuro-button rounded-lg px-6 py-3 text-sm font-medium text-gray-700 hover:text-primary">
+                                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                </svg>
+                                Nieuwe taak
+                            </button>
+                            <button class="neuro-button rounded-lg px-6 py-3 text-sm font-medium text-gray-700 hover:text-primary">
+                                Filter
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Kanban Board Container -->
+                    <div class="kanban-board-fullwidth">
+                        <!-- Mobile: Stacked Layout / Desktop: Horizontal Scroll -->
+                        <div class="kanban-columns-fullwidth">
+                            
+                            <!-- Column 1: To Do -->
+                            <div class="kanban-column-fullwidth">
+                                <div class="kanban-header">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-4 h-4 bg-gray-400 rounded-full"></div>
+                                            <h3 class="text-lg font-semibold text-gray-800">Te Doen</h3>
+                                            <span class="bg-gray-100 text-gray-600 text-sm px-3 py-1 rounded-full font-medium">2</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="kanban-cards-fullwidth space-y-4">
+                                    <!-- Task Card 1 -->
+                                    <div class="kanban-card neuro-card rounded-xl p-5" draggable="true">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex items-center space-x-3">
+                                                <img src="assets/logo_mechanisatie.png" alt="Mechanisatie Plus" class="w-10 h-10 rounded-lg object-cover">
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">AI Predictive Maintenance</h4>
+                                                    <p class="text-sm text-gray-600">Mechanisatie Plus</p>
+                                                </div>
+                                            </div>
+                                            <span class="priority-high text-white text-xs px-2 py-1 rounded-full">Hoog</span>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">Python</span>
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">AI</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between text-sm text-gray-500">
+                                            <span>Deadline: 20 nov</span>
+                                            <span class="font-medium">25 ECTS</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Task Card 2 -->
+                                    <div class="kanban-card neuro-card rounded-xl p-5" draggable="true">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex items-center space-x-3">
+                                                <img src="assets/logo_agrilogistiek.png" alt="AgriLogistiek" class="w-10 h-10 rounded-lg object-cover">
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">Logistics Dashboard</h4>
+                                                    <p class="text-sm text-gray-600">AgriLogistiek</p>
+                                                </div>
+                                            </div>
+                                            <span class="priority-medium text-white text-xs px-2 py-1 rounded-full">Medium</span>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">React</span>
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">Node.js</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between text-sm text-gray-500">
+                                            <span>Deadline: 5 nov</span>
+                                            <span class="font-medium">16 ECTS</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Column 2: In Progress -->
+                            <div class="kanban-column-fullwidth">
+                                <div class="kanban-header">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-4 h-4 bg-yellow-400 rounded-full"></div>
+                                            <h3 class="text-lg font-semibold text-gray-800">Bezig</h3>
+                                            <span class="bg-yellow-100 text-yellow-600 text-sm px-3 py-1 rounded-full font-medium">1</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="kanban-cards-fullwidth space-y-4">
+                                    <!-- Active Task Card -->
+                                    <div class="kanban-card kanban-card-active neuro-card rounded-xl p-5" draggable="true">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="activity-pulse relative">
+                                                    <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-10 h-10 rounded-lg object-cover">
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">IoT Sensoren Dashboard</h4>
+                                                    <p class="text-sm text-gray-600">SmartFarm Technologies</p>
+                                                </div>
+                                            </div>
+                                            <span class="priority-high text-white text-xs px-2 py-1 rounded-full">Hoog</span>
+                                        </div>
+                                        
+                                        <div class="working-indicator-small mb-4">Nu actief</div>
+                                        
+                                        <div class="progress-bar-container mb-4">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-sm text-gray-600">Voortgang</span>
+                                                <span class="text-sm font-medium text-gray-800">75%</span>
+                                            </div>
+                                            <div class="w-full h-3 bg-neuro-dark rounded-full overflow-hidden">
+                                                <div class="progress-bar-active w-3/4 h-full rounded-full"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">React</span>
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">Python</span>
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">IoT</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between text-sm mb-4">
+                                            <span class="text-gray-500">Deadline: 15 okt</span>
+                                            <span class="text-gray-800 font-medium">15 ECTS</span>
+                                        </div>
+                                        
+                                        <div class="flex space-x-3">
+                                            <button onclick="openProjectDetail()" class="flex-1 neuro-button px-4 py-2 rounded-lg text-sm font-medium hover:text-primary">
+                                                Bekijken
+                                            </button>
+                                            <button class="flex-1 neuro-button-primary px-4 py-2 rounded-lg text-sm font-medium text-white">
+                                                Doorgaan
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Column 3: Review -->
+                            <div class="kanban-column-fullwidth">
+                                <div class="kanban-header">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-4 h-4 bg-blue-400 rounded-full"></div>
+                                            <h3 class="text-lg font-semibold text-gray-800">Review</h3>
+                                            <span class="bg-blue-100 text-blue-600 text-sm px-3 py-1 rounded-full font-medium">1</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="kanban-cards-fullwidth space-y-4">
+                                    <!-- Review Task Card -->
+                                    <div class="kanban-card neuro-card rounded-xl p-5" draggable="true">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex items-center space-x-3">
+                                                <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-10 h-10 rounded-lg object-cover">
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">Sustainability Dashboard</h4>
+                                                    <p class="text-sm text-gray-600">Groene Kassen BV</p>
+                                                </div>
+                                            </div>
+                                            <span class="priority-medium text-white text-xs px-2 py-1 rounded-full">Medium</span>
+                                        </div>
+                                        
+                                        <div class="progress-bar-container mb-4">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-sm text-gray-600">Voortgang</span>
+                                                <span class="text-sm font-medium text-gray-800">90%</span>
+                                            </div>
+                                            <div class="w-full h-3 bg-neuro-dark rounded-full overflow-hidden">
+                                                <div class="w-9/10 h-full bg-blue-500 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">Vue.js</span>
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">D3.js</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between text-sm text-gray-500">
+                                            <span>Deadline: 28 okt</span>
+                                            <span class="font-medium">12 ECTS</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Column 4: Done -->
+                            <div class="kanban-column-fullwidth">
+                                <div class="kanban-header">
+                                    <div class="flex items-center justify-between mb-6">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-4 h-4 bg-green-400 rounded-full"></div>
+                                            <h3 class="text-lg font-semibold text-gray-800">Klaar</h3>
+                                            <span class="bg-green-100 text-green-600 text-sm px-3 py-1 rounded-full font-medium">1</span>
+                                        </div>
+                                        <button class="text-gray-400 hover:text-gray-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="kanban-cards-fullwidth space-y-4">
+                                    <!-- Completed Task Card -->
+                                    <div class="kanban-card kanban-card-completed neuro-card rounded-xl p-5" draggable="true">
+                                        <div class="flex items-start justify-between mb-4">
+                                            <div class="flex items-center space-x-3">
+                                                <img src="assets/logo_bodemexperts.png" alt="BodemExperts" class="w-10 h-10 rounded-lg object-cover">
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">Soil Analysis App</h4>
+                                                    <p class="text-sm text-gray-600">BodemExperts</p>
+                                                </div>
+                                            </div>
+                                            <span class="priority-low text-white text-xs px-2 py-1 rounded-full">Laag</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center space-x-2 mb-4">
+                                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                            </svg>
+                                            <span class="text-sm text-green-600 font-medium">Voltooid</span>
+                                        </div>
+                                        
+                                        <div class="flex flex-wrap gap-2 mb-4">
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">Angular</span>
+                                            <span class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full">Data Science</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center justify-between text-sm text-gray-500">
+                                            <span>Voltooid: 2 okt</span>
+                                            <span class="font-medium">20 ECTS</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Footer Dashboard Section: Portfolio, Analytics, Netwerk -->
         <div class="footer-dashboard-section mt-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <!-- Footer Widget 1: Portfolio -->
                 <div class="footer-widget neuro-card rounded-3xl p-6 expandable-section collapsed" data-widget="portfolio" data-section="portfolio">
                     <div class="section-preview">
@@ -1277,12 +1917,13 @@
                     <div class="text-sm font-medium">Custom</div>
                 </button>
             </div>
+                </div>
+            </div>
         </div>
-    </div>
 
     <!-- Footer -->
     <footer class="mt-16 p-6 text-center text-gray-600 text-sm">
-         <p>Projojo Dashboard V7 - Skills-Focused Learning with Footer Layout & Professional Animations</p>
+         <p>Projojo Dashboard V8 - Kanban Task Management with Mobile-Responsive Design</p>
     </footer>
 
     <script>
@@ -1539,7 +2180,99 @@
          document.addEventListener('DOMContentLoaded', function() {
               initializeDragAndDrop();
               initializeCollapsibleSections();
+              initializeKanban();
          });
+
+         // Kanban Drag & Drop functionality
+         function initializeKanban() {
+             const cards = document.querySelectorAll('.kanban-card');
+             const columns = document.querySelectorAll('.kanban-cards, .kanban-cards-fullwidth');
+             
+             // Make cards draggable
+             cards.forEach(card => {
+                 card.addEventListener('dragstart', handleDragStart);
+                 card.addEventListener('dragend', handleDragEnd);
+             });
+             
+             // Make columns drop zones
+             columns.forEach(column => {
+                 column.addEventListener('dragover', handleDragOver);
+                 column.addEventListener('drop', handleDrop);
+                 column.addEventListener('dragenter', handleDragEnter);
+                 column.addEventListener('dragleave', handleDragLeave);
+             });
+         }
+         
+         let draggedCard = null;
+         
+         function handleDragStart(e) {
+             draggedCard = this;
+             this.style.opacity = '0.5';
+             e.dataTransfer.effectAllowed = 'move';
+             e.dataTransfer.setData('text/html', this.outerHTML);
+         }
+         
+         function handleDragEnd(e) {
+             this.style.opacity = '';
+             draggedCard = null;
+         }
+         
+         function handleDragOver(e) {
+             if (e.preventDefault) {
+                 e.preventDefault();
+             }
+             e.dataTransfer.dropEffect = 'move';
+             return false;
+         }
+         
+         function handleDragEnter(e) {
+             this.classList.add('drag-over');
+         }
+         
+         function handleDragLeave(e) {
+             this.classList.remove('drag-over');
+         }
+         
+         function handleDrop(e) {
+             if (e.stopPropagation) {
+                 e.stopPropagation();
+             }
+             
+             this.classList.remove('drag-over');
+             
+             if (draggedCard !== this && !this.contains(draggedCard)) {
+                 this.appendChild(draggedCard);
+                 updateColumnCounts();
+                 
+                 // Show success feedback
+                 showDropSuccess();
+             }
+             
+             return false;
+         }
+         
+         function updateColumnCounts() {
+             const columns = document.querySelectorAll('.kanban-column');
+             columns.forEach(column => {
+                 const cards = column.querySelectorAll('.kanban-card');
+                 const countBadge = column.querySelector('.bg-gray-100, .bg-yellow-100, .bg-blue-100, .bg-green-100');
+                 if (countBadge) {
+                     countBadge.textContent = cards.length;
+                 }
+             });
+         }
+         
+         function showDropSuccess() {
+             // Simple visual feedback
+             const notification = document.createElement('div');
+             notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+             notification.textContent = 'Taak verplaatst!';
+             document.body.appendChild(notification);
+             
+             setTimeout(() => {
+                 notification.remove();
+             }, 2000);
+         }
     </script>
 </body>
 </html>
