@@ -10,7 +10,6 @@ In de docs directory.
 ## Prerequisites
 
 * Docker / Docker Desktop installed
-
 That's it! No direct Node.js or Python installation required as everything runs in containers.
 
 ## Development with Docker
