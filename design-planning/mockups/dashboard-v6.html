@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projojo Dashboard V6 - Comprehensive Student Features</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e50056',
+                        darkPrimary: '#CF004E',
+                        neuro: {
+                            bg: '#f0f0f3',
+                            light: '#ffffff',
+                            dark: '#d0d0d3',
+                            darker: '#a0a0a3'
+                        }
+                    },
+                    boxShadow: {
+                        'neuro': '20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff',
+                        'neuro-inset': 'inset 20px 20px 60px #d0d0d3, inset -20px -20px 60px #ffffff',
+                        'neuro-sm': '8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff',
+                        'neuro-hover': '25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: #f0f0f3; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .neuro-card {
+            background: #f0f0f3;
+            box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
+            transition: all 0.3s ease;
+        }
+        .neuro-card:hover {
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+            transform: translateY(-2px);
+        }
+        .neuro-button {
+            background: #f0f0f3;
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            transition: all 0.2s ease;
+        }
+        .neuro-button:hover {
+            box-shadow: 12px 12px 24px #d0d0d3, -12px -12px 24px #ffffff;
+        }
+        .neuro-button:active {
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+        }
+        .neuro-input {
+            background: #f0f0f3;
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+            border: none;
+        }
+        .neuro-input:focus {
+            outline: none;
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff, 0 0 0 3px rgba(229, 0, 86, 0.3);
+        }
+        .skill-badge {
+            background: linear-gradient(145deg, #e50056, #cf004e);
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+        
+        /* Stable Info Button & Modal System */
+        .info-button {
+            position: relative;
+            width: 20px;
+            height: 20px;
+            background: #f0f0f3;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 4px 4px 8px #d0d0d3, -4px -4px 8px #ffffff;
+            cursor: help;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        .info-button:hover {
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+            transform: scale(1.05);
+        }
+        .info-button:active {
+            box-shadow: inset 4px 4px 8px #d0d0d3, inset -4px -4px 8px #ffffff;
+        }
+        
+        /* Modal Overlay for Tooltips */
+        .tooltip-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(240, 240, 243, 0.8);
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .tooltip-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        /* Stable Tooltip Modal */
+        .info-tooltip {
+            position: relative;
+            background: #f0f0f3;
+            color: #2d3748;
+            padding: 20px 24px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
+            border: 1px solid rgba(208, 208, 211, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tooltip-overlay.active .info-tooltip {
+            transform: scale(1);
+        }
+        
+        /* Tooltip Header */
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(208, 208, 211, 0.3);
+        }
+        .tooltip-title {
+            font-weight: 600;
+            color: #e50056;
+            font-size: 16px;
+            flex: 1;
+        }
+        .tooltip-close {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f0f0f3;
+            box-shadow: 4px 4px 8px #d0d0d3, -4px -4px 8px #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-left: 12px;
+        }
+        .tooltip-close:hover {
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+            transform: scale(1.1);
+        }
+        
+        /* Tooltip Content */
+        .tooltip-content {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #4a5568;
+        }
+        .tooltip-content strong {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        .tooltip-content br {
+            margin-bottom: 4px;
+        }
+        
+        /* Feature-specific styles */
+        .task-status-pending { border-left: 4px solid #ffa502; }
+        .task-status-accepted { border-left: 4px solid #22bb33; }
+        .task-status-rejected { border-left: 4px solid #ff4757; }
+        .task-status-active { border-left: 4px solid #e50056; }
+        
+        .match-score-high { color: #22bb33; font-weight: 600; }
+        .match-score-medium { color: #ffa502; font-weight: 600; }
+        .match-score-low { color: #ff4757; font-weight: 600; }
+        
+        .notification-urgent { border-left: 4px solid #ff4757; }
+        .notification-important { border-left: 4px solid #ffa502; }
+        .notification-info { border-left: 4px solid #4c79ff; }
+        
+        .achievement-locked { opacity: 0.4; filter: grayscale(100%); }
+        .achievement-earned { position: relative; }
+        .achievement-earned::after {
+            content: '✓';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #22bb33;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .progress-analytics {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .portfolio-preview {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .collaboration-panel {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        
+        .widget-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-neuro-bg">
+    <!-- Header -->
+    <header class="neuro-card rounded-none mb-8 p-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="neuro-button rounded-full p-2">
+                    <img src="assets/han_logo.png" alt="HAN Logo" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h1 class="text-2xl font-bold text-gray-800">Welkom terug, Emma</h1>
+                        <span class="role-indicator">Student</span>
+                    </div>
+                    <p class="text-gray-600 mt-1">Toegepaste Informatica • Semester 1</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+                <button class="neuro-button rounded-full p-3 relative hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">5</span>
+                </button>
+                <div class="neuro-button rounded-full p-1">
+                    <img src="assets/student_female.png" alt="Profile" class="w-10 h-10 rounded-full">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 space-y-8">
+        <!-- V6 Comprehensive Dashboard Grid -->
+        <div id="dashboardGrid" class="dashboard-grid">
+            
+            <!-- 1. Task Registration & Management Hub -->
+            <div class="neuro-card rounded-3xl p-6 lg:col-span-2">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <h2 class="text-xl font-bold text-gray-800">Mijn Aanmeldingen</h2>
+                        <div class="info-button" data-tooltip="task-registration">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="neuro-button rounded-lg px-4 py-2 text-sm font-medium text-gray-700">Filter</button>
+                        <button class="neuro-button rounded-lg px-4 py-2 text-sm font-medium text-gray-700">Geschiedenis</button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <!-- Active Registration -->
+                    <div class="task-status-active neuro-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-10 h-10 rounded-lg">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">IoT Sensoren Dashboard</h3>
+                                    <p class="text-sm text-gray-600">SmartFarm Technologies</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-primary text-white text-xs rounded-full font-medium">Actief</span>
+                                <button class="neuro-button rounded-lg px-3 py-1 text-xs">Doorgaan</button>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Aangemeld: 2 weken geleden • Geaccepteerd: 1 week geleden • Voortgang: 75%
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Registration -->
+                    <div class="task-status-pending neuro-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_mechanisatie.png" alt="Mechanisatie" class="w-10 h-10 rounded-lg">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">AI Predictive Maintenance</h3>
+                                    <p class="text-sm text-gray-600">Mechanisatie Plus</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">Wachten</span>
+                                <button class="neuro-button rounded-lg px-3 py-1 text-xs text-red-600">Intrekken</button>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Aangemeld: 3 dagen geleden • Verwachte reactie: binnen 5 werkdagen
+                        </div>
+                    </div>
+                    
+                    <!-- Rejected Registration -->
+                    <div class="task-status-rejected neuro-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_agrilogistiek.png" alt="AgriLogistiek" class="w-10 h-10 rounded-lg">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">Data Analytics Platform</h3>
+                                    <p class="text-sm text-gray-600">AgriLogistiek</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-3 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">Afgewezen</span>
+                                <button class="neuro-button rounded-lg px-3 py-1 text-xs">Feedback</button>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            Afgewezen: 1 week geleden • Reden: Ervaring met PostgreSQL vereist
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Smart Project Matching -->
+            <div class="neuro-card rounded-3xl p-6">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <h2 class="text-xl font-bold text-gray-800">Smart Matches</h2>
+                        <div class="info-button" data-tooltip="smart-matching">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button class="neuro-button rounded-lg px-3 py-1 text-sm">Meer matches</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="neuro-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_mechanisatie.png" alt="Mechanisatie" class="w-8 h-8 rounded-lg">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-sm">AI Predictive Maintenance</h3>
+                                    <p class="text-xs text-gray-600">Mechanisatie Plus</p>
+                                </div>
+                            </div>
+                            <span class="match-score-high">95%</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Python ✓</span>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">ML ✓</span>
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">TensorFlow ?</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button class="text-xs text-primary cursor-pointer hover:underline">Skills gap bekijken</button>
+                            <button class="neuro-button px-3 py-1 rounded-lg text-xs">Aanmelden</button>
+                        </div>
+                    </div>
+                    
+                    <div class="neuro-card rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-8 h-8 rounded-lg">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 text-sm">Sustainability Dashboard</h3>
+                                    <p class="text-xs text-gray-600">Groene Kassen BV</p>
+                                </div>
+                            </div>
+                            <span class="match-score-medium">78%</span>
+                        </div>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">React ✓</span>
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">D3.js ?</span>
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">Sustainability ?</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <button class="text-xs text-primary cursor-pointer hover:underline">Skills gap bekijken</button>
+                            <button class="neuro-button px-3 py-1 rounded-lg text-xs">Aanmelden</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Progress Analytics -->
+            <div class="neuro-card rounded-3xl p-6 progress-analytics">
+                <div class="widget-header">
+                    <div class="widget-title text-white">
+                        <h2 class="text-xl font-bold">Mijn Analytics</h2>
+                        <div class="info-button" data-tooltip="progress-analytics">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button class="neuro-button rounded-lg px-3 py-1 text-sm text-gray-700">Detailrapport</button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 text-white">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">85%</div>
+                        <div class="text-sm opacity-90">Succesratio</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">8.7</div>
+                        <div class="text-sm opacity-90">Gem. Score</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">+4</div>
+                        <div class="text-sm opacity-90">Skills groei</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold">75%</div>
+                        <div class="text-sm opacity-90">Semester</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-white">
+                    <div class="text-sm mb-2">Prestatie trend (laatste 3 maanden)</div>
+                    <div class="flex items-end space-x-1 h-12">
+                        <div class="bg-white bg-opacity-40 w-3 h-6 rounded-sm"></div>
+                        <div class="bg-white bg-opacity-60 w-3 h-8 rounded-sm"></div>
+                        <div class="bg-white bg-opacity-80 w-3 h-10 rounded-sm"></div>
+                        <div class="bg-white w-3 h-12 rounded-sm"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Achievement System -->
+            <div class="neuro-card rounded-3xl p-6">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <h2 class="text-xl font-bold text-gray-800">Prestaties</h2>
+                        <div class="info-button" data-tooltip="achievements">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button class="neuro-button rounded-lg px-3 py-1 text-sm">Alle prestaties</button>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <!-- Earned Achievement -->
+                    <div class="achievement-earned neuro-card rounded-xl p-3 text-center">
+                        <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs font-medium text-gray-800">Snelle Leerling</div>
+                    </div>
+                    
+                    <!-- Locked Achievement -->
+                    <div class="achievement-locked neuro-card rounded-xl p-3 text-center cursor-pointer">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs font-medium text-gray-800">Team Player</div>
+                    </div>
+                    
+                    <!-- Progress Achievement -->
+                    <div class="neuro-card rounded-xl p-3 text-center cursor-pointer">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-lg mx-auto mb-2 flex items-center justify-center relative">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                            </svg>
+                            <div class="absolute -bottom-1 -right-1 bg-gray-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3/5</div>
+                        </div>
+                        <div class="text-xs font-medium text-gray-800">Mentor</div>
+                    </div>
+                    
+                    <!-- More achievements... -->
+                    <div class="achievement-earned neuro-card rounded-xl p-3 text-center">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs font-medium text-gray-800">React Master</div>
+                    </div>
+                    
+                    <div class="achievement-locked neuro-card rounded-xl p-3 text-center cursor-pointer">
+                        <div class="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs font-medium text-gray-800">AI Expert</div>
+                    </div>
+                    
+                    <div class="achievement-locked neuro-card rounded-xl p-3 text-center cursor-pointer">
+                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-500 rounded-lg mx-auto mb-2 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"/>
+                            </svg>
+                        </div>
+                        <div class="text-xs font-medium text-gray-800">Leider</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Smart Notifications -->
+            <div class="neuro-card rounded-3xl p-6">
+                <div class="widget-header">
+                    <div class="widget-title">
+                        <h2 class="text-xl font-bold text-gray-800">Meldingen</h2>
+                        <div class="info-button" data-tooltip="notifications">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs bg-primary text-white px-2 py-1 rounded-full">5 nieuw</span>
+                        <button class="neuro-button rounded-lg px-3 py-1 text-sm">Alle bekeken</button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <div class="notification-urgent neuro-card rounded-lg p-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm text-gray-800">Deadline vandaag!</div>
+                                <div class="text-xs text-gray-600 mt-1">IoT Dashboard project moet vandaag worden ingeleverd</div>
+                            </div>
+                            <button class="neuro-button rounded px-2 py-1 text-xs ml-2">Actie</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-important neuro-card rounded-lg p-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm text-gray-800">Nieuwe perfect match!</div>
+                                <div class="text-xs text-gray-600 mt-1">AI Maintenance project (95% match) - ideaal voor jouw skills</div>
+                            </div>
+                            <button class="neuro-button rounded px-2 py-1 text-xs ml-2">Bekijk</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-info neuro-card rounded-lg p-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm text-gray-800">Skill tip: Python</div>
+                                <div class="text-xs text-gray-600 mt-1">Leer NumPy om je data science projecten kansen te vergroten</div>
+                            </div>
+                            <button class="neuro-button rounded px-2 py-1 text-xs ml-2">Leren</button>
+                        </div>
+                    </div>
+                    
+                    <div class="notification-info neuro-card rounded-lg p-3">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="font-semibold text-sm text-gray-800">Prestatie behaald!</div>
+                                <div class="text-xs text-gray-600 mt-1">Je hebt de "Snelle Leerling" badge verdiend</div>
+                            </div>
+                            <button class="neuro-button rounded px-2 py-1 text-xs ml-2">Bekijk</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Portfolio Builder -->
+            <div class="neuro-card rounded-3xl p-6 portfolio-preview">
+                <div class="widget-header">
+                    <div class="widget-title text-white">
+                        <h2 class="text-xl font-bold">Mijn Portfolio</h2>
+                        <div class="info-button" data-tooltip="portfolio">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button class="neuro-button rounded-lg px-3 py-1 text-sm text-gray-700">Volledig portfolio</button>
+                </div>
+                
+                <div class="text-white space-y-4">
+                    <div class="flex justify-between">
+                        <span class="text-sm opacity-90">Voltooide projecten</span>
+                        <span class="font-semibold">12</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm opacity-90">Verworven skills</span>
+                        <span class="font-semibold">18</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-sm opacity-90">Gemiddelde rating</span>
+                        <span class="font-semibold">4.7/5.0</span>
+                    </div>
+                    
+                    <div class="border-t border-white border-opacity-20 pt-4">
+                        <div class="text-sm opacity-90 mb-2">Nieuwste project</div>
+                        <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                            <div class="font-semibold text-sm">IoT Sensoren Dashboard</div>
+                            <div class="text-xs opacity-80 mt-1">React, Python, IoT • SmartFarm Technologies</div>
+                            <div class="text-xs opacity-80">Rating: 4.8/5 • "Uitstekende communicatie en technische vaardigheden"</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button class="flex-1 bg-white bg-opacity-20 rounded-lg py-2 text-sm font-medium">Downloaden PDF</button>
+                        <button class="flex-1 bg-white bg-opacity-20 rounded-lg py-2 text-sm font-medium">Delen</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Collaboration & Networking -->
+            <div class="neuro-card rounded-3xl p-6 collaboration-panel">
+                <div class="widget-header">
+                    <div class="widget-title text-white">
+                        <h2 class="text-xl font-bold">Netwerk</h2>
+                        <div class="info-button" data-tooltip="collaboration">
+                            <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button class="neuro-button rounded-lg px-3 py-1 text-sm text-gray-700">Ontdek meer</button>
+                </div>
+                
+                <div class="text-white space-y-4">
+                    <div>
+                        <div class="text-sm opacity-90 mb-2">Huidige projectteam</div>
+                        <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <img src="assets/student_male.png" alt="Teammate" class="w-6 h-6 rounded-full">
+                                <span class="text-sm font-medium">Lars (Python specialist)</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <img src="assets/student_female.png" alt="Teammate" class="w-6 h-6 rounded-full">
+                                <span class="text-sm font-medium">Sophie (UX expert)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="text-sm opacity-90 mb-2">Skill match suggesties</div>
+                        <div class="space-y-2">
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <img src="assets/student_male.png" alt="Student" class="w-5 h-5 rounded-full">
+                                    <span class="text-sm">Tom (AI/ML)</span>
+                                </div>
+                                <button class="bg-white bg-opacity-30 rounded px-2 py-1 text-xs">Connect</button>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-2 flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <img src="assets/student_female.png" alt="Student" class="w-5 h-5 rounded-full">
+                                    <span class="text-sm">Emma (Frontend)</span>
+                                </div>
+                                <button class="bg-white bg-opacity-30 rounded px-2 py-1 text-xs">Connect</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="text-sm opacity-90 mb-2">Study groups</div>
+                        <div class="bg-white bg-opacity-20 rounded-lg p-2">
+                            <div class="text-sm font-medium">React Advanced Patterns</div>
+                            <div class="text-xs opacity-80">5 leden • Elke dinsdag 19:00</div>
+                            <button class="mt-1 bg-white bg-opacity-30 rounded px-2 py-1 text-xs">Lid worden</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 p-6 text-center text-gray-600 text-sm">
+        <p>Projojo Dashboard V6 - Comprehensive Student Experience with Smart Features</p>
+    </footer>
+
+    <script>
+        // Stable tooltip modal system
+        function initializeTooltips() {
+            // Tooltip content definitions
+            const tooltipContent = {
+                'task-registration': {
+                    title: 'Hoe werken aanmeldingen?',
+                    content: `Hier zie je alle projecttaken waar je je voor hebt aangemeld:<br><br>
+                    • <strong style="color: #ffa502;">Oranje rand</strong>: Wachten op goedkeuring van de supervisor<br>
+                    • <strong style="color: #22bb33;">Groene rand</strong>: Geaccepteerd, je mag meewerken aan het project<br>
+                    • <strong style="color: #ff4757;">Rode rand</strong>: Afgewezen, probeer andere projecten<br>
+                    • <strong style="color: #e50056;">Roze rand</strong>: Actief aan het werken<br><br>
+                    Je kunt aanmeldingen intrekken zolang ze nog niet zijn goedgekeurd.`
+                },
+                'smart-matching': {
+                    title: 'Hoe werkt AI matching?',
+                    content: `Onze AI vergelijkt jouw skills met projectvereisten:<br><br>
+                    • <strong style="color: #22bb33;">90%+ match</strong>: Perfect! Solliciteer direct<br>
+                    • <strong style="color: #ffa502;">70-89% match</strong>: Goede kans, leer 1-2 skills bij<br>
+                    • <strong style="color: #ff4757;">Onder 70%</strong>: Moeilijk, focus eerst op skill ontwikkeling<br><br>
+                    <strong>Tip:</strong> Klik op "Skills gap" om te zien welke vaardigheden je nog moet leren voor een project.`
+                },
+                'progress-analytics': {
+                    title: 'Wat betekenen de cijfers?',
+                    content: `Je persoonlijke prestatie-indicatoren:<br><br>
+                    • <strong>Succesratio</strong>: Percentage aanmeldingen dat wordt geaccepteerd<br>
+                    • <strong>Gemiddelde score</strong>: Hoe goed je gemiddeld presteert (1-10)<br>
+                    • <strong>Skills groei</strong>: Aantal nieuwe vaardigheden deze maand<br>
+                    • <strong>Semester voortgang</strong>: Percentage behaalde studiepunten<br><br>
+                    De grafiek toont je prestatie-trend van de laatste 3 maanden.`
+                },
+                'achievements': {
+                    title: 'Hoe verdien je prestaties?',
+                    content: `Badges worden automatisch toegekend bij mijlpalen:<br><br>
+                    • <strong>Skill badges</strong>: 5+ projecten met dezelfde technologie<br>
+                    • <strong>Tempo badges</strong>: Snelle voltooiing van taken<br>
+                    • <strong>Teamwork badges</strong>: Goede samenwerking scores<br>
+                    • <strong>Milestone badges</strong>: Belangrijke doelen bereikt<br><br>
+                    Grijze badges zijn nog niet behaald. Klik erop voor de voorwaarden.`
+                },
+                'notifications': {
+                    title: 'Wat betekenen de kleuren?',
+                    content: `Meldingen zijn geprioriteerd op urgentie:<br><br>
+                    • <strong style="color: #ff4757;">Rode rand</strong>: Urgent - actie vereist (deadlines, afwijzingen)<br>
+                    • <strong style="color: #ffa502;">Oranje rand</strong>: Belangrijk - bekijk binnenkort (matches, updates)<br>
+                    • <strong style="color: #4c79ff;">Blauwe rand</strong>: Info - handig om te weten (tips, nieuws)<br><br>
+                    Klik op een melding voor meer details en beschikbare acties.`
+                },
+                'portfolio': {
+                    title: 'Automatische portfolio',
+                    content: `Je portfolio wordt automatisch bijgewerkt met:<br><br>
+                    • <strong>Voltooide projecten</strong> en behaalde resultaten<br>
+                    • <strong>Verworven skills</strong> en certificaten<br>
+                    • <strong>Werkgever reviews</strong> en feedback scores<br>
+                    • <strong>Code samples</strong> en project screenshots<br><br>
+                    Perfect voor sollicitaties! Download als PDF of deel de link direct.`
+                },
+                'collaboration': {
+                    title: 'Waarom netwerken?',
+                    content: `Samenwerken verbetert je kansen en leert je meer:<br><br>
+                    • <strong>Projectteams</strong>: Andere studenten op hetzelfde project<br>
+                    • <strong>Skill matches</strong>: Studenten met complementaire vaardigheden<br>
+                    • <strong>Study groups</strong>: Groepen voor samen leren<br>
+                    • <strong>Mentorship</strong>: Ervaren studenten die kunnen helpen<br><br>
+                    Netwerken verhoogt je succeskansen en bouwt je professionele netwerk op.`
+                }
+            };
+
+            // Create tooltip overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'tooltip-overlay';
+            overlay.innerHTML = `
+                <div class="info-tooltip">
+                    <div class="tooltip-header">
+                        <div class="tooltip-title"></div>
+                        <div class="tooltip-close">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="tooltip-content"></div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Add click handlers to info buttons
+            const infoButtons = document.querySelectorAll('.info-button[data-tooltip]');
+            infoButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const tooltipKey = this.getAttribute('data-tooltip');
+                    const content = tooltipContent[tooltipKey];
+                    
+                    if (content) {
+                        overlay.querySelector('.tooltip-title').textContent = content.title;
+                        overlay.querySelector('.tooltip-content').innerHTML = content.content;
+                        overlay.classList.add('active');
+                    }
+                });
+            });
+
+            // Close tooltip handlers
+            function closeTooltip() {
+                overlay.classList.remove('active');
+            }
+
+            overlay.querySelector('.tooltip-close').addEventListener('click', closeTooltip);
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    closeTooltip();
+                }
+            });
+
+            // ESC key to close
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                    closeTooltip();
+                }
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTooltips();
+        });
+    </script>
+</body>
+</html>
