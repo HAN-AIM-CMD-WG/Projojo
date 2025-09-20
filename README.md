@@ -114,7 +114,11 @@ exit
 
 ### Backend Dependencies Management
 
-The backend uses **uv** for modern Python dependency management.
+The backend uses **uv** for modern Python dependency management. Think of uv as npm, but for Python:
+- `pyproject.toml` ≈ `package.json`
+- `uv.lock` ≈ `package-lock.json`
+- `uv add <dependency>` ≈ `npm install <dependency>`
+- `uv sync` ≈ `npm ci`
 
 **Quick Start:**
 ```bash

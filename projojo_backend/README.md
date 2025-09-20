@@ -8,13 +8,15 @@ API documentation will be available at:
 
 FastAPI backend service for the Projojo application.
 
-## Development Setup
+# Development Setup
 
 ## Prerequisites
 
 1. **[Docker & Docker Compose](https://www.docker.com/get-started/)**
-2. **[Python 3.13](https://www.python.org/downloads/)** (optional - only needed for IDE support and dependency management)
-3. **[uv](https://docs.astral.sh/uv/getting-started/installation/)** (optional - only needed for IDE support and dependency management)
+2. optional: **[Python 3.13](https://www.python.org/downloads/)**
+3. optional: **[uv](https://docs.astral.sh/uv/getting-started/installation/)**
+
+> **uv** and **python** are only needed for IDE support and dependency management
 
 ## Quick Start
 ```bash
@@ -26,13 +28,32 @@ uv sync
 docker compose up backend
 ```
 
+## What is uv?
+
+uv is a fast Python tool for dependency management and virtual environments. Think of it as npm, but for Python:
+- `pyproject.toml` ≈ `package.json` (project metadata and dependencies)
+- `uv.lock` ≈ `package-lock.json` (exact versions for reproducible installs)
+- `uv add <dependency>` ≈ `npm install <dependency>`
+- `uv sync` ≈ `npm ci` (install exact versions from lock file)
+
+More info: https://docs.astral.sh/uv/
+
 ## Dependency Management
 
 All commands below should be run locally, not inside the Docker container. This ensures dependency changes are immediately available for version control.
 
+> **Important:** When you change dependencies, always rebuild your Docker container so the changes are applied: `docker compose up --build backend`
+
+### Getting Started with Existing Project
+```bash
+# Install/sync dependencies according to pyproject.toml and uv.lock
+uv sync
+```
+
 ### Adding Dependencies
 ```bash
 # Production dependencies
+uv add <dependency> [<dependency2> ...]
 uv add fastapi pandas redis
 
 # Development dependencies
@@ -45,19 +66,46 @@ docker compose up --build backend
 ### Removing Dependencies
 ```bash
 # Production dependencies
+uv remove <dependency> [<dependency2> ...]
 uv remove pandas redis
 
 # Development dependencies
-uv remove pytest black flake8 --dev
+uv remove black flake8 --dev
 
 # Rebuild Docker to apply changes
 docker compose up --build backend
 ```
 
 ### Upgrading Dependencies
-To upgrade all dependencies to their latest compatible versions, use:
 ```bash
+# Upgrade all dependencies to latest compatible versions
 uv sync --upgrade
+
+# Upgrade specific dependency
+uv add <dependency> --upgrade
+
+# Rebuild Docker to apply changes
+docker compose up --build backend
+```
+
+### Running Commands
+You can run Python commands through uv without manually activating the virtual environment:
+```bash
+# Run Python scripts
+uv run python main.py
+uv run python --version
+```
+
+Or activate the virtual environment manually
+```bash
+# Windows (PowerShell)
+.venv\Scripts\activate
+
+# macOS/Linux
+source .venv/bin/activate
+
+# Deactivate when done
+deactivate
 ```
 
 ## Project Structure
