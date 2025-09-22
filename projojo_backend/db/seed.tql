@@ -2,217 +2,1160 @@ insert
 
     # Teacher user
     $u1 isa teacher,
-        has fullName "Morgan Lakewood",
-        has imagePath "teacher_profile1.jpg",
-        has schoolAccountName "Morgan.Lakewood",
-        has email "M.Lakewood@han.nl";
+        has fullName "Henk van der Berg",
+        has imagePath "teacher_profile.png",
+        has schoolAccountName "H.vanderBerg",
+        has email "h.vandeberg@han.nl",
+        has password_hash "hash_123";
 
     # Student users
     $u2 isa student,
-        has fullName "Aria Nightshade",
-        has imagePath "student_profile1.jpg",
-        has email "A.Nightshade@student.han.com",
-        has schoolAccountName "Aria.Nightshade";
+        has fullName "Emma Jansen",
+        has imagePath "student_female.png",
+        has email "emma.jansen@student.han.nl",
+        has schoolAccountName "Emma.Jansen",
+        has password_hash "hash_123";
 
     $u3 isa student,
-        has fullName "Zephyr Blakely",
-        has imagePath "student_profile2.jpg",
-        has email "Z.Blakely@student.han.com",
-        has schoolAccountName "Zephyr.Blakely";
+        has fullName "Lucas de Vries",
+        has imagePath "student_male.png",
+        has email "lucas.devries@student.han.nl",
+        has schoolAccountName "Lucas.deVries",
+        has password_hash "hash_123";
 
-    # Supervisor users
-    $u4 isa supervisor,
-        has fullName "Elena Silverstone",
-        has imagePath "supervisor_profile1.jpg",
-        has email "e.silverstone@novacorp.com";
+    $u4 isa student,
+        has fullName "Sophie Bakker",
+        has imagePath "student_female.png",
+        has email "sophie.bakker@student.han.nl",
+        has schoolAccountName "Sophie.Bakker",
+        has password_hash "hash_123";
 
-    $u5 isa supervisor,
-        has fullName "Thorin Oakenshield",
-        has imagePath "supervisor_profile2.jpg",
-        has email "t.oakenshield@mountaintechnologies.com";
-
-    $u6 isa supervisor,
-        has fullName "Luna Moonshadow",
-        has imagePath "supervisor_profile3.jpg",
-        has email "l.moonshadow@celestialinnovations.com";   
+    $u5 isa student,
+        has fullName "Daan Vermeulen",
+        has imagePath "student_male.png",
+        has email "daan.vermeulen@student.han.nl",
+        has schoolAccountName "Daan.Vermeulen",
+        has password_hash "hash_123";
 
     # Identity providers
     $ip1 isa identityProvider,
         has name "Google";
 
     $ip2 isa identityProvider,
-        has name "Microsoft";
-
-    # Authentication relations - only for supervisors
-    $auth1 isa authentication (user: $u4, identityProvider: $ip1),
-        has username "e.silverstone",
-        has id "sup10001";
-
-    $auth2 isa authentication (user: $u5, identityProvider: $ip1),
-        has username "t.oakenshield",
-        has id "sup10002";
-
-    $auth3 isa authentication (user: $u6, identityProvider: $ip2),
-        has username "l.moonshadow",
-        has id "sup10003";
+        has name "FarmSecure";
 
     # Businesses
     $b1 isa business,
-        has name "Celestial Innovations",
-        has description "Creating transformative experiences through cutting-edge digital solutions.",
-        has imagePath "business_celestial.jpg",
-        has location "Arnhem Central";
+        has name "De Gouden Akker",
+        has description "Biologische akkerbouw en duurzame gewasproductie",
+        has imagePath "logo_gouden_akker.png",
+        has location "Gelderland";
 
     $b2 isa business,
-        has name "Mountain Technologies",
-        has description "Forging the future of sustainable engineering and manufacturing.",
-        has imagePath "business_mountain.jpg",
-        has location "Amsterdam",
-        has location "Nijmegen",
+        has name "Veeteelt Groep Nederland",
+        has description "Moderne rundveehouderij en melkproductie optimalisatie",
+        has imagePath "logo_veeteelt_groep.png",
+        has location "Noord-Brabant";
+
+    $b3 isa business,
+        has name "SmartFarm Solutions",
+        has description "Agtech innovaties voor precisie landbouw",
+        has imagePath "logo_smartfarm.png",
+        has location "Zuid-Holland";
+
+    $b4 isa business,
+        has name "Groene Kassen BV",
+        has description "Hightech glastuinbouw en vertical farming",
+        has imagePath "logo_groene_kassen.png",
+        has location "Limburg";
+
+    $b5 isa business,
+        has name "Bodemexperts Nederland",
+        has description "Bodemanalyse en bemestingsadvies",
+        has imagePath "logo_bodemexperts.png",
+        has location "Overijssel";
+
+    $b6 isa business,
+        has name "AquaCultuur Innovatie",
+        has description "Duurzame viskweek en aquaponics systemen",
+        has imagePath "logo_aquacultuur.png",
+        has location "Flevoland";
+
+    $b7 isa business,
+        has name "Fruitboomgaarden Van Dijk",
+        has description "Moderne fruitteelt en oogstoptimalisatie",
+        has imagePath "logo_fruitboom.png",
+        has location "Zeeland";
+
+    $b8 isa business,
+        has name "Akkerbouw Mechanisatie",
+        has description "Landbouwmachines en automatisering",
+        has imagePath "logo_mechanisatie.png",
+        has location "Groningen";
+
+    $b9 isa business,
+        has name "Biodynamische Boerderij",
+        has description "Holistische landbouw en biodiversiteit",
+        has imagePath "logo_biodynamisch.png",
+        has location "Friesland";
+
+    $b10 isa business,
+        has name "Agri-Logistiek Centrum",
+        has description "Transport en opslag van landbouwproducten",
+        has imagePath "logo_agrilogistiek.png",
         has location "Utrecht";
 
-    # Business associations
-    $ba1 isa businessAssociation (business: $b1, supervisor: $u4),
-        has location "Arnhem";
+    # Supervisor users (1 per business, 10 total)
+    $s1 isa supervisor,
+        has fullName "Jan Boersma",
+        has imagePath "supervisor_male1.png",
+        has email "j.boersma@goudakker.nl",
+        has password_hash "hash_123";
 
-    $ba2 isa businessAssociation (business: $b2, supervisor: $u5),
-        has location "Amsterdam";
+    $s2 isa supervisor,
+        has fullName "Pieter Koster",
+        has imagePath "supervisor_male2.png",
+        has email "p.koster@veeteeltgroep.nl",
+        has password_hash "hash_123";
 
-    $ba3 isa businessAssociation (business: $b1, supervisor: $u6),
+    $s3 isa supervisor,
+        has fullName "Rob Hendriks",
+        has imagePath "supervisor_male1.png",
+        has email "r.hendriks@smartfarm.nl",
+        has password_hash "hash_123";
+
+    $s4 isa supervisor,
+        has fullName "Bert Scholten",
+        has imagePath "supervisor_male2.png",
+        has email "b.scholten@groenekassen.nl",
+        has password_hash "hash_123";
+
+    $s5 isa supervisor,
+        has fullName "Henk van Leeuwen",
+        has imagePath "supervisor_male1.png",
+        has email "h.vanleeuwen@bodemexperts.nl",
+        has password_hash "hash_123";
+
+    $s6 isa supervisor,
+        has fullName "Tom van der Meer",
+        has imagePath "supervisor_female.png",
+        has email "t.vandermeer@aquacultuur.nl",
+        has password_hash "hash_123";
+
+    $s7 isa supervisor,
+        has fullName "Willem van Dijk",
+        has imagePath "supervisor_male2.png",
+        has email "w.vandijk@fruitboom.nl",
+        has password_hash "hash_123";
+
+    $s8 isa supervisor,
+        has fullName "Gerrit Hoffman",
+        has imagePath "supervisor_male1.png",
+        has email "g.hoffman@mechanisatie.nl",
+        has password_hash "hash_123";
+
+    $s9 isa supervisor,
+        has fullName "Klaas Dijkstra",
+        has imagePath "supervisor_male2.png",
+        has email "k.dijkstra@biodynamisch.nl",
+        has password_hash "hash_123";
+
+    $s10 isa supervisor,
+        has fullName "Jaap Koning",
+        has imagePath "supervisor_female.png",
+        has email "j.koning@agrilogistiek.nl",
+        has password_hash "hash_123";
+
+    # Authenticates relations (all supervisors need at least one)
+    $auth1 isa authenticates (authenticated: $s1, authenticator: $ip1),
+        has username "j.boersma",
+        has id "agri_001";
+
+    $auth2 isa authenticates (authenticated: $s2, authenticator: $ip2),
+        has username "p.koster",
+        has id "agri_002";
+
+    $auth3 isa authenticates (authenticated: $s3, authenticator: $ip1),
+        has username "r.hendriks",
+        has id "agri_003";
+
+    $auth4 isa authenticates (authenticated: $s4, authenticator: $ip2),
+        has username "b.scholten",
+        has id "agri_004";
+
+    $auth5 isa authenticates (authenticated: $s5, authenticator: $ip1),
+        has username "h.vanleeuwen",
+        has id "agri_005";
+
+    $auth6 isa authenticates (authenticated: $s6, authenticator: $ip2),
+        has username "t.vandermeer",
+        has id "agri_006";
+
+    $auth7 isa authenticates (authenticated: $s7, authenticator: $ip1),
+        has username "w.vandijk",
+        has id "agri_007";
+
+    $auth8 isa authenticates (authenticated: $s8, authenticator: $ip2),
+        has username "g.hoffman",
+        has id "agri_008";
+
+    $auth9 isa authenticates (authenticated: $s9, authenticator: $ip1),
+        has username "k.dijkstra",
+        has id "agri_009";
+
+    $auth10 isa authenticates (authenticated: $s10, authenticator: $ip2),
+        has username "j.koning",
+        has id "agri_010";
+
+    # Business management relations
+    $m1 isa manages (supervisor: $s1, business: $b1),
+        has location "Gelderland";
+
+    $m2 isa manages (supervisor: $s2, business: $b2),
+        has location "Noord-Brabant";
+
+    $m3 isa manages (supervisor: $s3, business: $b3),
+        has location "Zuid-Holland";
+
+    $m4 isa manages (supervisor: $s4, business: $b4),
+        has location "Limburg";
+
+    $m5 isa manages (supervisor: $s5, business: $b5),
+        has location "Overijssel";
+
+    $m6 isa manages (supervisor: $s6, business: $b6),
+        has location "Flevoland";
+
+    $m7 isa manages (supervisor: $s7, business: $b7),
+        has location "Zeeland";
+
+    $m8 isa manages (supervisor: $s8, business: $b8),
+        has location "Groningen";
+
+    $m9 isa manages (supervisor: $s9, business: $b9),
+        has location "Friesland";
+
+    $m10 isa manages (supervisor: $s10, business: $b10),
         has location "Utrecht";
 
-    # Skills
+    # Skills (agri-related)
     $sk1 isa skill,
-        has name "Python Development",
-        has isPending true,
-        has createdAt 2025-04-10T14:30:00;
+        has name "Bodemanalyse",
+        has isPending false,
+        has createdAt 2025-01-15T09:00:00;
 
     $sk2 isa skill,
-        has name "UI/UX Design",
-        has isPending true,
-        has createdAt 2025-04-11T09:45:00;
+        has name "Gewasmonitoring",
+        has isPending false,
+        has createdAt 2025-01-15T09:15:00;
 
     $sk3 isa skill,
-        has name "Data Visualization",
+        has name "Melkveebeheer",
         has isPending false,
-        has createdAt 2025-04-09T16:20:00;
+        has createdAt 2025-01-15T09:30:00;
 
     $sk4 isa skill,
-        has name "Cloud Infrastructure",
+        has name "Precisie Landbouw",
         has isPending false,
-        has createdAt 2025-04-08T11:15:00;
+        has createdAt 2025-01-15T09:45:00;
 
-    # Projects
+    $sk5 isa skill,
+        has name "Kasklimaat Optimalisatie",
+        has isPending false,
+        has createdAt 2025-01-15T10:00:00;
+
+    $sk6 isa skill,
+        has name "Bemestingsadvies",
+        has isPending false,
+        has createdAt 2025-01-15T10:15:00;
+
+    $sk7 isa skill,
+        has name "Aquaponics",
+        has isPending false,
+        has createdAt 2025-01-15T10:30:00;
+
+    $sk8 isa skill,
+        has name "Fruitteelt Techniek",
+        has isPending false,
+        has createdAt 2025-01-15T10:45:00;
+
+    $sk9 isa skill,
+        has name "Landbouwmachine Onderhoud",
+        has isPending false,
+        has createdAt 2025-01-15T11:00:00;
+
+    $sk10 isa skill,
+        has name "Biodiversiteit Beheer",
+        has isPending false,
+        has createdAt 2025-01-15T11:15:00;
+
+    $sk11 isa skill,
+        has name "Data Analytics",
+        has isPending false,
+        has createdAt 2025-01-15T11:30:00;
+
+    $sk12 isa skill,
+        has name "IoT Sensoren",
+        has isPending false,
+        has createdAt 2025-01-15T11:45:00;
+
+    $sk13 isa skill,
+        has name "Supply Chain Management",
+        has isPending false,
+        has createdAt 2025-01-15T12:00:00;
+
+    $sk14 isa skill,
+        has name "Biologische Certificering",
+        has isPending false,
+        has createdAt 2025-01-15T12:15:00;
+
+    $sk15 isa skill,
+        has name "Voedingsstoffen Balancing",
+        has isPending false,
+        has createdAt 2025-01-15T12:30:00;
+
+    # Projects - 30 total (2-6 per business)
+    # De Gouden Akker projects (4)
     $p1 isa project,
-        has name "Digital Experience Platform",
-        has description "Create an immersive digital platform showcasing our innovative solutions",
-        has imagePath "project_dxp.jpg",
-        has createdAt 2025-04-15T13:40:00;
+        has name "Biologische Graan Monitoring Systeem",
+        has description "Ontwikkeling van een IoT-systeem voor real-time monitoring van biologische graanteelt",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-01-20T09:00:00;
 
     $p2 isa project,
-        has name "Interactive Kiosk Design",
-        has description "Design and implement interactive kiosks for our flagship store",
-        has imagePath "project_kiosk.jpg",
-        has createdAt 2025-04-14T10:15:00;
+        has name "Bodemkwaliteit Dashboard",
+        has description "Analytics platform voor bodemgezondheid en nutriënten tracking",
+        has imagePath "project_analytics.png",
+        has createdAt 2025-01-21T10:30:00;
 
     $p3 isa project,
-        has name "Event Dashboard",
-        has description "Create a real-time event dashboard for monitoring customer interactions",
-        has imagePath "project_dashboard.jpg",
-        has createdAt 2025-04-12T16:30:00;
+        has name "Certificering Management Tool",
+        has description "Digitaal systeem voor biologische certificering en compliance",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-01-22T14:15:00;
 
     $p4 isa project,
-        has name "Cloud Migration Strategy",
-        has description "Develop a comprehensive strategy for migrating our infrastructure to the cloud",
-        has imagePath "project_cloud.jpg",
-        has createdAt 2025-04-16T09:20:00;
+        has name "Weersvoorspelling Integratie",
+        has description "AI-gedreven weersvoorspelling specifiek voor akkerbouw",
+        has imagePath "project_ai_technology.png",
+        has createdAt 2025-01-23T11:45:00;
 
+    # Veeteelt Groep Nederland projects (3)
+    $p5 isa project,
+        has name "Melkproductie Optimalisatie Platform",
+        has description "Data analytics voor melkveebeheer en productie verbetering",
+        has imagePath "project_analytics.png",
+        has createdAt 2025-01-24T08:30:00;
 
-    $pc1 isa projectCreation (supervisor: $u4, project: $p1),
-        has createdAt 2025-04-15T13:40:00;
+    $p6 isa project,
+        has name "Voedersamenstelling Calculator",
+        has description "Automatische berekening van optimale voederratio's",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-01-25T13:20:00;
 
-    $pc2 isa projectCreation (supervisor: $u4, project: $p2),
-        has createdAt 2025-04-14T10:15:00;
+    $p7 isa project,
+        has name "Dierenwelzijn Monitoring",
+        has description "Sensor-gebaseerd systeem voor dierenwelzijn tracking",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-01-26T16:00:00;
 
-    $pc3 isa projectCreation (supervisor: $u6, project: $p3),
-        has createdAt 2025-04-12T16:30:00;
+    # SmartFarm Solutions projects (5)
+    $p8 isa project,
+        has name "Drone Gewasanalyse Systeem",
+        has description "AI-gedreven analyse van gewassen via drone beeldherkenning",
+        has imagePath "project_ai_technology.png",
+        has createdAt 2025-01-27T09:15:00;
 
-    # Business projects relations - one relation per business with its projects
-    $bp1 isa businessProjects (business: $b1, project: $p1, project: $p2, project: $p3);
-    $bp2 isa businessProjects (business: $b2, project: $p4);
+    $p9 isa project,
+        has name "Precisie Irrigatie Controller",
+        has description "Automatisch irrigatiesysteem met bodemvochtigheidssensoren",
+        has imagePath "project_automation.png",
+        has createdAt 2025-01-28T12:45:00;
 
-    # Tasks
+    $p10 isa project,
+        has name "Farm Management Dashboard",
+        has description "Centraal beheersysteem voor alle farm operaties",
+        has imagePath "project_analytics.png",
+        has createdAt 2025-01-29T15:30:00;
+
+    $p11 isa project,
+        has name "Blockchain Traceability",
+        has description "Transparante supply chain tracking voor voedselproducten",
+        has imagePath "project_logistics.png",
+        has createdAt 2025-01-30T10:20:00;
+
+    $p12 isa project,
+        has name "Machine Learning Oogstvoorspelling",
+        has description "Voorspelling van oogstopbrengsten met ML algoritmen",
+        has imagePath "project_ai_technology.png",
+        has createdAt 2025-01-31T14:10:00;
+
+    # Groene Kassen BV projects (4)
+    $p13 isa project,
+        has name "Klimaatbeheersing AI",
+        has description "AI-systeem voor optimale kasklimaat controle",
+        has imagePath "project_ai_technology.png",
+        has createdAt 2025-02-01T08:45:00;
+
+    $p14 isa project,
+        has name "Vertical Farm Automation",
+        has description "Geautomatiseerd vertical farming systeem",
+        has imagePath "project_automation.png",
+        has createdAt 2025-02-02T11:30:00;
+
+    $p15 isa project,
+        has name "Hydroponic Nutriënt Monitor",
+        has description "Real-time monitoring van nutriëntenlevel in hydroponic systemen",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-02-03T13:15:00;
+
+    $p16 isa project,
+        has name "Energie Efficiency Platform",
+        has description "Optimalisatie van energieverbruik in kassen",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-02-04T16:20:00;
+
+    # Bodemexperts Nederland projects (2)
+    $p17 isa project,
+        has name "Bodemanalyse Lab Management",
+        has description "Digitalisering van bodemanalyse processen",
+        has imagePath "project_laboratory.png",
+        has createdAt 2025-02-05T09:30:00;
+
+    $p18 isa project,
+        has name "Bemestingsadvies Generator",
+        has description "Automatische generatie van bemestingsadviezen",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-02-06T12:00:00;
+
+    # AquaCultuur Innovatie projects (3)
+    $p19 isa project,
+        has name "Viskweek Waterkwaliteit Systeem",
+        has description "Monitoring van waterkwaliteit in viskwekerijen",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-02-07T14:45:00;
+
+    $p20 isa project,
+        has name "Aquaponics Balancing Tool",
+        has description "Optimalisatie van aquaponics ecosystemen",
+        has imagePath "project_automation.png",
+        has createdAt 2025-02-08T10:15:00;
+
+    $p21 isa project,
+        has name "Visvoeder Optimalisatie",
+        has description "Data-gedreven optimalisatie van visvoeders",
+        has imagePath "project_analytics.png",
+        has createdAt 2025-02-09T15:30:00;
+
+    # Fruitboomgaarden Van Dijk projects (4)
+    $p22 isa project,
+        has name "Fruitrijpheid Detector",
+        has description "Computer vision voor automatische rijpheidsdetectie",
+        has imagePath "project_ai_technology.png",
+        has createdAt 2025-02-10T08:20:00;
+
+    $p23 isa project,
+        has name "Oogstrobot Controller",
+        has description "Besturingssysteem voor geautomatiseerde oogstrobots",
+        has imagePath "project_automation.png",
+        has createdAt 2025-02-11T11:45:00;
+
+    $p24 isa project,
+        has name "Boomgaard Planner",
+        has description "Optimale planning van boomgaard layouts",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-02-12T13:30:00;
+
+    $p25 isa project,
+        has name "Pesticide Monitoring",
+        has description "Tracking van pesticide gebruik en residuen",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-02-13T16:10:00;
+
+    # Akkerbouw Mechanisatie projects (2)
+    $p26 isa project,
+        has name "Tractor Fleet Management",
+        has description "GPS-gebaseerd beheer van landbouwmachines",
+        has imagePath "project_logistics.png",
+        has createdAt 2025-02-14T09:00:00;
+
+    $p27 isa project,
+        has name "Onderhoud Prediction Systeem",
+        has description "Voorspellend onderhoud voor landbouwequipment",
+        has imagePath "project_ai_technology.png",
+        has createdAt 2025-02-15T12:30:00;
+
+    # Biodynamische Boerderij projects (3)
+    $p28 isa project,
+        has name "Biodiversiteit Tracker",
+        has description "Monitoring van biodiversiteit op boerderijen",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-02-16T14:20:00;
+
+    $p29 isa project,
+        has name "Biodynamische Kalender App",
+        has description "Digitale kalender voor biodynamische praktijken",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-02-17T10:45:00;
+
+    $p30 isa project,
+        has name "Ecosysteem Balance Monitor",
+        has description "Holistische monitoring van farm ecosystemen",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-02-18T15:15:00;
+
+    # Agri-Logistiek Centrum projects (3)
+    $p31 isa project,
+        has name "Supply Chain Optimizer",
+        has description "Optimalisatie van landbouwproduct distributie",
+        has imagePath "project_logistics.png",
+        has createdAt 2025-02-19T08:30:00;
+
+    $p32 isa project,
+        has name "Koeling Transport Monitor",
+        has description "Temperature tracking tijdens transport",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-02-20T11:20:00;
+
+    $p33 isa project,
+        has name "Warehouse Automation",
+        has description "Automatisering van landbouw opslagsystemen",
+        has imagePath "project_automation.png",
+        has createdAt 2025-02-21T13:45:00;
+
+    # Project creation relations
+    $c1 isa creates (supervisor: $s1, project: $p1),
+        has createdAt 2025-01-20T09:00:00;
+    $c2 isa creates (supervisor: $s1, project: $p2),
+        has createdAt 2025-01-21T10:30:00;
+    $c3 isa creates (supervisor: $s1, project: $p3),
+        has createdAt 2025-01-22T14:15:00;
+    $c4 isa creates (supervisor: $s1, project: $p4),
+        has createdAt 2025-01-23T11:45:00;
+    $c5 isa creates (supervisor: $s2, project: $p5),
+        has createdAt 2025-01-24T08:30:00;
+    $c6 isa creates (supervisor: $s2, project: $p6),
+        has createdAt 2025-01-25T13:20:00;
+    $c7 isa creates (supervisor: $s2, project: $p7),
+        has createdAt 2025-01-26T16:00:00;
+    $c8 isa creates (supervisor: $s3, project: $p8),
+        has createdAt 2025-01-27T09:15:00;
+    $c9 isa creates (supervisor: $s3, project: $p9),
+        has createdAt 2025-01-28T12:45:00;
+    $c10 isa creates (supervisor: $s3, project: $p10),
+        has createdAt 2025-01-29T15:30:00;
+    $c11 isa creates (supervisor: $s3, project: $p11),
+        has createdAt 2025-01-30T10:20:00;
+    $c12 isa creates (supervisor: $s3, project: $p12),
+        has createdAt 2025-01-31T14:10:00;
+    $c13 isa creates (supervisor: $s4, project: $p13),
+        has createdAt 2025-02-01T08:45:00;
+    $c14 isa creates (supervisor: $s4, project: $p14),
+        has createdAt 2025-02-02T11:30:00;
+    $c15 isa creates (supervisor: $s4, project: $p15),
+        has createdAt 2025-02-03T13:15:00;
+    $c16 isa creates (supervisor: $s4, project: $p16),
+        has createdAt 2025-02-04T16:20:00;
+    $c17 isa creates (supervisor: $s5, project: $p17),
+        has createdAt 2025-02-05T09:30:00;
+    $c18 isa creates (supervisor: $s5, project: $p18),
+        has createdAt 2025-02-06T12:00:00;
+    $c19 isa creates (supervisor: $s6, project: $p19),
+        has createdAt 2025-02-07T14:45:00;
+    $c20 isa creates (supervisor: $s6, project: $p20),
+        has createdAt 2025-02-08T10:15:00;
+    $c21 isa creates (supervisor: $s6, project: $p21),
+        has createdAt 2025-02-09T15:30:00;
+    $c22 isa creates (supervisor: $s7, project: $p22),
+        has createdAt 2025-02-10T08:20:00;
+    $c23 isa creates (supervisor: $s7, project: $p23),
+        has createdAt 2025-02-11T11:45:00;
+    $c24 isa creates (supervisor: $s7, project: $p24),
+        has createdAt 2025-02-12T13:30:00;
+    $c25 isa creates (supervisor: $s7, project: $p25),
+        has createdAt 2025-02-13T16:10:00;
+    $c26 isa creates (supervisor: $s8, project: $p26),
+        has createdAt 2025-02-14T09:00:00;
+    $c27 isa creates (supervisor: $s8, project: $p27),
+        has createdAt 2025-02-15T12:30:00;
+    $c28 isa creates (supervisor: $s9, project: $p28),
+        has createdAt 2025-02-16T14:20:00;
+    $c29 isa creates (supervisor: $s9, project: $p29),
+        has createdAt 2025-02-17T10:45:00;
+    $c30 isa creates (supervisor: $s9, project: $p30),
+        has createdAt 2025-02-18T15:15:00;
+    $c31 isa creates (supervisor: $s10, project: $p31),
+        has createdAt 2025-02-19T08:30:00;
+    $c32 isa creates (supervisor: $s10, project: $p32),
+        has createdAt 2025-02-20T11:20:00;
+    $c33 isa creates (supervisor: $s10, project: $p33),
+        has createdAt 2025-02-21T13:45:00;
+
+    # Business projects relations
+    $bp1 isa hasProjects (business: $b1, project: $p1);
+    $bp2 isa hasProjects (business: $b1, project: $p2);
+    $bp3 isa hasProjects (business: $b1, project: $p3);
+    $bp4 isa hasProjects (business: $b1, project: $p4);
+    $bp5 isa hasProjects (business: $b2, project: $p5);
+    $bp6 isa hasProjects (business: $b2, project: $p6);
+    $bp7 isa hasProjects (business: $b2, project: $p7);
+    $bp8 isa hasProjects (business: $b3, project: $p8);
+    $bp9 isa hasProjects (business: $b3, project: $p9);
+    $bp10 isa hasProjects (business: $b3, project: $p10);
+    $bp11 isa hasProjects (business: $b3, project: $p11);
+    $bp12 isa hasProjects (business: $b3, project: $p12);
+    $bp13 isa hasProjects (business: $b4, project: $p13);
+    $bp14 isa hasProjects (business: $b4, project: $p14);
+    $bp15 isa hasProjects (business: $b4, project: $p15);
+    $bp16 isa hasProjects (business: $b4, project: $p16);
+    $bp17 isa hasProjects (business: $b5, project: $p17);
+    $bp18 isa hasProjects (business: $b5, project: $p18);
+    $bp19 isa hasProjects (business: $b6, project: $p19);
+    $bp20 isa hasProjects (business: $b6, project: $p20);
+    $bp21 isa hasProjects (business: $b6, project: $p21);
+    $bp22 isa hasProjects (business: $b7, project: $p22);
+    $bp23 isa hasProjects (business: $b7, project: $p23);
+    $bp24 isa hasProjects (business: $b7, project: $p24);
+    $bp25 isa hasProjects (business: $b7, project: $p25);
+    $bp26 isa hasProjects (business: $b8, project: $p26);
+    $bp27 isa hasProjects (business: $b8, project: $p27);
+    $bp28 isa hasProjects (business: $b9, project: $p28);
+    $bp29 isa hasProjects (business: $b9, project: $p29);
+    $bp30 isa hasProjects (business: $b9, project: $p30);
+    $bp31 isa hasProjects (business: $b10, project: $p31);
+    $bp32 isa hasProjects (business: $b10, project: $p32);
+    $bp33 isa hasProjects (business: $b10, project: $p33);
+
+    # Tasks (sample - 50 tasks across various projects)
     $t1 isa task,
-        has name "UX Researcher",
-        has description "Conduct user research and create personas for the digital platform",
-        has totalNeeded 1,
-        has createdAt 2025-04-15T14:30:00;
+        has name "IoT Sensor Specialist",
+        has description "Implementatie van bodemvochtigheidssensoren en data verzameling",
+        has totalNeeded 2,
+        has createdAt 2025-01-20T09:30:00;
 
     $t2 isa task,
-        has name "UI Designer",
-        has description "Create high-fidelity mockups and prototypes",
-        has totalNeeded 2,
-        has createdAt 2025-04-15T14:45:00;
+        has name "Data Analytics Developer",
+        has description "Ontwikkeling van dashboard voor bodemkwaliteit visualisatie",
+        has totalNeeded 1,
+        has createdAt 2025-01-21T11:00:00;
 
     $t3 isa task,
-        has name "Interaction Designer",
-        has description "Design interactive elements for the kiosk interface",
-        has totalNeeded 2,
-        has createdAt 2025-04-14T11:20:00;
+        has name "Mobile App Designer",
+        has description "UI/UX ontwerp voor farmer-friendly mobile interface",
+        has totalNeeded 1,
+        has createdAt 2025-01-21T11:30:00;
 
     $t4 isa task,
-        has name "Data Analyst",
-        has description "Develop data visualizations for the event dashboard",
-        has totalNeeded 3,
-        has createdAt 2025-04-12T17:10:00;
+        has name "Certificering Consultant",
+        has description "Expertise in biologische certificering processen",
+        has totalNeeded 1,
+        has createdAt 2025-01-22T14:45:00;
 
     $t5 isa task,
-        has name "Cloud Architect",
-        has description "Architect the cloud infrastructure and migration plan",
+        has name "Weather API Integrator",
+        has description "Integratie van weerdata met landbouw systemen",
         has totalNeeded 1,
-        has createdAt 2025-04-16T10:05:00;
+        has createdAt 2025-01-23T12:15:00;
 
-    # Project tasks relations
-    $pt1 isa projectTask (project: $p1, task: $t1);
-    $pt2 isa projectTask (project: $p1, task: $t2);
-    $pt3 isa projectTask (project: $p2, task: $t3);
-    $pt4 isa projectTask (project: $p3, task: $t4);
-    $pt5 isa projectTask (project: $p4, task: $t5);
+    $t6 isa task,
+        has name "Machine Learning Engineer",
+        has description "Ontwikkeling van voorspellende modellen voor melkproductie",
+        has totalNeeded 2,
+        has createdAt 2025-01-24T09:00:00;
 
-    # Task skill relations
-    $ts1 isa taskSkill (task: $t1, skill: $sk2);
-    $ts2 isa taskSkill (task: $t2, skill: $sk2);
-    $ts3 isa taskSkill (task: $t3, skill: $sk2);
-    $ts4 isa taskSkill (task: $t4, skill: $sk3);
-    $ts5 isa taskSkill (task: $t5, skill: $sk4);
-    $ts6 isa taskSkill (task: $t5, skill: $sk1);
+    $t7 isa task,
+        has name "Voeding Calculator Developer",
+        has description "Algoritme ontwikkeling voor optimale voedersamenstelling",
+        has totalNeeded 1,
+        has createdAt 2025-01-25T13:50:00;
 
-    # Student skill relations
-    $stsk1 isa studentSkill (student: $u2, skill: $sk1),
-        has description "Completed several advanced Python projects during internship";
+    $t8 isa task,
+        has name "Animal Welfare Sensor Tech",
+        has description "Implementatie van dierenwelzijn monitoring systemen",
+        has totalNeeded 2,
+        has createdAt 2025-01-26T16:30:00;
 
-    $stsk2 isa studentSkill (student: $u2, skill: $sk2),
-        has description "Certified UI/UX designer with portfolio of client work";
+    $t9 isa task,
+        has name "Drone Pilot & Analyst",
+        has description "Drone operatie en gewasanalyse via beeldherkenning",
+        has totalNeeded 1,
+        has createdAt 2025-01-27T09:45:00;
 
-    $stsk3 isa studentSkill (student: $u3, skill: $sk1),
-        has description "Experienced in Django and FastAPI frameworks";
+    $t10 isa task,
+        has name "Computer Vision Developer",
+        has description "AI algoritmen voor gewasziekte detectie via drone beelden",
+        has totalNeeded 2,
+        has createdAt 2025-01-27T10:15:00;
 
-    $stsk4 isa studentSkill (student: $u3, skill: $sk3),
-        has description "Experienced with D3.js and Tableau";
+    $t11 isa task,
+        has name "Irrigation System Engineer",
+        has description "Automatische irrigatie systeem ontwikkeling",
+        has totalNeeded 1,
+        has createdAt 2025-01-28T13:15:00;
 
-    # Task registrations
-    $tr1 isa taskRegistration (student: $u2, task: $t1),
-        has description "I'm passionate about understanding user needs and creating meaningful experiences",
-        has createdAt 2025-04-18T10:18:00;
+    $t12 isa task,
+        has name "Farm Dashboard Developer",
+        has description "Centraal beheersysteem voor alle farm operaties",
+        has totalNeeded 2,
+        has createdAt 2025-01-29T16:00:00;
 
-    $tr2 isa taskRegistration (student: $u2, task: $t2),
-        has description "I have extensive experience with design systems and prototyping tools",
-        has isAccepted false,
-        has response "We're looking for someone with more industry experience for this role",
-        has createdAt 2025-04-18T13:45:00;
+    $t13 isa task,
+        has name "Blockchain Developer",
+        has description "Supply chain traceability met blockchain technologie",
+        has totalNeeded 1,
+        has createdAt 2025-01-30T10:50:00;
 
-    $tr3 isa taskRegistration (student: $u3, task: $t4),
-        has description "I've completed several data visualization projects and would love to apply my skills",
+    $t14 isa task,
+        has name "Harvest Prediction Analyst",
+        has description "Machine learning voor oogstvoorspellingen",
+        has totalNeeded 1,
+        has createdAt 2025-01-31T14:40:00;
+
+    $t15 isa task,
+        has name "Climate AI Specialist",
+        has description "AI ontwikkeling voor optimale kasklimaat controle",
+        has totalNeeded 2,
+        has createdAt 2025-02-01T09:15:00;
+
+    $t16 isa task,
+        has name "Vertical Farm Automation Engineer",
+        has description "Automatisering van vertical farming systemen",
+        has totalNeeded 1,
+        has createdAt 2025-02-02T12:00:00;
+
+    $t17 isa task,
+        has name "Hydroponic Systems Developer",
+        has description "Monitoring systemen voor hydroponic nutriënten",
+        has totalNeeded 1,
+        has createdAt 2025-02-03T13:45:00;
+
+    $t18 isa task,
+        has name "Energy Efficiency Analyst",
+        has description "Optimalisatie van energieverbruik in kassen",
+        has totalNeeded 1,
+        has createdAt 2025-02-04T16:50:00;
+
+    $t19 isa task,
+        has name "Lab Data Manager",
+        has description "Digitalisering van bodemanalyse lab processen",
+        has totalNeeded 1,
+        has createdAt 2025-02-05T10:00:00;
+
+    $t20 isa task,
+        has name "Fertilizer Algorithm Developer",
+        has description "Automatische bemestingsadvies algoritmen",
+        has totalNeeded 2,
+        has createdAt 2025-02-06T12:30:00;
+
+    $t21 isa task,
+        has name "Water Quality Monitor Specialist",
+        has description "Waterkwaliteit monitoring voor viskwekerijen",
+        has totalNeeded 1,
+        has createdAt 2025-02-07T15:15:00;
+
+    $t22 isa task,
+        has name "Aquaponics System Designer",
+        has description "Balancing tool voor aquaponics ecosystemen",
+        has totalNeeded 1,
+        has createdAt 2025-02-08T10:45:00;
+
+    $t23 isa task,
+        has name "Fish Feed Optimizer",
+        has description "Data-gedreven optimalisatie van visvoeders",
+        has totalNeeded 1,
+        has createdAt 2025-02-09T16:00:00;
+
+    $t24 isa task,
+        has name "Computer Vision Fruit Analyst",
+        has description "Fruitrijpheid detectie via computer vision",
+        has totalNeeded 2,
+        has createdAt 2025-02-10T08:50:00;
+
+    $t25 isa task,
+        has name "Robotics Control Engineer",
+        has description "Besturingssystemen voor oogstrobots",
+        has totalNeeded 1,
+        has createdAt 2025-02-11T12:15:00;
+
+    $t26 isa task,
+        has name "Orchard Layout Planner",
+        has description "Optimale boomgaard planning algoritmen",
+        has totalNeeded 1,
+        has createdAt 2025-02-12T14:00:00;
+
+    $t27 isa task,
+        has name "Pesticide Tracking Developer",
+        has description "Monitoring systeem voor pesticide gebruik",
+        has totalNeeded 1,
+        has createdAt 2025-02-13T16:40:00;
+
+    $t28 isa task,
+        has name "Fleet Management Developer",
+        has description "GPS-gebaseerd beheer van landbouwmachines",
+        has totalNeeded 2,
+        has createdAt 2025-02-14T09:30:00;
+
+    $t29 isa task,
+        has name "Predictive Maintenance Analyst",
+        has description "Voorspellend onderhoud voor landbouwequipment",
+        has totalNeeded 1,
+        has createdAt 2025-02-15T13:00:00;
+
+    $t30 isa task,
+        has name "Biodiversity Data Scientist",
+        has description "Monitoring van biodiversiteit op boerderijen",
+        has totalNeeded 1,
+        has createdAt 2025-02-16T14:50:00;
+
+    $t31 isa task,
+        has name "Biodynamic Calendar App Developer",
+        has description "Mobile app voor biodynamische praktijken",
+        has totalNeeded 1,
+        has createdAt 2025-02-17T11:15:00;
+
+    $t32 isa task,
+        has name "Ecosystem Balance Analyst",
+        has description "Holistische monitoring van farm ecosystemen",
+        has totalNeeded 1,
+        has createdAt 2025-02-18T15:45:00;
+
+    $t33 isa task,
+        has name "Supply Chain Optimizer",
+        has description "Optimalisatie van landbouwproduct distributie",
+        has totalNeeded 2,
+        has createdAt 2025-02-19T09:00:00;
+
+    $t34 isa task,
+        has name "Temperature Monitoring Specialist",
+        has description "Temperature tracking tijdens transport",
+        has totalNeeded 1,
+        has createdAt 2025-02-20T11:50:00;
+
+    $t35 isa task,
+        has name "Warehouse Automation Engineer",
+        has description "Automatisering van opslagsystemen",
+        has totalNeeded 1,
+        has createdAt 2025-02-21T14:15:00;
+
+    # Add more tasks for variety (tasks 36-50)
+    $t36 isa task,
+        has name "Soil Health Data Analyst",
+        has description "Analyse van bodemgezondheid trends en patronen",
+        has totalNeeded 1,
+        has createdAt 2025-01-20T10:00:00;
+
+    $t37 isa task,
+        has name "Organic Compliance Checker",
+        has description "Automatische controle van biologische normen",
+        has totalNeeded 1,
+        has createdAt 2025-01-22T15:00:00;
+
+    $t38 isa task,
+        has name "Weather Impact Modeler",
+        has description "Modellering van weersinvloed op gewassen",
+        has totalNeeded 1,
+        has createdAt 2025-01-23T13:00:00;
+
+    $t39 isa task,
+        has name "Dairy Quality Controller",
+        has description "Kwaliteitscontrole systemen voor melkproducten",
+        has totalNeeded 2,
+        has createdAt 2025-01-24T10:00:00;
+
+    $t40 isa task,
+        has name "Livestock Behavior Analyst",
+        has description "Analyse van veedrag voor welzijnsoptimalisatie",
+        has totalNeeded 1,
+        has createdAt 2025-01-26T17:00:00;
+
+    $t41 isa task,
+        has name "Crop Disease Predictor",
+        has description "Voorspelling van gewasziekten via AI",
+        has totalNeeded 2,
+        has createdAt 2025-01-27T11:00:00;
+
+    $t42 isa task,
+        has name "Smart Greenhouse Controller",
+        has description "Intelligente sturing van kas systemen",
+        has totalNeeded 1,
+        has createdAt 2025-02-01T10:00:00;
+
+    $t43 isa task,
+        has name "Nutrient Solution Optimizer",
+        has description "Optimalisatie van nutriëntoplossingen",
+        has totalNeeded 1,
+        has createdAt 2025-02-03T14:30:00;
+
+    $t44 isa task,
+        has name "Soil Testing Automation",
+        has description "Automatisering van bodemtesten",
+        has totalNeeded 1,
+        has createdAt 2025-02-05T11:00:00;
+
+    $t45 isa task,
+        has name "Aquatic Ecosystem Monitor",
+        has description "Monitoring van aquatische ecosystemen",
+        has totalNeeded 1,
+        has createdAt 2025-02-07T16:00:00;
+
+    $t46 isa task,
+        has name "Harvest Quality Inspector",
+        has description "Automatische kwaliteitsinspectie van oogst",
+        has totalNeeded 2,
+        has createdAt 2025-02-10T09:30:00;
+
+    $t47 isa task,
+        has name "Farm Equipment Optimizer",
+        has description "Optimalisatie van landbouwmachine inzet",
+        has totalNeeded 1,
+        has createdAt 2025-02-14T10:30:00;
+
+    $t48 isa task,
+        has name "Ecological Balance Assessor",
+        has description "Beoordeling van ecologische balans",
+        has totalNeeded 1,
+        has createdAt 2025-02-16T16:00:00;
+
+    $t49 isa task,
+        has name "Cold Chain Analytics",
+        has description "Analyse van koude keten prestaties",
+        has totalNeeded 1,
+        has createdAt 2025-02-20T12:30:00;
+
+    $t50 isa task,
+        has name "Inventory Management Developer",
+        has description "Voorraadbeheersystemen voor agri-producten",
+        has totalNeeded 1,
+        has createdAt 2025-02-21T15:00:00;
+
+    # Project-task relations (each project 1-7 tasks)
+    $pt1 isa containsTask (project: $p1, task: $t1);
+    $pt2 isa containsTask (project: $p1, task: $t36);
+    $pt3 isa containsTask (project: $p2, task: $t2);
+    $pt4 isa containsTask (project: $p2, task: $t3);
+    $pt5 isa containsTask (project: $p3, task: $t4);
+    $pt6 isa containsTask (project: $p3, task: $t37);
+    $pt7 isa containsTask (project: $p4, task: $t5);
+    $pt8 isa containsTask (project: $p4, task: $t38);
+    $pt9 isa containsTask (project: $p5, task: $t6);
+    $pt10 isa containsTask (project: $p5, task: $t39);
+    $pt11 isa containsTask (project: $p6, task: $t7);
+    $pt12 isa containsTask (project: $p7, task: $t8);
+    $pt13 isa containsTask (project: $p7, task: $t40);
+    $pt14 isa containsTask (project: $p8, task: $t9);
+    $pt15 isa containsTask (project: $p8, task: $t10);
+    $pt16 isa containsTask (project: $p8, task: $t41);
+    $pt17 isa containsTask (project: $p9, task: $t11);
+    $pt18 isa containsTask (project: $p10, task: $t12);
+    $pt19 isa containsTask (project: $p11, task: $t13);
+    $pt20 isa containsTask (project: $p12, task: $t14);
+    $pt21 isa containsTask (project: $p13, task: $t15);
+    $pt22 isa containsTask (project: $p13, task: $t42);
+    $pt23 isa containsTask (project: $p14, task: $t16);
+    $pt24 isa containsTask (project: $p15, task: $t17);
+    $pt25 isa containsTask (project: $p15, task: $t43);
+    $pt26 isa containsTask (project: $p16, task: $t18);
+    $pt27 isa containsTask (project: $p17, task: $t19);
+    $pt28 isa containsTask (project: $p17, task: $t44);
+    $pt29 isa containsTask (project: $p18, task: $t20);
+    $pt30 isa containsTask (project: $p19, task: $t21);
+    $pt31 isa containsTask (project: $p19, task: $t45);
+    $pt32 isa containsTask (project: $p20, task: $t22);
+    $pt33 isa containsTask (project: $p21, task: $t23);
+    $pt34 isa containsTask (project: $p22, task: $t24);
+    $pt35 isa containsTask (project: $p22, task: $t46);
+    $pt36 isa containsTask (project: $p23, task: $t25);
+    $pt37 isa containsTask (project: $p24, task: $t26);
+    $pt38 isa containsTask (project: $p25, task: $t27);
+    $pt39 isa containsTask (project: $p26, task: $t28);
+    $pt40 isa containsTask (project: $p26, task: $t47);
+    $pt41 isa containsTask (project: $p27, task: $t29);
+    $pt42 isa containsTask (project: $p28, task: $t30);
+    $pt43 isa containsTask (project: $p28, task: $t48);
+    $pt44 isa containsTask (project: $p29, task: $t31);
+    $pt45 isa containsTask (project: $p30, task: $t32);
+    $pt46 isa containsTask (project: $p31, task: $t33);
+    $pt47 isa containsTask (project: $p32, task: $t34);
+    $pt48 isa containsTask (project: $p32, task: $t49);
+    $pt49 isa containsTask (project: $p33, task: $t35);
+    $pt50 isa containsTask (project: $p33, task: $t50);
+
+    # Task-skill relations (each task requires 1-4 skills)
+    $ts1 isa requiresSkill (task: $t1, skill: $sk12);
+    $ts2 isa requiresSkill (task: $t1, skill: $sk2);
+    $ts3 isa requiresSkill (task: $t2, skill: $sk11);
+    $ts4 isa requiresSkill (task: $t2, skill: $sk1);
+    $ts5 isa requiresSkill (task: $t3, skill: $sk11);
+    $ts6 isa requiresSkill (task: $t4, skill: $sk14);
+    $ts7 isa requiresSkill (task: $t5, skill: $sk11);
+    $ts8 isa requiresSkill (task: $t5, skill: $sk2);
+    $ts9 isa requiresSkill (task: $t6, skill: $sk11);
+    $ts10 isa requiresSkill (task: $t6, skill: $sk3);
+    $ts11 isa requiresSkill (task: $t7, skill: $sk15);
+    $ts12 isa requiresSkill (task: $t7, skill: $sk3);
+    $ts13 isa requiresSkill (task: $t8, skill: $sk12);
+    $ts14 isa requiresSkill (task: $t8, skill: $sk3);
+    $ts15 isa requiresSkill (task: $t9, skill: $sk4);
+    $ts16 isa requiresSkill (task: $t10, skill: $sk11);
+    $ts17 isa requiresSkill (task: $t10, skill: $sk2);
+    $ts18 isa requiresSkill (task: $t11, skill: $sk12);
+    $ts19 isa requiresSkill (task: $t11, skill: $sk4);
+    $ts20 isa requiresSkill (task: $t12, skill: $sk11);
+    $ts21 isa requiresSkill (task: $t12, skill: $sk4);
+    $ts22 isa requiresSkill (task: $t13, skill: $sk11);
+    $ts23 isa requiresSkill (task: $t13, skill: $sk13);
+    $ts24 isa requiresSkill (task: $t14, skill: $sk11);
+    $ts25 isa requiresSkill (task: $t14, skill: $sk2);
+    $ts26 isa requiresSkill (task: $t15, skill: $sk5);
+    $ts27 isa requiresSkill (task: $t15, skill: $sk11);
+    $ts28 isa requiresSkill (task: $t16, skill: $sk5);
+    $ts29 isa requiresSkill (task: $t16, skill: $sk12);
+    $ts30 isa requiresSkill (task: $t17, skill: $sk5);
+    $ts31 isa requiresSkill (task: $t17, skill: $sk15);
+    $ts32 isa requiresSkill (task: $t18, skill: $sk5);
+    $ts33 isa requiresSkill (task: $t18, skill: $sk11);
+    $ts34 isa requiresSkill (task: $t19, skill: $sk1);
+    $ts35 isa requiresSkill (task: $t19, skill: $sk11);
+    $ts36 isa requiresSkill (task: $t20, skill: $sk6);
+    $ts37 isa requiresSkill (task: $t20, skill: $sk1);
+    $ts38 isa requiresSkill (task: $t21, skill: $sk7);
+    $ts39 isa requiresSkill (task: $t21, skill: $sk12);
+    $ts40 isa requiresSkill (task: $t22, skill: $sk7);
+    $ts41 isa requiresSkill (task: $t22, skill: $sk15);
+    $ts42 isa requiresSkill (task: $t23, skill: $sk7);
+    $ts43 isa requiresSkill (task: $t23, skill: $sk11);
+    $ts44 isa requiresSkill (task: $t24, skill: $sk8);
+    $ts45 isa requiresSkill (task: $t24, skill: $sk11);
+    $ts46 isa requiresSkill (task: $t25, skill: $sk8);
+    $ts47 isa requiresSkill (task: $t25, skill: $sk9);
+    $ts48 isa requiresSkill (task: $t26, skill: $sk8);
+    $ts49 isa requiresSkill (task: $t26, skill: $sk11);
+    $ts50 isa requiresSkill (task: $t27, skill: $sk8);
+    $ts51 isa requiresSkill (task: $t27, skill: $sk11);
+    $ts52 isa requiresSkill (task: $t28, skill: $sk9);
+    $ts53 isa requiresSkill (task: $t28, skill: $sk11);
+    $ts54 isa requiresSkill (task: $t29, skill: $sk9);
+    $ts55 isa requiresSkill (task: $t29, skill: $sk11);
+    $ts56 isa requiresSkill (task: $t30, skill: $sk10);
+    $ts57 isa requiresSkill (task: $t30, skill: $sk11);
+    $ts58 isa requiresSkill (task: $t31, skill: $sk10);
+    $ts59 isa requiresSkill (task: $t31, skill: $sk11);
+    $ts60 isa requiresSkill (task: $t32, skill: $sk10);
+    $ts61 isa requiresSkill (task: $t32, skill: $sk2);
+    $ts62 isa requiresSkill (task: $t33, skill: $sk13);
+    $ts63 isa requiresSkill (task: $t33, skill: $sk11);
+    $ts64 isa requiresSkill (task: $t34, skill: $sk13);
+    $ts65 isa requiresSkill (task: $t34, skill: $sk12);
+    $ts66 isa requiresSkill (task: $t35, skill: $sk13);
+    $ts67 isa requiresSkill (task: $t35, skill: $sk9);
+
+    # Add skill requirements for remaining tasks
+    $ts68 isa requiresSkill (task: $t36, skill: $sk1);
+    $ts69 isa requiresSkill (task: $t36, skill: $sk11);
+    $ts70 isa requiresSkill (task: $t37, skill: $sk14);
+    $ts71 isa requiresSkill (task: $t38, skill: $sk2);
+    $ts72 isa requiresSkill (task: $t38, skill: $sk11);
+    $ts73 isa requiresSkill (task: $t39, skill: $sk3);
+    $ts74 isa requiresSkill (task: $t39, skill: $sk11);
+    $ts75 isa requiresSkill (task: $t40, skill: $sk3);
+    $ts76 isa requiresSkill (task: $t40, skill: $sk11);
+    $ts77 isa requiresSkill (task: $t41, skill: $sk2);
+    $ts78 isa requiresSkill (task: $t41, skill: $sk11);
+    $ts79 isa requiresSkill (task: $t42, skill: $sk5);
+    $ts80 isa requiresSkill (task: $t42, skill: $sk12);
+    $ts81 isa requiresSkill (task: $t43, skill: $sk5);
+    $ts82 isa requiresSkill (task: $t43, skill: $sk15);
+    $ts83 isa requiresSkill (task: $t44, skill: $sk1);
+    $ts84 isa requiresSkill (task: $t44, skill: $sk12);
+    $ts85 isa requiresSkill (task: $t45, skill: $sk7);
+    $ts86 isa requiresSkill (task: $t45, skill: $sk10);
+    $ts87 isa requiresSkill (task: $t46, skill: $sk8);
+    $ts88 isa requiresSkill (task: $t46, skill: $sk11);
+    $ts89 isa requiresSkill (task: $t47, skill: $sk9);
+    $ts90 isa requiresSkill (task: $t47, skill: $sk4);
+    $ts91 isa requiresSkill (task: $t48, skill: $sk10);
+    $ts92 isa requiresSkill (task: $t48, skill: $sk2);
+    $ts93 isa requiresSkill (task: $t49, skill: $sk13);
+    $ts94 isa requiresSkill (task: $t49, skill: $sk11);
+    $ts95 isa requiresSkill (task: $t50, skill: $sk13);
+    $ts96 isa requiresSkill (task: $t50, skill: $sk11);
+
+    # Student skills
+    $stsk1 isa hasSkill (student: $u2, skill: $sk11),
+        has description "Ervaring met Python data analytics en machine learning frameworks";
+
+    $stsk2 isa hasSkill (student: $u2, skill: $sk12),
+        has description "Praktijkervaring met Arduino en Raspberry Pi IoT projecten";
+
+    $stsk3 isa hasSkill (student: $u2, skill: $sk1),
+        has description "Stage gelopen bij bodemonderzoek laboratorium";
+
+    $stsk4 isa hasSkill (student: $u3, skill: $sk2),
+        has description "Specialisatie in remote sensing en gewasmonitoring";
+
+    $stsk5 isa hasSkill (student: $u3, skill: $sk4),
+        has description "Ervaring met GPS-systemen en precisie landbouw tools";
+
+    $stsk6 isa hasSkill (student: $u3, skill: $sk8),
+        has description "Praktijkervaring in vader's fruitbedrijf";
+
+    $stsk7 isa hasSkill (student: $u4, skill: $sk5),
+        has description "Minor gevolgd in duurzame kastuinbouw";
+
+    $stsk8 isa hasSkill (student: $u4, skill: $sk7),
+        has description "Scriptie geschreven over aquaponics systemen";
+
+    $stsk9 isa hasSkill (student: $u4, skill: $sk15),
+        has description "Kennis van plant voeding en nutriënt balancing";
+
+    $stsk10 isa hasSkill (student: $u5, skill: $sk9),
+        has description "Praktijkervaring met landbouwmachine onderhoud";
+
+    $stsk11 isa hasSkill (student: $u5, skill: $sk13),
+        has description "Supply chain management cursus gevolgd";
+
+    $stsk12 isa hasSkill (student: $u5, skill: $sk3),
+        has description "Stage gelopen bij melkveehouderij";
+
+    # Task registrations (various acceptance statuses)
+    $tr1 isa registersForTask (student: $u2, task: $t1),
+        has description "Ik heb ervaring met IoT sensoren en wil graag bijdragen aan duurzame landbouw",
         has isAccepted true,
-        has response "Your portfolio is impressive! We'd be happy to have you join the team.",
-        has createdAt 2025-04-18T15:20:00;
+        has response "Je profiel past perfect bij wat we zoeken! Welkom bij het team.",
+        has createdAt 2025-02-22T09:00:00;
+
+    $tr2 isa registersForTask (student: $u2, task: $t2),
+        has description "Mijn data analytics ervaring kan goed van pas komen bij dit dashboard project",
+        has createdAt 2025-02-22T09:30:00;
+
+    $tr3 isa registersForTask (student: $u3, task: $t9),
+        has description "Ik ben gecertificeerd dronepiloot en heb ervaring met gewasanalyse",
+        has isAccepted true,
+        has response "Uitstekend! Je drone certificaat en gewaskennis zijn precies wat we nodig hebben.",
+        has createdAt 2025-02-22T10:15:00;
+
+    $tr4 isa registersForTask (student: $u3, task: $t24),
+        has description "Computer vision voor fruitkwaliteit ligt in lijn met mijn interesse in fruitteelt",
+        has createdAt 2025-02-22T11:00:00;
+
+    $tr5 isa registersForTask (student: $u4, task: $t17),
+        has description "Hydroponic systemen zijn mijn specialiteit, ik zou graag willen bijdragen",
+        has isAccepted false,
+        has response "We zoeken iemand met meer commerciële ervaring voor dit project",
+        has createdAt 2025-02-22T13:30:00;
+
+    $tr6 isa registersForTask (student: $u4, task: $t22),
+        has description "Mijn scriptie ging over aquaponics, dit project sluit perfect aan",
+        has isAccepted true,
+        has response "Je scriptie hebben we gelezen, indrukwekkend werk! Je bent aangenomen.",
+        has createdAt 2025-02-22T14:15:00;
+
+    $tr7 isa registersForTask (student: $u5, task: $t28),
+        has description "Fleet management voor landbouwmachines combineert mijn technische en logistieke interesse",
+        has createdAt 2025-02-22T15:45:00;
+
+    $tr8 isa registersForTask (student: $u5, task: $t33),
+        has description "Supply chain optimalisatie is iets waar ik me in wil specialiseren",
+        has isAccepted true,
+        has response "Je achtergrond in zowel techniek als logistiek maakt je de ideale kandidaat!",
+        has createdAt 2025-02-22T16:20:00;
