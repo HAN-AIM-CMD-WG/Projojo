@@ -60,17 +60,17 @@ This will connect you to the TypeDB instance running in your local Docker contai
 
 ### Managing the Database
 
-To reset the TypeDB database and start fresh, you can use the `-reset` flag with the `docker-start` scripts, or manually run the following commands:
+To reset the TypeDB database and start fresh, you can use the `-reset` flag with the `docker-start` scripts shown at [quick start](#quick-start), or manually run the following commands:
 
 ```bash
 # Stop all containers
-docker-compose down
+docker compose down
 
 # Remove the volume
 docker volume rm projojo_typedb-data
 
 # Start everything back up
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Development Workflow
@@ -80,12 +80,12 @@ docker-compose up -d
    - Backend changes trigger automatic reload via the --reload flag in uvicorn
 
 2. **Container Management**:
-   - View logs: `docker-compose logs -f`
-   - Rebuild after dependency changes: `docker-compose build [service_name]`
+   - View logs: `docker compose logs -f`
+   - Rebuild after dependency changes: `docker compose up --build [service_name]`
 
 3. **Debugging**:
    - Frontend: Browser developer tools
-   - Backend: View logs with `docker-compose logs -f backend`
+   - Backend: View logs with `docker compose logs -f backend`
 
 ### Frontend Dependencies Management
 
@@ -94,14 +94,14 @@ When adding or updating frontend packages:
 #### Method 1: Rebuild after package.json changes
 ```bash
 # After manually editing package.json
-docker-compose build frontend
-docker-compose up -d frontend
+docker compose build frontend
+docker compose up -d frontend
 ```
 
 #### Method 2: Install inside the container
 ```bash
 # Access frontend container shell
-docker-compose exec frontend sh
+docker compose exec frontend sh
 
 # Install packages
 npm install package-name --save         # For runtime dependencies
@@ -120,27 +120,17 @@ The backend uses **uv** for modern Python dependency management. Think of uv as 
 - `uv add <dependency>` ≈ `npm install <dependency>`
 - `uv sync` ≈ `npm ci`
 
-**Quick Start:**
-```bash
-# Add a dependency locally
-cd projojo_backend
-uv add fastapi-users
-
-# Apply to Docker
-docker-compose up --build backend
-```
-
-For complete documentation on backend dependency management, see the [Backend README](./projojo_backend/README.md#dependency-management).
+For the complete documentation on backend dependency management, see the [backend README](./projojo_backend/README.md#dependency-management).
 
 ### Troubleshooting
 
 If HMR stops working or the frontend container's CPU usage drops significantly:
-1. Restart the frontend container: `docker-compose restart frontend`
-2. If the issue persists, try rebuilding: `docker-compose build --no-cache frontend`
+1. Restart the frontend container: `docker compose restart frontend`
+2. If the issue persists, try rebuilding: `docker compose build --no-cache frontend`
 
 For TypeDB connection issues:
 1. Ensure the TypeDB container is running: `docker ps`
-2. Check backend logs: `docker-compose logs backend`
+2. Check backend logs: `docker compose logs backend`
 
 #### Windows-Docker File Synchronization Issues
 
@@ -156,7 +146,7 @@ watch: {
 ```
 
 2. If file changes are still not detected, try:
-   - Restarting the containers: `docker-compose restart`
+   - Restarting the containers: `docker compose restart`
    - In extreme cases, restart Docker Desktop completely
 
 ## Legacy Setup (Not Recommended)

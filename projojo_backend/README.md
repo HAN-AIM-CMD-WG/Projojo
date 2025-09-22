@@ -20,12 +20,14 @@ FastAPI backend service for the Projojo application.
 
 ## Quick Start
 ```bash
+# Run with Docker (from project root)
+docker compose up backend
+
 # Optional: Install dependencies locally for IDE support and dependency management
 cd projojo_backend
 uv sync
-
-# Run with Docker (from project root)
-docker compose up backend
+# Optional: Run backend locally (requires Python and uv installed)
+uv run python main.py
 ```
 
 ## What is uv?
