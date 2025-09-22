@@ -9,6 +9,7 @@ env/
 .env
 .env.local
 venv/
+.venv/
 ENV/
 .virtualenvs/
 

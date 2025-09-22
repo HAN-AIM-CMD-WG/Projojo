@@ -50,6 +50,7 @@ yarn-error.log*
 
 # Backend Python
 projojo_backend/venv/
+projojo_backend/.venv/
 projojo_backend/__pycache__/
 *.pyc
 *.pyo

@@ -24,6 +24,7 @@ services:
       - "8000:8000"
     volumes:
       - ./projojo_backend:/app
+      - /app/.venv # Anonymous volume to prevent host .venv from mounting
     environment:
       - TYPEDB_SERVER_ADDR=typedb:1729
       - TYPEDB_NAME=projojo_db
