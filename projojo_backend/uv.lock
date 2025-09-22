@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.13"
 
 [[package]]
@@ -121,7 +121,7 @@ dependencies = [
     { name = "typedb-driver" },
     { name = "typing-extensions" },
     { name = "uvicorn" },
-    { name = "uvloop" },
+    { name = "uvloop", marker = "sys_platform != 'win32'" },
     { name = "watchfiles" },
     { name = "websockets" },
 ]
@@ -146,7 +146,7 @@ requires-dist = [
     { name = "typedb-driver", specifier = "==3.4.0" },
     { name = "typing-extensions", specifier = "==4.12.2" },
     { name = "uvicorn", specifier = "==0.34.0" },
-    { name = "uvloop", specifier = "==0.21.0" },
+    { name = "uvloop", marker = "sys_platform != 'win32'", specifier = "==0.21.0" },
     { name = "watchfiles", specifier = "==1.0.4" },
     { name = "websockets", specifier = "==15.0" },
 ]

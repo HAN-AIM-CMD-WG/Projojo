@@ -29,6 +29,10 @@ uv sync
 # Optional: Run backend locally (requires Python and uv installed)
 uv run python main.py
 ```
+> [!IMPORTANT] Windows Compatibility Notice
+> **Dependency management** with uv **should work just fine** (installing, adding, removing packages). However, the TypeDB driver currently has **compatibility issues** on Windows due to missing native binaries for Python 3.13. Local development with `uv run python main.py` may fail with import errors.
+>
+> Windows users should use Docker for development or **switch to WSL2** (Windows Subsystem for Linux). **Docker works perfectly fine** as it runs a Linux environment and downloads the necessary native dependencies on the first run.
 
 ## What is uv?
 
