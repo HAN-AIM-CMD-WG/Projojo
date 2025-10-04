@@ -23,7 +23,7 @@ class Db:
     _connection_established = False
     
     @classmethod
-    def connect_with_retry(cls, max_retries=10, initial_delay=2):
+    def connect_with_retry(cls, max_retries=10, initial_delay=1):
         """Connect to TypeDB with retry logic and exponential backoff"""
         if cls._connection_established and cls.driver is not None:
             return  # Already connected
