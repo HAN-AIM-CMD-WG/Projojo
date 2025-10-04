@@ -48,7 +48,7 @@
                focus:ring-4 focus:ring-pink-300 transition-all 
                duration-200 transform hover:-translate-y-0.5 
                shadow-md hover:shadow-lg 
-               bg-primary hover:bg-pink-700 text-white;
+               bg-pink-600 hover:bg-pink-700 text-white;
     }
 
     .btn-primary:disabled {
