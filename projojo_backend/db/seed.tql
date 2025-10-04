@@ -2,6 +2,7 @@ insert
 
     # Teacher user
     $u1 isa teacher,
+        has id "4198c8e8-a160-4d9e-95f3-930089dc97d2", # Generated with terminal command: `python -c "import uuid; [print(f'{i+1}:\t{uuid.uuid4()}') for i in range(15)]"`
         has fullName "Henk van der Berg",
         has imagePath "teacher_profile.png",
         has schoolAccountName "H.vanderBerg",
@@ -10,6 +11,7 @@ insert
 
     # Student users
     $u2 isa student,
+        has id "f544fec0-b4ff-4133-bc5d-4c95f34518bd",
         has fullName "Emma Jansen",
         has imagePath "student_female.png",
         has email "emma.jansen@student.han.nl",
@@ -17,6 +19,7 @@ insert
         has password_hash "hash_123";
 
     $u3 isa student,
+        has id "b0d7e3ca-dad8-4b40-83dd-02a970aebce3",
         has fullName "Lucas de Vries",
         has imagePath "student_male.png",
         has email "lucas.devries@student.han.nl",
@@ -24,6 +27,7 @@ insert
         has password_hash "hash_123";
 
     $u4 isa student,
+        has id "9c98b49c-5c99-4959-86d1-0d3d79b98902",
         has fullName "Sophie Bakker",
         has imagePath "student_female.png",
         has email "sophie.bakker@student.han.nl",
@@ -31,6 +35,7 @@ insert
         has password_hash "hash_123";
 
     $u5 isa student,
+        has id "b3afaca3-f714-432e-ac97-c437600b163a",
         has fullName "Daan Vermeulen",
         has imagePath "student_male.png",
         has email "daan.vermeulen@student.han.nl",
@@ -38,11 +43,14 @@ insert
         has password_hash "hash_123";
 
     # Identity providers
-    $ip1 isa identityProvider,
+    $op1 isa oauthProvider,
+        has name "Microsoft";
+
+    $op2 isa oauthProvider,
         has name "Google";
 
-    $ip2 isa identityProvider,
-        has name "FarmSecure";
+    $op3 isa oauthProvider,
+        has name "GitHub";
 
     # Businesses
     $b1 isa business,
@@ -107,105 +115,120 @@ insert
 
     # Supervisor users (1 per business, 10 total)
     $s1 isa supervisor,
+        has id "98f07817-9ede-4e4f-8f1b-0fd65ac33322",
         has fullName "Jan Boersma",
         has imagePath "supervisor_male1.png",
         has email "j.boersma@goudakker.nl",
         has password_hash "hash_123";
 
     $s2 isa supervisor,
+        has id "bb4d39d3-68f0-4484-ac7e-8f5ee97f65c7",
         has fullName "Pieter Koster",
         has imagePath "supervisor_male2.png",
         has email "p.koster@veeteeltgroep.nl",
         has password_hash "hash_123";
 
     $s3 isa supervisor,
+        has id "a7877a75-2559-4703-8904-ec82370050a5",
         has fullName "Rob Hendriks",
         has imagePath "supervisor_male1.png",
         has email "r.hendriks@smartfarm.nl",
         has password_hash "hash_123";
 
     $s4 isa supervisor,
+        has id "cf555071-1e0a-475c-bb66-fb647bac6887",
         has fullName "Bert Scholten",
         has imagePath "supervisor_male2.png",
         has email "b.scholten@groenekassen.nl",
         has password_hash "hash_123";
 
     $s5 isa supervisor,
+        has id "a4a87085-4e88-49d8-9ce7-7667ed2d9583",
         has fullName "Henk van Leeuwen",
         has imagePath "supervisor_male1.png",
         has email "h.vanleeuwen@bodemexperts.nl",
         has password_hash "hash_123";
 
     $s6 isa supervisor,
+        has id "dea05349-5e94-4d09-9a08-75551ba8703c",
         has fullName "Tom van der Meer",
         has imagePath "supervisor_female.png",
         has email "t.vandermeer@aquacultuur.nl",
         has password_hash "hash_123";
 
     $s7 isa supervisor,
+        has id "70d0ed1d-617d-4477-9969-979c0c34636a",
         has fullName "Willem van Dijk",
         has imagePath "supervisor_male2.png",
         has email "w.vandijk@fruitboom.nl",
         has password_hash "hash_123";
 
     $s8 isa supervisor,
+        has id "9e790315-e167-40fe-a37a-6f644809a84a",
         has fullName "Gerrit Hoffman",
         has imagePath "supervisor_male1.png",
         has email "g.hoffman@mechanisatie.nl",
         has password_hash "hash_123";
 
     $s9 isa supervisor,
+        has id "23692031-7502-4927-8c98-b503966824ea",
         has fullName "Klaas Dijkstra",
         has imagePath "supervisor_male2.png",
         has email "k.dijkstra@biodynamisch.nl",
         has password_hash "hash_123";
 
     $s10 isa supervisor,
+        has id "b63b20c4-14cf-42b8-a473-2fe1b607eea5",
         has fullName "Jaap Koning",
         has imagePath "supervisor_female.png",
         has email "j.koning@agrilogistiek.nl",
         has password_hash "hash_123";
 
-    # Authenticates relations (all supervisors need at least one)
-    $auth1 isa authenticates (authenticated: $s1, authenticator: $ip1),
-        has username "j.boersma",
-        has id "agri_001";
+    # oauthAuthentication relations (each user has at least one, current max is 10, students and teachers can only have Microsoft)
+    $auth1 isa oauthAuthentication (user: $u1, provider: $op1),
+        has oauthSub "693888b2-2895-4b76-9e0e-d436b92a60a7";
 
-    $auth2 isa authenticates (authenticated: $s2, authenticator: $ip2),
-        has username "p.koster",
-        has id "agri_002";
+    $auth2 isa oauthAuthentication (user: $u2, provider: $op1),
+        has oauthSub "8e9ade83-393f-4af6-abe3-cf84750c204b";
 
-    $auth3 isa authenticates (authenticated: $s3, authenticator: $ip1),
-        has username "r.hendriks",
-        has id "agri_003";
+    $auth3 isa oauthAuthentication (user: $u3, provider: $op1),
+        has oauthSub "532abbac-e4cd-4bbb-817c-8a74f63f0336";
 
-    $auth4 isa authenticates (authenticated: $s4, authenticator: $ip2),
-        has username "b.scholten",
-        has id "agri_004";
+    $auth4 isa oauthAuthentication (user: $u4, provider: $op1),
+        has oauthSub "30efa333-270b-434e-85ea-ea698f172db0";
 
-    $auth5 isa authenticates (authenticated: $s5, authenticator: $ip1),
-        has username "h.vanleeuwen",
-        has id "agri_005";
+    $auth5 isa oauthAuthentication (user: $u5, provider: $op1),
+        has oauthSub "c7db864b-df3c-4f0a-b60d-b7ee41c9dff6";
 
-    $auth6 isa authenticates (authenticated: $s6, authenticator: $ip2),
-        has username "t.vandermeer",
-        has id "agri_006";
+    $auth6 isa oauthAuthentication (user: $s1, provider: $op2),
+        has oauthSub "d8eac5e6-c028-4d46-bd47-dfd10cbe2b2d";
 
-    $auth7 isa authenticates (authenticated: $s7, authenticator: $ip1),
-        has username "w.vandijk",
-        has id "agri_007";
+    $auth7 isa oauthAuthentication (user: $s2, provider: $op3),
+        has oauthSub "6154f59b-0606-4255-a7f7-43e807b29f3c";
 
-    $auth8 isa authenticates (authenticated: $s8, authenticator: $ip2),
-        has username "g.hoffman",
-        has id "agri_008";
+    $auth8 isa oauthAuthentication (user: $s3, provider: $op2),
+        has oauthSub "96a4d60b-3a9c-4a8a-a85d-7907734d85fe";
 
-    $auth9 isa authenticates (authenticated: $s9, authenticator: $ip1),
-        has username "k.dijkstra",
-        has id "agri_009";
+    $auth9 isa oauthAuthentication (user: $s4, provider: $op3),
+        has oauthSub "cf94bda9-84e4-4fc1-ba58-03461e9a8362";
 
-    $auth10 isa authenticates (authenticated: $s10, authenticator: $ip2),
-        has username "j.koning",
-        has id "agri_010";
+    $auth10 isa oauthAuthentication (user: $s5, provider: $op2),
+        has oauthSub "2d03ce23-6b1c-4d7d-b258-49b265b6afc8";
+
+    $auth11 isa oauthAuthentication (user: $s6, provider: $op3),
+        has oauthSub "44457bb7-dc92-4dce-99f4-e7d7fd70afa3";
+
+    $auth12 isa oauthAuthentication (user: $s7, provider: $op2),
+        has oauthSub "84892a7a-3efa-439f-a803-b4386135266d";
+
+    $auth13 isa oauthAuthentication (user: $s8, provider: $op3),
+        has oauthSub "6ee72385-22b0-4f13-b3ec-c901a8c0f28d";
+
+    $auth14 isa oauthAuthentication (user: $s9, provider: $op2),
+        has oauthSub "448af3a9-48c9-4a34-9bf5-7e9744431808";
+
+    $auth15 isa oauthAuthentication (user: $s10, provider: $op3),
+        has oauthSub "f265ad97-dd3c-4c52-82b8-1874d1f9675c";
 
     # Business management relations
     $m1 isa manages (supervisor: $s1, business: $b1),

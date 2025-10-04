@@ -68,7 +68,6 @@ entity inviteKey,
 relation oauthAuthentication,
     relates provider,
     relates user,
-    owns username @card(1),
     owns oauthSub @key;
 
 relation creates,
@@ -126,7 +125,6 @@ attribute fullName value string;
 attribute password_hash value string;
 attribute imagePath value string;
 attribute schoolAccountName value string;
-attribute username value string;
 attribute id value string;
 attribute oauthSub value string;
 attribute description value string;
