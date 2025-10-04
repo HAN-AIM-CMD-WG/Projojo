@@ -1,4 +1,4 @@
-import { expect, within } from '@storybook/test';
+import { expect, within } from 'storybook/test';
 import { AuthProvider, useAuth } from '../components/AuthProvider';
 import Task from '../components/Task';
 
