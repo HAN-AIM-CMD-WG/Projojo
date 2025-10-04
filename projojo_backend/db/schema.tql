@@ -1,27 +1,28 @@
 define
 
 entity user @abstract,
+    owns id @card(0..1), # (1) # TODO: switch `@key` with email field once id's are implemented
     owns email @key,
     owns imagePath @card(1),
     owns fullName @card(1),
-    owns password_hash @card(1);
+    owns password_hash @card(1), # TODO: remove once oauth is implemented
+    plays oauthAuthentication:user @card(0..10); # (1..10)
 
 entity supervisor sub user,
-    plays authenticates:authenticated @card(1..10),
     plays manages:supervisor @card(1),
     plays creates:supervisor @card(0..);
 
 entity student sub user,
-    owns schoolAccountName @card(1),
+    owns schoolAccountName @card(1), # TODO: can be removed, also update queries that expect this field
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..);
 
 entity teacher sub user,
-    owns schoolAccountName @card(1);
+    owns schoolAccountName @card(1); # TODO: can be removed, also update queries that expect this field
 
-entity identityProvider,
-    owns name @card(0..1),
-    plays authenticates:authenticator;
+entity oauthProvider,
+    owns name @card(0..1), # e.g. "microsoft", "google"
+    plays oauthAuthentication:provider;
 
 entity business,
     owns name @key,
@@ -64,11 +65,11 @@ entity inviteKey,
     owns createdAt @card(1),
     plays businessInvite:key @card(0..1);
 
-relation authenticates,
-    relates authenticator,
-    relates authenticated,
+relation oauthAuthentication,
+    relates provider,
+    relates user,
     owns username @card(1),
-    owns id @key;
+    owns oauthSub @key;
 
 relation creates,
     relates supervisor @card(1),
@@ -127,6 +128,7 @@ attribute imagePath value string;
 attribute schoolAccountName value string;
 attribute username value string;
 attribute id value string;
+attribute oauthSub value string;
 attribute description value string;
 attribute location value string;
 attribute isPending value boolean;
