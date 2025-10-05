@@ -386,22 +386,6 @@ export function createTeacherInviteKey() {
     });
 }
 
-
-export function login(credentials) {
-    return fetchWithError(`${API_BASE_URL}login`, {
-        method: "POST",
-        body: JSON.stringify(credentials),
-    });
-}
-export function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("payload");
-    return this
-}
-
-
-
-
 /**
  * @returns {Promise<User[]>}
  */

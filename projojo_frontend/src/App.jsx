@@ -15,6 +15,7 @@ import UpdateBusinessPage from './pages/UpdateBusinessPage';
 import { getAuthorization } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
+import AuthCallback from "./auth/AuthCallback";
 
 export default function App() {
   const { setAuthData } = useAuth();
@@ -36,6 +37,7 @@ export default function App() {
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />
           <Route path="/" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/home" element={<OverviewPage />} />
           <Route path="/projects">
             <Route path="add" element={<ProjectsAddPage />} />

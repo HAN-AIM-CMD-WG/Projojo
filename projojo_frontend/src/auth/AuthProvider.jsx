@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { getAuthorization, login } from '../services';
+import { getAuthorization } from '../services';
 import { jwtDecode } from "jwt-decode";
 import { notification } from "../components/notifications/NotifySystem";
 
@@ -34,35 +34,11 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Function to handle login
-    const handleLogin = async (credentials) => {
-        try {
-            const response = await login(credentials);
-            if (response && response.token) {
-                // Store token in localStorage
-                localStorage.setItem("token", response.token);
-
-                // Process the token and set auth state
-                const success = processToken(response.token);
-
-                if (success) {
-                    notification.success("Succesvol ingelogd");
-                    return { success: true };
-                }
-            }
-            return { success: false, error: "Login mislukt. Controleer uw gegevens." };
-        } catch (error) {
-            const errorMessage = "Er is een fout opgetreden bij het inloggen";
-            notification.error(errorMessage);
-            return { success: false, error: errorMessage };
-        }
-    };
-
     // Function to handle logout
     const handleLogout = () => {
         localStorage.removeItem("token");
         setAuthData({ type: "none", userId: null, businessId: null, isLoading: false });
-        notification.info("U bent uitgelogd");
+        notification.success("Je bent uitgelogd");
     };
 
     // Check for existing token on mount
@@ -79,7 +55,6 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{
             authData,
             setAuthData,
-            login: handleLogin,
             logout: handleLogout
         }}>
             {children}
