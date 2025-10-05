@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../services";
 
 export default function TestUserSelector({ onUserSelect }) {
+	// TODO: Update for OAuth authentication - generate JWT via test endpoint?
 	const [testUsers, setTestUsers] = useState([]);
 	const [isTestUsersLoading, setIsTestUsersLoading] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +36,6 @@ export default function TestUserSelector({ onUserSelect }) {
 		setSelectedUser(user);
 		setIsOpen(false);
 		if (user && onUserSelect) {
-			// TODO: Update for OAuth authentication - no more password needed
 			onUserSelect({
 				email: user.email,
 				// password: user.password_hash // Removed for OAuth

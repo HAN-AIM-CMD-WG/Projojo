@@ -11,6 +11,8 @@ SECRET_KEY = "test"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
+# TODO: compare this file (original) to `jwt_handler.py` (new) and see if we can merge them
+
 def create_jwt_token(user, supervisor_data=None) -> str:
     """
     Create a JWT token for a user
