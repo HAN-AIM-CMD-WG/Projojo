@@ -1,6 +1,7 @@
 from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
 import pprint
+import time
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -15,17 +16,53 @@ class Db:
     base_path = os.path.dirname(os.path.abspath(__file__))
     schema_path = os.path.join(base_path, "schema.tql")
     seed_path = os.path.join(base_path, "seed.tql")
-    driver = TypeDB.driver( address, Credentials( username, password), DriverOptions(False, None))
-    db = driver.databases.get(name) if driver.databases.contains(name) else None
+    
+    # Initialize as None - will be connected lazily with retry logic
+    driver = None
+    db = None
+    _connection_established = False
+    
+    @classmethod
+    def connect_with_retry(cls, max_retries=10, initial_delay=1):
+        """Connect to TypeDB with retry logic and exponential backoff"""
+        if cls._connection_established and cls.driver is not None:
+            return  # Already connected
+        
+        delay = initial_delay
+        for attempt in range(max_retries):
+            try:
+                print(f"Attempting to connect to TypeDB at {cls.address} (attempt {attempt + 1}/{max_retries})...")
+                cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.password), DriverOptions(False, None))
+                cls.db = cls.driver.databases.get(cls.name) if cls.driver.databases.contains(cls.name) else None
+                cls._connection_established = True
+                print("Successfully connected to TypeDB!")
+                return
+            except Exception as e:
+                print(f"Connection failed: {e}")
+                if attempt < max_retries - 1:
+                    print(f"Retrying in {delay} seconds...")
+                    time.sleep(delay)
+                    delay = min(delay * 1.5, 30)  # Exponential backoff with max 30 seconds
+                else:
+                    print(f"Failed to connect to TypeDB after {max_retries} attempts")
+                    raise Exception(f"Failed to connect to TypeDB after {max_retries} attempts. Last error: {e}")
+    
+    @classmethod
+    def ensure_connection(cls):
+        """Ensure we have a valid connection, reconnect if necessary"""
+        if not cls._connection_established or cls.driver is None:
+            cls.connect_with_retry()
     
     @staticmethod
     def schema_transact(query):
+        Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.SCHEMA) as tx:
             tx.query(query).resolve()
             tx.commit()
 
     @staticmethod
     def read_transact(query, sort_fields=True):
+        Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
             results = list(tx.query(query).resolve())
 
@@ -37,36 +74,43 @@ class Db:
 
     @staticmethod
     def write_transact(query):
+        Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
             tx.commit()
 
     @staticmethod
     def close():
-        Db.driver.close()
+        if Db.driver is not None:
+            Db.driver.close()
+        Db.driver = None
         Db.db = None
+        Db._connection_established = False
 
     @staticmethod
     def reopen():
-        Db.driver = TypeDB.driver( Db.address, Credentials( Db.username, Db.password), DriverOptions(False, None))
-        Db.db = Db.driver.databases.get(Db.name) if Db.driver.databases.contains(Db.name) else None
-        create_database_if_needed()    
+        Db.close()
+        Db.connect_with_retry()
+        create_database_if_needed()
 
 
-print( f"Using database: {Db.name}")
+print(f"Using database: {Db.name}")
 
 def get_database():
-    create_database_if_needed()    
+    Db.ensure_connection()
+    create_database_if_needed()
     return Db
 
 def create_database_if_needed():
+    Db.ensure_connection()
     if Db.reset and Db.db is not None:
         Db.db.delete()
         Db.db = None
     if Db.db is None:
         print(f"Creating a new database: {Db.name}")
-        Db.driver.databases.create(Db.name)
-        Db.db = Db.driver.databases.get(Db.name)
+        if Db.driver is not None:  # Additional safety check
+            Db.driver.databases.create(Db.name)
+            Db.db = Db.driver.databases.get(Db.name)
         with open(Db.schema_path, 'r') as file:
             print("Installing schema", end="... ")
             schema_query = file.read()
@@ -77,7 +121,7 @@ def create_database_if_needed():
             seed_query = file.read()
             Db.write_transact(seed_query)
             print("OK")
-    Db.reset = False     # prevent re-creating the database again 
+    Db.reset = False     # prevent re-creating the database again
 
 
 def main():
