@@ -5,7 +5,7 @@ from .authentication import OAuthProvider
 
 
 class User(BaseModel):
-    id: str
+    id: str | None = None
     email: str
     full_name: str
     image_path: str | None = None

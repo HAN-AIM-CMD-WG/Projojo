@@ -18,7 +18,7 @@ entity student sub user,
 entity teacher sub user;
 
 entity oauthProvider,
-    owns name @card(0..1), # e.g. "microsoft", "google"
+    owns name @key, # e.g. "microsoft", "google"
     plays oauthAuthentication:provider;
 
 entity business,
