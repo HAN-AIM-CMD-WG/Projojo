@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { notification } from "../components/notifications/NotifySystem";
 import FormInput from "../components/FormInput";
 import TestUserSelector from "../components/TestUserSelector";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();

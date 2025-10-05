@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { getAuthorization, login } from '../services';
 import { jwtDecode } from "jwt-decode";
-import { notification } from "./notifications/NotifySystem";
+import { notification } from "../components/notifications/NotifySystem";
 
 const AuthContext = createContext();
 
@@ -41,10 +41,10 @@ export const AuthProvider = ({ children }) => {
             if (response && response.token) {
                 // Store token in localStorage
                 localStorage.setItem("token", response.token);
-                
+
                 // Process the token and set auth state
                 const success = processToken(response.token);
-                
+
                 if (success) {
                     notification.success("Succesvol ingelogd");
                     return { success: true };
@@ -76,8 +76,8 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ 
-            authData, 
+        <AuthContext.Provider value={{
+            authData,
             setAuthData,
             login: handleLogin,
             logout: handleLogout

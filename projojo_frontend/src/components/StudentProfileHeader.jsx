@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { IMAGE_BASE_URL } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import RichTextViewer from "./RichTextViewer";
 
 export default function StudentProfileHeader({ student }) {

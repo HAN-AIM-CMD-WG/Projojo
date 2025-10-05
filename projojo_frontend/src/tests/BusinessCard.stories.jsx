@@ -1,7 +1,6 @@
 import { expect, within, fn } from '@storybook/test';
 import BusinessCard from '../components/BusinessCard';
-import { useAuth } from '../components/AuthProvider';
-import { AuthProvider } from '../components/AuthProvider';
+import { useAuth, AuthProvider } from '../auth/AuthProvider';
 
 export default {
     title: 'Components/BusinessCard',

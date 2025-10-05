@@ -1,5 +1,5 @@
 import { expect, fn, userEvent, within } from '@storybook/test';
-import { AuthProvider, useAuth } from '../components/AuthProvider';
+import { AuthProvider, useAuth } from '../auth/AuthProvider';
 import SkillsEditor from '../components/SkillsEditor';
 
 const onSaveMock = fn()

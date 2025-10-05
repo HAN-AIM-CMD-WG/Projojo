@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from "react-router-dom";
 import { getSkills, getStudentRegistrations } from '../services';
 import Alert from './Alert';
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import Task from "./Task";
 
 /**

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from './components/AuthProvider';
+import { useAuth } from './auth/AuthProvider';
 import Footer from "./components/Footer";
 import Navbar from './components/Navbar';
 import BusinessPage from './pages/BusinessPage';

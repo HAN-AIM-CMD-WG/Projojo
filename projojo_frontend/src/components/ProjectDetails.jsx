@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createTask, IMAGE_BASE_URL } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
 import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
