@@ -35,9 +35,10 @@ export default function TestUserSelector({ onUserSelect }) {
 		setSelectedUser(user);
 		setIsOpen(false);
 		if (user && onUserSelect) {
+			// TODO: Update for OAuth authentication - no more password needed
 			onUserSelect({
 				email: user.email,
-				password: user.password_hash
+				// password: user.password_hash // Removed for OAuth
 			});
 		}
 	};

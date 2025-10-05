@@ -1,24 +1,21 @@
 define
 
 entity user @abstract,
-    owns id @card(0..1), # (1) # TODO: switch `@key` with email field once id's are implemented
-    owns email @key,
-    owns imagePath @card(1),
+    owns id @key,
+    owns email @card(1),
     owns fullName @card(1),
-    owns password_hash @card(1), # TODO: remove once oauth is implemented
-    plays oauthAuthentication:user @card(0..10); # (1..10)
+    owns imagePath @card(1),
+    plays oauthAuthentication:user @card(1..10);
 
 entity supervisor sub user,
     plays manages:supervisor @card(1),
     plays creates:supervisor @card(0..);
 
 entity student sub user,
-    owns schoolAccountName @card(1), # TODO: can be removed, also update queries that expect this field
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..);
 
-entity teacher sub user,
-    owns schoolAccountName @card(1); # TODO: can be removed, also update queries that expect this field
+entity teacher sub user;
 
 entity oauthProvider,
     owns name @card(0..1), # e.g. "microsoft", "google"
@@ -122,9 +119,7 @@ relation businessInvite,
 attribute email value string;
 attribute name value string;
 attribute fullName value string;
-attribute password_hash value string;
 attribute imagePath value string;
-attribute schoolAccountName value string;
 attribute id value string;
 attribute oauthSub value string;
 attribute description value string;

@@ -5,42 +5,32 @@ insert
         has id "4198c8e8-a160-4d9e-95f3-930089dc97d2", # Generated with terminal command: `python -c "import uuid; [print(f'{i+1}:\t{uuid.uuid4()}') for i in range(15)]"`
         has fullName "Henk van der Berg",
         has imagePath "teacher_profile.png",
-        has schoolAccountName "H.vanderBerg",
-        has email "h.vandeberg@han.nl",
-        has password_hash "hash_123";
+        has email "h.vandeberg@han.nl";
 
     # Student users
     $u2 isa student,
         has id "f544fec0-b4ff-4133-bc5d-4c95f34518bd",
         has fullName "Emma Jansen",
         has imagePath "student_female.png",
-        has email "emma.jansen@student.han.nl",
-        has schoolAccountName "Emma.Jansen",
-        has password_hash "hash_123";
+        has email "em.jansen@student.han.nl";
 
     $u3 isa student,
         has id "b0d7e3ca-dad8-4b40-83dd-02a970aebce3",
         has fullName "Lucas de Vries",
         has imagePath "student_male.png",
-        has email "lucas.devries@student.han.nl",
-        has schoolAccountName "Lucas.deVries",
-        has password_hash "hash_123";
+        has email "l.devries@student.han.nl";
 
     $u4 isa student,
         has id "9c98b49c-5c99-4959-86d1-0d3d79b98902",
         has fullName "Sophie Bakker",
         has imagePath "student_female.png",
-        has email "sophie.bakker@student.han.nl",
-        has schoolAccountName "Sophie.Bakker",
-        has password_hash "hash_123";
+        has email "sr.bakker@student.han.nl";
 
     $u5 isa student,
         has id "b3afaca3-f714-432e-ac97-c437600b163a",
         has fullName "Daan Vermeulen",
         has imagePath "student_male.png",
-        has email "daan.vermeulen@student.han.nl",
-        has schoolAccountName "Daan.Vermeulen",
-        has password_hash "hash_123";
+        has email "d.vermeulen@student.han.nl";
 
     # Identity providers
     $op1 isa oauthProvider,
@@ -118,71 +108,61 @@ insert
         has id "98f07817-9ede-4e4f-8f1b-0fd65ac33322",
         has fullName "Jan Boersma",
         has imagePath "supervisor_male1.png",
-        has email "j.boersma@goudakker.nl",
-        has password_hash "hash_123";
+        has email "j.boersma@goudakker.nl";
 
     $s2 isa supervisor,
         has id "bb4d39d3-68f0-4484-ac7e-8f5ee97f65c7",
         has fullName "Pieter Koster",
         has imagePath "supervisor_male2.png",
-        has email "p.koster@veeteeltgroep.nl",
-        has password_hash "hash_123";
+        has email "p.koster@veeteeltgroep.nl";
 
     $s3 isa supervisor,
         has id "a7877a75-2559-4703-8904-ec82370050a5",
         has fullName "Rob Hendriks",
         has imagePath "supervisor_male1.png",
-        has email "r.hendriks@smartfarm.nl",
-        has password_hash "hash_123";
+        has email "r.hendriks@smartfarm.nl";
 
     $s4 isa supervisor,
         has id "cf555071-1e0a-475c-bb66-fb647bac6887",
         has fullName "Bert Scholten",
         has imagePath "supervisor_male2.png",
-        has email "b.scholten@groenekassen.nl",
-        has password_hash "hash_123";
+        has email "b.scholten@groenekassen.nl";
 
     $s5 isa supervisor,
         has id "a4a87085-4e88-49d8-9ce7-7667ed2d9583",
         has fullName "Henk van Leeuwen",
         has imagePath "supervisor_male1.png",
-        has email "h.vanleeuwen@bodemexperts.nl",
-        has password_hash "hash_123";
+        has email "h.vanleeuwen@bodemexperts.nl";
 
     $s6 isa supervisor,
         has id "dea05349-5e94-4d09-9a08-75551ba8703c",
         has fullName "Tom van der Meer",
         has imagePath "supervisor_female.png",
-        has email "t.vandermeer@aquacultuur.nl",
-        has password_hash "hash_123";
+        has email "t.vandermeer@aquacultuur.nl";
 
     $s7 isa supervisor,
         has id "70d0ed1d-617d-4477-9969-979c0c34636a",
         has fullName "Willem van Dijk",
         has imagePath "supervisor_male2.png",
-        has email "w.vandijk@fruitboom.nl",
-        has password_hash "hash_123";
+        has email "w.vandijk@fruitboom.nl";
 
     $s8 isa supervisor,
         has id "9e790315-e167-40fe-a37a-6f644809a84a",
         has fullName "Gerrit Hoffman",
         has imagePath "supervisor_male1.png",
-        has email "g.hoffman@mechanisatie.nl",
-        has password_hash "hash_123";
+        has email "g.hoffman@mechanisatie.nl";
 
     $s9 isa supervisor,
         has id "23692031-7502-4927-8c98-b503966824ea",
         has fullName "Klaas Dijkstra",
         has imagePath "supervisor_male2.png",
-        has email "k.dijkstra@biodynamisch.nl",
-        has password_hash "hash_123";
+        has email "k.dijkstra@biodynamisch.nl";
 
     $s10 isa supervisor,
         has id "b63b20c4-14cf-42b8-a473-2fe1b607eea5",
         has fullName "Jaap Koning",
         has imagePath "supervisor_female.png",
-        has email "j.koning@agrilogistiek.nl",
-        has password_hash "hash_123";
+        has email "j.koning@agrilogistiek.nl";
 
     # oauthAuthentication relations (each user has at least one, current max is 10, students and teachers can only have Microsoft)
     $auth1 isa oauthAuthentication (user: $u1, provider: $op1),

@@ -17,7 +17,6 @@ def create_jwt_token(user, supervisor_data=None) -> str:
     """
     payload = {
         "sub": user.email,
-        "password_hash": user.password_hash,
         "role": user.type.lower(),
         "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     }

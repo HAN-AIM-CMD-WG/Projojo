@@ -4,8 +4,7 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import User, Supervisor, Student, Teacher
-import uuid
-from datetime import datetime
+from domain.models.authentication import OAuthProvider
 
 class UserRepository(BaseRepository[User]):
     def __init__(self):
@@ -18,15 +17,22 @@ class UserRepository(BaseRepository[User]):
                 has email "{id}",
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
                 $user isa $usertype;
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'password_hash': $password_hash,
-                'usertype': $usertype
+                'usertype': $usertype,
+                'oauth_providers': [
+                    match
+                        $provider isa oauthProvider;
+                        $auth isa oauthAuthentication($user, $provider);
+                    fetch {{
+                        'provider_name': $provider.name,
+                        'oauth_sub': $auth.oauthSub
+                    }};
+                ]
             }};
         """
         results = Db.read_transact(query)
@@ -73,16 +79,23 @@ class UserRepository(BaseRepository[User]):
                 has email "{escaped_email}",
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
                 $business isa business;
                 $manages isa manages( $supervisor, $business );
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'password_hash': $password_hash,
-                'business_association_id': $business.name
+                'business_association_id': $business.name,
+                'oauth_providers': [
+                    match
+                        $provider isa oauthProvider;
+                        $auth isa oauthAuthentication($supervisor, $provider);
+                    fetch {{
+                        'provider_name': $provider.name,
+                        'oauth_sub': $auth.oauthSub
+                    }};
+                ]
             }};
         """
         results = Db.read_transact(query)
@@ -134,9 +147,16 @@ class UserRepository(BaseRepository[User]):
                 'email': $student.email,
                 'full_name': $student.fullName,
                 'image_path': $student.imagePath,
-                'school_account_name': $student.schoolAccountName,
                 'type': 'student',
-                'password_hash': $student.password_hash,
+                'oauth_providers': [
+                    match
+                        $provider isa oauthProvider;
+                        $auth isa oauthAuthentication($student, $provider);
+                    fetch {{
+                        'provider_name': $provider.name,
+                        'oauth_sub': $auth.oauthSub
+                    }};
+                ],
                 'registered_task_ids': [
                     match
                         $task isa task;
@@ -180,15 +200,20 @@ class UserRepository(BaseRepository[User]):
                 has email "{escaped_email}",
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'oauth_providers': [
+                    match
+                        $provider isa oauthProvider;
+                        $auth isa oauthAuthentication($teacher, $provider);
+                    fetch {{
+                        'provider_name': $provider.name,
+                        'oauth_sub': $auth.oauthSub
+                    }};
+                ]
             }};
         """
         results = Db.read_transact(query)
@@ -203,7 +228,6 @@ class UserRepository(BaseRepository[User]):
                 $supervisor isa supervisor,
                 has email $email,
                 has fullName $fullName,
-                has password_hash $password_hash,
                 has imagePath $imagePath;
                 $business isa business;
                 $manages isa manages( $supervisor, $business );
@@ -211,8 +235,7 @@ class UserRepository(BaseRepository[User]):
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'business_association_id': $business.name,
-                'password_hash': $password_hash
+                'business_association_id': $business.name
             };
         """
         results = Db.read_transact(query)
@@ -264,17 +287,13 @@ class UserRepository(BaseRepository[User]):
                 $student isa student,
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
             fetch {
                 'id': $email,
                 'email': $email,
                 'full_name': $fullName,
                 'type': 'student',
                 'image_path': $imagePath,
-                'school_account_name': $schoolAccountName,
-                'password_hash': $password_hash,
                 'registered_task_ids': [
                     match
                         $task isa task;
@@ -299,27 +318,34 @@ class UserRepository(BaseRepository[User]):
                 $teacher isa teacher,
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
             fetch {
                 'email': $email,
                 'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'imagePath': $imagePath
             };
         """
         results = Db.read_transact(query)
         return [self._map_teacher(result) for result in results]
 
     def _base_user_data(self, result: dict[str, Any]) -> dict[str, Any]:
+        # Extract OAuth providers and create OAuthProvider objects (only if present in query result)
+        oauth_providers = []
+        if "oauth_providers" in result:
+            for provider_data in result.get("oauth_providers", []):
+                if "provider_name" in provider_data and "oauth_sub" in provider_data:
+                    oauth_provider = OAuthProvider(
+                        provider_name=provider_data["provider_name"],
+                        oauth_sub=provider_data["oauth_sub"]
+                    )
+                    oauth_providers.append(oauth_provider)
+
         return {
             "id": result.get("email", ""),
             "email": result.get("email", ""),
             "full_name": result.get("fullName", ""),
             "image_path": result.get("imagePath", ""),
-            "password_hash": result.get("password_hash", ""),
+            "oauth_providers": oauth_providers if oauth_providers else None,
         }
 
     def _map_to_model(self, result: dict[str, Any]) -> User:
@@ -332,7 +358,6 @@ class UserRepository(BaseRepository[User]):
     def _map_supervisor(self, result: dict[str, Any]) -> Supervisor:
         data = self._base_user_data(result)
         data.update({
-            "authentication_ids": [],
             "business_association_id": result.get("business_association_id", ""),
             "created_project_ids": result.get("created_project_ids", []),
         })
@@ -341,7 +366,6 @@ class UserRepository(BaseRepository[User]):
     def _map_student(self, result: dict[str, Any]) -> Student:
         data = self._base_user_data(result)
         data.update({
-            "school_account_name": result.get("schoolAccountName", ""),
             "skill_ids": result.get("skill_ids", []),
             "registered_task_ids": [],
         })
@@ -349,9 +373,6 @@ class UserRepository(BaseRepository[User]):
 
     def _map_teacher(self, result: dict[str, Any]) -> Teacher:
         data = self._base_user_data(result)
-        data.update({
-            "school_account_name": result.get("schoolAccountName", ""),
-        })
         return Teacher(**data)
 
     @staticmethod
@@ -368,7 +389,6 @@ class UserRepository(BaseRepository[User]):
             grouped[email]["email"] = email
             grouped[email]["fullName"] = result["fullName"]
             grouped[email]["imagePath"] = result["imagePath"]
-            grouped[email]["password_hash"] = result["password_hash"]
             grouped[email]["business_association_id"] = result["business_association_id"]
             # Only add project_id if it's not None
             project_id = result["created_project_id"]
@@ -388,9 +408,7 @@ class UserRepository(BaseRepository[User]):
                 $student isa student,
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
                 $registration isa registersForTask (student: $student, task: $task);
         """
 
@@ -414,9 +432,7 @@ class UserRepository(BaseRepository[User]):
             fetch {
                 'email': $email,
                 'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'imagePath': $imagePath
             };
         """
 
@@ -428,8 +444,6 @@ class UserRepository(BaseRepository[User]):
                 "email": result["email"],
                 "fullName": result["fullName"],
                 "imagePath": result["imagePath"],
-                "schoolAccountName": result["schoolAccountName"],
-                "password_hash": result["password_hash"],
                 "skill_ids": []
             }
             students.append(self._map_student(student_data))
