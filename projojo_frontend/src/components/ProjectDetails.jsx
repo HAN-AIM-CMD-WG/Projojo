@@ -25,14 +25,12 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
         });
         setError("");
 
-        // Remove the temp error message when this functionality is implemented
-        setError("Deze functionaliteit is nog niet beschikbaar");
-        // createTask(project.id, formDataObj)
-        //     .then(() => {
-        //         handleCloseModal();
-        //         refreshData();
-        //     })
-        //     .catch(error => setError(error.message));
+        createTask(project.id, formDataObj)
+            .then(() => {
+                handleCloseModal();
+                refreshData();
+            })
+            .catch(error => setError(error.message));
     }
 
     const handleOpenModal = () => setIsModalOpen(true);

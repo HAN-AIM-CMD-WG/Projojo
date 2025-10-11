@@ -3,7 +3,8 @@ from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends
 from domain.repositories import TaskRepository, UserRepository
 from auth.jwt_utils import get_token_payload
 from service import task_service
-from domain.models.task import RegistrationCreate, RegistrationUpdate
+from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
+from datetime import datetime
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
@@ -142,4 +143,30 @@ async def update_registration(
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie." + str(e))
+    
+@router.post("/", response_model=Task, status_code=201)
+async def create_task(
+    task_create: TaskCreate = Body(...),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Create a new task
+    """
+    # Check if user is a supervisor
+    if payload.get("role") != "supervisor":
+        raise HTTPException(status_code=403, detail="Alleen supervisors kunnen taken aanmaken")
 
+    try:
+        task = Task(
+            id=task_create.name,
+            name=task_create.name,
+            description=task_create.description,
+            total_needed=task_create.total_needed,
+            project_id=task_create.project_id,
+            created_at=datetime.now()
+        )
+        
+        created_task = task_repo.create(task)
+        return created_task
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Er is iets misgegaan bij het aanmaken van de taak: {str(e)}")

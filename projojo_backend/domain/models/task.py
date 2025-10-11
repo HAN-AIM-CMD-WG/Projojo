@@ -34,3 +34,9 @@ class RegistrationCreate(BaseModel):
 class RegistrationUpdate(BaseModel):
     accepted: bool
     response: str = ""
+
+class TaskCreate(BaseModel):
+    name: str
+    description: str
+    total_needed: int
+    project_id: str

@@ -282,11 +282,18 @@ export function createProject(project_data) {
         body: formData,
     });
 }
-//not implemented in the backend yet
-export function createTask(task) {
-    return fetchWithError(`${API_BASE_URL}projects`, {
+
+export function createTask(projectId, formDataObj) {
+    const taskData = {
+        name: formDataObj.title,
+        description: formDataObj.description,
+        total_needed: formDataObj.totalNeeded,
+        project_id: projectId
+    };
+    
+    return fetchWithError(`${API_BASE_URL}tasks/`, {
         method: "POST",
-        body: JSON.stringify(task),
+        body: JSON.stringify(taskData),
     });
 }
 
