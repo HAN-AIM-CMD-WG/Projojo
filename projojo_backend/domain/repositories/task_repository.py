@@ -126,28 +126,26 @@ class TaskRepository(BaseRepository[Task]):
         escaped_description = task.description.replace('"', '\\"')
         escaped_project_id = task.project_id.replace('"', '\\"')
 
-        # First, check if the project exists
-        check_project_query = f"""
+        validation_query = f"""
             match
                 $project isa project, has name "{escaped_project_id}";
-            fetch {{ 'exists': true }};
+            fetch {{ 
+                'exists': true,
+                'duplicate_tasks': [
+                    match
+                        $existingTask isa task, has name "{escaped_name}";
+                        $projectTask isa containsTask (project: $project, task: $existingTask);
+                    fetch {{ 'exists': true }};
+                ]
+            }};
         """
-        project_results = Db.read_transact(check_project_query)
+        validation_results = Db.read_transact(validation_query)
         
-        if not project_results:
+        if not validation_results:
             raise ItemRetrievalException("Project", f"Project with name '{task.project_id}' not found.")
 
-        # Second, check if a task with the same name already exists in this project
-        check_task_duplicate_query = f"""
-            match
-                $project isa project, has name "{escaped_project_id}";
-                $existingTask isa task, has name "{escaped_name}";
-                $projectTask isa containsTask (project: $project, task: $existingTask);
-            fetch {{ 'exists': true }};
-        """
-        task_duplicate_results = Db.read_transact(check_task_duplicate_query)
-        
-        if task_duplicate_results:
+        # Check if duplicate tasks were found
+        if validation_results[0].get('duplicate_tasks'):
             raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{task.project_id}'.")
         
         query = f"""
