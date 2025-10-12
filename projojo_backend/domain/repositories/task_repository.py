@@ -149,7 +149,6 @@ class TaskRepository(BaseRepository[Task]):
         
         if task_duplicate_results:
             raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{task.project_id}'.")
-
         
         query = f"""
             match
