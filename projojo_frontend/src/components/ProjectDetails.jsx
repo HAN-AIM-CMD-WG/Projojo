@@ -16,6 +16,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const { authData } = useAuth();
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const [newTaskDescription, setNewTaskDescription] = useState("");
+    const [formKey, setFormKey] = useState(0);
 
     const formDataObj = {};
 
@@ -34,7 +35,11 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     }
 
     const handleOpenModal = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setNewTaskDescription("");
+        setFormKey(prev => prev + 1); // Force form remount by changing key
+    };
 
     if (isLoading) {
         project = {
@@ -127,6 +132,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     setIsModalOpen={setIsModalOpen}
                 >
                     <form
+                        key={formKey}
                         className="p-4 md:p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
