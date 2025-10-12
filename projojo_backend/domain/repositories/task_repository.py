@@ -115,6 +115,9 @@ class TaskRepository(BaseRepository[Task]):
         return tasks
 
     def create(self, task: Task) -> Task:
+        if not task.project_id:
+            raise ValueError("project_id is required: Task must belong to a project")
+
         # Generate a creation timestamp
         created_at = datetime.now().isoformat()
 
@@ -123,6 +126,18 @@ class TaskRepository(BaseRepository[Task]):
         escaped_description = task.description.replace('"', '\\"')
         escaped_project_id = task.project_id.replace('"', '\\"')
 
+        # First, check if the project exists
+        check_project_query = f"""
+            match
+                $project isa project, has name "{escaped_project_id}";
+            fetch {{ 'exists': true }};
+        """
+        project_results = Db.read_transact(check_project_query)
+        
+        if not project_results:
+            raise ItemRetrievalException("Project", f"Project with name '{task.project_id}' not found.")
+
+        
         query = f"""
             match
                 $project isa project, has name "{escaped_project_id}";
