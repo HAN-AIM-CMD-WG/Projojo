@@ -116,7 +116,7 @@ class TaskRepository(BaseRepository[Task]):
 
     def create(self, task: Task) -> Task:
         if not task.project_id:
-            raise ValueError("project_id is required: Task must belong to a project")
+            raise ValueError("De taak moet bij een bestaand project horen.")
 
         # Generate a creation timestamp
         created_at = datetime.now().isoformat()
@@ -136,6 +136,19 @@ class TaskRepository(BaseRepository[Task]):
         
         if not project_results:
             raise ItemRetrievalException("Project", f"Project with name '{task.project_id}' not found.")
+
+        # Second, check if a task with the same name already exists in this project
+        check_task_duplicate_query = f"""
+            match
+                $project isa project, has name "{escaped_project_id}";
+                $existingTask isa task, has name "{escaped_name}";
+                $projectTask isa containsTask (project: $project, task: $existingTask);
+            fetch {{ 'exists': true }};
+        """
+        task_duplicate_results = Db.read_transact(check_task_duplicate_query)
+        
+        if task_duplicate_results:
+            raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{task.project_id}'.")
 
         
         query = f"""
