@@ -7,7 +7,7 @@ export default function AuthCallback() {
     const [searchParams] = useSearchParams();
 
     useEffect(() => {
-        const accessToken = searchParams.get('token');
+        const accessToken = searchParams.get('access_token');
 
         if (accessToken) {
             localStorage.setItem('token', accessToken);
