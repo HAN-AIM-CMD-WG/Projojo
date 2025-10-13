@@ -34,13 +34,13 @@ insert
 
     # Identity providers
     $op1 isa oauthProvider,
-        has name "Microsoft";
+        has name "microsoft";
 
     $op2 isa oauthProvider,
-        has name "Google";
+        has name "google";
 
     $op3 isa oauthProvider,
-        has name "GitHub";
+        has name "github";
 
     # Businesses
     $b1 isa business,
