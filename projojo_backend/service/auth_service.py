@@ -19,13 +19,12 @@ class AuthService:
 
         # Exchange authorization code for access token
         token = await client.authorize_access_token(request)
-        print(f"Token received from {provider}: {token}")
 
         # Extract user info based on provider
-        oauth_user = await self._extract_user_from_token(provider, client, token)
+        extracted_user = await self._extract_user_from_token(provider, client, token)
 
         # Get or create user in database
-        existing_user = self._get_or_create_user(oauth_user)
+        existing_user = self._get_or_create_user(extracted_user)
 
         # Create JWT token
         jwt_token = self.jwt_handler.create_jwt_token(existing_user.id)
@@ -103,16 +102,19 @@ class AuthService:
 
         raise ValueError("No email found for GitHub user")
 
-
-
-    def _get_or_create_user(self, oauth_user: User) -> User:
+    def _get_or_create_user(self, extracted_user: User) -> User:
         """Get existing user or create new one"""
+        if not extracted_user.oauth_providers or len(extracted_user.oauth_providers) == 0:
+            raise ValueError("No OAuth provider information found")
+
+        oauth_provider = extracted_user.oauth_providers[0]
+
         existing_user = self.user_repo.get_user_by_sub_and_provider(
-            oauth_user.sub,
-            oauth_user.provider
+            oauth_provider.oauth_sub,
+            oauth_provider.provider_name
         )
 
         if not existing_user:
-            existing_user = self.user_repo.create_user(oauth_user)
+            existing_user = self.user_repo.create_user(extracted_user)
 
         return existing_user
