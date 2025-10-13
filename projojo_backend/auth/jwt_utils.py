@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer
@@ -7,7 +8,7 @@ from fastapi.security import HTTPBearer
 security = HTTPBearer()
 
 # JWT configuration
-SECRET_KEY = "test"
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
