@@ -127,7 +127,7 @@ class UserRepository(BaseRepository[User]):
 
         return self._map_supervisor(next(iter(grouped.values())))
 
-    def get_student_by_id(self, email: str) -> Student | None:
+    def get_student_by_id(self, email: str) -> dict | None:
         # Escape any double quotes in the email
         escaped_email = email.replace('"', '\\"')
 
@@ -138,8 +138,8 @@ class UserRepository(BaseRepository[User]):
             fetch {{
                 'id': $student.email,
                 'email': $student.email,
-                'fullName': $student.fullName,
-                'imagePath': $student.imagePath,
+                'full_name': $student.fullName,
+                'image_path': $student.imagePath,
                 'type': 'student',
                 'registered_task_ids': [
                     match
@@ -172,7 +172,7 @@ class UserRepository(BaseRepository[User]):
         if not result:
             return None
 
-        return self._map_student(result[0])
+        return result[0]
 
 
     def get_teacher_by_id(self, email: str) -> Teacher | None:
