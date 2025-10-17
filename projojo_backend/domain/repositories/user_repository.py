@@ -564,6 +564,11 @@ class UserRepository(BaseRepository[User]):
 
         Db.write_transact(create_user_query)
 
+        # if user is a student, it returns a dict which needs to be mapped to Student model
+        created_user = self.get_by_id(user.email)
+        if isinstance(created_user, dict):
+            created_user = self._map_student(created_user)
+
         # Return the created user
-        return self.get_by_id(user.email)
+        return created_user
 

@@ -35,6 +35,7 @@ async def auth_callback(
     try:
         # All complex logic moved to service
         jwt_token = await auth_service.handle_oauth_callback(request, provider)
+        # TODO: also return if the user is new, to show an "account created" message in frontend
 
         # Simple redirect with token
         redirect_url = f"http://localhost:5173/auth/callback?access_token={jwt_token}"
