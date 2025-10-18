@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import Request, Depends
 from domain.models.user import User
 from domain.repositories.user_repository import UserRepository
@@ -62,14 +63,15 @@ class AuthService:
 
     async def _extract_github_user(self, client, token) -> User:
         """Extract user info from GitHub OAuth token"""
-        # Get basic user profile
-        user_resp = await client.get('user', token=token)
-        user_info = user_resp.json()
-        print(f"User info received from GitHub: {user_info}")
+        # Get basic user profile and emails in parallel
+        user_resp, emails_resp = await asyncio.gather(
+            client.get('user', token=token),
+            client.get('user/emails', token=token)
+        )
 
-        # Get user's emails
-        emails_resp = await client.get('user/emails', token=token)
+        user_info = user_resp.json()
         emails = emails_resp.json()
+        print(f"User info received from GitHub: {user_info}")
         print(f"Email info received from GitHub: {emails}")
 
         if not user_info:

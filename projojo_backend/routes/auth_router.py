@@ -15,6 +15,7 @@ async def auth_login(
 ):
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
+    # TODO: remove debug prints throughout oauth flow
     print(f"Redirect URI: {redirect_uri}")
 
     # Get the OAuth client for the specified provider
