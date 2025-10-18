@@ -30,7 +30,6 @@ This guide will help you obtain the necessary OAuth credentials for running the 
 ### Step 4: Save Your Credentials
 1. Click **Create**
 2. Copy the **Client ID** and **Client secret** from the modal
-   > ⚠️ **Important**: This is the only time you can copy this Client secret!
 3. Add them to your `.env` file:
    ```env
    GOOGLE_CLIENT_ID=your_client_id_here
@@ -44,7 +43,8 @@ This guide will help you obtain the necessary OAuth credentials for running the 
 - Disable and delete the lost first Client secret
 
 ### Step 5: Test Your Setup
-You should now be able to log in using the same Google account that you used to log in to the Google Cloud Console.
+1. Save any Python file in the backend (e.g., `main.py`) to trigger an automatic reload that loads the updated `.env` file
+2. You should now be able to log in using the same Google account that you used to log in to the Google Cloud Console
 
 ### Optional: Customize Your App
 
@@ -60,8 +60,38 @@ You should now be able to log in using the same Google account that you used to 
 **Publish Your App**
 - When ready for production, you can publish your app from the [Audience page](https://console.cloud.google.com/auth/audience)
 
----
-
 ## GitHub OAuth Setup
 
-<!-- ## Troubleshooting -->
+### Step 1: Access OAuth Apps Settings
+1. Go to [GitHub](https://github.com/)
+2. Click on your **profile picture** > **Settings** > **Developer settings** > **OAuth Apps**
+
+### Step 2: Create New OAuth App
+1. Click **New OAuth App**
+2. Fill in the application details:
+   - **Application name**: This will be displayed to users during login (e.g., "Projojo")
+   - **Homepage URL**: `http://localhost:5173/home` (will also be displayed to users)
+   - **Application description** (optional): Note that this doesn't seem to be shown to users despite what the form suggests
+   - **Authorization callback URL**: `http://localhost:8000/auth/callback/github`
+   - **Enable Device Flow**: Can stay disabled
+
+3. Click **Register application**
+
+### Step 3: Save Your Credentials
+1. Click **Generate a new client secret**
+2. Copy the **Client secret** and the **Client ID** into your `.env` file:
+   ```env
+   GITHUB_CLIENT_ID=your_client_id_here
+   GITHUB_CLIENT_SECRET=your_client_secret_here
+   ```
+
+**Lost your Client secret?**
+- You can generate a new one from the same OAuth Apps settings page
+- Delete the old secret after generating a new one
+
+### Step 4: Test Your Setup
+1. Save any Python file in the backend (e.g., `main.py`) to trigger an automatic reload that loads the updated `.env` file
+2. You should now be able to log in using any GitHub account
+
+### Optional: Add Branding
+- Upload an application logo to make your OAuth app more recognizable to users
