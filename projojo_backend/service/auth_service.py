@@ -38,6 +38,8 @@ class AuthService:
             return await self._extract_google_user(token)
         elif provider == 'github':
             return await self._extract_github_user(client, token)
+        elif provider == 'microsoft':
+            return await self._extract_microsoft_user(client, token)
         else:
             raise ValueError(f"Provider '{provider}' not supported")
 
@@ -103,6 +105,38 @@ class AuthService:
             return emails[0]['email']
 
         raise ValueError("No email found for GitHub user")
+
+    async def _extract_microsoft_user(self, client, token) -> User:
+        """Extract user info from Microsoft OAuth token"""
+        print(f"Token received from Microsoft: {token}")
+        user_info = token.get('userinfo')
+        print(f"User info received from Microsoft: {user_info}")
+
+        if not user_info:
+            raise ValueError("Failed to get user info from Microsoft")
+
+        # TODO: This works, but the picture should only be downloaded once it's clear that this user doesn't exist yet
+        # picture_resp = await client.get(
+        #     'me/photo/$value',
+        #     token=token
+        # )
+        # print(f"Profile picture response status: {picture_resp.status_code}")
+        # if picture_resp.status_code == 200:
+        #     with open('temp_microsoft_pic.jpg', 'wb') as f:
+        #         f.write(picture_resp.content)
+        #         f.close()
+
+        oauth_provider = OAuthProvider(
+            provider_name='microsoft',
+            oauth_sub=user_info['sub']
+        )
+
+        return User(
+            email=user_info['email'],
+            full_name=user_info.get('name', ''),
+            image_path=user_info.get('picture', ''),
+            oauth_providers=[oauth_provider]
+        )
 
     def _get_or_create_user(self, extracted_user: User) -> User:
         """Get existing user or create new one"""
