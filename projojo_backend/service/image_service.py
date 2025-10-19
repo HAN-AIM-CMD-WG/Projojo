@@ -6,7 +6,7 @@ import requests
 from urllib.parse import urlparse
 
 
-def save_image(file: UploadFile, directory: str = "static/images") -> tuple[str, str]:
+def save_image(file: UploadFile, directory: str = "static/images") -> str:
     """
     Save an uploaded image to the specified directory with a randomly generated filename
 
@@ -15,7 +15,7 @@ def save_image(file: UploadFile, directory: str = "static/images") -> tuple[str,
         directory (str, optional): The directory to save the image to. Defaults to "static/images".
 
     Returns:
-        tuple[str, str]: A tuple containing (file_path, filename)
+        str: The unique filename of the saved image
     """
     # Create the directory if it doesn't exist
     os.makedirs(directory, exist_ok=True)
@@ -33,10 +33,10 @@ def save_image(file: UploadFile, directory: str = "static/images") -> tuple[str,
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return file_path, unique_filename
+    return unique_filename
 
 
-def save_image_from_url(image_url: str, directory: str = "static/images") -> tuple[str, str]:
+def save_image_from_url(image_url: str, directory: str = "static/images") -> str:
     """
     Download and save an image from a URL to the specified directory with a randomly generated filename
 
@@ -45,10 +45,10 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> tup
         directory (str, optional): The directory to save the image to. Defaults to "static/images".
 
     Returns:
-        tuple[str, str]: A tuple containing (file_path, filename)
+        str: The unique filename of the saved image, or empty string if failed
     """
     if not image_url:
-        return "", ""
+        return ""
 
     try:
         # Create the directory if it doesn't exist
@@ -85,16 +85,16 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> tup
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
 
-        return file_path, unique_filename
+        return unique_filename
 
     except requests.RequestException as e:
         print(f"Failed to download image from {image_url}: {e}")
-        return "", ""
+        return ""
     except Exception as e:
         print(f"Error saving image from {image_url}: {e}")
-        return "", ""
+        return ""
 
-def save_image_from_bytes(image_bytes: bytes, file_extension: str = ".jpg", directory: str = "static/images") -> tuple[str, str]:
+def save_image_from_bytes(image_bytes: bytes, file_extension: str = ".jpg", directory: str = "static/images") -> str:
     """
     Save image bytes to the specified directory with a randomly generated filename
 
@@ -104,10 +104,10 @@ def save_image_from_bytes(image_bytes: bytes, file_extension: str = ".jpg", dire
         directory (str, optional): The directory to save the image to. Defaults to "static/images".
 
     Returns:
-        tuple[str, str]: A tuple containing (file_path, filename)
+        str: The unique filename of the saved image, or empty string if failed
     """
     if not image_bytes:
-        return "", ""
+        return ""
 
     try:
         # Create the directory if it doesn't exist
@@ -121,11 +121,11 @@ def save_image_from_bytes(image_bytes: bytes, file_extension: str = ".jpg", dire
         with open(file_path, "wb") as f:
             f.write(image_bytes)
 
-        return file_path, unique_filename
+        return unique_filename
 
     except Exception as e:
         print(f"Error saving image from bytes: {e}")
-        return "", ""
+        return ""
 
 
 def generate_unique_filename(file_extension: str) -> str:

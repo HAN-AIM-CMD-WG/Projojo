@@ -157,7 +157,7 @@ class AuthService:
                     file_extension = '.gif'
 
                 # Save the image bytes
-                _, image_filename = save_image_from_bytes(picture_resp.content, file_extension)
+                image_filename = save_image_from_bytes(picture_resp.content, file_extension)
                 print(f"Saved Microsoft profile picture as: {image_filename}")
         except Exception as e:
             print(f"Failed to download Microsoft profile picture: {e}")

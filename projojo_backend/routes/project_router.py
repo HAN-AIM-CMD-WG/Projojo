@@ -74,7 +74,7 @@ async def create_project(
         )
 
     # Save the image with a random filename
-    _, unique_filename = save_image(image)
+    unique_filename = save_image(image)
 
     # Create project data
     project_creation = ProjectCreation(
