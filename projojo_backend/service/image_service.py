@@ -94,6 +94,40 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> tup
         print(f"Error saving image from {image_url}: {e}")
         return "", ""
 
+def save_image_from_bytes(image_bytes: bytes, file_extension: str = ".jpg", directory: str = "static/images") -> tuple[str, str]:
+    """
+    Save image bytes to the specified directory with a randomly generated filename
+
+    Args:
+        image_bytes (bytes): The image data as bytes
+        file_extension (str, optional): The file extension for the image. Defaults to ".jpg".
+        directory (str, optional): The directory to save the image to. Defaults to "static/images".
+
+    Returns:
+        tuple[str, str]: A tuple containing (file_path, filename)
+    """
+    if not image_bytes:
+        return "", ""
+
+    try:
+        # Create the directory if it doesn't exist
+        os.makedirs(directory, exist_ok=True)
+
+        # Generate a unique filename
+        unique_filename = generate_unique_filename(file_extension)
+        file_path = os.path.join(directory, unique_filename)
+
+        # Save the image
+        with open(file_path, "wb") as f:
+            f.write(image_bytes)
+
+        return file_path, unique_filename
+
+    except Exception as e:
+        print(f"Error saving image from bytes: {e}")
+        return "", ""
+
+
 def generate_unique_filename(file_extension: str) -> str:
     """
     Generate a unique filename using UUID and the given file extension.

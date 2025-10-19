@@ -542,10 +542,13 @@ class UserRepository(BaseRepository[User]):
         escaped_email = user.email.replace('"', '\\"')
         escaped_full_name = user.full_name.replace('"', '\\"')
 
-        # Download and save the image from the OAuth provider URL
+        # Handle image path - could be a URL (Google/GitHub) or already a filename (Microsoft)
         downloaded_image_name = ""
         if user.image_path:
-            _, downloaded_image_name = save_image_from_url(user.image_path)
+            if user.image_path.startswith(('http://', 'https://')):
+                _, downloaded_image_name = save_image_from_url(user.image_path)
+            else:
+                downloaded_image_name = user.image_path
 
         escaped_image_path = downloaded_image_name.replace('"', '\\"')
 

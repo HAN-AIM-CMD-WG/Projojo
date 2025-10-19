@@ -5,6 +5,7 @@ from domain.repositories.user_repository import UserRepository
 from auth.jwt_handler import JWTHandler
 from auth.oauth_config import oauth_client
 from domain.models.authentication import OAuthProvider
+from service.image_service import save_image_from_bytes
 
 class AuthService:
     def __init__(self, user_repo: UserRepository = Depends(UserRepository), jwt_handler: JWTHandler = Depends(JWTHandler)):
@@ -25,10 +26,10 @@ class AuthService:
         extracted_user = await self._extract_user_from_token(provider, client, token)
 
         # Get or create user in database
-        existing_user = self._get_or_create_user(extracted_user)
+        final_user = self._get_or_create_user(extracted_user)
 
         # Create JWT token
-        jwt_token = self.jwt_handler.create_jwt_token(existing_user.id)
+        jwt_token = self.jwt_handler.create_jwt_token(final_user.id)
 
         return jwt_token
 
@@ -108,35 +109,61 @@ class AuthService:
 
     async def _extract_microsoft_user(self, client, token) -> User:
         """Extract user info from Microsoft OAuth token"""
-        print(f"Token received from Microsoft: {token}")
         user_info = token.get('userinfo')
         print(f"User info received from Microsoft: {user_info}")
 
         if not user_info:
             raise ValueError("Failed to get user info from Microsoft")
 
-        # TODO: This works, but the picture should only be downloaded once it's clear that this user doesn't exist yet
-        # picture_resp = await client.get(
-        #     'me/photo/$value',
-        #     token=token
-        # )
-        # print(f"Profile picture response status: {picture_resp.status_code}")
-        # if picture_resp.status_code == 200:
-        #     with open('temp_microsoft_pic.jpg', 'wb') as f:
-        #         f.write(picture_resp.content)
-        #         f.close()
-
         oauth_provider = OAuthProvider(
             provider_name='microsoft',
             oauth_sub=user_info['sub']
         )
 
+        # Check if user already exists
+        existing_user = self.user_repo.get_user_by_sub_and_provider(
+            oauth_provider.oauth_sub,
+            oauth_provider.provider_name
+        )
+
+        # Only download profile picture for new users
+        image_filename = ""
+        if not existing_user:
+            image_filename = await self._download_microsoft_picture(client, token)
+
         return User(
             email=user_info['email'],
             full_name=user_info.get('name', ''),
-            image_path=user_info.get('picture', ''),
+            image_path=image_filename,
             oauth_providers=[oauth_provider]
         )
+
+    async def _download_microsoft_picture(self, client, token) -> str:
+        """Download Microsoft profile picture and return the filename"""
+        image_filename = ""
+        try:
+            picture_resp = await client.get('me/photo/$value', token=token)
+            print(f"Profile picture response status: {picture_resp.status_code}")
+
+            if picture_resp.status_code == 200:
+                # Determine file extension from Content-Type header
+                content_type = picture_resp.headers.get('Content-Type', '')
+                file_extension = '.jpg'  # Default
+                if 'jpeg' in content_type or 'jpg' in content_type:
+                    file_extension = '.jpg'
+                elif 'png' in content_type:
+                    file_extension = '.png'
+                elif 'gif' in content_type:
+                    file_extension = '.gif'
+
+                # Save the image bytes
+                _, image_filename = save_image_from_bytes(picture_resp.content, file_extension)
+                print(f"Saved Microsoft profile picture as: {image_filename}")
+        except Exception as e:
+            print(f"Failed to download Microsoft profile picture: {e}")
+            # Continue without profile picture
+
+        return image_filename
 
     def _get_or_create_user(self, extracted_user: User) -> User:
         """Get existing user or create new one"""
@@ -151,6 +178,6 @@ class AuthService:
         )
 
         if not existing_user:
-            existing_user = self.user_repo.create_user(extracted_user)
+            return self.user_repo.create_user(extracted_user)
 
         return existing_user
