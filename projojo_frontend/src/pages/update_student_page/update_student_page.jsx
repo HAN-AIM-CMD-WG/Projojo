@@ -113,3 +113,4 @@ export default function UpdateStudentPage() {
             </Card>
         </form>
     );
+}
