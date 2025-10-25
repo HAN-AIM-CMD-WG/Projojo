@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../components/AuthProvider";
 import Card from "../../components/Card";
@@ -33,15 +33,21 @@ export default function UpdateStudentPage() {
     }
 
     const { data, error, isLoading } = useFetch(() => getUser(authData.userId), [authData.userId]);
-    if (!isLoading && data && description === undefined) {
-        setDescription(data.description);
-    }
-    if (error !== undefined && serverError === undefined) {
-        setServerError(createErrorMessage(error, {
-            ...authErrorMessages,
-            404: "Je account is niet gevonden? Probeer opnieuw in te loggen",
-        }));
-    }
+    
+    useEffect(() => {
+        if (!isLoading && data && description === undefined) {
+            setDescription(data.description);
+        }
+    }, [data, isLoading, description]);
+
+    useEffect(() => {
+        if (error !== undefined && serverError === undefined) {
+            setServerError(createErrorMessage(error, {
+                ...authErrorMessages,
+                404: "Je account is niet gevonden? Probeer opnieuw in te loggen",
+            }));
+        }
+    }, [error, serverError]);
 
     function onSubmit(event) {
         event.preventDefault();
@@ -107,4 +113,3 @@ export default function UpdateStudentPage() {
             </Card>
         </form>
     );
-}
