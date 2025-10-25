@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Path, Body, HTTPException
+from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form, Depends
+from typing import Optional
+from auth.jwt_utils import get_token_payload
 
 from domain.repositories import (
     BusinessRepository,
@@ -8,6 +10,7 @@ from domain.repositories import (
 )
 
 from domain.models import Business
+from service import save_image
 
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
@@ -80,4 +83,46 @@ async def create_business(name: str = Body(...)):
         raise HTTPException(
             status_code=500,
             detail="Er is een fout opgetreden bij het aanmaken van het bedrijf",
+        )
+
+@router.put("/{business_id}")
+async def update_business(
+    business_id: str = Path(..., description="Business ID/name to update"),
+    name: str = Form(...),
+    description: str = Form(...),
+    location: str = Form(...),
+    photos: Optional[UploadFile] = File(None),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update business information with optional photo upload.
+    """
+    allowed = (
+        payload.get("role") == "teacher"
+        or (payload.get("role") == "supervisor" and payload.get("business") == business_id)
+        )
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Je bent niet bevoegd om de bedrijfspagina bij te werken")
+    
+    # Verify business exists
+    existing_business = business_repo.get_by_id(business_id)
+    if not existing_business:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
+    # Handle photo upload if provided
+    image_filename = None
+    if photos and photos.filename:
+        try:
+        # Save the image with a random filename
+            _, image_filename = save_image(photos)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
+
+    try:        
+        business_repo.update(business_id, name, description, location, image_filename)
+        return {"message": "Bedrijf succesvol bijgewerkt"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." + str(e)
         )

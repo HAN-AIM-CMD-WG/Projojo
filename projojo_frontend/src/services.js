@@ -329,6 +329,18 @@ export function updateTaskSkills(name, taskSkills) {
 }
 
 /**
+ * @param {string} businessId - The business ID to update
+ * @param {FormData} formData - The form data containing business information (name, location, description, photos)
+ * @returns {Promise<void>}
+ */
+export function updateBusiness(businessId, formData) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
+}
+
+/**
  * @param {string} name
  * @returns {Promise<void>}
  */

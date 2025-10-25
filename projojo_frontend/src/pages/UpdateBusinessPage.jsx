@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { createErrorMessage, getBusinessByName, /*updateBusiness*/ } from '../services';
+import { createErrorMessage, getBusinessByName, updateBusiness } from '../services';
 import useFetch from '../useFetch';
 
 /**
@@ -46,21 +46,19 @@ export default function UpdateBusinessPage() {
 
         formData.append("description", description);
 
-        // Remove the temp error message when this functionality is implemented
-        setError("Deze functionaliteit is nog niet beschikbaar");
-        // updateBusiness(formData)
-        //     .then(() => {
-        //         navigation(`/business/${authData.businessId}`);
-        //     }).catch(error =>
-        //         setError(createErrorMessage(
-        //             error,
-        //             {
-        //                 401: "Je bent niet ingelogd om de bedrijfspagina aan te passen",
-        //                 403: "Je bent niet geauthoriseerd om de bedrijfspagina aan te passen",
-        //                 404: "De bedrijfspagina kan niet gevonden worden",
-        //             }
-        //         ))
-        //     );
+        updateBusiness(authData.businessId, formData)
+            .then(() => {
+                navigation(`/business/${authData.businessId}`);
+            }).catch(error =>
+                setError(createErrorMessage(
+                    error,
+                    {
+                        401: "De bedrijfspagina kan niet aangepast worden als je niet bent ingelogd",
+                        403: "Je bent niet geauthoriseerd om de bedrijfspagina aan te passen",
+                        404: "De bedrijfspagina kan niet gevonden worden",
+                    }
+                ))
+            );
     }
 
     return (
