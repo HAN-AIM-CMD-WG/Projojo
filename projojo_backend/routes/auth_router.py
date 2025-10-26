@@ -9,7 +9,6 @@ user_repo = UserRepository()
 router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
 # TODO: make sure there are no endpoints returning JSON. All should redirect to frontend, e.g. to {frontendurl}/login?error=... (error handling not implemented yet)
-#       And remove debug prints throughout oauth flow
 @router.get("/login/{provider}")
 async def auth_login(
     request: Request,
@@ -17,8 +16,6 @@ async def auth_login(
 ):
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
-    # TODO: remove debug prints throughout oauth flow
-    print(f"Redirect URI: {redirect_uri}")
 
     # Get the OAuth client for the specified provider
     client = getattr(oauth_client, provider, None)

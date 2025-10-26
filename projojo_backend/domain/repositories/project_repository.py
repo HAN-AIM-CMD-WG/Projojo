@@ -168,7 +168,6 @@ class ProjectRepository(BaseRepository[Project]):
         )
 
     def create(self, project: ProjectCreation) -> ProjectCreation:
-        print(project)
         project.created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         query = f"""
             match

@@ -137,7 +137,6 @@ class UserRepository(BaseRepository[User]):
             }};
         """
         result = Db.read_transact(query)
-        print(result)
         if not result:
             return None
 

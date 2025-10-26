@@ -46,7 +46,6 @@ class AuthService:
     async def _extract_google_user(self, token) -> User:
         """Extract user info from Google OAuth token"""
         user_info = token.get('userinfo')
-        print(f"User info received from Google: {user_info}")
 
         if not user_info:
             raise ValueError("Failed to get user info from Google")
@@ -73,8 +72,6 @@ class AuthService:
 
         user_info = user_resp.json()
         emails = emails_resp.json()
-        print(f"User info received from GitHub: {user_info}")
-        print(f"Email info received from GitHub: {emails}")
 
         if not user_info:
             raise ValueError("Failed to get user info from GitHub")
@@ -109,7 +106,6 @@ class AuthService:
     async def _extract_microsoft_user(self, client, token) -> User:
         """Extract user info from Microsoft OAuth token"""
         user_info = token.get('userinfo')
-        print(f"User info received from Microsoft: {user_info}")
 
         if not user_info:
             raise ValueError("Failed to get user info from Microsoft")
@@ -142,7 +138,6 @@ class AuthService:
         image_filename = ""
         try:
             picture_resp = await client.get('me/photo/$value', token=token)
-            print(f"Profile picture response status: {picture_resp.status_code}")
 
             if picture_resp.status_code == 200:
                 # Determine file extension from Content-Type header
@@ -157,10 +152,8 @@ class AuthService:
 
                 # Save the image bytes
                 image_filename = save_image_from_bytes(picture_resp.content, file_extension)
-                print(f"Saved Microsoft profile picture as: {image_filename}")
         except Exception as e:
             print(f"Failed to download Microsoft profile picture: {e}")
-            # Continue without profile picture
 
         return image_filename
 
