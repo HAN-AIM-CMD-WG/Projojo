@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from domain.repositories.user_repository import UserRepository
 from auth.oauth_config import oauth_client
+from auth.jwt_utils import create_jwt_token
 from service.auth_service import AuthService
 
 user_repo = UserRepository()
 router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
 # TODO: make sure there are no endpoints returning JSON. All should redirect to frontend, e.g. to {frontendurl}/login?error=... (error handling not implemented yet)
+#       And remove debug prints throughout oauth flow
 @router.get("/login/{provider}")
 async def auth_login(
     request: Request,
@@ -48,45 +50,57 @@ async def auth_callback(
         return {"error": f"OAuth failed: {str(e)}"}
 
 
+@router.post("/test/login/{user_id}")
+async def test_login(user_id: str, request: Request):
+    """
+    LOCALHOST ONLY: Generate a JWT token for any user ID for testing purposes.
+    This endpoint should only be used in development environments.
+    """
+    # Check if the server itself is running on localhost
+    server_host = request.url.hostname
+    if server_host not in ["127.0.0.1", "localhost", "::1"]:
+        raise HTTPException(
+            status_code=403,
+            detail="This endpoint is only available when the server is running on localhost"
+        )
 
-# def verify_user_credentials(email: str, password: str):
-#     # TODO: Remove password-based authentication once OAuth is fully implemented
-#     # For now, we'll allow all users with valid email addresses
-#     user = user_repo.get_credentials(email)
-#     print("verifying... "+str(email))
-#     if user:
-#         return user
-#     return None
+    # Get user from database
+    user = user_repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
 
-# @router.post("/login", response_model=LoginResponse)
-# async def login(login_data: LoginRequest):
-#     """
-#     Authenticate a user and return a JWT token
-#     """
-#     print("login data: "+str(login_data))
-#     user = verify_user_credentials(login_data.email, login_data.password)
-#     if not user:
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Invalid email or password"
-#         )
+    # Handle both dict and object responses from repository
+    if isinstance(user, dict):
+        user_type = user.get("type")
+        user_email = user.get("email")
+        user_full_name = user.get("full_name")
+        user_id_value = user.get("id")
+    else:
+        user_type = user.type
+        user_email = user.email
+        user_full_name = user.full_name
+        user_id_value = user.id
 
-#     # Get supervisor data if needed
-#     supervisor_data = None
-#     if user.type == "supervisor":
-#         supervisor = user_repo.get_supervisor_by_id(user.id)
-#         supervisor_data = {
-#             "business_association_id": supervisor.business_association_id,
-#             "created_project_ids": supervisor.created_project_ids
-#         }
+    # Get business_id if user is a supervisor
+    business_id = None
+    if user_type == "supervisor":
+        supervisor = user_repo.get_supervisor_by_id(user_id_value)
+        if supervisor:
+            business_id = supervisor.business_association_id
 
-#     # Create JWT token
-#     token = create_jwt_token(user, supervisor_data)
+    # Create JWT token
+    token = create_jwt_token(user_id=user_id_value, role=user_type, business_id=business_id)
 
-#     # Decode for debug payload
-#     debug_payload = decode_jwt_token(token)
-
-#     return LoginResponse(
-#         token=token,
-#         debug_payload=debug_payload
-#     )
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user_id_value,
+            "email": user_email,
+            "full_name": user_full_name,
+            "type": user_type
+        }
+    }

@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../services";
+import { jwtDecode } from "jwt-decode";
+import { notification } from "./notifications/NotifySystem";
 
-export default function TestUserSelector({ onUserSelect }) {
-	// TODO: Update for OAuth authentication - generate JWT via test endpoint?
+export default function TestUserSelector() {
+	const navigate = useNavigate();
 	const [testUsers, setTestUsers] = useState([]);
 	const [isTestUsersLoading, setIsTestUsersLoading] = useState(false);
+	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
 
@@ -32,14 +36,43 @@ export default function TestUserSelector({ onUserSelect }) {
 		fetchTestUsers();
 	}, [isLocalhost]);
 	// Handle test user selection
-	const handleTestUserSelect = (user) => {
+	const handleTestUserSelect = async (user) => {
+		if (!user) {
+			setSelectedUser(null);
+			setIsOpen(false);
+			return;
+		}
+
 		setSelectedUser(user);
 		setIsOpen(false);
-		if (user && onUserSelect) {
-			onUserSelect({
-				email: user.email,
-				// password: user.password_hash // Removed for OAuth
+		setIsLoggingIn(true);
+
+		try {
+			// Call the test login endpoint to get a JWT token
+			const response = await fetch(`${API_BASE_URL}auth/test/login/${user.id}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				}
 			});
+
+			if (!response.ok) {
+				throw new Error('Failed to generate test token');
+			}
+
+			const data = await response.json();
+			const token = data.access_token;
+
+			// Store the token in localStorage
+			localStorage.setItem('token', token);
+
+			navigate('/home');
+
+		} catch (error) {
+			console.error("Error logging in with test user:", error);
+			notification.error("Fout bij inloggen met testgebruiker");
+		} finally {
+			setIsLoggingIn(false);
 		}
 	};
 
@@ -54,7 +87,7 @@ export default function TestUserSelector({ onUserSelect }) {
 		</h3>
 		<div>
 			<label className="block text-sm font-medium text-orange-700 mb-1">
-				Selecteer een testgebruiker:
+				Selecteer een testgebruiker om direct in te loggen:
 			</label>
 			<div className="relative mt-2">
 				<button
@@ -62,12 +95,12 @@ export default function TestUserSelector({ onUserSelect }) {
 					className="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-orange-300 focus:outline-2 focus:-outline-offset-2 focus:outline-orange-600 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
 					aria-haspopup="listbox"
 					aria-expanded={isOpen}
-					onClick={() => !isTestUsersLoading && setIsOpen(!isOpen)}
-					disabled={isTestUsersLoading}
+					onClick={() => !isTestUsersLoading && !isLoggingIn && setIsOpen(!isOpen)}
+					disabled={isTestUsersLoading || isLoggingIn}
 				>
 					<span className="col-start-1 row-start-1 flex items-center gap-3 pr-6">
 						<span className="block truncate">
-							{selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : "-- Selecteer een gebruiker --"}
+							{isLoggingIn ? "Inloggen..." : selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : "-- Selecteer een gebruiker --"}
 						</span>
 					</span>
 					<svg className="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -134,6 +167,7 @@ export default function TestUserSelector({ onUserSelect }) {
 			</div>
 		</div>
 		{isTestUsersLoading && <p className="text-xs text-orange-600 mt-1">Gebruikers laden...</p>}
+		{isLoggingIn && <p className="text-xs text-orange-600 mt-1">Inloggen met geselecteerde gebruiker...</p>}
 	</div>
 	);
 }

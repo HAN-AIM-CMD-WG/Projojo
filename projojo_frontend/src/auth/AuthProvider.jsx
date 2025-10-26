@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { getAuthorization } from '../services';
 import { jwtDecode } from "jwt-decode";
@@ -7,6 +8,7 @@ import { notification } from "../components/notifications/NotifySystem";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+    const location = useLocation();
     const [authData, setAuthData] = useState({ type: "none", userId: null, businessId: null, isLoading: true });
 
     // Function to process token and set auth state
@@ -41,7 +43,7 @@ export const AuthProvider = ({ children }) => {
         notification.success("Je bent uitgelogd");
     };
 
-    // Check for existing token on mount
+    // Check for existing token on mount and whenever location changes
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
@@ -49,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         } else {
             setAuthData({ type: "none", userId: null, businessId: null, isLoading: false });
         }
-    }, []);
+    }, [location]);
 
     return (
         <AuthContext.Provider value={{
