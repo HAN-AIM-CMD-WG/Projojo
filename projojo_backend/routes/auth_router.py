@@ -36,12 +36,10 @@ async def auth_callback(
 ):
     """Step 2: Handle callback from OAuth provider with authorization code"""
     try:
-        # All complex logic moved to service
-        jwt_token = await auth_service.handle_oauth_callback(request, provider)
-        # TODO: also return if the user is new, to show an "account created" message in frontend
+        jwt_token, is_new_user = await auth_service.handle_oauth_callback(request, provider)
 
-        # Simple redirect with token
-        redirect_url = f"http://localhost:5173/auth/callback?access_token={jwt_token}"
+        # Redirect with token and new user flag
+        redirect_url = f"http://localhost:5173/auth/callback?access_token={jwt_token}&is_new_user={str(is_new_user).lower()}"
         return RedirectResponse(url=redirect_url)
 
     except ValueError as e:

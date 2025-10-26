@@ -11,8 +11,8 @@ class AuthService:
     def __init__(self, user_repo: UserRepository = Depends(UserRepository)):
         self.user_repo = user_repo
 
-    async def handle_oauth_callback(self, request: Request, provider: str) -> str:
-        """Handle OAuth callback and return JWT token"""
+    async def handle_oauth_callback(self, request: Request, provider: str) -> tuple[str, bool]:
+        """Handle OAuth callback and return JWT token and is_new_user flag"""
         # Get OAuth client
         client = getattr(oauth_client, provider, None)
         if not client:
@@ -25,12 +25,12 @@ class AuthService:
         extracted_user = await self._extract_user_from_token(provider, client, token)
 
         # Get or create user in database
-        final_user = self._get_or_create_user(extracted_user)
+        final_user, is_new_user = self._get_or_create_user(extracted_user)
 
         # Create JWT token
         jwt_token = create_jwt_token(final_user.id)
 
-        return jwt_token
+        return jwt_token, is_new_user
 
     async def _extract_user_from_token(self, provider: str, client, token) -> User:
         """Extract user information from OAuth token based on provider"""
@@ -164,8 +164,8 @@ class AuthService:
 
         return image_filename
 
-    def _get_or_create_user(self, extracted_user: User) -> User:
-        """Get existing user or create new one"""
+    def _get_or_create_user(self, extracted_user: User) -> tuple[User, bool]:
+        """Get existing user or create new one. Returns (user, is_new_user)"""
         if not extracted_user.oauth_providers or len(extracted_user.oauth_providers) == 0:
             raise ValueError("No OAuth provider information found")
 
@@ -177,6 +177,7 @@ class AuthService:
         )
 
         if not existing_user:
-            return self.user_repo.create_user(extracted_user)
+            new_user = self.user_repo.create_user(extracted_user)
+            return new_user, True
 
-        return existing_user
+        return existing_user, False

@@ -8,9 +8,18 @@ export default function AuthCallback() {
 
     useEffect(() => {
         const accessToken = searchParams.get('access_token');
+        const isNewUser = searchParams.get('is_new_user') === 'true';
 
         if (accessToken) {
             localStorage.setItem('token', accessToken);
+            
+            // Show appropriate welcome message
+            if (isNewUser) {
+                notification.success("Welkom! Je account is succesvol aangemaakt.");
+            } else {
+                notification.success("Welkom terug!");
+            }
+            
             navigate('/home', { replace: true });
         } else {
             navigate('/', { replace: true });
