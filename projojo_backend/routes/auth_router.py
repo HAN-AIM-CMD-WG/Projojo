@@ -4,11 +4,36 @@ from domain.repositories.user_repository import UserRepository
 from auth.oauth_config import oauth_client
 from auth.jwt_utils import create_jwt_token
 from service.auth_service import AuthService
+import os
+from urllib.parse import urlparse
 
 user_repo = UserRepository()
 router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
-# TODO: make sure there are no endpoints returning JSON. All should redirect to frontend, e.g. to {frontendurl}/login?error=... (error handling not implemented yet)
+# Default frontend URL as fallback
+DEFAULT_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+
+def get_frontend_url_from_login(request: Request) -> str:
+    """
+    Extract frontend URL from the initial login request.
+    This is called when user initiates login from the frontend.
+    """
+    # Try to get from Referer header (user coming from frontend)
+    referer = request.headers.get("referer")
+    if referer:
+        parsed = urlparse(referer)
+        return f"{parsed.scheme}://{parsed.netloc}"
+
+    # Try Origin header as fallback
+    origin = request.headers.get("origin")
+    if origin:
+        return origin
+
+    # Fallback to configured/default URL
+    return DEFAULT_FRONTEND_URL
+
+
 @router.get("/login/{provider}")
 async def auth_login(
     request: Request,
@@ -17,11 +42,18 @@ async def auth_login(
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
 
+    # Get frontend URL from the request and store it in the session
+    frontend_url = get_frontend_url_from_login(request)
+    request.session['frontend_url'] = frontend_url
+
     # Get the OAuth client for the specified provider
     client = getattr(oauth_client, provider, None)
     if not client:
-        return {"error": f"Het is niet mogelijk om in te loggen met {provider}"}
+        print(f"Unsupported OAuth provider: {provider}")
+        # Redirect to frontend auth callback with error
+        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=unsupported_provider")
 
+    # Authlib will handle the state parameter for CSRF protection
     return await client.authorize_redirect(request, redirect_uri)
 
 
@@ -32,17 +64,24 @@ async def auth_callback(
     auth_service: AuthService = Depends(AuthService)
 ):
     """Step 2: Handle callback from OAuth provider with authorization code"""
+    # Retrieve frontend URL from session (stored during login)
+    frontend_url = request.session.get('frontend_url', DEFAULT_FRONTEND_URL)
+
     try:
         jwt_token, is_new_user = await auth_service.handle_oauth_callback(request, provider)
 
         # Redirect with token and new user flag
-        redirect_url = f"http://localhost:5173/auth/callback?access_token={jwt_token}&is_new_user={str(is_new_user).lower()}"
+        redirect_url = f"{frontend_url}/auth/callback?access_token={jwt_token}&is_new_user={str(is_new_user).lower()}"
         return RedirectResponse(url=redirect_url)
 
     except ValueError as e:
-        return {"error": str(e)}
+        # Redirect to frontend auth callback with error
+        print(f"OAuth callback handling failed for {provider}: {e}")
+        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
     except Exception as e:
-        return {"error": f"OAuth failed: {str(e)}"}
+        # Redirect to frontend auth callback with error for any other exception
+        print(f"OAuth callback handling failed for {provider}: {e}")
+        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
 
 
 @router.post("/test/login/{user_id}")
