@@ -12,37 +12,6 @@ class UserRepository(BaseRepository[User]):
     def __init__(self):
         super().__init__(User, "user")
 
-    def get_credentials(self, id: str) -> User | None:
-        query = f"""
-            match
-                $user isa user,
-                has email "{id}",
-                has email $email,
-                has fullName $fullName,
-                has imagePath $imagePath;
-                $user isa $usertype;
-            fetch {{
-                'email': $email,
-                'fullName': $fullName,
-                'imagePath': $imagePath,
-                'usertype': $usertype,
-                'oauth_providers': [
-                    match
-                        $provider isa oauthProvider;
-                        $auth isa oauthAuthentication($user, $provider);
-                    fetch {{
-                        'provider_name': $provider.name,
-                        'oauth_sub': $auth.oauthSub
-                    }};
-                ]
-            }};
-        """
-        results = Db.read_transact(query)
-        if not results:
-            raise ItemRetrievalException(User, f"User with ID {id} not found.")
-        print(results)
-        return self._map_to_model(results[1])
-
     def get_by_id(self, id: str) -> User | None:
         # First try to find as a supervisor
         supervisor = self.get_supervisor_by_id(id)
@@ -474,7 +443,7 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         return [User(**result) for result in results]
 
-    def get_user_by_sub_and_provider(self, sub: str, provider: str) -> User | None:
+    def get_by_sub_and_provider(self, sub: str, provider: str) -> User | None:
         """Get user from database by OAuth sub (provider user ID) and provider"""
         escaped_sub = sub.replace('"', '\\"')
         escaped_provider = provider.replace('"', '\\"')

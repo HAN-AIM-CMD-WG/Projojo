@@ -8,7 +8,7 @@ class User(BaseModel):
     id: str | None = None
     email: str
     full_name: str
-    image_path: str | None = None # TODO: check if this is ever None after implementing OAuth
+    image_path: str
     oauth_providers: list[OAuthProvider] | None = None
     type: str | None = None
 

@@ -120,7 +120,7 @@ class AuthService:
         )
 
         # Check if user already exists
-        existing_user = self.user_repo.get_user_by_sub_and_provider(
+        existing_user = self.user_repo.get_by_sub_and_provider(
             oauth_provider.oauth_sub,
             oauth_provider.provider_name
         )
@@ -171,7 +171,7 @@ class AuthService:
 
         oauth_provider = extracted_user.oauth_providers[0]
 
-        existing_user = self.user_repo.get_user_by_sub_and_provider(
+        existing_user = self.user_repo.get_by_sub_and_provider(
             oauth_provider.oauth_sub,
             oauth_provider.provider_name
         )
