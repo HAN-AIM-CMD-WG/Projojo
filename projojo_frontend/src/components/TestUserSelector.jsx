@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../services";
 import { jwtDecode } from "jwt-decode";
@@ -11,6 +11,7 @@ export default function TestUserSelector() {
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 	const [isOpen, setIsOpen] = useState(false);
 	const [selectedUser, setSelectedUser] = useState(null);
+	const dropdownRef = useRef(null);
 
 	// Only show test functionality on localhost
 	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -35,6 +36,23 @@ export default function TestUserSelector() {
 
 		fetchTestUsers();
 	}, [isLocalhost]);
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+				setIsOpen(false);
+			}
+		};
+
+		if (isOpen) {
+			document.addEventListener('mousedown', handleClickOutside);
+		}
+
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+		};
+	}, [isOpen]);
 	// Handle test user selection
 	const handleTestUserSelect = async (user) => {
 		if (!user) {
@@ -89,7 +107,7 @@ export default function TestUserSelector() {
 			<label className="block text-sm font-medium text-orange-700 mb-1">
 				Selecteer een testgebruiker om direct in te loggen:
 			</label>
-			<div className="relative mt-2">
+			<div className="relative mt-2" ref={dropdownRef}>
 				<button
 					type="button"
 					className="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-orange-300 focus:outline-2 focus:-outline-offset-2 focus:outline-orange-600 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
