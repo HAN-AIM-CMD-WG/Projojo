@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Path, HTTPException
 from domain.repositories import UserRepository
-from auth.dependencies import get_current_user
+from auth.jwt_utils import get_token_user
 from domain.models.user import User
 
 user_repo = UserRepository()
@@ -16,7 +16,7 @@ async def get_all_users():
     return users
 
 @router.get("/me")
-def get_me(user: User | None = Depends(get_current_user)):
+def get_me(user: User | None = Depends(get_token_user)):
     """Get current authenticated user's info"""
     if user:
         return user

@@ -1,50 +1,60 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer
+from domain.models.user import User
+from domain.repositories.user_repository import UserRepository
 
 # Security scheme for extracting Bearer tokens
 security = HTTPBearer()
 
 # JWT configuration
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-super-secret-jwt-key-change-in-production")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_TIME_MINUTES = 60
 
-# TODO: compare this file (original) to `jwt_handler.py` (new) and see if we can merge them
+def create_jwt_token(user_id: str, role: str = "student", business_id: str | None = None) -> str:
+    """
+    Create a JWT token containing only the user ID (UUID)
+    """
+    # Calculate expiration time with timezone-aware datetime
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=JWT_EXPIRATION_TIME_MINUTES)
 
-def create_jwt_token(user, supervisor_data=None) -> str:
-    """
-    Create a JWT token for a user
-    """
+    # Create the payload with only the user ID
     payload = {
-        "sub": user.email,
-        "role": user.type.lower(),
-        "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        "sub": user_id,  # Subject (user UUID) - only data stored in JWT
+        "role": role,
+        "exp": expire,  # Expires at
+        "iat": now,  # Issued at
+        "iss": "projojo"  # Issuer
     }
 
-    # Add supervisor-specific data if provided
-    if user.type == "supervisor" and supervisor_data:
-        payload["business"] = supervisor_data.get("business_association_id")
-        payload["projects"] = supervisor_data.get("created_project_ids", [])
+    if role == "supervisor" and business_id:
+        payload["businessId"] = business_id
 
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    # Encode the JWT token
+    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return token
 
-def decode_jwt_token(token) -> dict:
+# used in auth/dependencies
+def get_token_user(user_repository: UserRepository = Depends(UserRepository)) -> User | None:
     """
-    Decode and validate a JWT token
-    Returns the payload if valid, raises HTTPException if invalid/expired
+    Get the user from database based on the JWT token
     """
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    # Decode the token to get user ID (UUID)
+    payload = get_token_payload()
+    user_id = payload.get("sub")
 
+    if not user_id:
+        return None
+
+    # Fetch user data from database using UUID
+    user = user_repository.get_user_by_id(user_id)
+    return user
+
+# used in invite, student and task routers
 def get_token_payload(token: str = Depends(security)) -> dict:
     """
     FastAPI dependency to extract and validate JWT token
@@ -56,5 +66,10 @@ def get_token_payload(token: str = Depends(security)) -> dict:
     else:
         token_str = token.credentials
 
-    # Decode and validate token (this will raise HTTPException if invalid)
-    return decode_jwt_token(token_str)
+    try:
+        return jwt.decode(token_str, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    # Token could be expired or invalid (tampered with)
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")

@@ -26,7 +26,7 @@ async def create_supervisor_invite_key(business_id: str = Path(..., description=
     if payload.get("role") not in ["supervisor", "teacher"]:
         raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen andere supervisors uitnodigen")
 
-    if payload.get("role") == "supervisor" and payload.get("business") != business_id:
+    if payload.get("role") == "supervisor" and payload.get("businessId") != business_id:
         raise HTTPException(status_code=403, detail="Supervisors kunnen alleen andere supervisors uitnodigen binnen hun eigen bedrijf")
 
     business = business_repo.get_by_id(business_id)

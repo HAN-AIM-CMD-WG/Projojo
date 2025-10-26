@@ -13,10 +13,10 @@ export const AuthProvider = ({ children }) => {
     const processToken = (token) => {
         try {
             const decoded = jwtDecode(token);
-            const { sub, role, business } = decoded;
+            const { sub, role, businessId } = decoded;
 
             if (role === "supervisor") {
-                setAuthData({ type: "supervisor", userId: sub, businessId: business, isLoading: false });
+                setAuthData({ type: "supervisor", userId: sub, businessId: businessId, isLoading: false });
             } else if (role === "student") {
                 setAuthData({ type: "student", userId: sub, businessId: null, isLoading: false });
             } else if (role === "teacher") {

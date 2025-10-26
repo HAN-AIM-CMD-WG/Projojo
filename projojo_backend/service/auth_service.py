@@ -2,15 +2,14 @@ import asyncio
 from fastapi import Request, Depends
 from domain.models.user import User
 from domain.repositories.user_repository import UserRepository
-from auth.jwt_handler import JWTHandler
+from auth.jwt_utils import create_jwt_token
 from auth.oauth_config import oauth_client
 from domain.models.authentication import OAuthProvider
 from service.image_service import save_image_from_bytes
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository = Depends(UserRepository), jwt_handler: JWTHandler = Depends(JWTHandler)):
+    def __init__(self, user_repo: UserRepository = Depends(UserRepository)):
         self.user_repo = user_repo
-        self.jwt_handler = jwt_handler
 
     async def handle_oauth_callback(self, request: Request, provider: str) -> str:
         """Handle OAuth callback and return JWT token"""
@@ -29,7 +28,7 @@ class AuthService:
         final_user = self._get_or_create_user(extracted_user)
 
         # Create JWT token
-        jwt_token = self.jwt_handler.create_jwt_token(final_user.id)
+        jwt_token = create_jwt_token(final_user.id)
 
         return jwt_token
 
