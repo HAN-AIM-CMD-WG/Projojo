@@ -13,6 +13,8 @@ entity supervisor sub user,
 
 entity student sub user,
     owns schoolAccountName @card(1),
+    owns description @card(0..1),
+    owns cvPath @card(0..1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..);
 
@@ -124,6 +126,7 @@ attribute name value string;
 attribute fullName value string;
 attribute password_hash value string;
 attribute imagePath value string;
+attribute cvPath value string;
 attribute schoolAccountName value string;
 attribute username value string;
 attribute id value string;

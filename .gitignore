@@ -73,5 +73,5 @@ node_modules
 
 # Backend Static Files
 projojo_backend/static/images/*
-projojo_backend/static/pdf/*
+# projojo_backend/static/pdf/*
 !projojo_backend/static/images/__init__.py

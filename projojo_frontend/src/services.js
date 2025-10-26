@@ -229,6 +229,19 @@ export function updateStudentSkillDescription(email, skill) {
 }
 
 /**
+ * Update student profile (description, profile picture, CV)
+ * @param {string} email - Student email
+ * @param {FormData} formData - Form data containing description, profilePicture, and cv
+ * @returns {Promise<{message: string}>}
+ */
+export function updateStudent(email, formData) {
+    return fetchWithError(`${API_BASE_URL}students/${email}`, {
+        method: "PUT",
+        body: formData,
+    });
+}
+
+/**
  * @param {string} taskId
  * @returns {Promise<{student: {id: string, full_name: string, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}, reason: string}[]>}
  */
@@ -290,7 +303,7 @@ export function createTask(projectId, formDataObj) {
         total_needed: formDataObj.totalNeeded,
         project_id: projectId
     };
-    
+
     return fetchWithError(`${API_BASE_URL}tasks/`, {
         method: "POST",
         body: JSON.stringify(taskData),

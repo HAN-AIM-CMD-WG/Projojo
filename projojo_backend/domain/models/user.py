@@ -29,6 +29,8 @@ class Student(User):
     school_account_name: str
     skill_ids: list[str] = []
     registered_task_ids: list[str] = []
+    description: str | None = None
+    cv_path: str | None = None
 
 class Teacher(User):
     school_account_name: str

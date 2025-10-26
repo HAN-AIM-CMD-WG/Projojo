@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Depends
+from fastapi import APIRouter, Path, Body, HTTPException, Depends, UploadFile, File, Form
 from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
 from domain.models import StudentSkills
+from service.image_service import save_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
@@ -91,3 +92,52 @@ async def get_student_registrations(payload: dict = Depends(get_token_payload)) 
     student_email = payload.get("sub")
     registrations = user_repo.get_student_registrations(student_email)
     return registrations
+
+
+@router.put("/{email}")
+async def update_student(
+    email: str = Path(..., description="Student email"),
+    description: str = Form(None),
+    profilePicture: UploadFile = File(None),
+    cv: UploadFile = File(None),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update student profile information (description, profile picture, CV)
+    """
+    # Verify the student is updating their own profile
+    if payload.get("role") != "student" or payload.get("sub") != email:
+        raise HTTPException(status_code=403, detail="Je kunt alleen je eigen profiel aanpassen")
+
+    # Verify student exists
+    student = user_repo.get_student_by_id(email)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student niet gevonden")
+
+    image_filename = None
+    cv_filename = None
+
+    try:
+        # Handle profile picture upload
+        if profilePicture and profilePicture.filename:
+            _, image_filename = save_image(profilePicture)
+
+        # Handle CV upload
+        if cv and cv.filename:
+            _, cv_filename = save_image(cv, "static/pdf")
+
+        # Update student in database
+        user_repo.update_student(
+            email=email,
+            description=description,
+            image_path=image_filename,
+            cv_path=cv_filename
+        )
+
+        return {"message": "Profiel succesvol bijgewerkt"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Er is een fout opgetreden bij het bijwerken van het profiel: {str(e)}"
+        )

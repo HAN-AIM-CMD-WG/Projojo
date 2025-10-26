@@ -12,7 +12,9 @@ insert
     $u2 isa student,
         has fullName "Emma Jansen",
         has imagePath "student_female.png",
+        has description "Enthousiaste student **landbouwtechnologie** met passie voor _duurzame_ **landbouwpraktijken**.",
         has email "emma.jansen@student.han.nl",
+        has cvPath "cv_emma_jansen.pdf",
         has schoolAccountName "Emma.Jansen",
         has password_hash "hash_123";
 

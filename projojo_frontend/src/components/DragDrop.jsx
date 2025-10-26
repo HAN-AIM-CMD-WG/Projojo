@@ -2,34 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import { /*getFile*/ } from '../services';
 
 /**
- * 
- * @param {{ onFileChanged: (file: File[]) => void }} param0 
- * @returns 
+ *
+ * @param {{ onFileChanged: (file: File[]) => void }} param0
+ * @returns
  */
 export default function DragDrop({ onFileChanged, multiple = false, accept = "image/*", name, required = false, initialFilePath, text = "Sleep uw afbeeldingen hier", showAddedFiles = true }) {
     const fileInput = useRef();
     const [files, setFiles] = useState([]);
     const [error, setError] = useState();
+    const [initialPreview, setInitialPreview] = useState(null);
 
     useEffect(() => {
-        let ignore = false;
-
-        // if (initialFilePath !== undefined) {
-        //     getFile(initialFilePath)
-        //         .then(file => {
-        //             if (ignore) return;
-        //             const fileArray = [file];
-        //             if (typeof onFileChanged === "function") {
-        //                 onFileChanged(fileArray.length === 0 ? undefined : fileArray);
-        //             }
-        //             setFiles(fileArray);
-        //         });
-        // }
-
-        return () => {
-            ignore = true;
+        // Set initial preview if a file path is provided
+        if (initialFilePath && initialFilePath !== "undefined" && !initialFilePath.includes("null")) {
+            setInitialPreview(initialFilePath);
+        } else {
+            setInitialPreview(null);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialFilePath]);
 
     function onKeyUp(event) {
@@ -64,13 +53,16 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
         if (!multiple) {
             fileArray = fileArray.slice(0, 1);
         }
-        
+
         // Validate that files were actually selected
         if (fileArray.length === 0) {
             setError("Geen afbeelding toegevoegd");
             return;
         }
-        
+
+        // Clear initial preview when new files are added
+        setInitialPreview(null);
+
         setFiles(fileArray);
         if (typeof onFileChanged === "function") {
             onFileChanged(fileArray.length === 0 ? undefined : fileArray);
@@ -103,16 +95,43 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
             </div>
             <span className="text-primary text-center">{error}</span>
             <input ref={fileInput} hidden type="file" name={name} multiple={multiple} accept={accept} onInput={onFileInput} onInvalid={() => setError("Geen afbeelding toegevoegd")} data-testid="fileinput" required={required} />
-            {showAddedFiles && <div className='flex justify-center'>
-                {files.map((file, index) =>
-                    <img
-                        src={URL.createObjectURL(file)}
-                        className="w-12 h-12"
-                        alt="aangemaakte foto"
-                        key={index}
-                    />
-                )}
-            </div>}
+
+            {/* Show newly added files */}
+            {showAddedFiles && files.length > 0 && (
+                <div className='flex justify-center'>
+                    {files.map((file, index) =>
+                        <img
+                            src={URL.createObjectURL(file)}
+                            className="w-12 h-12"
+                            alt="aangemaakte foto"
+                            key={index}
+                        />
+                    )}
+                </div>
+            )}
+
+            {/* Show initial file preview if no new files are added */}
+            {files.length === 0 && initialPreview && (
+                <div className='flex justify-center mt-3'>
+                    {accept.includes("image") ? (
+                        <img
+                            src={initialPreview}
+                            className="w-48 h-48 object-cover rounded"
+                            alt="Huidige afbeelding"
+                        />
+                    ) : accept.includes("pdf") ? (
+                        <embed
+                            src={initialPreview}
+                            className="h-96 w-full"
+                            title="Huidige PDF"
+                        />
+                    ) : (
+                        <a href={initialPreview} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
+                            Bekijk huidig bestand
+                        </a>
+                    )}
+                </div>
+            )}
         </>
     );
 }

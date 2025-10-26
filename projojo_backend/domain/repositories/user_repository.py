@@ -137,6 +137,8 @@ class UserRepository(BaseRepository[User]):
                 'school_account_name': $student.schoolAccountName,
                 'type': 'student',
                 'password_hash': $student.password_hash,
+                'description': $student.description,
+                'cv_path': $student.cvPath,
                 'registered_task_ids': [
                     match
                         $task isa task;
@@ -483,3 +485,34 @@ class UserRepository(BaseRepository[User]):
 
         results = Db.read_transact(query)
         return [User(**result) for result in results]
+
+    def update_student(self, email: str, description: str | None = None, image_path: str | None = None, cv_path: str | None = None) -> None:
+        """
+        Update student profile information (description, profile picture, CV)
+        """
+        escaped_email = email.replace('"', '\\"')
+
+        # Build update statements for provided fields
+        update_statements = []
+
+        if description is not None:
+            escaped_description = description.replace('"', '\\"').replace('\n', '\\n')
+            update_statements.append(f'$student has description "{escaped_description}";')
+
+        if image_path is not None:
+            escaped_image_path = image_path.replace('"', '\\"')
+            update_statements.append(f'$student has imagePath "{escaped_image_path}";')
+
+        if cv_path is not None:
+            escaped_cv_path = cv_path.replace('"', '\\"')
+            update_statements.append(f'$student has cvPath "{escaped_cv_path}";')
+
+        # Only execute if there are updates to make
+        if update_statements:
+            update_query = f"""
+                match
+                    $student isa student, has email "{escaped_email}";
+                update
+                    {' '.join(update_statements)}
+            """
+            Db.write_transact(update_query)
