@@ -3,6 +3,7 @@ import Alert from "../components/Alert";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
 import { getBusinessByName, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
+import { normalizeSkill } from '../utils/skills';
 import useFetch from '../useFetch';
 import NotFound from './NotFound';
 import PageHeader from '../components/PageHeader';
@@ -69,6 +70,28 @@ export default function BusinessPage() {
 
     // No need to set imagePath as it's already in image_path field in the new API response
 
+    // Compute topSkills for the business from the loaded projects' tasks (normalize shapes)
+    const computedTopSkills = (() => {
+        if (!projectsData) return [];
+        const allSkills = projectsData.flatMap(project =>
+            (project.tasks || []).flatMap(task => (task.skills || []).map(s => normalizeSkill(s)))
+        );
+
+        const skillCounts = allSkills.reduce((acc, skill) => {
+            const key = skill.skillId ?? skill.name;
+            if (!acc[key]) {
+                acc[key] = { count: 0, isPending: skill.isPending, name: skill.name, skillId: key };
+            }
+            acc[key].count++;
+            return acc;
+        }, {});
+
+        return Object.values(skillCounts)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5)
+            .map(({ skillId, name, isPending }) => ({ skillId, name, isPending }));
+    })();
+
     return (
         <>
             <PageHeader name={'Bedrijfspagina'} />
@@ -76,7 +99,18 @@ export default function BusinessPage() {
                 <Alert text={businessErrorMessage} />
                 <Alert text={projectsErrorMessage} />
             </div>
-            {isBusinessLoading ? (<Loading />) : (<BusinessProjectDashboard showDescription={true} showUpdateButton={true} isAlwaysExtended={true} business={businessData} projects={projectsData} />)}
+            {isBusinessLoading ? (
+                <Loading />
+            ) : (
+                <BusinessProjectDashboard
+                    showDescription={true}
+                    showUpdateButton={true}
+                    isAlwaysExtended={true}
+                    business={businessData}
+                    projects={projectsData}
+                    topSkills={computedTopSkills}
+                />
+            )}
         </>
     );
 }
