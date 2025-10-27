@@ -25,7 +25,7 @@ export default function Filter({ onFilter }) {
             .then(data => {
                 if (ignore) return;
                 // Normalize skills from backend before storing in state
-                setAllSkills((data || []).map(normalizeSkill));
+                setAllSkills((data || []).map(normalizeSkill).filter(Boolean));
             })
             .catch(err => {
                 if (ignore) return;
@@ -38,7 +38,7 @@ export default function Filter({ onFilter }) {
     }, []);
 
     const handleSave = (skills) => {
-        const normalized = (skills || []).map(normalizeSkill);
+        const normalized = (skills || []).map(normalizeSkill).filter(Boolean);
         setSelectedSkills(normalized);
         setIsEditing(false);
         onFilter({

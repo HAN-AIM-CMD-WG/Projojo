@@ -24,7 +24,7 @@ export default function OverviewPage() {
         const formattedBusinesses = data.map(business => {
           // Normalize all task skills for this business
           const allSkills = business.projects.flatMap(project =>
-            project.tasks.flatMap(task => (task.skills || []).map(s => normalizeSkill(s)))
+            project.tasks.flatMap(task => (task.skills || []).map(normalizeSkill).filter(Boolean))
           );
 
           // Aggregate by id (fallback to name) so counting is stable across shapes
@@ -61,7 +61,7 @@ export default function OverviewPage() {
                 title: project.name,
                 tasks: project.tasks.map(task => ({
                   ...task,
-                  skills: (task.skills || []).map(normalizeSkill)
+                  skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
                 }))
               };
             }),
@@ -126,7 +126,8 @@ export default function OverviewPage() {
           const filteredTasks = project.tasks.filter(task => {
             // Build a set of task skill ids for quicker lookup (fallback to name)
             const taskSkillIds = new Set((task.skills || []).map(ts => String(ts.skillId ?? ts.name)));
-            return (selectedSkills || []).every(sel => taskSkillIds.has(String(sel.skillId ?? sel.name)));
+            // Use the precomputed selectedIds set for membership checks
+            return [...selectedIds].every(id => taskSkillIds.has(id));
           });
 
           if (filteredTasks.length > 0) {

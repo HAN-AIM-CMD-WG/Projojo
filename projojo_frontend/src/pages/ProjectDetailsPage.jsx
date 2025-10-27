@@ -20,7 +20,7 @@ export default function ProjectDetailsPage() {
         getProject(projectId)
             .then(data => {
                 // Normalize skills from tasks
-                const allSkills = (data.tasks || []).flatMap(task => (task.skills || []).map(s => normalizeSkill(s)));
+                const allSkills = (data.tasks || []).flatMap(task => (task.skills || []).map(s => normalizeSkill(s)).filter(Boolean));
 
                 // Aggregate by stable key (skillId fallback to name)
                 const skillCounts = allSkills.reduce((acc, skill) => {
@@ -40,7 +40,7 @@ export default function ProjectDetailsPage() {
                 // Normalize each task's skills as well
                 const normalizedTasks = (data.tasks || []).map(task => ({
                     ...task,
-                    skills: (task.skills || []).map(normalizeSkill)
+                    skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
                 }));
 
                 setProject({ ...data, topSkills });
