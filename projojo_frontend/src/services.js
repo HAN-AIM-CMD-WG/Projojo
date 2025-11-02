@@ -182,7 +182,7 @@ export function getTasks(projectId) {
 /**
  *
  * @param {string} userId
- * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, type: string, oauth_providers: {provider_name: string, oauth_sub: string}[] | null, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, type: string, oauth_providers: {provider_name: string, oauth_sub: string}[] | null, skill_ids: {skill_id: string}[], registered_task_ids: {task_id: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
 export function getUser(userId) {
     return fetchWithError(`${API_BASE_URL}users/${userId}`);
