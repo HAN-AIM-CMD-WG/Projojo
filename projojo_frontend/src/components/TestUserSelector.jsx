@@ -201,6 +201,14 @@ export default function TestUserSelector() {
 		</div>
 		{isTestUsersLoading && <p className="text-xs text-orange-600 mt-1">Gebruikers laden...</p>}
 		{isLoggingIn && <p className="text-xs text-orange-600 mt-1">Inloggen met geselecteerde gebruiker...</p>}
+		<p className="text-xs text-orange-600 mt-4">
+			Revoke OAuth access: {' '}
+			<a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-800"><strong>Google</strong></a>
+			{' • '}
+			<a href="https://github.com/settings/applications" target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-800"><strong>GitHub</strong></a>
+			{' • '}
+			<a href="https://account.microsoft.com/privacy/app-access" target="_blank" rel="noopener noreferrer" className="underline hover:text-orange-800"><strong>Microsoft</strong></a>
+		</p>
 	</div>
 	);
 }
