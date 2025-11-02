@@ -115,36 +115,51 @@ class TaskRepository(BaseRepository[Task]):
         return tasks
 
     def create(self, task: Task) -> Task:
+        if not task.project_id:
+            raise ValueError("De taak moet bij een bestaand project horen.")
+
         # Generate a creation timestamp
         created_at = datetime.now().isoformat()
 
         # Escape any double quotes in strings
         escaped_name = task.name.replace('"', '\\"')
         escaped_description = task.description.replace('"', '\\"')
+        escaped_project_id = task.project_id.replace('"', '\\"')
 
-        # Create the task
-        task_query = f"""
+        validation_query = f"""
+            match
+                $project isa project, has name "{escaped_project_id}";
+            fetch {{ 
+                'exists': true,
+                'duplicate_tasks': [
+                    match
+                        $existingTask isa task, has name "{escaped_name}";
+                        $projectTask isa containsTask (project: $project, task: $existingTask);
+                    fetch {{ 'exists': true }};
+                ]
+            }};
+        """
+        validation_results = Db.read_transact(validation_query)
+        
+        if not validation_results:
+            raise ItemRetrievalException("Project", f"Project with name '{task.project_id}' not found.")
+
+        # Check if duplicate tasks were found
+        if validation_results[0].get('duplicate_tasks'):
+            raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{task.project_id}'.")
+        
+        query = f"""
+            match
+                $project isa project, has name "{escaped_project_id}";
             insert
                 $task isa task,
                 has name "{escaped_name}",
                 has description "{escaped_description}",
                 has totalNeeded {task.total_needed},
                 has createdAt {created_at};
+                $projectTask isa containsTask (project: $project, task: $task);
         """
-        Db.write_transact(task_query)
-
-        # If project_id is provided, create project-task relation
-        if task.project_id:
-            escaped_project_id = task.project_id.replace('"', '\\"')
-
-            project_task_query = f"""
-                match
-                    $project isa project, has name "{escaped_project_id}";
-                    $task isa task, has name "{escaped_name}";
-                insert
-                    $projectTask isa containsTask (project: $project, task: $task);
-            """
-            Db.write_transact(project_task_query)
+        Db.write_transact(query)
 
         # Update the created_at in the returned task
         task.created_at = datetime.fromisoformat(created_at)
@@ -253,5 +268,3 @@ class TaskRepository(BaseRepository[Task]):
         """
 
         Db.write_transact(query)
-
-
