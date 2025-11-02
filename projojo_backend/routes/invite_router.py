@@ -12,7 +12,7 @@ async def create_teacher_invite_key(payload: dict = Depends(get_token_payload)):
     """
     Create an invite key for a teacher
     """
-    if payload.get("role") != "teacher":
+    if payload["role"] != "teacher":
         raise HTTPException(status_code=403, detail="Alleen docenten kunnen andere docenten uitnodigen")
 
     invite_key = invite_repo.save_invite_key("teacher")
@@ -23,10 +23,10 @@ async def create_supervisor_invite_key(business_id: str = Path(..., description=
     """
     Create an invite key for a supervisor
     """
-    if payload.get("role") not in ["supervisor", "teacher"]:
+    if payload["role"] not in ["supervisor", "teacher"]:
         raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen andere supervisors uitnodigen")
 
-    if payload.get("role") == "supervisor" and payload.get("businessId") != business_id:
+    if payload["role"] == "supervisor" and payload.get("businessId") != business_id:
         raise HTTPException(status_code=403, detail="Supervisors kunnen alleen andere supervisors uitnodigen binnen hun eigen bedrijf")
 
     business = business_repo.get_by_id(business_id)

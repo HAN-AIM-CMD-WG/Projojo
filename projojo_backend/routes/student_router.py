@@ -3,7 +3,6 @@ from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
-from domain.models import StudentSkills
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
@@ -20,28 +19,28 @@ async def get_all_students():
     return students
 
 
-@router.get("/{email}/skills")
-async def get_student_skills(email: str = Path(..., description="Student email")):
+@router.get("/{id}/skills")
+async def get_student_skills(id: str = Path(..., description="Student ID")):
     """
     Get all skills for a student
     """
-    student = user_repo.get_student_by_id(email)
+    student = user_repo.get_student_by_id(id)
 
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
 
-@router.put("/{email}/skills")
+@router.put("/{id}/skills")
 async def update_student_skills(
-    email: str = Path(..., description="Student email"),
-    skills: list[str] = Body(..., description="List of skillnames"),
+    id: str = Path(..., description="Student ID"),
+    skills: list[str] = Body(..., description="List of skill IDs"),
 ):
     """
     Update skills for a student
     """
     try:
-        skill_repo.update_student_skills(email, skills)
+        skill_repo.update_student_skills(id, skills)
         return {"message": "Skills succesvol bijgewerkt"}
     except Exception:
         raise HTTPException(
@@ -60,7 +59,7 @@ async def update_student_skill_description(
     """
     Update a specific skill's description for a student
     """
-    if payload.get("role") != "student" or payload.get("sub") != student_id:
+    if payload["role"] != "student" or payload["sub"] != student_id:
         raise HTTPException(status_code=403, detail="Studenten kunnen alleen hun eigen skills bijwerken")
 
     user = user_repo.get_student_by_id(student_id)
@@ -85,9 +84,9 @@ async def get_student_registrations(payload: dict = Depends(get_token_payload)) 
     """
     Get all student registrations for debugging purposes
     """
-    if payload.get("role") != "student":
+    if payload["role"] != "student":
         raise HTTPException(status_code=403, detail="Alleen studenten kunnen hun registraties bekijken")
 
-    student_email = payload.get("sub")
-    registrations = user_repo.get_student_registrations(student_email)
+    student_id = payload["sub"]
+    registrations = user_repo.get_student_registrations(student_id)
     return registrations

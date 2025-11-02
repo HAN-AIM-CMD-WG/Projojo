@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Path, Body
 
 from domain.repositories import SkillRepository
-skill_repo = SkillRepository()
-
 from domain.models import Skill
+
+skill_repo = SkillRepository()
 
 router = APIRouter(prefix="/skills", tags=["Skill Endpoints"])
 
@@ -16,12 +16,12 @@ async def get_all_skills():
     skills = skill_repo.get_all()
     return skills
 
-@router.get("/{name}")
-async def get_skill(name: str = Path(..., description="Skill name")):
+@router.get("/{id}")
+async def get_skill(id: str = Path(..., description="Skill ID")):
     """
-    Get a specific skill by name
+    Get a specific skill by ID
     """
-    skill = skill_repo.get_by_id(name)
+    skill = skill_repo.get_by_id(id)
     return skill
 
 @router.post("/", response_model=Skill, status_code=201)
