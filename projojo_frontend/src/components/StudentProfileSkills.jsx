@@ -15,12 +15,12 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     const isOwnProfile = authData.type === "student" && authData.userId === student.id;
 
     const handleSave = async (skills) => {
-        const skillNames = skills.map((skill) => skill.name);
+        const skillIds = skills.map((skill) => skill.skillId || skill.id);
 
         setStudentSkillsError("");
 
         try {
-            await updateStudentSkills(student.email, skillNames);
+            await updateStudentSkills(student.id, skillIds);
             setIsEditing(false)
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
