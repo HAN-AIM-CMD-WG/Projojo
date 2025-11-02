@@ -5,7 +5,7 @@ from .skill import Skill
 
 
 class Task(BaseModel):
-    id: str
+    id: str | None = None
     name: str
     description: str
     total_needed: int
