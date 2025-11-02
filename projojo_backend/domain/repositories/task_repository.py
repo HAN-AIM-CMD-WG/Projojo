@@ -66,7 +66,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
-                    not {{ $registration has isAccepted $any_value; }};
+                    not { $registration has isAccepted $any_value; };
                     return count;
                 ),
                 'total_accepted': (
