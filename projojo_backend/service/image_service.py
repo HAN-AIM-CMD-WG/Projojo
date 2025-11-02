@@ -134,5 +134,8 @@ def generate_unique_filename(file_extension: str) -> str:
 
     Args:
         file_extension (str): The file extension to use (e.g., '.jpg', '.png').
+
+    Returns:
+        str: A unique filename combining UUID and the file extension
     """
     return f"{uuid.uuid4()}{file_extension}"

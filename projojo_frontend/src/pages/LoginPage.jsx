@@ -1,9 +1,4 @@
-import { useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { notification } from "../components/notifications/NotifySystem";
-import FormInput from "../components/FormInput";
 import TestUserSelector from "../components/TestUserSelector";
-import { useAuth } from "../auth/AuthProvider";
 import { API_BASE_URL } from "../services";
 
 export default function LoginPage() {

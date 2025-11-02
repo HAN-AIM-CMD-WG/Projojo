@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../services";
-import { jwtDecode } from "jwt-decode";
 import { notification } from "./notifications/NotifySystem";
 
 export default function TestUserSelector() {

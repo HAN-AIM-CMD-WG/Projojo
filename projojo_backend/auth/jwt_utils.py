@@ -3,8 +3,6 @@ import os
 import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer
-from domain.models.user import User
-from domain.repositories.user_repository import UserRepository
 
 # Security scheme for extracting Bearer tokens
 security = HTTPBearer()
@@ -38,23 +36,6 @@ def create_jwt_token(user_id: str, role: str = "student", business_id: str | Non
     token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return token
 
-# used in auth/dependencies
-def get_token_user(user_repository: UserRepository = Depends(UserRepository)) -> User | None:
-    """
-    Get the user from database based on the JWT token
-    """
-    # Decode the token to get user ID (UUID)
-    payload = get_token_payload()
-    user_id = payload.get("sub")
-
-    if not user_id:
-        return None
-
-    # Fetch user data from database using UUID
-    user = user_repository.get_user_by_id(user_id)
-    return user
-
-# used in invite, student and task routers
 def get_token_payload(token: str = Depends(security)) -> dict:
     """
     FastAPI dependency to extract and validate JWT token

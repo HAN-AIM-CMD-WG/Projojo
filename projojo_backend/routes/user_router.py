@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends, Path, HTTPException
+from fastapi import APIRouter, Path
 from domain.repositories import UserRepository
-from auth.jwt_utils import get_token_user
-from domain.models.user import User
 
 user_repo = UserRepository()
 
@@ -14,14 +12,6 @@ async def get_all_users():
     """
     users = user_repo.get_all()
     return users
-
-@router.get("/me")
-def get_me(user: User | None = Depends(get_token_user)):
-    """Get current authenticated user's info"""
-    if user:
-        return user
-    else:
-        raise HTTPException(status_code=401, detail="Not authenticated")
 
 @router.get("/{email}")
 async def get_user(email: str = Path(..., description="User email")):
