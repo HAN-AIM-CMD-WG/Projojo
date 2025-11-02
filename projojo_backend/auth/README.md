@@ -4,6 +4,9 @@ This guide will help you obtain the necessary OAuth credentials for running the 
 
 ## Google OAuth Setup
 
+**Official Documentation:** [Google OAuth 2.0](https://developers.google.com/identity/protocols/oauth2)\
+**Revoke Access:** [Manage Connected Apps](https://myaccount.google.com/connections)
+
 > **Note:** The Google Cloud Console can be buggy in **Chrome** and sometimes needs a refresh when CSS doesn't load properly. **Edge** seems to work fine.
 
 ### Step 1: Create a New Project
@@ -62,6 +65,9 @@ This guide will help you obtain the necessary OAuth credentials for running the 
 
 ## GitHub OAuth Setup
 
+**Official Documentation:** [GitHub OAuth Apps](https://docs.github.com/en/apps/oauth-apps)\
+**Revoke Access:** [Authorized Applications](https://github.com/settings/applications)
+
 ### Step 1: Access OAuth Apps Settings
 1. Go to [GitHub](https://github.com/)
 2. Click on your **profile picture** > **Settings** > **Developer settings** > **OAuth Apps**
@@ -95,3 +101,53 @@ This guide will help you obtain the necessary OAuth credentials for running the 
 
 ### Optional: Add Branding
 - Upload an application logo to make your OAuth app more recognizable to users
+
+## Microsoft OAuth Setup
+
+**Official Documentation:** [Microsoft Entra Identity Platform](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app)\
+**Revoke Access:** [App Access Management](https://account.microsoft.com/privacy/app-access)
+
+### Step 1: Register an Application
+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com/) (formerly Azure Active Directory)
+2. Browse to **Entra ID** > **App registrations** and select **New registration**
+3. Fill in the application details:
+   - **Name**: This will be displayed to users during login (e.g., "Projojo")
+   - **Supported account types**: Select **Accounts in any organizational directory and personal Microsoft accounts** for most applications
+   - Leave **Redirect URI** empty for now (we'll add it in the next step)
+4. Click **Register**
+5. Record the **Application (client) ID** from the Overview page - you'll need this for your `.env` file
+
+### Step 2: Add a Redirect URI
+**Guide:** [How to add a redirect URI](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-redirect-uri)
+
+1. In your app registration, select **Authentication** under Manage
+2. Under **Platform configurations**, select **Add a platform**
+3. Select **Web** as the platform type
+4. Add the redirect URI:
+   - `http://localhost:8000/auth/callback/microsoft`
+5. Click **Configure** to save
+
+### Step 3: Create a Client Secret
+**Guide:** [How to add credentials](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials)
+
+1. In your app registration, select **Certificates & secrets** under Manage
+2. Select **Client secrets** tab > **New client secret**
+3. Add a description (e.g., "Local development") and choose an expiration period
+4. Click **Add**
+5. **Important:** Copy the **Value** (not the Secret ID) immediately - it won't be shown again!
+
+### Step 4: Save Your Credentials
+Add the Application (client) ID and client secret to your `.env` file:
+```env
+MICROSOFT_CLIENT_ID=your_client_id_here
+MICROSOFT_CLIENT_SECRET=your_client_secret_here
+```
+
+**Lost your Client secret?**
+- Client secrets cannot be retrieved after creation
+- Go to **Certificates & secrets** and create a new client secret
+- Delete the old secret after updating your `.env` file
+
+### Step 5: Test Your Setup
+1. Save any Python file in the backend (e.g., `main.py`) to trigger an automatic reload that loads the updated `.env` file
+2. You should now be able to log in using any Microsoft account (personal or organizational)
