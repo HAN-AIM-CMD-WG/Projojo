@@ -36,9 +36,9 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
             !(selectedSkills ?? []).some(s => (s.skillId || s.id) === (skill.skillId || skill.id))
         )
         .sort((a, b) => a.name.localeCompare(b.name))
-        .filter(skill => !showOwnSkillsOption || authData.type !== 'student' || !onlyShowStudentsSkills || (onlyShowStudentsSkills && studentsSkills.includes((skill.skillId || skill.id))))
+        .filter(skill => !showOwnSkillsOption || authData.type !== 'student' || !onlyShowStudentsSkills || (onlyShowStudentsSkills && studentsSkills.includes(skill.skillId || skill.id)))
 
-    const searchedSkillExists = allSkills.map(skill => isSearchInString(formattedSearch, skill.name)) || selectedSkills.map(skill => isSearchInString(formattedSearch, skill.name))
+    const searchedSkillExists = allSkills.some(skill => isSearchInString(formattedSearch, skill.name)) || selectedSkills.some(skill => isSearchInString(formattedSearch, skill.name))
 
     const toggleSkill = (skill) => {
         setSelectedSkills(currentSelectedSkills => {

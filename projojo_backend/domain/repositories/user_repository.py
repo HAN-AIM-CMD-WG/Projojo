@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Any
+from urllib.parse import urlparse
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -527,9 +528,12 @@ class UserRepository(BaseRepository[User]):
         # Handle image path - could be a URL (Google/GitHub) or already a filename (Microsoft)
         downloaded_image_name = ""
         if user.image_path:
-            if user.image_path.startswith(('http://', 'https://')):
+            parsed_url = urlparse(user.image_path)
+            # Check if it's a URL with http or https scheme
+            if parsed_url.scheme in ('http', 'https'):
                 downloaded_image_name = save_image_from_url(user.image_path)
             else:
+                # It's already a filename or local path
                 downloaded_image_name = user.image_path
 
         escaped_image_path = downloaded_image_name.replace('"', '\\"')
