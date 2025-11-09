@@ -229,7 +229,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     ref={editorRef}
                     editor={editor}
                     title="Editor content"
-                    className="p-2 rounded border border-gray-300 border-solid [&>*]:outline-none [&_ul]:list-disc [&_ul]:pl-10 [&_ol]:list-decimal [&_ol]:pl-10 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-2xl [&_h2]:font-semibold [&_pre]:bg-gray-200 [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:shadow-md [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-2 [&_a]:text-[#0000EE] [&_a]:underline [&_a:visited]:text-[#551A8B] [&_a]:cursor-pointer"
+                    className="rounded border border-gray-300 border-solid [&>*]:outline-none [&>div]:min-h-[4.1rem] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:p-2 [&_ul]:list-disc [&_ul]:pl-10 [&_ol]:list-decimal [&_ol]:pl-10 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-2xl [&_h2]:font-semibold [&_pre]:bg-gray-200 [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:shadow-md [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-2 [&_a]:text-[#0000EE] [&_a]:underline [&_a:visited]:text-[#551A8B] [&_a]:cursor-pointer"
                 />
                 <div className={`text-right text-sm text-gray-500 ${error ? 'text-red-600' : ''}`}>
                     {charCount}/{max} karakters
