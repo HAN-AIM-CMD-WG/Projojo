@@ -3,7 +3,7 @@ from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
-from service.image_service import save_image
+from service.image_service import save_image, delete_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
@@ -114,6 +114,10 @@ async def update_student(
     if not student:
         raise HTTPException(status_code=404, detail="Student niet gevonden")
 
+    # Store old file paths for deletion after successful update
+    old_image_path = student.get("image_path")
+    old_cv_path = student.get("cv_path")
+
     image_filename = None
     cv_filename = None
 
@@ -136,6 +140,14 @@ async def update_student(
             image_path=image_filename,
             cv_path=cv_filename
         )
+
+        # Delete old files after successful database update
+        if image_filename and old_image_path:
+            delete_image(old_image_path)
+
+        if cv_filename is not None and old_cv_path:
+            # Delete old CV if we uploaded a new one or explicitly deleted it
+            delete_image(old_cv_path, "static/pdf")
 
         return {"message": "Profiel succesvol bijgewerkt"}
 

@@ -188,3 +188,29 @@ def generate_unique_filename(file_extension: str) -> str:
         str: A unique filename combining UUID and the file extension
     """
     return f"{uuid.uuid4()}{file_extension}"
+
+
+def delete_image(filename: str, directory: str = "static/images") -> bool:
+    """
+    Delete an image file from the specified directory.
+
+    Args:
+        filename (str): The filename to delete
+        directory (str, optional): The directory where the file is located. Defaults to "static/images".
+
+    Returns:
+        bool: True if the file was successfully deleted or doesn't exist, False if an error occurred
+    """
+    if not filename:
+        return True
+
+    try:
+        file_path = os.path.join(directory, filename)
+
+        # Check if file exists before attempting to delete
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+        return True
+    except Exception as e:
+        return False
