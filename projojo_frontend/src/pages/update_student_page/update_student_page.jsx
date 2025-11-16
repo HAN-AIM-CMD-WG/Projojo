@@ -35,7 +35,7 @@ export default function UpdateStudentPage() {
         if (authData.type !== "student" && !authData.isLoading) {
             navigate("/home");
         }
-    }, [authData.type, authData.isLoading, navigate]);
+    }, [authData.isLoading]);
 
 
     const { data, error, isLoading } = useFetch(
