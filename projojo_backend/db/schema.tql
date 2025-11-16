@@ -22,7 +22,8 @@ entity oauthProvider,
     plays oauthAuthentication:provider;
 
 entity business,
-    owns name @key,
+    owns id @key,
+    owns name @card(1), # was `name @key` before UUID migration
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
@@ -31,6 +32,7 @@ entity business,
     plays businessInvite:business @card(0..);
 
 entity project,
+    owns id @key,
     owns name @card(1),
     owns description @card(1),
     owns imagePath @card(1),
@@ -40,6 +42,7 @@ entity project,
     plays creates:project @card(0..);
 
 entity task,
+    owns id @key,
     owns name @card(1),
     owns description @card(1),
     owns totalNeeded @card(1),
@@ -49,7 +52,8 @@ entity task,
     plays registersForTask:task @card(0..);
 
 entity skill,
-    owns name @key,
+    owns id @key,
+    owns name @card(1) @unique, # was `name @key` before UUID migration
     owns isPending @card(1),
     owns createdAt @card(1),
     plays requiresSkill:skill @card(0..),

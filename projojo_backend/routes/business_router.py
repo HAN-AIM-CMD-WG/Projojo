@@ -26,7 +26,7 @@ async def get_all_businesses_with_projects():
     """
     businesses = business_repo.get_all()
     for business in businesses:
-        business.projects = project_repo.get_projects_by_business(business.name)
+        business.projects = project_repo.get_projects_by_business(business.id)
 
     return businesses
 
@@ -46,20 +46,20 @@ async def get_all_businesses_with_full_nesting():
     """
     return business_repo.get_all_with_full_nesting()
 
-@router.get("/{name}")
-async def get_business(name: str = Path(..., description="Business name")):
+@router.get("/{id}")
+async def get_business(id: str = Path(..., description="Business ID")):
     """
-    Get a specific business by name
+    Get a specific business by ID
     """
-    business = business_repo.get_by_id(name)
+    business = business_repo.get_by_id(id)
     return business
 
-@router.get("/{name}/projects")
-async def get_business_projects(name: str = Path(..., description="Business name")):
+@router.get("/{id}/projects")
+async def get_business_projects(id: str = Path(..., description="Business ID")):
     """
     Get all projects for a business
     """
-    projects = project_repo.get_projects_by_business(name)
+    projects = project_repo.get_projects_by_business(id)
     return projects
 
 

@@ -3,8 +3,8 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Project, ProjectCreation
-import uuid
 from datetime import datetime
+from service.uuid_service import generate_uuid
 
 
 class ProjectRepository(BaseRepository[Project]):
@@ -17,18 +17,20 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $project isa project,
-                has name "{id}",
+                has id "{id}",
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
                 $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id;
             fetch {{
+                'id': "{id}",
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
-                'business': $business.name
+                'business': $business_id
             }};
         """
         results = Db.read_transact(query)
@@ -40,17 +42,20 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $project isa project,
+                has id $id,
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
                 $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id;
             fetch {
+                'id': $id,
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
-                'business': $business.name
+                'business': $business_id
             };
         """
         results = Db.read_transact(query)
@@ -59,19 +64,21 @@ class ProjectRepository(BaseRepository[Project]):
     def get_projects_by_business(self, business_id: str) -> list[Project]:
         query = f"""
             match
-                $business isa business, has name "{business_id}";
+                $business isa business, has id "{business_id}";
                 $hasProjects isa hasProjects (business: $business, project: $project);
                 $project isa project,
+                has id $id,
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
             fetch {{
+                'id': $id,
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
-                'business': $business.name
+                'business': "{business_id}"
             }};
         """
         results = Db.read_transact(query)
@@ -87,10 +94,11 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $project isa project,
-                has name "{project_id}";
+                has id "{project_id}";
                 $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id;
             fetch {{
-                'id': $business.name,
+                'id': $business_id,
                 'name': $business.name,
                 'description': $business.description,
                 'image_path': $business.imagePath,
@@ -104,6 +112,7 @@ class ProjectRepository(BaseRepository[Project]):
 
     def _map_to_model(self, result: dict[str, Any]) -> Project:
         # Extract relevant information from the query result
+        id = result.get("id", "")
         name = result.get("name", "")
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
@@ -116,7 +125,7 @@ class ProjectRepository(BaseRepository[Project]):
         )
 
         return Project(
-            id=name,  # Using name as the ID
+            id=id,
             name=name,
             description=description,
             image_path=image_path,
@@ -124,11 +133,11 @@ class ProjectRepository(BaseRepository[Project]):
             business_id=business,
         )
 
-    def check_project_exists(self, name: str, business_id: str) -> bool:
+    def check_project_exists(self, project_name: str, business_id: str) -> bool:
         query = f"""
             match
-                $business isa business, has name "{business_id}";
-                $project isa project, has name "{name}";
+                $business isa business, has id "{business_id}";
+                $project isa project, has name "{project_name}";
                 $hasProjects isa hasProjects (business: $business, project: $project);
             fetch {{
                 'name': $project.name
@@ -142,13 +151,13 @@ class ProjectRepository(BaseRepository[Project]):
         query = f"""
             match
                 $project isa project,
-                has name "{project_id}";
+                has id "{project_id}";
                 $creates isa creates( $supervisor, $project ),
                 has createdAt $createdAt;
                 $supervisor isa supervisor,
-                has email $email;
+                has id $supervisor_id;
             fetch {{
-                'email': $email,
+                'id': $supervisor_id,
                 'createdAt': $createdAt
             }};
         """
@@ -157,50 +166,61 @@ class ProjectRepository(BaseRepository[Project]):
             return None
 
         result = results[0]
-        supervisor_email = result.get("email", "")
+        supervisor_id = result.get("id", "")
         created_at_str = result.get("createdAt", "")
         created_at = (
             datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
         )
 
         return ProjectCreation(
-            project_id=project_id, supervisor_id=supervisor_email, created_at=created_at
+            project_id=project_id, supervisor_id=supervisor_id, created_at=created_at
         )
 
     def create(self, project: ProjectCreation) -> ProjectCreation:
-        project.created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        id = generate_uuid()
+        created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+        # Escape strings
+        escaped_name = project.name.replace('"', '\\"')
+        escaped_description = project.description.replace('"', '\\"')
+        escaped_image_path = project.image_path.replace('"', '\\"')
+        escaped_business_id = project.business_id.replace('"', '\\"')
+
         query = f"""
             match
                 $business isa business,
-                has name "{project.business_id}";
+                has id "{escaped_business_id}";
             insert
                 $project isa project,
-                has name "{project.name}",
-                has description "{project.description}",
-                has imagePath "{project.image_path}",
-                has createdAt {project.created_at};
+                has id "{id}",
+                has name "{escaped_name}",
+                has description "{escaped_description}",
+                has imagePath "{escaped_image_path}",
+                has createdAt {created_at};
                 $hasProjects isa hasProjects($business, $project);
         """
         Db.write_transact(query)
 
         # Create the relationship with the supervisor
+        escaped_supervisor_id = project.supervisor_id.replace('"', '\\"')
+
         query = f"""
             match
                 $supervisor isa supervisor,
-                has email "{project.supervisor_id}";
+                has id "{escaped_supervisor_id}";
                 $project isa project,
-                has name "{project.name}";
+                has id "{id}";
             insert $creates isa creates($supervisor, $project),
-                has createdAt {project.created_at};
+                has createdAt {created_at};
         """
         Db.write_transact(query)
 
         return ProjectCreation(
-            id=project.name,  # Using name as the ID
+            id=id,
             name=project.name,
             description=project.description,
             image_path=project.image_path,
-            created_at=project.created_at,
+            created_at=created_at,
             business_id=project.business_id,
             supervisor_id=project.supervisor_id,
         )

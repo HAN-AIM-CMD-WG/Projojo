@@ -3,7 +3,7 @@ from typing import Annotated
 from datetime import datetime
 
 class Skill(BaseModel):
-    id: str
+    id: str | None = None
     name: str
     is_pending: bool
     created_at: Annotated[datetime, Field(

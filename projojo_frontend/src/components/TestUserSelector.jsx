@@ -114,8 +114,16 @@ export default function TestUserSelector() {
 					aria-expanded={isOpen}
 					onClick={() => !isTestUsersLoading && !isLoggingIn && setIsOpen(!isOpen)}
 					disabled={isTestUsersLoading || isLoggingIn}
+					title={selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : ""}
 				>
 					<span className="col-start-1 row-start-1 flex items-center gap-3 pr-6">
+						{selectedUser && selectedUser.image_path && (
+							<img
+								src={`${API_BASE_URL}image/${selectedUser.image_path}`}
+								alt={selectedUser.full_name}
+								className="h-6 w-6 rounded-full object-cover flex-shrink-0"
+							/>
+						)}
 						<span className="block truncate">
 							{isLoggingIn ? "Inloggen..." : selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : "-- Selecteer een gebruiker --"}
 						</span>
@@ -159,10 +167,18 @@ export default function TestUserSelector() {
 										.map(user => (
 											<li
 												key={user.id}
-												className="relative cursor-pointer py-2 pr-9 pl-3 text-gray-900 select-none hover:bg-orange-100"
+												className="relative cursor-pointer py-2 px-3 text-gray-900 select-none hover:bg-orange-100"
 												onClick={() => handleTestUserSelect(user)}
+												title={`${user.full_name} - ${user.email}`}
 											>
 												<div className="flex items-center gap-3">
+													{user.image_path && (
+														<img
+															src={`${API_BASE_URL}image/${user.image_path}`}
+															alt={user.full_name}
+															className="h-6 w-6 rounded-full object-cover flex-shrink-0"
+														/>
+													)}
 													<span className="block truncate font-normal">
 														{user.full_name} - {user.email}
 													</span>

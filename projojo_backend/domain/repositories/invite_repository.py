@@ -23,7 +23,7 @@ class InviteRepository:
         if invite_type == "business" and business_id:
             query = f"""
                 match
-                    $business isa business, has name "{business_id}";
+                    $business isa business, has id "{business_id}";
                 insert
                     $inviteKey isa inviteKey,
                         has key "{key}",

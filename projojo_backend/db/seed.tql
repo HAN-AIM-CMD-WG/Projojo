@@ -44,60 +44,70 @@ insert
 
     # Businesses
     $b1 isa business,
+        has id "978556ff-3c15-4b7a-b559-5e7e131a4c28",
         has name "De Gouden Akker",
         has description "Biologische akkerbouw en duurzame gewasproductie",
         has imagePath "logo_gouden_akker.png",
         has location "Gelderland";
 
     $b2 isa business,
+        has id "13d56397-fdd5-4846-a333-007ab188f403",
         has name "Veeteelt Groep Nederland",
         has description "Moderne rundveehouderij en melkproductie optimalisatie",
         has imagePath "logo_veeteelt_groep.png",
         has location "Noord-Brabant";
 
     $b3 isa business,
+        has id "a9986c4d-60b6-404c-9eb3-2e6d16822852",
         has name "SmartFarm Solutions",
         has description "Agtech innovaties voor precisie landbouw",
         has imagePath "logo_smartfarm.png",
         has location "Zuid-Holland";
 
     $b4 isa business,
+        has id "1b9bd6a1-3b32-4309-8b0a-6acaf611bcad",
         has name "Groene Kassen BV",
         has description "Hightech glastuinbouw en vertical farming",
         has imagePath "logo_groene_kassen.png",
         has location "Limburg";
 
     $b5 isa business,
+        has id "abebaa2f-711b-4558-80ca-a9ac9ee6d558",
         has name "Bodemexperts Nederland",
         has description "Bodemanalyse en bemestingsadvies",
         has imagePath "logo_bodemexperts.png",
         has location "Overijssel";
 
     $b6 isa business,
+        has id "31baf4a8-c4be-4d63-9e0c-c71bea59d144",
         has name "AquaCultuur Innovatie",
         has description "Duurzame viskweek en aquaponics systemen",
         has imagePath "logo_aquacultuur.png",
         has location "Flevoland";
 
     $b7 isa business,
+        has id "70a5d893-6368-4833-ab12-48703670117d",
         has name "Fruitboomgaarden Van Dijk",
         has description "Moderne fruitteelt en oogstoptimalisatie",
         has imagePath "logo_fruitboom.png",
         has location "Zeeland";
 
     $b8 isa business,
+        has id "f9a953b8-dec4-4ebf-b04a-12b24a3911c6",
         has name "Akkerbouw Mechanisatie",
         has description "Landbouwmachines en automatisering",
         has imagePath "logo_mechanisatie.png",
         has location "Groningen";
 
     $b9 isa business,
+        has id "3205714b-859c-4ecb-aea3-c6f736e6f8db",
         has name "Biodynamische Boerderij",
         has description "Holistische landbouw en biodiversiteit",
         has imagePath "logo_biodynamisch.png",
         has location "Friesland";
 
     $b10 isa business,
+        has id "7a48c8c1-2d4a-498a-adb4-4198032de610",
         has name "Agri-Logistiek Centrum",
         has description "Transport en opslag van landbouwproducten",
         has imagePath "logo_agrilogistiek.png",
@@ -243,76 +253,91 @@ insert
 
     # Skills (agri-related)
     $sk1 isa skill,
+        has id "c7852c64-eb33-4e82-9e42-d11f4108de03",
         has name "Bodemanalyse",
         has isPending false,
         has createdAt 2025-01-15T09:00:00;
 
     $sk2 isa skill,
+        has id "238bcbb1-9f91-48d0-a972-cdcddfd81aa7",
         has name "Gewasmonitoring",
         has isPending false,
         has createdAt 2025-01-15T09:15:00;
 
     $sk3 isa skill,
+        has id "29a025c8-651d-45f8-9465-d489f08509b1",
         has name "Melkveebeheer",
         has isPending false,
         has createdAt 2025-01-15T09:30:00;
 
     $sk4 isa skill,
+        has id "ae6a26c1-46fe-4b6b-8126-e210086255d1",
         has name "Precisie Landbouw",
         has isPending false,
         has createdAt 2025-01-15T09:45:00;
 
     $sk5 isa skill,
+        has id "f9bd0201-74a3-413a-9528-05b0d56a19de",
         has name "Kasklimaat Optimalisatie",
         has isPending false,
         has createdAt 2025-01-15T10:00:00;
 
     $sk6 isa skill,
+        has id "a65013c1-c658-4931-998e-68fe2b2c6ca2",
         has name "Bemestingsadvies",
         has isPending false,
         has createdAt 2025-01-15T10:15:00;
 
     $sk7 isa skill,
+        has id "b73492d9-b818-4a19-b3fc-53cdb125460d",
         has name "Aquaponics",
         has isPending false,
         has createdAt 2025-01-15T10:30:00;
 
     $sk8 isa skill,
+        has id "1bf0e923-def3-4e46-83af-fb5fe5439d5e",
         has name "Fruitteelt Techniek",
         has isPending false,
         has createdAt 2025-01-15T10:45:00;
 
     $sk9 isa skill,
+        has id "1d9fb327-ae1e-4043-9974-e9dcabed56bb",
         has name "Landbouwmachine Onderhoud",
         has isPending false,
         has createdAt 2025-01-15T11:00:00;
 
     $sk10 isa skill,
+        has id "c7d2cf94-e849-4677-9ef9-6586cfb5325f",
         has name "Biodiversiteit Beheer",
         has isPending false,
         has createdAt 2025-01-15T11:15:00;
 
     $sk11 isa skill,
+        has id "8ca48042-c1be-419b-a976-928ff7ed2eb6",
         has name "Data Analytics",
         has isPending false,
         has createdAt 2025-01-15T11:30:00;
 
     $sk12 isa skill,
+        has id "d222b33a-6f56-4734-a779-5e467dd7c477",
         has name "IoT Sensoren",
         has isPending false,
         has createdAt 2025-01-15T11:45:00;
 
     $sk13 isa skill,
+        has id "a3b250fb-4b8a-44bb-9a6d-cc4ec688b2e0",
         has name "Supply Chain Management",
         has isPending false,
         has createdAt 2025-01-15T12:00:00;
 
     $sk14 isa skill,
+        has id "d34defe6-aa19-44b8-8692-de27db86024f",
         has name "Biologische Certificering",
         has isPending false,
         has createdAt 2025-01-15T12:15:00;
 
     $sk15 isa skill,
+        has id "c82ec5ef-1004-4a75-b768-2962ac46d70d",
         has name "Voedingsstoffen Balancing",
         has isPending false,
         has createdAt 2025-01-15T12:30:00;
@@ -320,24 +345,28 @@ insert
     # Projects - 30 total (2-6 per business)
     # De Gouden Akker projects (4)
     $p1 isa project,
+        has id "98b721e4-b9d4-4b42-9d3c-d66ffdf9ed15",
         has name "Biologische Graan Monitoring Systeem",
         has description "Ontwikkeling van een IoT-systeem voor real-time monitoring van biologische graanteelt",
         has imagePath "project_monitoring.png",
         has createdAt 2025-01-20T09:00:00;
 
     $p2 isa project,
+        has id "b6260d01-f570-4eea-b0ae-8cfedf2eb6b2",
         has name "Bodemkwaliteit Dashboard",
         has description "Analytics platform voor bodemgezondheid en nutriënten tracking",
         has imagePath "project_analytics.png",
         has createdAt 2025-01-21T10:30:00;
 
     $p3 isa project,
+        has id "b9f1a256-3f37-4ae3-9577-38bc2683b9e3",
         has name "Certificering Management Tool",
         has description "Digitaal systeem voor biologische certificering en compliance",
         has imagePath "project_mobile_app.png",
         has createdAt 2025-01-22T14:15:00;
 
     $p4 isa project,
+        has id "b9417fd1-6b28-4106-95b8-c1552f604d46",
         has name "Weersvoorspelling Integratie",
         has description "AI-gedreven weersvoorspelling specifiek voor akkerbouw",
         has imagePath "project_ai_technology.png",
@@ -345,18 +374,21 @@ insert
 
     # Veeteelt Groep Nederland projects (3)
     $p5 isa project,
+        has id "780b3672-fd8e-4055-8c9f-8977e0218d67",
         has name "Melkproductie Optimalisatie Platform",
         has description "Data analytics voor melkveebeheer en productie verbetering",
         has imagePath "project_analytics.png",
         has createdAt 2025-01-24T08:30:00;
 
     $p6 isa project,
+        has id "4496b7a8-130f-41b7-888f-032011bfbaaf",
         has name "Voedersamenstelling Calculator",
         has description "Automatische berekening van optimale voederratio's",
         has imagePath "project_mobile_app.png",
         has createdAt 2025-01-25T13:20:00;
 
     $p7 isa project,
+        has id "2591f54c-b9c6-4169-a293-f139d6bde444",
         has name "Dierenwelzijn Monitoring",
         has description "Sensor-gebaseerd systeem voor dierenwelzijn tracking",
         has imagePath "project_monitoring.png",
@@ -364,30 +396,35 @@ insert
 
     # SmartFarm Solutions projects (5)
     $p8 isa project,
+        has id "6bb5d292-a551-476c-a242-d7b079a6d842",
         has name "Drone Gewasanalyse Systeem",
         has description "AI-gedreven analyse van gewassen via drone beeldherkenning",
         has imagePath "project_ai_technology.png",
         has createdAt 2025-01-27T09:15:00;
 
     $p9 isa project,
+        has id "202bf45b-42ec-4e50-9ae1-bae161d56b25",
         has name "Precisie Irrigatie Controller",
         has description "Automatisch irrigatiesysteem met bodemvochtigheidssensoren",
         has imagePath "project_automation.png",
         has createdAt 2025-01-28T12:45:00;
 
     $p10 isa project,
+        has id "ba35aa2f-4f46-4df4-ac87-0113ecde20e7",
         has name "Farm Management Dashboard",
         has description "Centraal beheersysteem voor alle farm operaties",
         has imagePath "project_analytics.png",
         has createdAt 2025-01-29T15:30:00;
 
     $p11 isa project,
+        has id "5880b44c-dd63-4583-b8ae-75b96be5c6a4",
         has name "Blockchain Traceability",
         has description "Transparante supply chain tracking voor voedselproducten",
         has imagePath "project_logistics.png",
         has createdAt 2025-01-30T10:20:00;
 
     $p12 isa project,
+        has id "b547572e-9029-4d47-832b-0726f65a2757",
         has name "Machine Learning Oogstvoorspelling",
         has description "Voorspelling van oogstopbrengsten met ML algoritmen",
         has imagePath "project_ai_technology.png",
@@ -395,24 +432,28 @@ insert
 
     # Groene Kassen BV projects (4)
     $p13 isa project,
+        has id "645cbcd9-0029-41ac-81c9-caee69427a34",
         has name "Klimaatbeheersing AI",
         has description "AI-systeem voor optimale kasklimaat controle",
         has imagePath "project_ai_technology.png",
         has createdAt 2025-02-01T08:45:00;
 
     $p14 isa project,
+        has id "2d0d232f-10b6-4628-a972-831e7be60fac",
         has name "Vertical Farm Automation",
         has description "Geautomatiseerd vertical farming systeem",
         has imagePath "project_automation.png",
         has createdAt 2025-02-02T11:30:00;
 
     $p15 isa project,
+        has id "455f9a39-ebff-4471-9a48-49058a4d07e6",
         has name "Hydroponic Nutriënt Monitor",
         has description "Real-time monitoring van nutriëntenlevel in hydroponic systemen",
         has imagePath "project_monitoring.png",
         has createdAt 2025-02-03T13:15:00;
 
     $p16 isa project,
+        has id "0fd89987-49b8-4ca8-a116-38da26ee5f4f",
         has name "Energie Efficiency Platform",
         has description "Optimalisatie van energieverbruik in kassen",
         has imagePath "project_sustainability.png",
@@ -420,12 +461,14 @@ insert
 
     # Bodemexperts Nederland projects (2)
     $p17 isa project,
+        has id "c68c9f39-285c-4ea8-bd25-7b57c6463cb7",
         has name "Bodemanalyse Lab Management",
         has description "Digitalisering van bodemanalyse processen",
         has imagePath "project_laboratory.png",
         has createdAt 2025-02-05T09:30:00;
 
     $p18 isa project,
+        has id "63849ef7-de9c-41be-aad3-1c386eaae3a6",
         has name "Bemestingsadvies Generator",
         has description "Automatische generatie van bemestingsadviezen",
         has imagePath "project_mobile_app.png",
@@ -433,18 +476,21 @@ insert
 
     # AquaCultuur Innovatie projects (3)
     $p19 isa project,
+        has id "a4bf2f2e-c81a-4d54-9ef6-745aa7aee481",
         has name "Viskweek Waterkwaliteit Systeem",
         has description "Monitoring van waterkwaliteit in viskwekerijen",
         has imagePath "project_monitoring.png",
         has createdAt 2025-02-07T14:45:00;
 
     $p20 isa project,
+        has id "c03ca374-5334-4dde-b355-81ee591526f0",
         has name "Aquaponics Balancing Tool",
         has description "Optimalisatie van aquaponics ecosystemen",
         has imagePath "project_automation.png",
         has createdAt 2025-02-08T10:15:00;
 
     $p21 isa project,
+        has id "33b526b7-cc4a-4b3f-a7ec-a7d811ed81f3",
         has name "Visvoeder Optimalisatie",
         has description "Data-gedreven optimalisatie van visvoeders",
         has imagePath "project_analytics.png",
@@ -452,24 +498,28 @@ insert
 
     # Fruitboomgaarden Van Dijk projects (4)
     $p22 isa project,
+        has id "e5b3756a-916d-4ad8-8ce1-040933bd0bb6",
         has name "Fruitrijpheid Detector",
         has description "Computer vision voor automatische rijpheidsdetectie",
         has imagePath "project_ai_technology.png",
         has createdAt 2025-02-10T08:20:00;
 
     $p23 isa project,
+        has id "75d8eaa3-a535-4e3e-948e-8276515477f0",
         has name "Oogstrobot Controller",
         has description "Besturingssysteem voor geautomatiseerde oogstrobots",
         has imagePath "project_automation.png",
         has createdAt 2025-02-11T11:45:00;
 
     $p24 isa project,
+        has id "e5d8bd3c-9823-4fb5-bae6-935461acf2a6",
         has name "Boomgaard Planner",
         has description "Optimale planning van boomgaard layouts",
         has imagePath "project_mobile_app.png",
         has createdAt 2025-02-12T13:30:00;
 
     $p25 isa project,
+        has id "447e0bbf-cddc-42cd-aa9a-aaa738bdb350",
         has name "Pesticide Monitoring",
         has description "Tracking van pesticide gebruik en residuen",
         has imagePath "project_monitoring.png",
@@ -477,12 +527,14 @@ insert
 
     # Akkerbouw Mechanisatie projects (2)
     $p26 isa project,
+        has id "713d0e6d-3992-4224-8a73-dc2d32a346f4",
         has name "Tractor Fleet Management",
         has description "GPS-gebaseerd beheer van landbouwmachines",
         has imagePath "project_logistics.png",
         has createdAt 2025-02-14T09:00:00;
 
     $p27 isa project,
+        has id "50d8c9a9-392d-49e7-b846-a18115a953bd",
         has name "Onderhoud Prediction Systeem",
         has description "Voorspellend onderhoud voor landbouwequipment",
         has imagePath "project_ai_technology.png",
@@ -490,18 +542,21 @@ insert
 
     # Biodynamische Boerderij projects (3)
     $p28 isa project,
+        has id "23cbaa73-0b6a-4a72-9fd0-affd99fcb09f",
         has name "Biodiversiteit Tracker",
         has description "Monitoring van biodiversiteit op boerderijen",
         has imagePath "project_sustainability.png",
         has createdAt 2025-02-16T14:20:00;
 
     $p29 isa project,
+        has id "0b5dc5c8-0be6-4ad1-8ffc-77ebe950acd3",
         has name "Biodynamische Kalender App",
         has description "Digitale kalender voor biodynamische praktijken",
         has imagePath "project_mobile_app.png",
         has createdAt 2025-02-17T10:45:00;
 
     $p30 isa project,
+        has id "825e0b32-183e-410a-b8c6-176c04532300",
         has name "Ecosysteem Balance Monitor",
         has description "Holistische monitoring van farm ecosystemen",
         has imagePath "project_monitoring.png",
@@ -509,18 +564,21 @@ insert
 
     # Agri-Logistiek Centrum projects (3)
     $p31 isa project,
+        has id "22db2dd5-e3c2-4fa2-864a-b43b3697196d",
         has name "Supply Chain Optimizer",
         has description "Optimalisatie van landbouwproduct distributie",
         has imagePath "project_logistics.png",
         has createdAt 2025-02-19T08:30:00;
 
     $p32 isa project,
+        has id "495050ab-07ea-4e9f-bf43-74ee7f7e95f1",
         has name "Koeling Transport Monitor",
         has description "Temperature tracking tijdens transport",
         has imagePath "project_monitoring.png",
         has createdAt 2025-02-20T11:20:00;
 
     $p33 isa project,
+        has id "28f2d807-956e-41a7-9f9d-6bd3139ce365",
         has name "Warehouse Automation",
         has description "Automatisering van landbouw opslagsystemen",
         has imagePath "project_automation.png",
@@ -631,210 +689,245 @@ insert
 
     # Tasks (sample - 50 tasks across various projects)
     $t1 isa task,
+        has id "753d8083-2adc-464e-9c6f-bb2e55cf5cbe",
         has name "IoT Sensor Specialist",
         has description "Implementatie van bodemvochtigheidssensoren en data verzameling",
         has totalNeeded 2,
         has createdAt 2025-01-20T09:30:00;
 
     $t2 isa task,
+        has id "2b23d4c7-31c0-428d-be93-e28c12fe78ed",
         has name "Data Analytics Developer",
         has description "Ontwikkeling van dashboard voor bodemkwaliteit visualisatie",
         has totalNeeded 1,
         has createdAt 2025-01-21T11:00:00;
 
     $t3 isa task,
+        has id "11362171-528e-49c6-b857-a257736f9963",
         has name "Mobile App Designer",
         has description "UI/UX ontwerp voor farmer-friendly mobile interface",
         has totalNeeded 1,
         has createdAt 2025-01-21T11:30:00;
 
     $t4 isa task,
+        has id "55d94a54-c4fc-416c-a257-d7acb9e0acfb",
         has name "Certificering Consultant",
         has description "Expertise in biologische certificering processen",
         has totalNeeded 1,
         has createdAt 2025-01-22T14:45:00;
 
     $t5 isa task,
+        has id "b446bc69-8bce-4d03-8d76-3761ef05f378",
         has name "Weather API Integrator",
         has description "Integratie van weerdata met landbouw systemen",
         has totalNeeded 1,
         has createdAt 2025-01-23T12:15:00;
 
     $t6 isa task,
+        has id "57a48d47-c0d8-4cdd-96b3-0f4ca2cacb55",
         has name "Machine Learning Engineer",
         has description "Ontwikkeling van voorspellende modellen voor melkproductie",
         has totalNeeded 2,
         has createdAt 2025-01-24T09:00:00;
 
     $t7 isa task,
+        has id "4497a1c6-1c05-4456-83ba-d22e4e9577cf",
         has name "Voeding Calculator Developer",
         has description "Algoritme ontwikkeling voor optimale voedersamenstelling",
         has totalNeeded 1,
         has createdAt 2025-01-25T13:50:00;
 
     $t8 isa task,
+        has id "d476b93f-0af7-450c-9a38-253bc1aa39b1",
         has name "Animal Welfare Sensor Tech",
         has description "Implementatie van dierenwelzijn monitoring systemen",
         has totalNeeded 2,
         has createdAt 2025-01-26T16:30:00;
 
     $t9 isa task,
+        has id "b7146863-8037-44c0-9d83-e6fb1f90355f",
         has name "Drone Pilot & Analyst",
         has description "Drone operatie en gewasanalyse via beeldherkenning",
         has totalNeeded 1,
         has createdAt 2025-01-27T09:45:00;
 
     $t10 isa task,
+        has id "dac49e10-28ec-4ff6-a6c6-ab1744196094",
         has name "Computer Vision Developer",
         has description "AI algoritmen voor gewasziekte detectie via drone beelden",
         has totalNeeded 2,
         has createdAt 2025-01-27T10:15:00;
 
     $t11 isa task,
+        has id "af4748ec-f50c-4ffe-8e3e-804b4233afb7",
         has name "Irrigation System Engineer",
         has description "Automatische irrigatie systeem ontwikkeling",
         has totalNeeded 1,
         has createdAt 2025-01-28T13:15:00;
 
     $t12 isa task,
+        has id "52dc8c78-c556-4685-97fc-520d289f635b",
         has name "Farm Dashboard Developer",
         has description "Centraal beheersysteem voor alle farm operaties",
         has totalNeeded 2,
         has createdAt 2025-01-29T16:00:00;
 
     $t13 isa task,
+        has id "f5f4c37b-7255-4f05-a805-d0b9f3e4e8ed",
         has name "Blockchain Developer",
         has description "Supply chain traceability met blockchain technologie",
         has totalNeeded 1,
         has createdAt 2025-01-30T10:50:00;
 
     $t14 isa task,
+        has id "bba01204-d76b-4f76-acfd-dabfec4879e3",
         has name "Harvest Prediction Analyst",
         has description "Machine learning voor oogstvoorspellingen",
         has totalNeeded 1,
         has createdAt 2025-01-31T14:40:00;
 
     $t15 isa task,
+        has id "4104fd9d-c07a-42d5-adb4-1cc46236ea31",
         has name "Climate AI Specialist",
         has description "AI ontwikkeling voor optimale kasklimaat controle",
         has totalNeeded 2,
         has createdAt 2025-02-01T09:15:00;
 
     $t16 isa task,
+        has id "5d582438-2486-4f28-820c-30f1ee413a4b",
         has name "Vertical Farm Automation Engineer",
         has description "Automatisering van vertical farming systemen",
         has totalNeeded 1,
         has createdAt 2025-02-02T12:00:00;
 
     $t17 isa task,
+        has id "d30bba18-d7b4-4e36-9623-04eed0d182f7",
         has name "Hydroponic Systems Developer",
         has description "Monitoring systemen voor hydroponic nutriënten",
         has totalNeeded 1,
         has createdAt 2025-02-03T13:45:00;
 
     $t18 isa task,
+        has id "01cb885f-c3dd-4585-813c-7a8ffeccc2b5",
         has name "Energy Efficiency Analyst",
         has description "Optimalisatie van energieverbruik in kassen",
         has totalNeeded 1,
         has createdAt 2025-02-04T16:50:00;
 
     $t19 isa task,
+        has id "6f77782d-4e35-4732-b26f-b5c69de42416",
         has name "Lab Data Manager",
         has description "Digitalisering van bodemanalyse lab processen",
         has totalNeeded 1,
         has createdAt 2025-02-05T10:00:00;
 
     $t20 isa task,
+        has id "e557b627-d6d4-47b4-ba48-7b18ad9ff9a6",
         has name "Fertilizer Algorithm Developer",
         has description "Automatische bemestingsadvies algoritmen",
         has totalNeeded 2,
         has createdAt 2025-02-06T12:30:00;
 
     $t21 isa task,
+        has id "3765f20d-9ec4-40b8-8b64-2616d3c74f8d",
         has name "Water Quality Monitor Specialist",
         has description "Waterkwaliteit monitoring voor viskwekerijen",
         has totalNeeded 1,
         has createdAt 2025-02-07T15:15:00;
 
     $t22 isa task,
+        has id "f03e1d10-6568-4799-a123-a7b7ef0dba83",
         has name "Aquaponics System Designer",
         has description "Balancing tool voor aquaponics ecosystemen",
         has totalNeeded 1,
         has createdAt 2025-02-08T10:45:00;
 
     $t23 isa task,
+        has id "bfe19309-c42a-4f1f-bfd3-5037543fac6b",
         has name "Fish Feed Optimizer",
         has description "Data-gedreven optimalisatie van visvoeders",
         has totalNeeded 1,
         has createdAt 2025-02-09T16:00:00;
 
     $t24 isa task,
+        has id "c7471f12-7998-412f-acb6-4cac2c8b3077",
         has name "Computer Vision Fruit Analyst",
         has description "Fruitrijpheid detectie via computer vision",
         has totalNeeded 2,
         has createdAt 2025-02-10T08:50:00;
 
     $t25 isa task,
+        has id "b0173028-a02d-44fd-bdaa-a5f83f9a4cd0",
         has name "Robotics Control Engineer",
         has description "Besturingssystemen voor oogstrobots",
         has totalNeeded 1,
         has createdAt 2025-02-11T12:15:00;
 
     $t26 isa task,
+        has id "4dea3de9-f794-4469-ade7-744255026e4f",
         has name "Orchard Layout Planner",
         has description "Optimale boomgaard planning algoritmen",
         has totalNeeded 1,
         has createdAt 2025-02-12T14:00:00;
 
     $t27 isa task,
+        has id "f9b5b5cd-e80b-4102-aba1-b275bbbedca3",
         has name "Pesticide Tracking Developer",
         has description "Monitoring systeem voor pesticide gebruik",
         has totalNeeded 1,
         has createdAt 2025-02-13T16:40:00;
 
     $t28 isa task,
+        has id "27ed3a8b-45b8-4a97-9d12-5fbc0dc187b1",
         has name "Fleet Management Developer",
         has description "GPS-gebaseerd beheer van landbouwmachines",
         has totalNeeded 2,
         has createdAt 2025-02-14T09:30:00;
 
     $t29 isa task,
+        has id "f1d8b74e-b8d6-4083-91c1-aa116c990151",
         has name "Predictive Maintenance Analyst",
         has description "Voorspellend onderhoud voor landbouwequipment",
         has totalNeeded 1,
         has createdAt 2025-02-15T13:00:00;
 
     $t30 isa task,
+        has id "d13f20c4-9e39-484a-bfc2-1759b6dd8c69",
         has name "Biodiversity Data Scientist",
         has description "Monitoring van biodiversiteit op boerderijen",
         has totalNeeded 1,
         has createdAt 2025-02-16T14:50:00;
 
     $t31 isa task,
+        has id "873faf66-d9c1-4f54-8e32-bcc091e46210",
         has name "Biodynamic Calendar App Developer",
         has description "Mobile app voor biodynamische praktijken",
         has totalNeeded 1,
         has createdAt 2025-02-17T11:15:00;
 
     $t32 isa task,
+        has id "97164fe7-33bb-41a0-9e5f-7b22fd729570",
         has name "Ecosystem Balance Analyst",
         has description "Holistische monitoring van farm ecosystemen",
         has totalNeeded 1,
         has createdAt 2025-02-18T15:45:00;
 
     $t33 isa task,
+        has id "7f68f155-3562-42f0-9f3a-e0f7084c93a8",
         has name "Supply Chain Optimizer",
         has description "Optimalisatie van landbouwproduct distributie",
         has totalNeeded 2,
         has createdAt 2025-02-19T09:00:00;
 
     $t34 isa task,
+        has id "ed30ad4a-e047-45a3-a9af-815759718224",
         has name "Temperature Monitoring Specialist",
         has description "Temperature tracking tijdens transport",
         has totalNeeded 1,
         has createdAt 2025-02-20T11:50:00;
 
     $t35 isa task,
+        has id "bbb76eb0-19fd-4a84-a3c7-8191d0219581",
         has name "Warehouse Automation Engineer",
         has description "Automatisering van opslagsystemen",
         has totalNeeded 1,
@@ -842,90 +935,105 @@ insert
 
     # Add more tasks for variety (tasks 36-50)
     $t36 isa task,
+        has id "ba638539-602f-4082-8078-d6a23a2c8821",
         has name "Soil Health Data Analyst",
         has description "Analyse van bodemgezondheid trends en patronen",
         has totalNeeded 1,
         has createdAt 2025-01-20T10:00:00;
 
     $t37 isa task,
+        has id "f9b54e41-3292-441a-b8ac-4035f0ad63cd",
         has name "Organic Compliance Checker",
         has description "Automatische controle van biologische normen",
         has totalNeeded 1,
         has createdAt 2025-01-22T15:00:00;
 
     $t38 isa task,
+        has id "913aacde-174e-4089-80dd-133dc7e8e6f5",
         has name "Weather Impact Modeler",
         has description "Modellering van weersinvloed op gewassen",
         has totalNeeded 1,
         has createdAt 2025-01-23T13:00:00;
 
     $t39 isa task,
+        has id "3e8e11f8-89d0-48d1-acea-711563fb43f3",
         has name "Dairy Quality Controller",
         has description "Kwaliteitscontrole systemen voor melkproducten",
         has totalNeeded 2,
         has createdAt 2025-01-24T10:00:00;
 
     $t40 isa task,
+        has id "51e0464b-6059-44ab-8885-c783b7ba959b",
         has name "Livestock Behavior Analyst",
         has description "Analyse van veedrag voor welzijnsoptimalisatie",
         has totalNeeded 1,
         has createdAt 2025-01-26T17:00:00;
 
     $t41 isa task,
+        has id "fddf015b-fdc9-4f93-bfb1-f1bafd8cf52a",
         has name "Crop Disease Predictor",
         has description "Voorspelling van gewasziekten via AI",
         has totalNeeded 2,
         has createdAt 2025-01-27T11:00:00;
 
     $t42 isa task,
+        has id "a2be2e26-0347-41c9-9204-4b2e7719d524",
         has name "Smart Greenhouse Controller",
         has description "Intelligente sturing van kas systemen",
         has totalNeeded 1,
         has createdAt 2025-02-01T10:00:00;
 
     $t43 isa task,
+        has id "9c0a8a70-7b4c-428e-b935-a330fda66633",
         has name "Nutrient Solution Optimizer",
         has description "Optimalisatie van nutriëntoplossingen",
         has totalNeeded 1,
         has createdAt 2025-02-03T14:30:00;
 
     $t44 isa task,
+        has id "2814e49f-6f62-45ab-b7e2-9b00dc62f830",
         has name "Soil Testing Automation",
         has description "Automatisering van bodemtesten",
         has totalNeeded 1,
         has createdAt 2025-02-05T11:00:00;
 
     $t45 isa task,
+        has id "4c8d9967-e830-429d-a3d5-cc49fb2d8462",
         has name "Aquatic Ecosystem Monitor",
         has description "Monitoring van aquatische ecosystemen",
         has totalNeeded 1,
         has createdAt 2025-02-07T16:00:00;
 
     $t46 isa task,
+        has id "5857633e-d8ce-446a-8990-e91f8e5c7fc5",
         has name "Harvest Quality Inspector",
         has description "Automatische kwaliteitsinspectie van oogst",
         has totalNeeded 2,
         has createdAt 2025-02-10T09:30:00;
 
     $t47 isa task,
+        has id "50aba629-1631-4576-bb3d-d0dfe12865ea",
         has name "Farm Equipment Optimizer",
         has description "Optimalisatie van landbouwmachine inzet",
         has totalNeeded 1,
         has createdAt 2025-02-14T10:30:00;
 
     $t48 isa task,
+        has id "ab904c5e-2792-49ee-9883-2826e2652caf",
         has name "Ecological Balance Assessor",
         has description "Beoordeling van ecologische balans",
         has totalNeeded 1,
         has createdAt 2025-02-16T16:00:00;
 
     $t49 isa task,
+        has id "ba41bd53-274c-4067-9e79-2b44a864cce9",
         has name "Cold Chain Analytics",
         has description "Analyse van koude keten prestaties",
         has totalNeeded 1,
         has createdAt 2025-02-20T12:30:00;
 
     $t50 isa task,
+        has id "f2e84bd1-5d30-496b-850c-46f914dcd4e2",
         has name "Inventory Management Developer",
         has description "Voorraadbeheersystemen voor agri-producten",
         has totalNeeded 1,

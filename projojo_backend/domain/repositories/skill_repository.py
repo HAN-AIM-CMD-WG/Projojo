@@ -3,8 +3,8 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Skill
-import uuid
 from datetime import datetime
+from service.uuid_service import generate_uuid
 
 from ..models.skill import StudentSkill
 
@@ -18,11 +18,12 @@ class SkillRepository(BaseRepository[Skill]):
         query = f"""
             match
                 $skill isa skill,
-                has name "{escaped_id}",
+                has id "{escaped_id}",
                 has name $name,
                 has isPending $isPending,
                 has createdAt $createdAt;
             fetch {{
+                'id': $skill.id,
                 'name': $name,
                 'isPending': $isPending,
                 'createdAt': $createdAt
@@ -36,8 +37,10 @@ class SkillRepository(BaseRepository[Skill]):
     def get_all(self) -> list[Skill]:
         query = """
             match
-                $skill isa skill;
+                $skill isa skill,
+                has id $id;
             fetch {
+                'id': $id,
                 'name': $skill.name,
                 'isPending': $skill.isPending,
                 'createdAt': $skill.createdAt,
@@ -52,13 +55,15 @@ class SkillRepository(BaseRepository[Skill]):
         query = f"""
             match
                 $student isa student,
-                has email "{escaped_student_id}";
+                has id "{escaped_student_id}";
                 $hasSkill isa hasSkill( $student, $skill),
                 has description $description;
                 $skill isa skill,
+                has id $skill_id,
                 has createdAt $createdAt,
                 has name $skill_name;
             fetch {{
+                'id': $skill_id,
                 'name': $skill_name,
                 'description': $description,
                 'isPending': $skill.isPending,
@@ -69,30 +74,32 @@ class SkillRepository(BaseRepository[Skill]):
 
         return [self._map_to_model(result) for result in results]
 
-    def update_student_skills(self, email: str, updated_skills: list[str]) -> None:
-        escaped_student_email = email.replace('"', '\\"')
-        current_skills = self.get_student_skills(escaped_student_email)
-        current_skill_names = {skill.name for skill in current_skills}
+    def update_student_skills(self, student_id: str, updated_skills: list[str]) -> None:
+        escaped_student_id = student_id.replace('"', '\\"')
+        current_skills = self.get_student_skills(escaped_student_id)
+        current_skill_ids = {skill.id for skill in current_skills}
 
-        to_add = set(updated_skills) - (current_skill_names)
-        to_remove = (current_skill_names) - set(updated_skills)
+        to_add = set(updated_skills) - (current_skill_ids)
+        to_remove = (current_skill_ids) - set(updated_skills)
 
-        for skill in to_add:
+        for skill_id in to_add:
+            escaped_skill_id = skill_id.replace('"', '\\"')
             query = f"""
                 match
-                    $student isa student, has email "{escaped_student_email}";
-                    $skill isa skill, has name "{skill}";
+                    $student isa student, has id "{escaped_student_id}";
+                    $skill isa skill, has id "{escaped_skill_id}";
                 insert
                     $hasSkill isa hasSkill (student: $student, skill: $skill),
                     has description "";
             """
             Db.write_transact(query)
 
-        for skill in to_remove:
+        for skill_id in to_remove:
+            escaped_skill_id = skill_id.replace('"', '\\"')
             query = f"""
                 match
-                    $student isa student, has email "{escaped_student_email}";
-                    $skill isa skill, has name "{skill}";
+                    $student isa student, has id "{escaped_student_id}";
+                    $skill isa skill, has id "{escaped_skill_id}";
                     $hasSkill isa hasSkill (student: $student, skill: $skill);
                 delete
                     $hasSkill;
@@ -106,8 +113,8 @@ class SkillRepository(BaseRepository[Skill]):
 
         query = f"""
             match
-                $student isa student, has email "{escaped_student_id}";
-                $skill isa skill, has name "{escaped_skill_id}";
+                $student isa student, has id "{escaped_student_id}";
+                $skill isa skill, has id "{escaped_skill_id}";
                 $hasSkill isa hasSkill (student: $student, skill: $skill);
             update
                 $hasSkill has description "{escaped_description}";
@@ -115,17 +122,19 @@ class SkillRepository(BaseRepository[Skill]):
         Db.write_transact(query)
 
     def create(self, skill: Skill) -> Skill:
+        id = generate_uuid()
         # Generate a creation timestamp if not provided
         created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         # Convert boolean to string for TypeDB query
         is_pending_value = "true" if skill.is_pending else "false"
 
-        # Escape any double quotes in the name
+        # Escape any double quotes
         escaped_name = skill.name.replace('"', '\\"')
 
         query = f"""
             insert
                 $skill isa skill,
+                has id "{id}",
                 has name "{escaped_name}",
                 has isPending {is_pending_value},
                 has createdAt {created_at};
@@ -137,13 +146,11 @@ class SkillRepository(BaseRepository[Skill]):
         if not skill.created_at:
             skill.created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-        # Set the ID to match the name (since you're using name as the ID)
-        skill.id = skill.name
-
         return skill
 
     def _map_to_model(self, result: dict[str, Any]) -> Skill:
         # Extract relevant information from the query result
+        id = result.get("id", "")
         name = result.get("name", "")
         is_pending_value = result.get("isPending", True)
         if isinstance(is_pending_value, bool):
@@ -160,7 +167,7 @@ class SkillRepository(BaseRepository[Skill]):
         description = result.get("description")
         if description:
             return StudentSkill(
-                id=name,  # Using name as the ID since it's marked as @key
+                id=id,
                 name=name,
                 description=description,
                 is_pending=is_pending,
@@ -168,7 +175,7 @@ class SkillRepository(BaseRepository[Skill]):
             )
 
         return Skill(
-            id=name,  # Using name as the ID since it's marked as @key
+            id=id,
             name=name,
             is_pending=is_pending,
             created_at=created_at,
@@ -177,11 +184,12 @@ class SkillRepository(BaseRepository[Skill]):
     def get_task_skills(self, task_id: str) -> list[Skill]:
         query = f"""
             match
-                $task isa task, has name "{task_id}";
+                $task isa task, has id "{task_id}";
                 $taskSkill isa requiresSkill (task: $task, skill: $skill);
-                $skill isa skill, has name $skill_name;
+                $skill isa skill, has id $skill_id, has name $skill_name;
             fetch {{
-                'skill_name': $skill_name,
+                'id': $skill_id,
+                'name': $skill_name,
                 'isPending': $skill.isPending
             }};
         """
@@ -189,12 +197,13 @@ class SkillRepository(BaseRepository[Skill]):
 
         skills = []
         for result in results:
-            skill_name = result.get("skill_name", "")
+            skill_id = result.get("id", "")
+            skill_name = result.get("name", "")
             is_pending_value = result.get("isPending", True)
 
             skills.append(
                 Skill(
-                    id=skill_name,  # Using name as the ID since it's marked as @key
+                    id=skill_id,
                     name=skill_name,
                     is_pending=is_pending_value,
                     created_at=datetime.now(),  # Assuming created_at is not needed here

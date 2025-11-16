@@ -6,6 +6,46 @@ import requests
 from urllib.parse import urlparse
 
 
+# Whitelist of allowed domains for image downloads
+ALLOWED_IMAGE_DOMAINS = [
+    "avatars.githubusercontent.com",
+    "lh3.googleusercontent.com",
+]
+
+
+def is_safe_url(url: str) -> tuple[bool, str]:
+    """
+    Validate that a URL is from an allowed domain.
+
+    Args:
+        url (str): The URL to validate
+
+    Returns:
+        tuple[bool, str]: (is_safe, error_message)
+    """
+    try:
+        parsed = urlparse(url)
+
+        # Only allow https
+        if parsed.scheme.lower() != "https":
+            return False, "Only https URLs are allowed"
+
+        # Check if hostname exists
+        if not parsed.hostname:
+            return False, "URL must have a valid hostname"
+
+        hostname = parsed.hostname.lower()
+
+        # Check if hostname is in the whitelist
+        if hostname not in ALLOWED_IMAGE_DOMAINS:
+            return False, f"Domain {hostname} is not allowed"
+
+        return True, ""
+
+    except Exception as e:
+        return False, f"Invalid URL format: {str(e)}"
+
+
 def save_image(file: UploadFile, directory: str = "static/images") -> str:
     """
     Save an uploaded image to the specified directory with a randomly generated filename
@@ -46,9 +86,18 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> str
 
     Returns:
         str: The unique filename of the saved image, or empty string if failed
+
+    Raises:
+        ValueError: If the URL is not from an allowed domain
     """
     if not image_url:
         return ""
+
+    # Validate URL is from allowed domain
+    is_safe, error_message = is_safe_url(image_url)
+    if not is_safe:
+        print(f"Security validation failed for URL {image_url}: {error_message}")
+        raise ValueError(f"Invalid or unsafe URL: {error_message}")
 
     try:
         # Create the directory if it doesn't exist

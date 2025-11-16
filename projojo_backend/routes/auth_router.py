@@ -12,6 +12,7 @@ router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
 # Default frontend URL as fallback
 DEFAULT_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+ENVIRONMENT = os.getenv("ENVIRONMENT", "none").lower()
 
 
 def get_frontend_url_from_login(request: Request) -> str:
@@ -83,19 +84,17 @@ async def auth_callback(
         print(f"OAuth callback handling failed for {provider}: {e}")
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
 
-
 @router.post("/test/login/{user_id}")
 async def test_login(user_id: str, request: Request):
     """
     LOCALHOST ONLY: Generate a JWT token for any user ID for testing purposes.
     This endpoint should only be used in development environments.
     """
-    # Check if the server itself is running on localhost
-    server_host = request.url.hostname
-    if server_host not in ["127.0.0.1", "localhost", "::1"]:
+    # Check if the request is from localhost
+    if not ENVIRONMENT == "development":
         raise HTTPException(
             status_code=403,
-            detail="This endpoint is only available when the server is running on localhost"
+            detail="This endpoint is only available from localhost in development environments"
         )
 
     # Get user from database

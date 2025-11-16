@@ -103,7 +103,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     }
 
     const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId);
+        const skillIds = skills.map((skill) => skill.skillId || skill.id);
 
         setTaskSkillsError("");
 

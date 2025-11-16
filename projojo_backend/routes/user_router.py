@@ -13,10 +13,10 @@ async def get_all_users():
     users = user_repo.get_all()
     return users
 
-@router.get("/{email}")
-async def get_user(email: str = Path(..., description="User email")):
+@router.get("/{id}")
+async def get_user(id: str = Path(..., description="User ID")):
     """
-    Get a specific user by email
+    Get a specific user by ID
     """
-    user = user_repo.get_by_id(email)
+    user = user_repo.get_by_id(id)
     return user
