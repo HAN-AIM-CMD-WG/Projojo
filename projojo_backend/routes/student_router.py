@@ -99,6 +99,7 @@ async def update_student(
     description: str = Form(None),
     profilePicture: UploadFile = File(None),
     cv: UploadFile = File(None),
+    cv_deleted: str = Form(None),
     payload: dict = Depends(get_token_payload)
 ):
     """
@@ -121,9 +122,12 @@ async def update_student(
         if profilePicture and profilePicture.filename:
             image_filename = save_image(profilePicture)
 
-        # Handle CV upload
+        # Handle CV upload or deletion
         if cv and cv.filename:
             cv_filename = save_image(cv, "static/pdf")
+        elif cv_deleted == "true":
+            # User explicitly deleted the CV
+            cv_filename = ""
 
         # Update student in database
         user_repo.update_student(

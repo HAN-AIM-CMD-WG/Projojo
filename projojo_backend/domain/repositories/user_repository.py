@@ -476,8 +476,20 @@ class UserRepository(BaseRepository[User]):
             update_statements.append(f'$student has imagePath "{escaped_image_path}";')
 
         if cv_path is not None:
-            escaped_cv_path = cv_path.replace('"', '\\"')
-            update_statements.append(f'$student has cvPath "{escaped_cv_path}";')
+            if cv_path == "":
+                # Empty string means delete the CV
+                delete_query = f"""
+                    match
+                        $student isa student,
+                        has id "{escaped_id}",
+                        has cvPath $cvPath;
+                    delete
+                        has $cvPath of $student;
+                """
+                Db.write_transact(delete_query)
+            else:
+                escaped_cv_path = cv_path.replace('"', '\\"')
+                update_statements.append(f'$student has cvPath "{escaped_cv_path}";')
 
         # Only execute if there are updates to make
         if update_statements:
