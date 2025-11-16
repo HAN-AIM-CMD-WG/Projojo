@@ -128,21 +128,13 @@ export default function UpdateStudentPage() {
                                 initialFilePath={IMAGE_BASE_URL + data?.image_path}
                             />
                         </Page>
-                        <Page>
+                        <Page className="flex flex-col gap-4">
                             <DragDrop
                                 accept="application/pdf"
-                                text="Sleep uw cv hier"
                                 onFileChanged={onCVAdded}
-                                showAddedFiles={false}
                                 name="cv"
                                 initialFilePath={PDF_BASE_URL + data?.cv_path}
                             />
-                            <div aria-label="pdf voorbeelden" className="flex justify-center mt-3">
-                                {
-                                    cv.map((file, index) =>
-                                        <PdfPreview key={index} url={URL.createObjectURL(file)} className='h-[25rem]' />)
-                                }
-                            </div>
                         </Page>
                     </PagedComponent>
                 )}

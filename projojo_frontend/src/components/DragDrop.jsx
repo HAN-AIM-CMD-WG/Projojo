@@ -7,10 +7,10 @@ import PdfPreview from './PdfPreview';
  * @param {{ onFileChanged: (file: File[]) => void }} param0
  * @returns
  */
-export default function DragDrop({ onFileChanged, multiple = false, accept = "image/*", name, required = false, initialFilePath, text = "Sleep uw afbeeldingen hier", showAddedFiles = true }) {
+export default function DragDrop({ onFileChanged, multiple = false, accept = "image/*", name, required = false, initialFilePath }) {
     const fileInput = useRef();
     const [files, setFiles] = useState([]);
-    const [error, setError] = useState();
+    const [error, setError] = useState(null);
     const [initialPreview, setInitialPreview] = useState(null);
 
     useEffect(() => {
@@ -89,31 +89,39 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                         <path fillRule="nonzero" d="M16 13l6.964 4.062-2.973.85 2.125 3.681-1.732 1-2.125-3.68-2.223 2.15L16 13zm-2-7h2v2h5a1 1 0 0 1 1 1v4h-2v-3H10v10h4v2H9a1 1 0 0 1-1-1v-5H6v-2h2V9a1 1 0 0 1 1-1h5V6zM4 14v2H2v-2h2zm0-4v2H2v-2h2zm0-4v2H2V6h2zm0-4v2H2V2h2zm4 0v2H6V2h2zm4 0v2h-2V2h2zm4 0v2h-2V2h2z" />
                     </g>
                 </svg>
-                <h2>{text}</h2>
+                <h2>Klik hier of sleep hier een bestand heen</h2>
             </div>
-            <div className="text-center">
-                <button className="btn-primary sm:hidden w-full" onClick={() => fileInput.current.click()}>Voeg afbeeldingen toe</button>
-            </div>
-            <span className="text-primary text-center">{error}</span>
+            <button className="btn-primary sm:hidden w-full" onClick={() => fileInput.current.click()}>Voeg een bestand toe</button>
+
+            {!!error && (
+                <span className="text-primary text-center">{error}</span>
+            )}
+
             <input ref={fileInput} hidden type="file" name={name} multiple={multiple} accept={accept} onInput={onFileInput} onInvalid={() => setError("Geen afbeelding toegevoegd")} data-testid="fileinput" required={required} />
 
             {/* Show newly added files */}
-            {showAddedFiles && files.length > 0 && (
+            {files.length > 0 && (
                 <div className='flex justify-center'>
                     {files.map((file, index) =>
-                        <img
-                            src={URL.createObjectURL(file)}
-                            className="w-12 h-12"
-                            alt="aangemaakte foto"
-                            key={index}
-                        />
+                        file.type === "application/pdf" ? (
+                            <div key={index} className="w-full">
+                                <PdfPreview url={URL.createObjectURL(file)} className='h-[25rem]' />
+                            </div>
+                        ) : (
+                            <img
+                                src={URL.createObjectURL(file)}
+                                className="w-48 h-48"
+                                alt="Toegevoegde foto"
+                                key={index}
+                            />
+                        )
                     )}
                 </div>
             )}
 
             {/* Show initial file preview if no new files are added */}
             {files.length === 0 && initialPreview && (
-                <div className='flex justify-center mt-3'>
+                <div className='flex justify-center'>
                     {accept.includes("image") ? (
                         <img
                             src={initialPreview}
