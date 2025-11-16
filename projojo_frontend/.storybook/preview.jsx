@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom';
-import { AuthProvider } from '../src/components/AuthProvider';
+import { AuthProvider } from '../src/auth/AuthProvider';
 import '../src/index.css';
 
 /** @type { import('@storybook/react').Preview } */

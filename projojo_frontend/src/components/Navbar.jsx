@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { IMAGE_BASE_URL, getUser } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function Navbar() {
     const { authData, logout } = useAuth();
@@ -102,7 +102,7 @@ export default function Navbar() {
                             {
                                 // profile picture, only for students
                                 authData.type === "student" || authData.type === "supervisor" ?
-                                     <li key="profile-picture" className="flex items-center ml-2">
+                                    <li key="profile-picture" className="flex items-center ml-2">
                                         <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
                                     </li>
                                     : null

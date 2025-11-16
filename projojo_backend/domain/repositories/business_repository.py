@@ -1,9 +1,9 @@
 from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
-from .project_repository import ProjectRepository as project_repo
 from .base import BaseRepository
 from domain.models import Business, BusinessAssociation
+from service.uuid_service import generate_uuid
 
 
 class BusinessRepository(BaseRepository[Business]):
@@ -16,12 +16,13 @@ class BusinessRepository(BaseRepository[Business]):
         query = f"""
             match
                 $business isa business,
-                has name "{id}",
+                has id "{id}",
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
             fetch {{
+                'id': "{id}",
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
@@ -32,15 +33,18 @@ class BusinessRepository(BaseRepository[Business]):
         if not results:
             raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
+
     def get_all(self) -> list[Business]:
         query = """
             match
                 $business isa business,
+                has id $id,
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
             fetch {
+                'id': $id,
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
@@ -52,6 +56,7 @@ class BusinessRepository(BaseRepository[Business]):
 
     def _map_to_model(self, result: dict[str, Any]) -> Business:
         # Extract relevant information from the query result
+        id = result.get("id", "")
         name = result.get("name", "")
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
@@ -61,7 +66,7 @@ class BusinessRepository(BaseRepository[Business]):
             locations = [locations]
 
         return Business(
-            id=name,  # Using name as the ID since it's marked as @key
+            id=id,
             name=name,
             description=description,
             image_path=image_path,
@@ -74,13 +79,13 @@ class BusinessRepository(BaseRepository[Business]):
 
         query = f"""
             match
-                $business isa business, has name "{escaped_business_id}";
+                $business isa business, has id "{escaped_business_id}";
                 $manages isa manages,
                     has location $location,
                     (supervisor: $supervisor, business: $business);
-                $supervisor isa supervisor, has email $email;
+                $supervisor isa supervisor, has id $supervisor_id;
             fetch {{
-                'email': $email,
+                'id': $supervisor_id,
                 'location': $location
             }};
         """
@@ -88,7 +93,7 @@ class BusinessRepository(BaseRepository[Business]):
 
         associations = []
         for result in results:
-            supervisor_email = result.get("email", "")
+            supervisor_id = result.get("id", "")
 
             # Handle locations as a list
             locations = result.get("location", [])
@@ -98,7 +103,7 @@ class BusinessRepository(BaseRepository[Business]):
             associations.append(
                 BusinessAssociation(
                     business_id=business_id,
-                    supervisor_id=supervisor_email,
+                    supervisor_id=supervisor_id,
                     location=locations,
                 )
             )
@@ -110,7 +115,7 @@ class BusinessRepository(BaseRepository[Business]):
         match
             $business isa business;
         fetch {
-            "id": $business.name,
+            "id": $business.id,
             "name": $business.name,
             "description": $business.description,
             "image_path": $business.imagePath,
@@ -120,7 +125,7 @@ class BusinessRepository(BaseRepository[Business]):
                     ($business, $project) isa hasProjects;
                     $project isa project;
                 fetch {
-                    "id": $project.name,
+                    "id": $project.id,
                     "name": $project.name,
                     "description": $project.description,
                     "image_path": $project.imagePath,
@@ -130,12 +135,12 @@ class BusinessRepository(BaseRepository[Business]):
                             ($project, $task) isa containsTask;
                             $task isa task;
                         fetch {
-                            "id": $task.name,
+                            "id": $task.id,
                             "name": $task.name,
                             "description": $task.description,
                             "total_needed": $task.totalNeeded,
                             "created_at": $task.createdAt,
-                            "project_id": $project.name,
+                            "project_id": $project.id,
                             "total_registered": (
                                 match
                                     $registration isa registersForTask (task: $task, student: $student);
@@ -153,6 +158,7 @@ class BusinessRepository(BaseRepository[Business]):
                                     ($task, $skill) isa requiresSkill;
                                     $skill isa skill;
                                 fetch {
+                                    "id": $skill.id,
                                     "name": $skill.name,
                                     "is_pending": $skill.isPending,
                                     "created_at": $skill.createdAt
@@ -167,17 +173,21 @@ class BusinessRepository(BaseRepository[Business]):
         return Db.read_transact(query)
 
     def create(self, name: str) -> Business:
+        id = generate_uuid()
+        escaped_name = name.replace('"', '\\"')
+
         query = f"""
             insert
                 $business isa business,
-                has name "{name}",
+                has id "{id}",
+                has name "{escaped_name}",
                 has description "",
                 has imagePath "default.png",
                 has location "";
         """
         Db.write_transact(query)
         return Business(
-            id=name, name=name, description="", image_path="default.png", location=[""]
+            id=id, name=name, description="", image_path="default.png", location=[""]
         )
 
     def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None) -> Business:

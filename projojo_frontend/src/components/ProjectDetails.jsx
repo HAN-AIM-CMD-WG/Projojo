@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createTask, IMAGE_BASE_URL } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
 import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
@@ -16,6 +16,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const { authData } = useAuth();
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const [newTaskDescription, setNewTaskDescription] = useState("");
+    const [formKey, setFormKey] = useState(0);
 
     const formDataObj = {};
 
@@ -25,18 +26,20 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
         });
         setError("");
 
-        // Remove the temp error message when this functionality is implemented
-        setError("Deze functionaliteit is nog niet beschikbaar");
-        // createTask(project.id, formDataObj)
-        //     .then(() => {
-        //         handleCloseModal();
-        //         refreshData();
-        //     })
-        //     .catch(error => setError(error.message));
+        createTask(project.id, formDataObj)
+            .then(() => {
+                handleCloseModal();
+                refreshData();
+            })
+            .catch(error => setError(error.message));
     }
 
     const handleOpenModal = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setNewTaskDescription("");
+        setFormKey(prev => prev + 1); // Force form remount by changing key
+    };
 
     if (isLoading) {
         project = {
@@ -111,8 +114,8 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             <div className="flex flex-row justify-between">
                 <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
                     {project.topSkills?.map((skill) => (
-                        <li key={skill.name}>
-                            <SkillBadge skillName={skill.name} isPending={skill.is_pending} />
+                        <li key={skill.skillId}>
+                            <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                         </li>
                     ))}
                 </ul>
@@ -129,6 +132,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     setIsModalOpen={setIsModalOpen}
                 >
                     <form
+                        key={formKey}
                         className="p-4 md:p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
@@ -148,13 +152,6 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 defaultText={newTaskDescription}
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
-                            <input
-                                id="projectId"
-                                name="projectId"
-                                type="hidden"
-                                required
-                                value={project.name || project.projectId || project.id}
-                            />
                         </div>
                         <button type="submit" name="Taak Toevoegen" className="btn-primary w-full">
                             Taak Toevoegen

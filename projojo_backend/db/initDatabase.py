@@ -16,18 +16,18 @@ class Db:
     base_path = os.path.dirname(os.path.abspath(__file__))
     schema_path = os.path.join(base_path, "schema.tql")
     seed_path = os.path.join(base_path, "seed.tql")
-    
+
     # Initialize as None - will be connected lazily with retry logic
     driver = None
     db = None
     _connection_established = False
-    
+
     @classmethod
     def connect_with_retry(cls, max_retries=10, initial_delay=1):
         """Connect to TypeDB with retry logic and exponential backoff"""
         if cls._connection_established and cls.driver is not None:
             return  # Already connected
-        
+
         delay = initial_delay
         for attempt in range(max_retries):
             try:
@@ -46,13 +46,13 @@ class Db:
                 else:
                     print(f"Failed to connect to TypeDB after {max_retries} attempts")
                     raise Exception(f"Failed to connect to TypeDB after {max_retries} attempts. Last error: {e}")
-    
+
     @classmethod
     def ensure_connection(cls):
         """Ensure we have a valid connection, reconnect if necessary"""
         if not cls._connection_established or cls.driver is None:
             cls.connect_with_retry()
-    
+
     @staticmethod
     def schema_transact(query):
         Db.ensure_connection()
@@ -131,15 +131,15 @@ def main():
     print()
     print("Running a sample query")
     read_query = """
-        match 
-            $s isa supervisor; 
+        match
+            $s isa supervisor;
             $ip isa identityProvider;
             $b isa business;
             authenticates( $s, $ip );
             $m isa manages( $s, $b );
-        fetch { 
-            'name': $s.fullName, 
-            'email': $s.email, 
+        fetch {
+            'name': $s.fullName,
+            'email': $s.email,
             'provider': $ip.name,
             'business': $b.name,
             'location': [$b.location],
@@ -153,10 +153,10 @@ def main():
     print()
     print("Running a sample query for skills")
     skill_query = """
-        match 
+        match
             $sk isa skill;
-        fetch { 
-            'name': $sk.name,	
+        fetch {
+            'name': $sk.name,
             'isPending': $sk.isPending,
             'createdAt': $sk.createdAt,
         };
@@ -168,13 +168,13 @@ def main():
     print()
     print("Running a sample query for projects")
     project_query = """
-        match 
+        match
             $b isa business;
             $p isa project;
             hasProjects( $b, $p );
-        fetch { 
+        fetch {
             'businessName': $b.name,
-            'projectName': $p.name,	
+            'projectName': $p.name,
         };
     """
     project_results = Db.read_transact(project_query)
@@ -184,32 +184,32 @@ def main():
     print()
     print("Running a sample query for tasks")
     task_query = """
-        match 
+        match
             $b isa business;
             $p isa project;
             $t isa task;
             hasProjects( $b, $p );
             containsTask( $p, $t );
-        fetch { 
+        fetch {
             'businessName': $b.name,
-            'projectName': $p.name,	
-            'taskName': $t.name,	
+            'projectName': $p.name,
+            'taskName': $t.name,
             'totalNeeded': $t.totalNeeded,
         };
     """
     task_results = Db.read_transact(task_query)
     pprint.pp(task_results)
-    
+
     # Example 5: Run a fifth query
     print()
     print("Running a sample query for task skills")
     task_skill_query = """
-        match 
+        match
             $t isa task;
             $sk isa skill;
             requiresSkill( $t, $sk );
-        fetch { 	
-            'taskName': $t.name,	
+        fetch {
+            'taskName': $t.name,
             'skillName': $sk.name,
         };
     """
@@ -220,12 +220,12 @@ def main():
     print()
     print("Running a sample query for student skills")
     student_query = """
-        match 
+        match
             $s isa student;
             $sk isa skill;
             $stsk isa hasSkill( $s, $sk );
-        fetch { 	
-            'studentName': $s.fullName,	
+        fetch {
+            'studentName': $s.fullName,
             'skillName': $sk.name,
             'description': $stsk.description,
         };
@@ -237,12 +237,12 @@ def main():
     print()
     print("Running a sample query for task registrations")
     registration_query = """
-        match 
+        match
             $s isa student;
             $t isa task;
             $tr isa registersForTask( $s, $t );
-        fetch { 	
-            'studentName': $s.fullName,	
+        fetch {
+            'studentName': $s.fullName,
             'taskName': $t.name,
             'description': $tr.description,
             'isAccepted': $tr.isAccepted,
@@ -255,14 +255,14 @@ def main():
     print()
     print("Running a sample query for project creations")
     projectcreations_query = """
-        match 
+        match
             $s isa supervisor;
             $b isa business;
             $p isa project;
             $m isa manages($s, $b);
             hasProjects($b, $p);
             $c isa creates($s, $p);
-        fetch { 
+        fetch {
             'supervisorName': $s.fullName,
             'supervisorEmail': $s.email,
             'business': $b.name,

@@ -4,6 +4,7 @@ import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
 import Loading from '../components/Loading';
 import { getBusinessesComplete } from '../services';
+import { normalizeSkill } from '../utils/skills';
 import PageHeader from '../components/PageHeader';
 
 export default function OverviewPage() {
@@ -21,22 +22,25 @@ export default function OverviewPage() {
         if (ignore) return;
 
         const formattedBusinesses = data.map(business => {
+          // Normalize all task skills for this business
           const allSkills = business.projects.flatMap(project =>
-            project.tasks.flatMap(task => task.skills)
+            project.tasks.flatMap(task => (task.skills || []).map(normalizeSkill).filter(Boolean))
           );
 
+          // Aggregate by id (fallback to name) so counting is stable across shapes
           const skillCounts = allSkills.reduce((acc, skill) => {
-            if (!acc[skill.name]) {
-              acc[skill.name] = { count: 0, is_pending: skill.is_pending };
+            const key = skill.skillId;
+            if (!acc[key]) {
+              acc[key] = { count: 0, isPending: skill.isPending, name: skill.name, skillId: key };
             }
-            acc[skill.name].count++;
+            acc[key].count++;
             return acc;
           }, {});
 
           const topSkills = Object.entries(skillCounts)
             .sort(([, a], [, b]) => b.count - a.count)
             .slice(0, 5)
-            .map(([name, { is_pending }]) => ({ name, is_pending }));
+            .map(([, { name, isPending, skillId }]) => ({ skillId, name, isPending }));
 
           return {
             ...business,
@@ -55,7 +59,10 @@ export default function OverviewPage() {
                 ...project,
                 projectId: project.id,
                 title: project.name,
-                tasks: project.tasks
+                tasks: project.tasks.map(task => ({
+                  ...task,
+                  skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
+                }))
               };
             }),
             topSkills: topSkills
@@ -111,9 +118,17 @@ export default function OverviewPage() {
     }
 
     if (selectedSkills.length > 0) {
+      // Prepare a set of selected ids (fallback to name) for stable comparisons
+      const selectedIds = new Set((selectedSkills || []).map(s => String(s.skillId ?? s.name)));
+
       filteredData = filteredData.map(business => {
         const filteredProjects = business.projects.map(project => {
-          const filteredTasks = project.tasks.filter(task => selectedSkills.every(selectedSkill => task.skills.some(taskSkill => taskSkill.skillId === selectedSkill.skillId)));
+          const filteredTasks = project.tasks.filter(task => {
+            // Build a set of task skill ids for quicker lookup (fallback to name)
+            const taskSkillIds = new Set((task.skills || []).map(ts => String(ts.skillId ?? ts.name)));
+            // Use the precomputed selectedIds set for membership checks
+            return [...selectedIds].every(id => taskSkillIds.has(id));
+          });
 
           if (filteredTasks.length > 0) {
             return {

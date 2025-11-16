@@ -4,7 +4,7 @@ from .project import Project
 
 
 class Business(BaseModel):
-    id: str
+    id: str | None = None
     name: str
     description: str
     image_path: str

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../components/AuthProvider";
+import { useAuth } from "../../auth/AuthProvider";
 import Card from "../../components/Card";
 import DragDrop from "../../components/DragDrop";
 import FormInput from "../../components/FormInput";

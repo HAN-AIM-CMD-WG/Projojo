@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '../auth/AuthProvider';
 import FormInput from './FormInput';
 import Loading from "./Loading";
 import Modal from "./Modal";
@@ -78,7 +78,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                     <>
                         <p className="mb-3 font-normal text-gray-700 ">Top {topSkills.length} skills in dit bedrijf: </p><div className="flex flex-wrap gap-2 pt-1 pb-4">
                             {topSkills.map((skill) => (
-                                <SkillBadge key={skill.name} skillName={skill.name} isPending={skill.is_pending} />
+                                <SkillBadge key={skill.skillId ?? skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                             ))}
                         </div>
                     </>

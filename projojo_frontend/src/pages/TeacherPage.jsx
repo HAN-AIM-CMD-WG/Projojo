@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import BusinessesOverview from "../components/BusinessesOverview";
 import FormInput from "../components/FormInput";
 import Loading from "../components/Loading";

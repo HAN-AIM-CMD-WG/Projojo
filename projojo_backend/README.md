@@ -13,12 +13,27 @@ FastAPI backend service for the Projojo application.
 ## Prerequisites
 
 1. **[Docker & Docker Compose](https://www.docker.com/get-started/)**
-2. optional: **[Python 3.13](https://www.python.org/downloads/)**
-3. optional: **[uv](https://docs.astral.sh/uv/getting-started/installation/)**
+2. **OAuth Credentials** - See [OAuth Setup Guide](./auth/README.md) for instructions
+3. optional: **[Python 3.13](https://www.python.org/downloads/)**
+4. optional: **[uv](https://docs.astral.sh/uv/getting-started/installation/)**
 
 > **uv** and **python** are only needed for IDE support and dependency management
 
 ## Quick Start
+
+### 1. Configure OAuth Credentials
+Before running the application, you need to set up OAuth credentials:
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Follow the [OAuth Setup Guide](./auth/README.md) to obtain your Google and GitHub OAuth credentials
+
+3. Update the `.env` file with your credentials
+
+### 2. Run the Application
 ```bash
 # Run with Docker (from project root)
 docker compose up backend

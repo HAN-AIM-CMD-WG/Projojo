@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateStudentSkillDescription } from "../services";
 import Alert from "./Alert";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function StudentProfileSkill({ skill, isOwnProfile }) {
     const [error, setError] = useState("");
@@ -35,7 +35,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
     };
 
     return (
-        <div key={skill.id} className="w-full p-5 rounded-lg bg-white shadow-md border border-gray-300 transition hover:shadow-lg">
+        <div key={skill.skillId ?? skill.id} className="w-full p-5 rounded-lg bg-white shadow-md border border-gray-300 transition hover:shadow-lg">
             <div className="w-full">
                 <div className="flex flex-col min-[400px]:flex-row min-[400px]:justify-between  gap-2">
                     <h2 className="text-lg font-semibold text-gray-800">{skill.name}</h2>

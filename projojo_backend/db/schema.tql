@@ -1,30 +1,29 @@
 define
 
 entity user @abstract,
-    owns email @key,
-    owns imagePath @card(1),
+    owns id @key,
+    owns email @card(1),
     owns fullName @card(1),
-    owns password_hash @card(1);
+    owns imagePath @card(1),
+    plays oauthAuthentication:user @card(1..10);
 
 entity supervisor sub user,
-    plays authenticates:authenticated @card(1..10),
     plays manages:supervisor @card(1),
     plays creates:supervisor @card(0..);
 
 entity student sub user,
-    owns schoolAccountName @card(1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..);
 
-entity teacher sub user,
-    owns schoolAccountName @card(1);
+entity teacher sub user;
 
-entity identityProvider,
-    owns name @card(0..1),
-    plays authenticates:authenticator;
+entity oauthProvider,
+    owns name @key, # e.g. "microsoft", "google"
+    plays oauthAuthentication:provider;
 
 entity business,
-    owns name @key,
+    owns id @key,
+    owns name @card(1), # was `name @key` before UUID migration
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1..),
@@ -33,6 +32,7 @@ entity business,
     plays businessInvite:business @card(0..);
 
 entity project,
+    owns id @key,
     owns name @card(1),
     owns description @card(1),
     owns imagePath @card(1),
@@ -42,6 +42,7 @@ entity project,
     plays creates:project @card(0..);
 
 entity task,
+    owns id @key,
     owns name @card(1),
     owns description @card(1),
     owns totalNeeded @card(1),
@@ -51,7 +52,8 @@ entity task,
     plays registersForTask:task @card(0..);
 
 entity skill,
-    owns name @key,
+    owns id @key,
+    owns name @card(1) @unique, # was `name @key` before UUID migration
     owns isPending @card(1),
     owns createdAt @card(1),
     plays requiresSkill:skill @card(0..),
@@ -64,11 +66,10 @@ entity inviteKey,
     owns createdAt @card(1),
     plays businessInvite:key @card(0..1);
 
-relation authenticates,
-    relates authenticator,
-    relates authenticated,
-    owns username @card(1),
-    owns id @key;
+relation oauthAuthentication,
+    relates provider,
+    relates user,
+    owns oauthSub @key;
 
 relation creates,
     relates supervisor @card(1),
@@ -122,11 +123,9 @@ relation businessInvite,
 attribute email value string;
 attribute name value string;
 attribute fullName value string;
-attribute password_hash value string;
 attribute imagePath value string;
-attribute schoolAccountName value string;
-attribute username value string;
 attribute id value string;
+attribute oauthSub value string;
 attribute description value string;
 attribute location value string;
 attribute isPending value boolean;
