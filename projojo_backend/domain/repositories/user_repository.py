@@ -1,39 +1,16 @@
 from collections import defaultdict
 from typing import Any
+import uuid
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import User, Supervisor, Student, Teacher
-import uuid
-from datetime import datetime
+from domain.models.authentication import OAuthProvider
+from service.image_service import save_image_from_url
 
 class UserRepository(BaseRepository[User]):
     def __init__(self):
         super().__init__(User, "user")
-
-    def get_credentials(self, id: str) -> User | None:
-        query = f"""
-            match
-                $user isa user,
-                has email "{id}",
-                has email $email,
-                has fullName $fullName,
-                has imagePath $imagePath,
-                has password_hash $password_hash;
-                $user isa $usertype;
-            fetch {{
-                'email': $email,
-                'fullName': $fullName,
-                'imagePath': $imagePath,
-                'password_hash': $password_hash,
-                'usertype': $usertype
-            }};
-        """
-        results = Db.read_transact(query)
-        if not results:
-            raise ItemRetrievalException(User, f"User with ID {id} not found.")
-        print(results)
-        return self._map_to_model(results[1])
 
     def get_by_id(self, id: str) -> User | None:
         # First try to find as a supervisor
@@ -73,15 +50,13 @@ class UserRepository(BaseRepository[User]):
                 has email "{escaped_email}",
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
                 $business isa business;
                 $manages isa manages( $supervisor, $business );
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'password_hash': $password_hash,
                 'business_association_id': $business.name
             }};
         """
@@ -134,9 +109,7 @@ class UserRepository(BaseRepository[User]):
                 'email': $student.email,
                 'full_name': $student.fullName,
                 'image_path': $student.imagePath,
-                'school_account_name': $student.schoolAccountName,
                 'type': 'student',
-                'password_hash': $student.password_hash,
                 'registered_task_ids': [
                     match
                         $task isa task;
@@ -180,15 +153,11 @@ class UserRepository(BaseRepository[User]):
                 has email "{escaped_email}",
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
             fetch {{
                 'email': $email,
                 'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'imagePath': $imagePath
             }};
         """
         results = Db.read_transact(query)
@@ -203,7 +172,6 @@ class UserRepository(BaseRepository[User]):
                 $supervisor isa supervisor,
                 has email $email,
                 has fullName $fullName,
-                has password_hash $password_hash,
                 has imagePath $imagePath;
                 $business isa business;
                 $manages isa manages( $supervisor, $business );
@@ -211,8 +179,7 @@ class UserRepository(BaseRepository[User]):
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
-                'business_association_id': $business.name,
-                'password_hash': $password_hash
+                'business_association_id': $business.name
             };
         """
         results = Db.read_transact(query)
@@ -264,17 +231,13 @@ class UserRepository(BaseRepository[User]):
                 $student isa student,
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
             fetch {
                 'id': $email,
                 'email': $email,
                 'full_name': $fullName,
                 'type': 'student',
                 'image_path': $imagePath,
-                'school_account_name': $schoolAccountName,
-                'password_hash': $password_hash,
                 'registered_task_ids': [
                     match
                         $task isa task;
@@ -299,27 +262,34 @@ class UserRepository(BaseRepository[User]):
                 $teacher isa teacher,
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
             fetch {
                 'email': $email,
                 'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'imagePath': $imagePath
             };
         """
         results = Db.read_transact(query)
         return [self._map_teacher(result) for result in results]
 
     def _base_user_data(self, result: dict[str, Any]) -> dict[str, Any]:
+        # Extract OAuth providers and create OAuthProvider objects (only if present in query result)
+        oauth_providers = []
+        if "oauth_providers" in result:
+            for provider_data in result.get("oauth_providers", []):
+                if "provider_name" in provider_data and "oauth_sub" in provider_data:
+                    oauth_provider = OAuthProvider(
+                        provider_name=provider_data["provider_name"],
+                        oauth_sub=provider_data["oauth_sub"]
+                    )
+                    oauth_providers.append(oauth_provider)
+
         return {
             "id": result.get("email", ""),
             "email": result.get("email", ""),
             "full_name": result.get("fullName", ""),
             "image_path": result.get("imagePath", ""),
-            "password_hash": result.get("password_hash", ""),
+            "oauth_providers": oauth_providers if oauth_providers else None,
         }
 
     def _map_to_model(self, result: dict[str, Any]) -> User:
@@ -332,7 +302,6 @@ class UserRepository(BaseRepository[User]):
     def _map_supervisor(self, result: dict[str, Any]) -> Supervisor:
         data = self._base_user_data(result)
         data.update({
-            "authentication_ids": [],
             "business_association_id": result.get("business_association_id", ""),
             "created_project_ids": result.get("created_project_ids", []),
         })
@@ -341,17 +310,13 @@ class UserRepository(BaseRepository[User]):
     def _map_student(self, result: dict[str, Any]) -> Student:
         data = self._base_user_data(result)
         data.update({
-            "school_account_name": result.get("schoolAccountName", ""),
-            "skill_ids": result.get("skill_ids", []),
-            "registered_task_ids": [],
+            "skill_ids": [skill["skill_name"] for skill in result.get("skill_ids", [])],
+            "registered_task_ids": [task["task_name"] for task in result.get("registered_task_ids", [])],
         })
         return Student(**data)
 
     def _map_teacher(self, result: dict[str, Any]) -> Teacher:
         data = self._base_user_data(result)
-        data.update({
-            "school_account_name": result.get("schoolAccountName", ""),
-        })
         return Teacher(**data)
 
     @staticmethod
@@ -368,7 +333,6 @@ class UserRepository(BaseRepository[User]):
             grouped[email]["email"] = email
             grouped[email]["fullName"] = result["fullName"]
             grouped[email]["imagePath"] = result["imagePath"]
-            grouped[email]["password_hash"] = result["password_hash"]
             grouped[email]["business_association_id"] = result["business_association_id"]
             # Only add project_id if it's not None
             project_id = result["created_project_id"]
@@ -388,9 +352,7 @@ class UserRepository(BaseRepository[User]):
                 $student isa student,
                 has email $email,
                 has fullName $fullName,
-                has imagePath $imagePath,
-                has schoolAccountName $schoolAccountName,
-                has password_hash $password_hash;
+                has imagePath $imagePath;
                 $registration isa registersForTask (student: $student, task: $task);
         """
 
@@ -414,9 +376,7 @@ class UserRepository(BaseRepository[User]):
             fetch {
                 'email': $email,
                 'fullName': $fullName,
-                'imagePath': $imagePath,
-                'schoolAccountName': $schoolAccountName,
-                'password_hash': $password_hash
+                'imagePath': $imagePath
             };
         """
 
@@ -428,8 +388,6 @@ class UserRepository(BaseRepository[User]):
                 "email": result["email"],
                 "fullName": result["fullName"],
                 "imagePath": result["imagePath"],
-                "schoolAccountName": result["schoolAccountName"],
-                "password_hash": result["password_hash"],
                 "skill_ids": []
             }
             students.append(self._map_student(student_data))
@@ -483,3 +441,105 @@ class UserRepository(BaseRepository[User]):
 
         results = Db.read_transact(query)
         return [User(**result) for result in results]
+
+    def get_by_sub_and_provider(self, sub: str, provider: str) -> User | None:
+        """Get user from database by OAuth sub (provider user ID) and provider"""
+        escaped_sub = sub.replace('"', '\\"')
+        escaped_provider = provider.replace('"', '\\"')
+
+        query = f"""
+            match
+                $user isa user;
+                $provider isa oauthProvider, has name "{escaped_provider}";
+                $auth isa oauthAuthentication($user, $provider),
+                has oauthSub "{escaped_sub}";
+                $user isa $usertype;
+            fetch {{
+                'id': $user.email,
+                'email': $user.email,
+                'fullName': $user.fullName,
+                'imagePath': $user.imagePath,
+                'usertype': $usertype,
+                'oauth_providers': [
+                    match
+                        $oauth_provider isa oauthProvider;
+                        $oauth_auth isa oauthAuthentication($user, $oauth_provider);
+                    fetch {{
+                        'provider_name': $oauth_provider.name,
+                        'oauth_sub': $oauth_auth.oauthSub
+                    }};
+                ]
+            }};
+        """
+
+        results = Db.read_transact(query)
+        if not results:
+            return None
+
+        return self._map_to_model(results[0])
+
+    def create_user(self, user: User) -> User:
+        """Create a new user in database with OAuth provider"""
+        # TODO: still need to determine the user type (probably based on email domain)
+        # Currently always creates a student
+
+        if not user.oauth_providers or len(user.oauth_providers) == 0:
+            raise ValueError("Cannot create user without OAuth provider information")
+
+        if len(user.oauth_providers) > 1:
+            raise ValueError("Cannot create user with multiple OAuth providers. Users can only be created with a single OAuth provider.")
+
+        # Get the OAuth provider
+        oauth_provider = user.oauth_providers[0]
+        escaped_provider_name = oauth_provider.provider_name.replace('"', '\\"')
+        escaped_oauth_sub = oauth_provider.oauth_sub.replace('"', '\\"')
+
+        # Check if OAuth provider exists (with case-insensitive match)
+        provider_query = f"""
+            match
+                $provider isa oauthProvider, has name $name;
+                $name like "(?i){escaped_provider_name}";
+            fetch {{ 'name': $provider.name }};
+        """
+        provider_results = Db.read_transact(provider_query)
+
+        if not provider_results:
+            raise ValueError(f"OAuth provider '{oauth_provider.provider_name}' is not configured.")
+
+        id = str(uuid.uuid4())
+        escaped_email = user.email.replace('"', '\\"')
+        escaped_full_name = user.full_name.replace('"', '\\"')
+
+        # Handle image path - could be a URL (Google/GitHub) or already a filename (Microsoft)
+        downloaded_image_name = ""
+        if user.image_path:
+            if user.image_path.startswith(('http://', 'https://')):
+                downloaded_image_name = save_image_from_url(user.image_path)
+            else:
+                downloaded_image_name = user.image_path
+
+        escaped_image_path = downloaded_image_name.replace('"', '\\"')
+
+        create_user_query = f"""
+            match
+                $provider isa oauthProvider, has name "{escaped_provider_name}";
+            insert
+                $student isa student,
+                has id "{id}",
+                has email "{escaped_email}",
+                has fullName "{escaped_full_name}",
+                has imagePath "{escaped_image_path}";
+                $auth isa oauthAuthentication($student, $provider),
+                has oauthSub "{escaped_oauth_sub}";
+        """
+
+        Db.write_transact(create_user_query)
+
+        # if user is a student, it returns a dict which needs to be mapped to Student model
+        created_user = self.get_by_id(user.email)
+        if isinstance(created_user, dict):
+            created_user = self._map_student(created_user)
+
+        # Return the created user
+        return created_user
+

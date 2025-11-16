@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getSkills, updateStudentSkills } from "../services";
 import Alert from "./Alert";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import SkillsEditor from "./SkillsEditor";
 import StudentProfileSkill from "./StudentProfileSkill";
 

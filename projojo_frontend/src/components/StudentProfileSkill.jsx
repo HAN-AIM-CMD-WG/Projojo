@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { updateStudentSkillDescription } from "../services";
 import Alert from "./Alert";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function StudentProfileSkill({ skill, isOwnProfile }) {
     const [error, setError] = useState("");

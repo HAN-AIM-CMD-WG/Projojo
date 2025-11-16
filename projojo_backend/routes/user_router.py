@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Path
-
 from domain.repositories import UserRepository
+
 user_repo = UserRepository()
 
 router = APIRouter(prefix="/users", tags=["User Endpoints"])

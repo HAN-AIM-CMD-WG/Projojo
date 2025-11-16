@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
 import Alert from "./Alert";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
 import InfoBox from "./InfoBox";
 import Modal from "./Modal";

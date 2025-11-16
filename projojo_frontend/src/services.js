@@ -51,7 +51,7 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
     const token = localStorage.getItem("token");
 
     if (token) {
-        headers.authorization = `bearer ${token}`;
+        headers.authorization = `Bearer ${token}`;
     }
 
     return fetch(url, {
@@ -184,7 +184,7 @@ export function getTasks(projectName) {
 /**
  *
  * @param {string} email
- * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, type: string, oauth_providers: {provider_name: string, oauth_sub: string}[] | null, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
 export function getUser(email) {
     return fetchWithError(`${API_BASE_URL}users/${email}`);
@@ -392,22 +392,6 @@ export function createTeacherInviteKey() {
         method: "POST",
     });
 }
-
-
-export function login(credentials) {
-    return fetchWithError(`${API_BASE_URL}login`, {
-        method: "POST",
-        body: JSON.stringify(credentials),
-    });
-}
-export function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("payload");
-    return this
-}
-
-
-
 
 /**
  * @returns {Promise<User[]>}

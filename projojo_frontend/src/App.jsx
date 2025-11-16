@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from './components/AuthProvider';
+import { useAuth } from './auth/AuthProvider';
 import Footer from "./components/Footer";
 import Navbar from './components/Navbar';
 import BusinessPage from './pages/BusinessPage';
@@ -15,6 +15,7 @@ import UpdateBusinessPage from './pages/UpdateBusinessPage';
 import { getAuthorization } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
+import AuthCallback from "./auth/AuthCallback";
 
 export default function App() {
   const { setAuthData } = useAuth();
@@ -36,6 +37,7 @@ export default function App() {
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />
           <Route path="/" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/home" element={<OverviewPage />} />
           <Route path="/projects">
             <Route path="add" element={<ProjectsAddPage />} />

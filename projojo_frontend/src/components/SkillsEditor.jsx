@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createSkill, getUser } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import SkillBadge from "./SkillBadge";
 
 /**

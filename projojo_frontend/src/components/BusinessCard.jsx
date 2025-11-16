@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '../auth/AuthProvider';
 import FormInput from './FormInput';
 import Loading from "./Loading";
 import Modal from "./Modal";
