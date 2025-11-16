@@ -6,7 +6,7 @@ from .task import Task
 
 
 class Project(BaseModel):
-    id: str
+    id: str | None = None
     name: str
     description: str
     image_path: str
@@ -15,7 +15,7 @@ class Project(BaseModel):
     )]
     business_id: str | None = None
     tasks: list[Task] | None = None
-    
+
     class Config:
         from_attributes = True
         json_encoders = {
@@ -24,6 +24,6 @@ class Project(BaseModel):
 
 class ProjectCreation(Project):
     supervisor_id: str
-    
+
     class Config:
         from_attributes = True

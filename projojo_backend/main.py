@@ -1,8 +1,11 @@
+import os
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
@@ -21,6 +24,9 @@ from routes.user_router import router as user_router
 
 # Import the TypeDB connection module
 from db.initDatabase import get_database
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -49,6 +55,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
+)
+
+# Add session middleware (required by authlib for OAuth state)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=os.getenv("SESSIONS_SECRET_KEY", "supersecretkey123456789abcdefghijklmnop")
 )
 
 # Include routers

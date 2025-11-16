@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import Alert from "./Alert";
 import DragDrop from "./DragDrop";
 import FormInput from "./FormInput";
