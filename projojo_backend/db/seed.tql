@@ -14,7 +14,7 @@ insert
         has imagePath "student_female.png",
         has description "Enthousiaste student **landbouwtechnologie** met passie voor _duurzame_ **landbouwpraktijken**.",
         has email "em.jansen@student.han.nl",
-        has cvPath "cv_emma_jansen.pdf",
+        has cvPath "cv_emma_jansen.pdf";
 
     $u3 isa student,
         has id "b0d7e3ca-dad8-4b40-83dd-02a970aebce3",

@@ -459,12 +459,11 @@ class UserRepository(BaseRepository[User]):
         results = Db.read_transact(query)
         return [User(**result) for result in results]
 
-    def update_student(self, email: str, description: str | None = None, image_path: str | None = None, cv_path: str | None = None) -> None:
+    def update_student(self, id: str, description: str | None = None, image_path: str | None = None, cv_path: str | None = None) -> None:
         """
         Update student profile information (description, profile picture, CV)
         """
-        escaped_email = email.replace('"', '\\"')
-
+        escaped_id = id.replace('"', '\\"')
         # Build update statements for provided fields
         update_statements = []
 
@@ -484,7 +483,7 @@ class UserRepository(BaseRepository[User]):
         if update_statements:
             update_query = f"""
                 match
-                    $student isa student, has email "{escaped_email}";
+                    $student isa student, has id "{escaped_id}";
                 update
                     {' '.join(update_statements)}
             """

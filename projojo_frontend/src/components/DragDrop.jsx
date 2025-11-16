@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { /*getFile*/ } from '../services';
+import PdfPreview from './PdfPreview';
 
 /**
  *
@@ -120,11 +121,9 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                             alt="Huidige afbeelding"
                         />
                     ) : accept.includes("pdf") ? (
-                        <embed
-                            src={initialPreview}
-                            className="h-96 w-full"
-                            title="Huidige PDF"
-                        />
+                        <div className="w-full">
+                            <PdfPreview url={initialPreview} className='h-[25rem]' />
+                        </div>
                     ) : (
                         <a href={initialPreview} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">
                             Bekijk huidig bestand

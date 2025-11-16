@@ -93,9 +93,9 @@ async def get_student_registrations(payload: dict = Depends(get_token_payload)) 
     return registrations
 
 
-@router.put("/{email}")
+@router.put("/{id}")
 async def update_student(
-    email: str = Path(..., description="Student email"),
+    id: str = Path(..., description="Student ID"),
     description: str = Form(None),
     profilePicture: UploadFile = File(None),
     cv: UploadFile = File(None),
@@ -105,11 +105,11 @@ async def update_student(
     Update student profile information (description, profile picture, CV)
     """
     # Verify the student is updating their own profile
-    if payload.get("role") != "student" or payload.get("sub") != email:
+    if payload.get("role") != "student" or payload.get("sub") != id:
         raise HTTPException(status_code=403, detail="Je kunt alleen je eigen profiel aanpassen")
 
     # Verify student exists
-    student = user_repo.get_student_by_id(email)
+    student = user_repo.get_student_by_id(id)
     if not student:
         raise HTTPException(status_code=404, detail="Student niet gevonden")
 
@@ -119,15 +119,15 @@ async def update_student(
     try:
         # Handle profile picture upload
         if profilePicture and profilePicture.filename:
-            _, image_filename = save_image(profilePicture)
+            image_filename = save_image(profilePicture)
 
         # Handle CV upload
         if cv and cv.filename:
-            _, cv_filename = save_image(cv, "static/pdf")
+            cv_filename = save_image(cv, "static/pdf")
 
         # Update student in database
         user_repo.update_student(
-            email=email,
+            id=id,
             description=description,
             image_path=image_filename,
             cv_path=cv_filename

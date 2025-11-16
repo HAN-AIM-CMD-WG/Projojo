@@ -6,6 +6,7 @@ import DragDrop from "../../components/DragDrop";
 import FormInput from "../../components/FormInput";
 import Page from "../../components/paged_component/page";
 import PagedComponent from "../../components/paged_component/paged_component";
+import PdfPreview from "../../components/PdfPreview";
 import RichTextEditor from "../../components/RichTextEditor";
 import { createErrorMessage, getUser, updateStudent } from "../../services";
 import useFetch from "../../useFetch";
@@ -139,7 +140,7 @@ export default function UpdateStudentPage() {
                             <div aria-label="pdf voorbeelden" className="flex justify-center mt-3">
                                 {
                                     cv.map((file, index) =>
-                                        <embed key={index} src={URL.createObjectURL(file)} className="h-96 w-full" title="voorbeeld pdf" />)
+                                        <PdfPreview key={index} url={URL.createObjectURL(file)} className='h-[25rem]' />)
                                 }
                             </div>
                         </Page>
