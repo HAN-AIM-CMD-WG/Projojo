@@ -51,7 +51,7 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
     const token = localStorage.getItem("token");
 
     if (token) {
-        headers.authorization = `bearer ${token}`;
+        headers.authorization = `Bearer ${token}`;
     }
 
     return fetch(url, {
@@ -117,14 +117,12 @@ export function createErrorMessage(error, mapper) {
     return message ?? "Er is een onverwachte fout opgetreden.";
 }
 
-// These functions have been replaced by getBusinessByName
-
 /**
- * @param {string} businessName optional business name parameter for getting only the projects for 1 business
+ * @param {string} businessId business ID parameter for getting only the projects for 1 business
  * @returns { Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}[]> }
  */
-export function getProjectsWithBusinessId(businessName) {
-    return fetchWithError(`${API_BASE_URL}businesses/${businessName}/projects`)
+export function getProjectsWithBusinessId(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/projects`)
 }
 
 /**
@@ -150,11 +148,11 @@ export function getBusinessesBasic() {
 
 /**
  *
- * @param {string} projectName
+ * @param {string} projectId
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string, tasks: any[]}>}
  */
-export function getProject(projectName) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectName}/complete`)
+export function getProject(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/complete`)
 }
 
 // This function is not available in the backend
@@ -172,22 +170,22 @@ export function getAuthorization() {
 // This function is not available in the backend
 
 /**
- * @param {string} projectName
+ * @param {string} projectId
  * @returns {Promise<{id: string, name: string, description: string, total_needed: number, created_at: string, project_id: string, skills: skill[]}[]>}
  */
-export function getTasks(projectName) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectName}/tasks`);
+export function getTasks(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/tasks`);
 }
 
 // This function is not available in the backend
 
 /**
  *
- * @param {string} email
- * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
+ * @param {string} userId
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, type: string, oauth_providers: {provider_name: string, oauth_sub: string}[] | null, skill_ids: {skill_id: string}[], registered_task_ids: {task_id: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
-export function getUser(email) {
-    return fetchWithError(`${API_BASE_URL}users/${email}`);
+export function getUser(userId) {
+    return fetchWithError(`${API_BASE_URL}users/${userId}`);
 }
 
 // This function is not available in the backend
@@ -202,27 +200,27 @@ export function getSkills() {
     return fetchWithError(`${API_BASE_URL}skills`);
 }
 /**
- * @param {string} email
+ * @param {string} studentId
  * @returns {Promise<{student: any, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
-export function getSkillsFromStudent(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
+export function getSkillsFromStudent(studentId) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills`);
 }
 
 
 /**
- * @param {string} email
- * @param {string[]} skills
+ * @param {string} studentId
+ * @param {string[]} skillIds - Array of skill IDs
  */
-export function updateStudentSkills(email, skills) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+export function updateStudentSkills(studentId, skillIds) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills`, {
         method: "PUT",
-        body: JSON.stringify(skills),
+        body: JSON.stringify(skillIds),
     });
 }
 
-export function updateStudentSkillDescription(email, skill) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills/${skill.id}`, {
+export function updateStudentSkillDescription(studentId, skill) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills/${skill.id}`, {
         method: "PATCH",
         body: JSON.stringify(skill),
     });
@@ -290,7 +288,7 @@ export function createTask(projectId, formDataObj) {
         total_needed: formDataObj.totalNeeded,
         project_id: projectId
     };
-    
+
     return fetchWithError(`${API_BASE_URL}tasks/`, {
         method: "POST",
         body: JSON.stringify(taskData),
@@ -328,38 +326,38 @@ export function updateRegistration(registration) {
 }
 
 //Not implemented in the backend yet
-export function updateTaskSkills(name, taskSkills) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills`, {
+export function updateTaskSkills(taskId, taskSkills) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {
         method: "PUT",
         body: JSON.stringify(taskSkills),
     });
 }
 
 /**
- * @param {string} name
+ * @param {string} skillId
  * @returns {Promise<void>}
  */
-export function getSkill(name) {
-    return fetchWithError(`${API_BASE_URL}task/${name}/skills`);
+export function getSkill(skillId) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}`);
 }
 
 /**
- * @param {string} email
+ * @param {string} studentId
  * @returns {Promise<void>}
  */
-export function getStudentSkills(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
+export function getStudentSkills(studentId) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills`);
 }
 
 // This function is not available in the backend
 
 /**
  *
- * @param {string} taskName
+ * @param {string} taskId
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
-export function getTaskSkills(taskName) {
-    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills`)
+export function getTaskSkills(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`)
 }
 
 
@@ -393,22 +391,6 @@ export function createTeacherInviteKey() {
     });
 }
 
-
-export function login(credentials) {
-    return fetchWithError(`${API_BASE_URL}login`, {
-        method: "POST",
-        body: JSON.stringify(credentials),
-    });
-}
-export function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("payload");
-    return this
-}
-
-
-
-
 /**
  * @returns {Promise<User[]>}
  */
@@ -438,19 +420,19 @@ export function getAllTeachers() {
 }
 
 /**
- * @param {string} name
+ * @param {string} businessId
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}>}
  */
-export function getBusinessByName(name) {
-    return fetchWithError(`${API_BASE_URL}businesses/${name}`);
+export function getBusinessById(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}`);
 }
 
 /**
- * @param {string} name
+ * @param {string} taskId
  * @returns {Promise<Task>}
  */
-export function getTaskByName(name) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}`);
+export function getTaskById(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}`);
 }
 
 export function preprocessMarkdown(input) {

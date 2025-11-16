@@ -1,22 +1,24 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
-import { getAuthorization, login } from '../services';
+import { getAuthorization } from '../services';
 import { jwtDecode } from "jwt-decode";
-import { notification } from "./notifications/NotifySystem";
+import { notification } from "../components/notifications/NotifySystem";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+    const location = useLocation();
     const [authData, setAuthData] = useState({ type: "none", userId: null, businessId: null, isLoading: true });
 
     // Function to process token and set auth state
     const processToken = (token) => {
         try {
             const decoded = jwtDecode(token);
-            const { sub, role, business } = decoded;
+            const { sub, role, businessId } = decoded;
 
             if (role === "supervisor") {
-                setAuthData({ type: "supervisor", userId: sub, businessId: business, isLoading: false });
+                setAuthData({ type: "supervisor", userId: sub, businessId: businessId, isLoading: false });
             } else if (role === "student") {
                 setAuthData({ type: "student", userId: sub, businessId: null, isLoading: false });
             } else if (role === "teacher") {
@@ -34,38 +36,14 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Function to handle login
-    const handleLogin = async (credentials) => {
-        try {
-            const response = await login(credentials);
-            if (response && response.token) {
-                // Store token in localStorage
-                localStorage.setItem("token", response.token);
-                
-                // Process the token and set auth state
-                const success = processToken(response.token);
-                
-                if (success) {
-                    notification.success("Succesvol ingelogd");
-                    return { success: true };
-                }
-            }
-            return { success: false, error: "Login mislukt. Controleer uw gegevens." };
-        } catch (error) {
-            const errorMessage = "Er is een fout opgetreden bij het inloggen";
-            notification.error(errorMessage);
-            return { success: false, error: errorMessage };
-        }
-    };
-
     // Function to handle logout
     const handleLogout = () => {
         localStorage.removeItem("token");
         setAuthData({ type: "none", userId: null, businessId: null, isLoading: false });
-        notification.info("U bent uitgelogd");
+        notification.success("Je bent uitgelogd");
     };
 
-    // Check for existing token on mount
+    // Check for existing token on mount and whenever location changes
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
@@ -73,13 +51,12 @@ export const AuthProvider = ({ children }) => {
         } else {
             setAuthData({ type: "none", userId: null, businessId: null, isLoading: false });
         }
-    }, []);
+    }, [location]);
 
     return (
-        <AuthContext.Provider value={{ 
-            authData, 
+        <AuthContext.Provider value={{
+            authData,
             setAuthData,
-            login: handleLogin,
             logout: handleLogout
         }}>
             {children}

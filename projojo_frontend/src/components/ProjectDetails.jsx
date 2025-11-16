@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createTask, IMAGE_BASE_URL } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
 import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
@@ -152,13 +152,6 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 defaultText={newTaskDescription}
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
-                            <input
-                                id="projectId"
-                                name="projectId"
-                                type="hidden"
-                                required
-                                value={project.name || project.projectId || project.id}
-                            />
                         </div>
                         <button type="submit" name="Taak Toevoegen" className="btn-primary w-full">
                             Taak Toevoegen

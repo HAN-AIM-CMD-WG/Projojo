@@ -1,5 +1,5 @@
 import CreateBusinessEmail from "../components/CreateBusinessEmail";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import { within, fn, expect, userEvent } from "@storybook/test";
 
 

@@ -5,12 +5,16 @@ A full-stack application with a Python backend, React frontend, and TypeDB datab
 ## Prerequisites
 
 * Docker / Docker Desktop installed
+* OAuth credentials configured (see [OAuth Setup Guide](./projojo_backend/auth/README.md))
 
 That's it! No direct Node.js or Python installation required as everything runs in containers.
 
 ## Development with Docker
 
 ### Quick Start
+
+> **First time setup?** Make sure to configure your OAuth credentials first!  
+> See the [OAuth Setup Guide](./projojo_backend/auth/README.md) for instructions on obtaining Google and GitHub OAuth credentials.
 
 For Windows (PowerShell):
 ```powershell

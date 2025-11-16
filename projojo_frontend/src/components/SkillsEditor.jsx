@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { createSkill, getUser } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import SkillBadge from "./SkillBadge";
 
 /**
  * @param {{
  *  children: React.ReactNode,
- *  allSkills: {skillId: number, name: string}[],
- *  initialSkills: {skillId: number, name: string}[],
+ *  allSkills: {id: string, name: string}[],
+ *  initialSkills: {id: string, name: string}[],
  *  isEditing: boolean,
- *  onSave: (newSkills: {skillId: number, name: string}[]) => void,
+ *  onSave: (newSkills: {id: string, name: string}[]) => void,
  *  onCancel: () => void
  *  setError: (error: string) => void
  *  isAllowedToAddSkill?: boolean
@@ -36,14 +36,14 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
             !(selectedSkills ?? []).some(s => (s.skillId || s.id) === (skill.skillId || skill.id))
         )
         .sort((a, b) => a.name.localeCompare(b.name))
-        .filter(skill => !showOwnSkillsOption || authData.type !== 'student' || !onlyShowStudentsSkills || (onlyShowStudentsSkills && studentsSkills.includes(skill.skillId)))
+        .filter(skill => !showOwnSkillsOption || authData.type !== 'student' || !onlyShowStudentsSkills || (onlyShowStudentsSkills && studentsSkills.includes(skill.skillId || skill.id)))
 
-    const searchedSkillExists = allSkills.map(skill => isSearchInString(formattedSearch, skill.name)) || selectedSkills.map(skill => isSearchInString(formattedSearch, skill.name))
+    const searchedSkillExists = allSkills.some(skill => isSearchInString(formattedSearch, skill.name)) || selectedSkills.some(skill => isSearchInString(formattedSearch, skill.name))
 
     const toggleSkill = (skill) => {
         setSelectedSkills(currentSelectedSkills => {
-            if (currentSelectedSkills.some(s => s.name === skill.name)) {
-                return currentSelectedSkills.filter(s => s.name !== skill.name);
+            if (currentSelectedSkills.some(s => s.id === skill.id)) {
+                return currentSelectedSkills.filter(s => s.id !== skill.id);
             } else {
                 return [...currentSelectedSkills, skill]
             }
@@ -90,10 +90,10 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     if (ignore) return
                     // Handle the new API response format
                     if (data.skill_ids) {
-                        setStudentsSkills(data.skill_ids.map(skill => skill.skill_name))
-                    } else if (data.skills) {
-                        // If we have a skills array
-                        setStudentsSkills(data.skills.map(skill => skill.id))
+                        setStudentsSkills(data.skill_ids.map(skill => skill.skill_id))
+                    } else if (data.Skills) {
+                        // If we have a Skills array
+                        setStudentsSkills(data.Skills.map(skill => skill.id))
                     }
                 })
                 .catch(() => {
@@ -116,7 +116,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
             <div className="flex flex-wrap gap-2 items-center">
                 {selectedSkills.length === 0 && <span>Er zijn geen skills geselecteerd.</span>}
                 {selectedSkills.map((skill) => (
-                    <SkillBadge key={skill.name} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
+                    <SkillBadge key={skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
                         <span className="ps-1 font-bold text-xl leading-3">×</span>
                     </SkillBadge>
                 ))}
@@ -162,7 +162,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     )}
                     <div className="flex flex-wrap gap-2 items-center">
                         {filteredSkills.slice(0, maxSkillsDisplayed).map((skill) => (
-                            <SkillBadge key={skill.name} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                            <SkillBadge key={skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                 <span className="ps-1 font-bold text-xl leading-3">+</span>
                             </SkillBadge>
                         ))}
@@ -172,7 +172,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         {filteredSkills.length > maxSkillsDisplayed && showAllSkills && (
                             <>
                                 {filteredSkills.slice(maxSkillsDisplayed).map((skill) => (
-                                    <SkillBadge key={skill.name} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                                    <SkillBadge key={skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                         <span className="ps-1 font-bold text-xl leading-3">+</span>
                                     </SkillBadge>
                                 ))}

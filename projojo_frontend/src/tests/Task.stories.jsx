@@ -1,5 +1,5 @@
 import { expect, within } from '@storybook/test';
-import { AuthProvider, useAuth } from '../components/AuthProvider';
+import { AuthProvider, useAuth } from '../auth/AuthProvider';
 import Task from '../components/Task';
 
 export default {
