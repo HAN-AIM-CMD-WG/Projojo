@@ -196,11 +196,10 @@ class BusinessRepository(BaseRepository[Business]):
         escaped_description = description.replace('"', '\\"')
         escaped_location = location.replace('"', '\\"')
 
-        # TO DO: add $business has name "{escaped_name}"; to the update query after ids are implemented. 
-
         # Build the update query dynamically based on what needs to be updated
         update_clauses = [
             f'$business has description "{escaped_description}";',
+            f'$business has name "{escaped_name}";',
             # f'$business has location "{escaped_location}";',      update fails on location update
         ]
         
