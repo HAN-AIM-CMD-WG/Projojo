@@ -42,8 +42,9 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
 
     const toggleSkill = (skill) => {
         setSelectedSkills(currentSelectedSkills => {
-            if (currentSelectedSkills.some(s => s.id === skill.id)) {
-                return currentSelectedSkills.filter(s => s.id !== skill.id);
+            const skillId = skill.skillId || skill.id;
+            if (currentSelectedSkills.some(s => (s.skillId || s.id) === skillId)) {
+                return currentSelectedSkills.filter(s => (s.skillId || s.id) !== skillId);
             } else {
                 return [...currentSelectedSkills, skill]
             }
@@ -78,7 +79,15 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
     }
 
     useEffect(() => {
-        setSelectedSkills(initialSkills)
+        // Deduplicate skills based on skillId or id
+        const uniqueSkills = initialSkills.reduce((acc, skill) => {
+            const skillId = skill.skillId || skill.id;
+            if (!acc.some(s => (s.skillId || s.id) === skillId)) {
+                acc.push(skill);
+            }
+            return acc;
+        }, []);
+        setSelectedSkills(uniqueSkills)
     }, [initialSkills])
 
     useEffect(() => {
@@ -93,7 +102,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         setStudentsSkills(data.skill_ids.map(skill => skill.skill_id))
                     } else if (data.Skills) {
                         // If we have a Skills array
-                        setStudentsSkills(data.Skills.map(skill => skill.id))
+                        setStudentsSkills(data.Skills.map(skill => skill.skillId ?? skill.id))
                     }
                 })
                 .catch(() => {
@@ -116,7 +125,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
             <div className="flex flex-wrap gap-2 items-center">
                 {selectedSkills.length === 0 && <span>Er zijn geen skills geselecteerd.</span>}
                 {selectedSkills.map((skill) => (
-                    <SkillBadge key={skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
+                    <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`Verwijder ${skill.name}`}>
                         <span className="ps-1 font-bold text-xl leading-3">×</span>
                     </SkillBadge>
                 ))}
@@ -162,7 +171,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     )}
                     <div className="flex flex-wrap gap-2 items-center">
                         {filteredSkills.slice(0, maxSkillsDisplayed).map((skill) => (
-                            <SkillBadge key={skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                            <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                 <span className="ps-1 font-bold text-xl leading-3">+</span>
                             </SkillBadge>
                         ))}
@@ -172,7 +181,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         {filteredSkills.length > maxSkillsDisplayed && showAllSkills && (
                             <>
                                 {filteredSkills.slice(maxSkillsDisplayed).map((skill) => (
-                                    <SkillBadge key={skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
+                                    <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                         <span className="ps-1 font-bold text-xl leading-3">+</span>
                                     </SkillBadge>
                                 ))}

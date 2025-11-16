@@ -48,7 +48,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
     // Map student skills to the format expected by SkillsEditor
     const currentSkills = student?.Skills?.map((skill) => {
         return {
-            skillId: skill.id,
+            skillId: skill.skillId ?? skill.id,
             name: skill.name,
             isPending: skill.is_pending,
             description: skill.description,
@@ -75,7 +75,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                         setError={setStudentSkillsError}
                         isAbsolute={false}
                     >
-                        {student?.Skills?.map(skill => <StudentProfileSkill key={skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
+                        {student?.Skills?.map(skill => <StudentProfileSkill key={skill.skillId ?? skill.id} skill={skill} isOwnProfile={isOwnProfile} />)}
                     </SkillsEditor>
                 </div>
             </div>

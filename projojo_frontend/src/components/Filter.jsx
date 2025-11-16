@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSkills } from '../services';
+import { normalizeSkill } from '../utils/skills';
 import Alert from "./Alert";
 import SkillBadge from './SkillBadge';
 import SkillsEditor from "./SkillsEditor";
@@ -23,7 +24,8 @@ export default function Filter({ onFilter }) {
         getSkills()
             .then(data => {
                 if (ignore) return;
-                setAllSkills(data);
+                // Normalize skills from backend before storing in state
+                setAllSkills((data || []).map(normalizeSkill).filter(Boolean));
             })
             .catch(err => {
                 if (ignore) return;
@@ -36,11 +38,12 @@ export default function Filter({ onFilter }) {
     }, []);
 
     const handleSave = (skills) => {
-        setSelectedSkills(skills);
+        const normalized = (skills || []).map(normalizeSkill).filter(Boolean);
+        setSelectedSkills(normalized);
         setIsEditing(false);
         onFilter({
             searchInput: search,
-            selectedSkills: skills
+            selectedSkills: normalized
         });
     };
 
