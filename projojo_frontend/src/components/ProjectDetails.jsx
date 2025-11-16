@@ -114,7 +114,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             <div className="flex flex-row justify-between">
                 <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
                     {project.topSkills?.map((skill) => (
-                        <li key={skill.skillId ?? skill.name}>
+                        <li key={skill.skillId}>
                             <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                         </li>
                     ))}

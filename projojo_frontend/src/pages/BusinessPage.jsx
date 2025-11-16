@@ -77,7 +77,7 @@ export default function BusinessPage() {
         );
 
         const skillCounts = allSkills.reduce((acc, skill) => {
-            const key = skill.skillId ?? skill.name;
+            const key = skill.skillId;
             if (!acc[key]) {
                 acc[key] = { count: 0, isPending: skill.isPending, name: skill.name, skillId: key };
             }

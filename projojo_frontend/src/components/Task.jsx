@@ -140,7 +140,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
                             {task.skills && task.skills.map((skill) => (
                                 <SkillBadge
-                                    key={skill.skillId ?? skill.id ?? skill.name}
+                                    key={skill.skillId ?? skill.id}
                                     skillName={skill.name}
                                     isPending={skill.isPending ?? skill.is_pending}
                                 />
@@ -224,7 +224,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     <span>Skills:</span>
                                     {registration.student.skills.map((skill) => (
                                         <SkillBadge
-                                            key={skill.skillId ?? skill.id ?? skill.name}
+                                            key={skill.skillId ?? skill.id}
                                             skillName={skill.name}
                                             isPending={skill.isPending ?? skill.is_pending}
                                         />

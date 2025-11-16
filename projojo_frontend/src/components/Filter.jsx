@@ -119,7 +119,7 @@ export default function Filter({ onFilter }) {
                 <div className="flex flex-wrap gap-2 mb-4">
                     {selectedSkills.map((skill) => (
                         <SkillBadge
-                            key={skill.skillId ?? skill.name}
+                            key={skill.skillId}
                             skillName={skill.name}
                             isPending={skill.isPending}
                         />
