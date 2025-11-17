@@ -4,8 +4,15 @@ import PdfPreview from './PdfPreview';
 
 /**
  *
- * @param {{ onFileChanged: (file: File[]) => void }} param0
- * @returns
+ * @param {Object} props
+ * @param {function} props.onFileChanged - Callback function when files are added or removed
+ * @param {boolean} [props.multiple=false] - Whether to allow multiple file selection
+ * @param {string} [props.accept="image/*"] - Accepted file types (MIME types), comma-separated for multiple types
+ * @param {string} [props.name] - Name attribute for the file input
+ * @param {boolean} [props.required=true] - Whether the file input is required
+ * @param {string} [props.initialFilePath] - Initial file path for preview
+ * @param {string} [props.label] - Label for the file input
+ * @returns JSX.Element
  */
 export default function DragDrop({ onFileChanged, multiple = false, accept = "image/*", name, required = true, initialFilePath, label }) {
     const fileInput = useRef();
@@ -53,6 +60,27 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
         return fileArray;
     }
 
+    function validateFileType(file) {
+        // Parse the accept prop to get allowed types
+        const acceptedTypes = accept.split(',').map(type => type.trim());
+
+        for (const acceptedType of acceptedTypes) {
+            if (acceptedType.endsWith('/*')) {
+                // Handle wildcard types like "image/*" or "application/*"
+                const baseType = acceptedType.split('/')[0];
+                if (file.type.startsWith(baseType + '/')) {
+                    return true;
+                }
+            } else {
+                // Handle specific MIME types like "application/pdf"
+                if (file.type === acceptedType) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function onFilesAdded(newFiles) {
         let fileArray = convertFileListToArray(newFiles);
         if (!multiple) {
@@ -68,6 +96,33 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                     files.forEach(file => dataTransfer.items.add(file));
                     fileInput.current.files = dataTransfer.files;
                 } catch { /* File restoration failed, but state remains consistent */ }
+            }
+            return;
+        }
+
+        // Validate file types
+        const invalidFiles = fileArray.filter(file => !validateFileType(file));
+        if (invalidFiles.length > 0) {
+            if (accept.includes('image')) {
+                setError('Alleen afbeeldingen zijn toegestaan');
+            } else if (accept.includes('pdf')) {
+                setError('Alleen PDF-bestanden zijn toegestaan');
+            } else {
+                setError('Dit bestandstype wordt niet ondersteund');
+            }
+
+            // Restore previous files if validation fails
+            if (files.length > 0) {
+                try {
+                    const dataTransfer = new DataTransfer();
+                    files.forEach(file => dataTransfer.items.add(file));
+                    fileInput.current.files = dataTransfer.files;
+                } catch { /* File restoration failed, but state remains consistent */ }
+            } else {
+                // If no previous files but there's an initial preview, clear the file input
+                if (fileInput.current) {
+                    fileInput.current.value = '';
+                }
             }
             return;
         }
@@ -141,13 +196,17 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                             <div key={index} className="w-full">
                                 <PdfPreview url={URL.createObjectURL(file)} className='h-[25rem]' />
                             </div>
-                        ) : (
+                        ) : file.type.startsWith("image/") ? (
                             <img
                                 src={URL.createObjectURL(file)}
                                 className="w-48 h-48"
                                 alt="Toegevoegde foto"
                                 key={index}
                             />
+                        ) : (
+                            <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-blue-500 underline" key={index}>
+                                {file.name}
+                            </a>
                         )
                     )}
                 </div>

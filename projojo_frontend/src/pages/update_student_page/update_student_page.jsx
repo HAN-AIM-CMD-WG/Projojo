@@ -130,7 +130,6 @@ export default function UpdateStudentPage() {
                             />
                         </Page>
                         <Page className="flex flex-col gap-4">
-                            {/* text to indicate to upload CV */}
                             <DragDrop
                                 accept="application/pdf"
                                 onFileChanged={onCVAdded}
