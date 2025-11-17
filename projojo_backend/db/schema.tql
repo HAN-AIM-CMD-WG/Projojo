@@ -12,6 +12,8 @@ entity supervisor sub user,
     plays creates:supervisor @card(0..);
 
 entity student sub user,
+    owns description @card(0..1),
+    owns cvPath @card(0..1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..);
 
@@ -124,6 +126,7 @@ attribute email value string;
 attribute name value string;
 attribute fullName value string;
 attribute imagePath value string;
+attribute cvPath value string;
 attribute id value string;
 attribute oauthSub value string;
 attribute description value string;

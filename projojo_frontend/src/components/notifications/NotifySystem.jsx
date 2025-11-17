@@ -54,6 +54,11 @@ class NotificationSystem {
         if (message === this.#previousMessage) {
             return;
         }
+        this.#previousMessage = message;
+
+        setTimeout(() => {
+            this.#previousMessage = undefined;
+        }, 1000);
 
         const listeners = this.#listeners;
         const promises = [];
@@ -65,7 +70,6 @@ class NotificationSystem {
             }
         }
         await Promise.all(promises);
-        this.#previousMessage = message;
     }
 
     async #emitQueue() {

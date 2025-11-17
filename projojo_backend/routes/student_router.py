@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Depends
+from fastapi import APIRouter, Path, Body, HTTPException, Depends, UploadFile, File, Form
 from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
+from service.image_service import save_image, delete_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
@@ -90,3 +91,68 @@ async def get_student_registrations(payload: dict = Depends(get_token_payload)) 
     student_id = payload["sub"]
     registrations = user_repo.get_student_registrations(student_id)
     return registrations
+
+
+@router.put("/{id}")
+async def update_student(
+    id: str = Path(..., description="Student ID"),
+    description: str = Form(None),
+    profilePicture: UploadFile = File(None),
+    cv: UploadFile = File(None),
+    cv_deleted: str = Form(None),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update student profile information (description, profile picture, CV)
+    """
+    # Verify the student is updating their own profile
+    if payload.get("role") != "student" or payload.get("sub") != id:
+        raise HTTPException(status_code=403, detail="Je kunt alleen je eigen profiel aanpassen")
+
+    # Verify student exists
+    student = user_repo.get_student_by_id(id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student niet gevonden")
+
+    # Store old file paths for deletion after successful update
+    old_image_path = student.get("image_path")
+    old_cv_path = student.get("cv_path")
+
+    image_filename = None
+    cv_filename = None
+
+    try:
+        # Handle profile picture upload
+        if profilePicture and profilePicture.filename:
+            image_filename = save_image(profilePicture)
+
+        # Handle CV upload or deletion
+        if cv and cv.filename:
+            cv_filename = save_image(cv, "static/pdf")
+        elif cv_deleted == "true":
+            # User explicitly deleted the CV
+            cv_filename = ""
+
+        # Update student in database
+        user_repo.update_student(
+            id=id,
+            description=description,
+            image_path=image_filename,
+            cv_path=cv_filename
+        )
+
+        # Delete old files after successful database update
+        if image_filename and old_image_path:
+            delete_image(old_image_path)
+
+        if cv_filename is not None and old_cv_path:
+            # Delete old CV if we uploaded a new one or explicitly deleted it
+            delete_image(old_cv_path, "static/pdf")
+
+        return {"message": "Profiel succesvol bijgewerkt"}
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Er is een fout opgetreden bij het bijwerken van het profiel: {str(e)}"
+        )

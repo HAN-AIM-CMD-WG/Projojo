@@ -1,6 +1,11 @@
-export default function PdfPreview({ link }) {
+export default function PdfPreview({ url, className = "" }) {
     return (
-        
-            <embed src={link} type="application/pdf" width="100%" height="600px" />
+        <iframe
+            src={`${url}#view=FitV`}
+            type="application/pdf"
+            className={`w-full h-[40rem] ${className}`}
+            allow="fullscreen"
+            title="PDF Preview"
+        />
     )
 }
