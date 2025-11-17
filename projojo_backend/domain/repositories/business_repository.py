@@ -189,3 +189,29 @@ class BusinessRepository(BaseRepository[Business]):
         return Business(
             id=id, name=name, description="", image_path="default.png", location=[""]
         )
+
+    def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None) -> Business:
+        escaped_business_id = business_id.replace('"', '\\"')
+        escaped_name = name.replace('"', '\\"')
+        escaped_description = description.replace('"', '\\"')
+        escaped_location = location.replace('"', '\\"')
+
+        # Build the update query dynamically based on what needs to be updated
+        update_clauses = [
+            f'$business has description "{escaped_description}";',
+            f'$business has name "{escaped_name}";',
+            # f'$business has location "{escaped_location}";',      update fails on location update
+        ]
+        
+        # Only update imagePath if a new image filename is provided
+        if image_filename is not None:
+            update_clauses.append(f'$business has imagePath "{image_filename}";')
+
+        query = f"""
+            match
+                $business isa business, has name "{escaped_business_id}";
+            update
+                {' '.join(update_clauses)}
+        """
+
+        Db.write_transact(query)
