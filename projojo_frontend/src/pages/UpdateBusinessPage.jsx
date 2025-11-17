@@ -25,7 +25,7 @@ export default function UpdateBusinessPage() {
         if (!authData.isLoading && authData.type !== 'supervisor') {
             navigation("/not-found");
         }
-    }, [authData])
+    }, [authData.isLoading])
 
     const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessById(authData.businessId), [authData.businessId]);
     if (business?.description !== undefined && description === undefined) {
