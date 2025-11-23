@@ -3,6 +3,7 @@ import os
 import pprint
 import time
 from dotenv import load_dotenv
+from .tql_safe_formatter import TQLSafeFormatter
 
 # Load environment variables from .env file
 load_dotenv()
@@ -61,7 +62,8 @@ class Db:
             tx.commit()
 
     @staticmethod
-    def read_transact(query, sort_fields=True):
+    def read_transact(template: str, params: dict = {}, sort_fields = True):
+        query = TQLSafeFormatter.build_query(template, params)
         Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
             results = list(tx.query(query).resolve())
@@ -73,7 +75,8 @@ class Db:
             return results
 
     @staticmethod
-    def write_transact(query):
+    def write_transact(template: str, params: dict = {}):
+        query = TQLSafeFormatter.build_query(template, params)
         Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
@@ -119,7 +122,9 @@ def create_database_if_needed():
         with open(Db.seed_path, 'r') as file:
             print("Installing seed data", end="... ")
             seed_query = file.read()
-            Db.write_transact(seed_query)
+            with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
+                tx.query(seed_query).resolve()
+                tx.commit()
             print("OK")
     Db.reset = False     # prevent re-creating the database again
 
