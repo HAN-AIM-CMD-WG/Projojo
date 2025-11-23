@@ -45,10 +45,11 @@ class TQLSafeFormatter:
 
             # Reject unsupported types explicitly
             raise ValueError(f"Unsupported type {type(value).__name__} for value {value}. "
-                           f"Supported types: str, bool, int, float, datetime")
+                        f"Supported types: str, bool, int, float, datetime")
 
         result = template
         for key, value in params.items():
             escaped_value = _escape_value(value)
-            result = re.sub(rf'@{key}\b', escaped_value, result)
+            placeholder = f'@{key}'
+            result = result.replace(placeholder, escaped_value)
         return result
