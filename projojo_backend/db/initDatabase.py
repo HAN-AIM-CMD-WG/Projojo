@@ -62,7 +62,9 @@ class Db:
             tx.commit()
 
     @staticmethod
-    def read_transact(template: str, params: dict = {}, sort_fields = True):
+    def read_transact(template: str, params: dict | None = None, sort_fields = True):
+        if params is None:
+            params = {}
         query = TQLSafeFormatter.build_query(template, params)
         Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
@@ -75,7 +77,9 @@ class Db:
             return results
 
     @staticmethod
-    def write_transact(template: str, params: dict = {}):
+    def write_transact(template: str, params: dict | None = None):
+        if params is None:
+            params = {}
         query = TQLSafeFormatter.build_query(template, params)
         Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
