@@ -19,13 +19,33 @@ class TQLSafeFormatter:
 
         # 2. Vervang elke placeholder door veilig formaat
         def _escape_value(value):
-            if isinstance(value, str):
-                return '"' + value.replace('"', '\\"') + '"'
+            # Reject None/NULL values explicitly
+            if value is None:
+                raise ValueError("None/NULL values not supported. Use explicit handling in your query.")
+
+            # Boolean check must come before int check (bool is subclass of int in Python)
             if isinstance(value, bool):
                 return "true" if value else "false"
+
+            # String escaping with proper backslash handling
+            if isinstance(value, str):
+                # CRITICAL: Escape backslashes FIRST, then quotes
+                escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+                # Escape control characters to prevent multi-line injection
+                escaped = escaped.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+                return '"' + escaped + '"'
+
+            # DateTime handling
             if isinstance(value, datetime):
                 return '"' + value.strftime("%Y-%m-%dT%H:%M:%S") + '"'
-            return str(value)
+
+            # Numeric types - return unquoted
+            if isinstance(value, (int, float)):
+                return str(value)
+
+            # Reject unsupported types explicitly
+            raise ValueError(f"Unsupported type {type(value).__name__} for value {value}. "
+                           f"Supported types: str, bool, int, float, datetime")
 
         result = template
         for key, value in params.items():
