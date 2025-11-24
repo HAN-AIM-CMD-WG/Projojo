@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { /* createErrorMessage, */ getBusinessById, /*updateBusiness*/ } from '../services';
+import { /* createErrorMessage, */ getBusinessById, IMAGE_BASE_URL, /*updateBusiness*/ } from '../services';
 import useFetch from '../useFetch';
 
 /**
@@ -101,7 +101,13 @@ export default function UpdateBusinessPage() {
                     max={255}
                     required={true}
                 />
-                <DragDrop multiple={false} name="photos" initialFilePath={business?.photo?.path} />
+                <DragDrop
+                    name="photos"
+                    accept="image/*"
+                    label="Bedrijfslogo"
+                    initialFilePath={IMAGE_BASE_URL + business?.image_path}
+
+                />
                 <div className='grid grid-cols-2 gap-2'>
                     <button className="btn-secondary flex-grow" type="button" onClick={() => navigation(-1)}>Annuleren</button>
                     <button className="btn-primary flex-grow" type="submit">Opslaan</button>
