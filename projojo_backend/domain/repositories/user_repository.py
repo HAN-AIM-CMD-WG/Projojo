@@ -42,43 +42,40 @@ class UserRepository(BaseRepository[User]):
         return users
 
     def get_supervisor_by_id(self, id: str) -> Supervisor | None :
-        # Escape any double quotes in the id
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $supervisor isa supervisor,
-                has id "{escaped_id}",
+                has id @id,
                 has id $id,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath;
                 $business isa business;
                 $manages isa manages( $supervisor, $business );
-            fetch {{
+            fetch {
                 'id': $id,
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'business_association_id': $business.id
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             return None
 
         # Get projects for this supervisor
-        project_query = f"""
+        project_query = """
             match
                 $supervisor isa supervisor,
-                has id "{escaped_id}";
+                has id @id;
                 $project isa project;
                 $creates isa creates( $supervisor, $project);
-            fetch {{
+            fetch {
                 'created_project_id': $project.id
-            }};
+            };
         """
-        project_results = Db.read_transact(project_query)
+        project_results = Db.read_transact(project_query, {"id": id})
 
         # Merge project data with supervisor data
         merged_results = []
@@ -100,14 +97,11 @@ class UserRepository(BaseRepository[User]):
         return self._map_supervisor(next(iter(grouped.values())))
 
     def get_student_by_id(self, id: str) -> dict | None:
-        # Escape any double quotes in the id
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $student isa student,
-                has id "{escaped_id}";
-            fetch {{
+                has id @id;
+            fetch {
                 'id': $student.id,
                 'email': $student.email,
                 'full_name': $student.fullName,
@@ -117,29 +111,29 @@ class UserRepository(BaseRepository[User]):
                     match
                         $task isa task;
                         $registration isa registersForTask( $student, $task );
-                    fetch {{ 'task_id': $task.id }};
+                    fetch { 'task_id': $task.id };
                 ],
                 'skill_ids': [
                     match
                         $skill isa skill;
                         $hasSkill isa hasSkill( $skill, $student );
-                    fetch {{ 'skill_id': $skill.id }};
+                    fetch { 'skill_id': $skill.id };
                 ],
                 'Skills': [
                     match
                         $skill isa skill;
                         $hasSkill isa hasSkill( $skill, $student );
-                    fetch {{
+                    fetch {
                         'id': $skill.id,
                         'name': $skill.name,
                         'is_pending': $skill.isPending,
                         'created_at': $skill.createdAt,
                         'description': $hasSkill.description
-                    }};
+                    };
                 ]
-            }};
+            };
         """
-        result = Db.read_transact(query)
+        result = Db.read_transact(query, {"id": id})
         if not result:
             return None
 
@@ -147,25 +141,22 @@ class UserRepository(BaseRepository[User]):
 
 
     def get_teacher_by_id(self, id: str) -> Teacher | None:
-        # Escape any double quotes in the id
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $teacher isa teacher,
-                has id "{escaped_id}",
+                has id @id,
                 has id $id,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath;
-            fetch {{
+            fetch {
                 'id': $id,
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             return None
 
@@ -356,11 +347,9 @@ class UserRepository(BaseRepository[User]):
         """
         Get students by task and their application status
         """
-        escaped_task_id = task_id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $task isa task, has id "{escaped_task_id}";
+                $task isa task, has id @task_id;
                 $student isa student,
                 has id $id,
                 has email $email,
@@ -394,7 +383,7 @@ class UserRepository(BaseRepository[User]):
             };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"task_id": task_id})
         students = []
 
         for result in results:
@@ -413,18 +402,16 @@ class UserRepository(BaseRepository[User]):
         """
         Get all registrations for a student
         """
-        escaped_student_id = studentId.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $student isa student, has id "{escaped_student_id}";
+                $student isa student, has id @student_id;
                 $registration isa registersForTask (student: $student, task: $task);
-            fetch {{
+            fetch {
                 'id': $task.id,
-            }};
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"student_id": studentId})
         if not results:
             return []
 
@@ -436,40 +423,34 @@ class UserRepository(BaseRepository[User]):
         """
         Get supervisors who work in the same business as the authenticated supervisor
         """
-        # Escape the supervisor email to prevent injection
-        escaped_id = supervisor_id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $auth_supervisor isa supervisor, has id "{escaped_id}";
+                $auth_supervisor isa supervisor, has id @supervisor_id;
                 $manages_auth isa manages (supervisor: $auth_supervisor, business: $business);
                 $manages_colleague isa manages (supervisor: $colleague, business: $business);
                 $colleague isa supervisor,
                 has email $email,
                 has fullName $fullName;
-            fetch {{
+            fetch {
                 'id': $colleague.id,
                 'email': $email,
                 'full_name': $fullName,
-            }};
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"supervisor_id": supervisor_id})
         return [User(**result) for result in results]
 
     def get_by_sub_and_provider(self, sub: str, provider: str) -> User | None:
         """Get user from database by OAuth sub (provider user ID) and provider"""
-        escaped_sub = sub.replace('"', '\\"')
-        escaped_provider = provider.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $user isa user;
-                $provider isa oauthProvider, has name "{escaped_provider}";
+                $provider isa oauthProvider, has name @provider_name;
                 $auth isa oauthAuthentication($user, $provider),
-                has oauthSub "{escaped_sub}";
+                has oauthSub @oauth_sub;
                 $user isa $usertype;
-            fetch {{
+            fetch {
                 'id': $user.id,
                 'email': $user.email,
                 'fullName': $user.fullName,
@@ -479,15 +460,15 @@ class UserRepository(BaseRepository[User]):
                     match
                         $oauth_provider isa oauthProvider;
                         $oauth_auth isa oauthAuthentication($user, $oauth_provider);
-                    fetch {{
+                    fetch {
                         'provider_name': $oauth_provider.name,
                         'oauth_sub': $oauth_auth.oauthSub
-                    }};
+                    };
                 ]
-            }};
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"provider_name": provider, "oauth_sub": sub})
         if not results:
             return None
 
@@ -506,24 +487,22 @@ class UserRepository(BaseRepository[User]):
 
         # Get the OAuth provider
         oauth_provider = user.oauth_providers[0]
-        escaped_provider_name = oauth_provider.provider_name.replace('"', '\\"')
-        escaped_oauth_sub = oauth_provider.oauth_sub.replace('"', '\\"')
 
         # Check if OAuth provider exists (with case-insensitive match)
-        provider_query = f"""
+        provider_query = """
             match
                 $provider isa oauthProvider, has name $name;
-                $name like "(?i){escaped_provider_name}";
-            fetch {{ 'name': $provider.name }};
+                $name like @provider_pattern;
+            fetch { 'name': $provider.name };
         """
-        provider_results = Db.read_transact(provider_query)
+        provider_results = Db.read_transact(provider_query, {
+            "provider_pattern": f"(?i){oauth_provider.provider_name}"
+        })
 
         if not provider_results:
             raise ValueError(f"OAuth provider '{oauth_provider.provider_name}' is not configured.")
 
         id = generate_uuid()
-        escaped_email = user.email.replace('"', '\\"')
-        escaped_full_name = user.full_name.replace('"', '\\"')
 
         # Handle image path - could be a URL (Google/GitHub) or already a filename (Microsoft)
         downloaded_image_name = ""
@@ -536,22 +515,27 @@ class UserRepository(BaseRepository[User]):
                 # It's already a filename or local path
                 downloaded_image_name = user.image_path
 
-        escaped_image_path = downloaded_image_name.replace('"', '\\"')
-
-        create_user_query = f"""
+        create_user_query = """
             match
-                $provider isa oauthProvider, has name "{escaped_provider_name}";
+                $provider isa oauthProvider, has name @provider_name;
             insert
                 $student isa student,
-                has id "{id}",
-                has email "{escaped_email}",
-                has fullName "{escaped_full_name}",
-                has imagePath "{escaped_image_path}";
+                has id @id,
+                has email @email,
+                has fullName @full_name,
+                has imagePath @image_path;
                 $auth isa oauthAuthentication($student, $provider),
-                has oauthSub "{escaped_oauth_sub}";
+                has oauthSub @oauth_sub;
         """
 
-        Db.write_transact(create_user_query)
+        Db.write_transact(create_user_query, {
+            "provider_name": oauth_provider.provider_name,
+            "id": id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "image_path": downloaded_image_name,
+            "oauth_sub": oauth_provider.oauth_sub
+        })
 
         # if user is a student, it returns a dict which needs to be mapped to Student model
         created_user = self.get_by_id(id)

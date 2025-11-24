@@ -21,28 +21,39 @@ class InviteRepository:
         created_at = datetime.now()
 
         if invite_type == "business" and business_id:
-            query = f"""
+            query = """
                 match
-                    $business isa business, has id "{business_id}";
+                    $business isa business, has id @business_id;
                 insert
                     $inviteKey isa inviteKey,
-                        has key "{key}",
-                        has inviteType "{invite_type}",
-                        has isUsed false,
-                        has createdAt {created_at.isoformat()};
+                        has key @key,
+                        has inviteType @invite_type,
+                        has isUsed @is_used,
+                        has createdAt @created_at;
                     (business: $business, key: $inviteKey) isa businessInvite;
             """
+            Db.write_transact(query, {
+                "business_id": business_id,
+                "key": key,
+                "invite_type": invite_type,
+                "is_used": False,
+                "created_at": created_at
+            })
         else:
-            query = f"""
+            query = """
                 insert
                     $inviteKey isa inviteKey,
-                        has key "{key}",
-                        has inviteType "{invite_type}",
-                        has isUsed false,
-                        has createdAt {created_at.isoformat()};
+                        has key @key,
+                        has inviteType @invite_type,
+                        has isUsed @is_used,
+                        has createdAt @created_at;
             """
-
-        Db.write_transact(query)
+            Db.write_transact(query, {
+                "key": key,
+                "invite_type": invite_type,
+                "is_used": False,
+                "created_at": created_at
+            })
 
         result = {
             "key": key,
