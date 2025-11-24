@@ -10,7 +10,7 @@ security = HTTPBearer()
 # JWT configuration
 JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_TIME_MINUTES = 60
+JWT_EXPIRATION_TIME_MINUTES = 60 * 8
 
 if (not JWT_SECRET_KEY) or (JWT_SECRET_KEY.strip() == ""):
     raise Exception("JWT_SECRET_KEY is not set in environment variables")
