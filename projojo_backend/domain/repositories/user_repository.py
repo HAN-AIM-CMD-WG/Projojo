@@ -447,43 +447,43 @@ class UserRepository(BaseRepository[User]):
         """
         Update student profile information (description, profile picture, CV)
         """
-        escaped_id = id.replace('"', '\\"')
         # Build update statements for provided fields
         update_statements = []
+        params = {"id": id}
 
         if description is not None:
-            escaped_description = description.replace('"', '\\"').replace('\n', '\\n')
-            update_statements.append(f'$student has description "{escaped_description}";')
+            update_statements.append('$student has description "@description";')
+            params["description"] = description
 
         if image_path is not None:
-            escaped_image_path = image_path.replace('"', '\\"')
-            update_statements.append(f'$student has imagePath "{escaped_image_path}";')
+            update_statements.append('$student has imagePath "@image_path";')
+            params["image_path"] = image_path
 
         if cv_path is not None:
             if cv_path == "":
                 # Empty string means delete the CV
-                delete_query = f"""
+                delete_query = """
                     match
                         $student isa student,
-                        has id "{escaped_id}",
+                        has id "@id",
                         has cvPath $cvPath;
                     delete
                         has $cvPath of $student;
                 """
-                Db.write_transact(delete_query)
+                Db.write_transact(delete_query, {"id": id})
             else:
-                escaped_cv_path = cv_path.replace('"', '\\"')
-                update_statements.append(f'$student has cvPath "{escaped_cv_path}";')
+                update_statements.append('$student has cvPath "@cv_path";')
+                params["cv_path"] = cv_path
 
         # Only execute if there are updates to make
         if update_statements:
             update_query = f"""
                 match
-                    $student isa student, has id "{escaped_id}";
+                    $student isa student, has id "@id";
                 update
                     {' '.join(update_statements)}
             """
-            Db.write_transact(update_query)
+            Db.write_transact(update_query, params)
 
     def get_by_sub_and_provider(self, sub: str, provider: str) -> User | None:
         """Get user from database by OAuth sub (provider user ID) and provider"""
