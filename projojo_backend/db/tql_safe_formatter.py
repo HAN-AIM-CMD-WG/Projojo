@@ -52,7 +52,7 @@ class TQLSafeFormatter:
 
                 # Unicode validation - allow common European characters but block dangerous ones
                 # Allow: Latin-1 Supplement (À-ÿ), includes Dutch é, ë, ï, etc.
-                # Block: Dangerous homoglyphs, zero-width chars, control chars, quotes, backslashes
+                # Block: Dangerous homoglyphs, zero-width chars, but allow control chars that will be escaped
                 for c in value:
                     code = ord(c)
                     # Allow ASCII printable (32-126)
@@ -62,20 +62,21 @@ class TQLSafeFormatter:
                     # Includes: À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ñ Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ý à á â ã ä å æ ç è é ê ë ì í î ï ñ ò ó ô õ ö ø ù ú û ü ý ÿ
                     if 160 <= code <= 255:
                         continue
+                    # Allow common control characters that will be escaped: \n (10), \r (13), \t (9)
+                    if code in (9, 10, 13):
+                        continue
                     # Block everything else (homoglyphs, zero-width, Cyrillic, Greek, etc.)
-                    raise ValueError(f"Character not allowed: '{c}' (U+{code:04X}). Only ASCII and common European characters (À-ÿ) are supported.")
+                    raise ValueError(f"Character not allowed: '{c}' (U+{code:04X}). Only ASCII, common European characters (À-ÿ), and newlines/tabs are supported.")
 
                 # CRITICAL: Escape backslashes FIRST, then quotes (both " and ')
                 escaped = value.replace('\\', '\\\\').replace('"', '\\"').replace("'", "\\'")
                 # Escape control characters to prevent multi-line injection
                 escaped = escaped.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
-                # Escape hash to prevent comment injection
-                escaped = escaped.replace('#', '\\#')
                 return '"' + escaped + '"'
 
             # DateTime handling
             if isinstance(value, datetime):
-                return '"' + value.strftime("%Y-%m-%dT%H:%M:%S") + '"'
+                return value.strftime("%Y-%m-%dT%H:%M:%S.%f+0000")
 
             # Float validation - reject Infinity and NaN
             if isinstance(value, float):
