@@ -87,7 +87,7 @@ async def create_business(name: str = Body(...)):
 
 @router.put("/{business_id}")
 async def update_business(
-    business_id: str = Path(..., description="Business ID/name to update"),
+    business_id: str = Path(..., description="Business ID to update"),
     name: str = Form(...),
     description: str = Form(...),
     location: str = Form(...),

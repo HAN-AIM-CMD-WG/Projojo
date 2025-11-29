@@ -54,7 +54,7 @@ export default function UpdateBusinessPage() {
                     error,
                     {
                         401: "De bedrijfspagina kan niet aangepast worden als je niet bent ingelogd",
-                        403: "Je bent niet geauthoriseerd om de bedrijfspagina aan te passen",
+                        403: "Je bent niet geautoriseerd om de bedrijfspagina aan te passen",
                         404: "De bedrijfspagina kan niet gevonden worden",
                     }
                 ))
