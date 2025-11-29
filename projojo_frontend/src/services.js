@@ -348,7 +348,7 @@ export function updateTaskSkills(taskId, taskSkills) {
 
 /**
  * @param {string} businessId - The business ID to update
- * @param {FormData} formData - The form data containing business information (name, location, description, photos)
+ * @param {FormData} formData - The form data containing business information (name, location, description, image)
  * @returns {Promise<void>}
  */
 export function updateBusiness(businessId, formData) {

@@ -91,7 +91,7 @@ async def update_business(
     name: str = Form(...),
     description: str = Form(...),
     location: str = Form(...),
-    photos: Optional[UploadFile] = File(None),
+    image: Optional[UploadFile] = File(None),
     payload: dict = Depends(get_token_payload)
 ):
     """
@@ -99,7 +99,7 @@ async def update_business(
     """
     allowed = (
         payload.get("role") == "teacher"
-        or (payload.get("role") == "supervisor" and payload.get("business") == business_id)
+        or (payload.get("role") == "supervisor" and payload.get("businessId") == business_id)
         )
     if not allowed:
         raise HTTPException(status_code=403, detail="Je bent niet bevoegd om de bedrijfspagina bij te werken")
@@ -111,10 +111,10 @@ async def update_business(
 
     # Handle photo upload if provided
     image_filename = None
-    if photos and photos.filename:
+    if image and image.filename:
         try:
         # Save the image with a random filename
-            _, image_filename = save_image(photos)
+            image_filename = save_image(image)
         except Exception as e:
             raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
 

@@ -100,11 +100,10 @@ export default function UpdateBusinessPage() {
                     required={true}
                 />
                 <DragDrop
-                    name="photos"
+                    name="image"
                     accept="image/*"
                     label="Bedrijfslogo"
                     initialFilePath={IMAGE_BASE_URL + business?.image_path}
-
                 />
                 <div className='grid grid-cols-2 gap-2'>
                     <button className="btn-secondary flex-grow" type="button" onClick={() => navigation(-1)}>Annuleren</button>
