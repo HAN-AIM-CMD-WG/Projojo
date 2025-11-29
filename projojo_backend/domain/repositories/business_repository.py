@@ -61,16 +61,17 @@ class BusinessRepository(BaseRepository[Business]):
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
         # Handle locations as a list
-        locations = result.get("location", [])
-        if not isinstance(locations, list):
-            locations = [locations]
+        # locations = result.get("location", [])
+        # if not isinstance(locations, list):
+        #     locations = [locations]
+        location = result.get("location", "")
 
         return Business(
             id=id,
             name=name,
             description=description,
             image_path=image_path,
-            location=locations,
+            location=location,
         )
 
     def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
@@ -96,15 +97,16 @@ class BusinessRepository(BaseRepository[Business]):
             supervisor_id = result.get("id", "")
 
             # Handle locations as a list
-            locations = result.get("location", [])
-            if not isinstance(locations, list):
-                locations = [locations]
+            # locations = result.get("location", [])
+            # if not isinstance(locations, list):
+            #     locations = [locations]
+            location = result.get("location", "")
 
             associations.append(
                 BusinessAssociation(
                     business_id=business_id,
                     supervisor_id=supervisor_id,
-                    location=locations,
+                    location=location,
                 )
             )
 
@@ -119,7 +121,7 @@ class BusinessRepository(BaseRepository[Business]):
             "name": $business.name,
             "description": $business.description,
             "image_path": $business.imagePath,
-            "location": [$business.location],
+            "location": $business.location,
             "projects": [
                 match
                     ($business, $project) isa hasProjects;
@@ -187,7 +189,7 @@ class BusinessRepository(BaseRepository[Business]):
         """
         Db.write_transact(query)
         return Business(
-            id=id, name=name, description="", image_path="default.png", location=[""]
+            id=id, name=name, description="", image_path="default.png", location=""
         )
 
     def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None) -> Business:
@@ -200,7 +202,7 @@ class BusinessRepository(BaseRepository[Business]):
         update_clauses = [
             f'$business has description "{escaped_description}";',
             f'$business has name "{escaped_name}";',
-            # f'$business has location "{escaped_location}";',      update fails on location update
+            f'$business has location "{escaped_location}";',
         ]
         
         # Only update imagePath if a new image filename is provided
@@ -209,7 +211,7 @@ class BusinessRepository(BaseRepository[Business]):
 
         query = f"""
             match
-                $business isa business, has name "{escaped_business_id}";
+                $business isa business, has id "{escaped_business_id}";
             update
                 {' '.join(update_clauses)}
         """
