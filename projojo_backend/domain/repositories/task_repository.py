@@ -13,7 +13,7 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task,
-                has id @id,
+                has id ~id,
                 has name $name,
                 has description $description,
                 has totalNeeded $totalNeeded,
@@ -81,7 +81,7 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $project isa project,
-                has id @project_id,
+                has id ~project_id,
                 has id $project_id;
                 $projectTask isa containsTask (project: $project, task: $task);
                 $task isa task,
@@ -126,12 +126,12 @@ class TaskRepository(BaseRepository[Task]):
 
         validation_query = """
             match
-                $project isa project, has id @project_id;
+                $project isa project, has id ~project_id;
             fetch {
                 'exists': true,
                 'duplicate_tasks': [
                     match
-                        $existingTask isa task, has name @task_name;
+                        $existingTask isa task, has name ~task_name;
                         $projectTask isa containsTask (project: $project, task: $existingTask);
                     fetch { 'exists': true };
                 ]
@@ -151,14 +151,14 @@ class TaskRepository(BaseRepository[Task]):
 
         query = """
             match
-                $project isa project, has id @project_id;
+                $project isa project, has id ~project_id;
             insert
                 $task isa task,
-                has id @id,
-                has name @name,
-                has description @description,
-                has totalNeeded @total_needed,
-                has createdAt @created_at;
+                has id ~id,
+                has name ~name,
+                has description ~description,
+                has totalNeeded ~total_needed,
+                has createdAt ~created_at;
                 $projectTask isa containsTask (project: $project, task: $task);
         """
         Db.write_transact(query, {
@@ -180,7 +180,7 @@ class TaskRepository(BaseRepository[Task]):
         delete_query = """
             match
                 $task isa task,
-                has id @id;
+                has id ~id;
             delete $task isa task;
         """
         Db.write_transact(delete_query, {"id": id})
@@ -192,7 +192,7 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task,
-                has id @id;
+                has id ~id;
             delete $task isa task;
         """
         Db.write_transact(query, {"id": id})
@@ -204,7 +204,7 @@ class TaskRepository(BaseRepository[Task]):
         """
         query = """
             match
-                $task isa task, has id @task_id;
+                $task isa task, has id ~task_id;
                 $student isa student, has id $student_id;
                 $registration isa registersForTask (student: $student, task: $task);
             not { $registration has isAccepted $any_value; };
@@ -239,12 +239,12 @@ class TaskRepository(BaseRepository[Task]):
 
         query = """
             match
-                $task isa task, has id @task_id;
-                $student isa student, has id @student_id;
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
             insert
                 $registration isa registersForTask (student: $student, task: $task),
-                has description @motivation,
-                has createdAt @created_at;
+                has description ~motivation,
+                has createdAt ~created_at;
         """
 
         Db.write_transact(query, {
@@ -260,12 +260,12 @@ class TaskRepository(BaseRepository[Task]):
         """
         query = """
             match
-                $task isa task, has id @task_id;
-                $student isa student, has id @student_id;
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
             update
-                $registration has isAccepted @accepted;
-                $registration has response @response;
+                $registration has isAccepted ~accepted;
+                $registration has response ~response;
         """
 
         Db.write_transact(query, {

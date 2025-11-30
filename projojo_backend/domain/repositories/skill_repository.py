@@ -17,7 +17,7 @@ class SkillRepository(BaseRepository[Skill]):
         query = """
             match
                 $skill isa skill,
-                has id @id,
+                has id ~id,
                 has name $name,
                 has isPending $isPending,
                 has createdAt $createdAt;
@@ -52,7 +52,7 @@ class SkillRepository(BaseRepository[Skill]):
         query = """
             match
                 $student isa student,
-                has id @student_id;
+                has id ~student_id;
                 $hasSkill isa hasSkill( $student, $skill),
                 has description $description;
                 $skill isa skill,
@@ -81,8 +81,8 @@ class SkillRepository(BaseRepository[Skill]):
         for skill_id in to_add:
             query = """
                 match
-                    $student isa student, has id @student_id;
-                    $skill isa skill, has id @skill_id;
+                    $student isa student, has id ~student_id;
+                    $skill isa skill, has id ~skill_id;
                 insert
                     $hasSkill isa hasSkill (student: $student, skill: $skill),
                     has description "";
@@ -92,8 +92,8 @@ class SkillRepository(BaseRepository[Skill]):
         for skill_id in to_remove:
             query = """
                 match
-                    $student isa student, has id @student_id;
-                    $skill isa skill, has id @skill_id;
+                    $student isa student, has id ~student_id;
+                    $skill isa skill, has id ~skill_id;
                     $hasSkill isa hasSkill (student: $student, skill: $skill);
                 delete
                     $hasSkill;
@@ -103,11 +103,11 @@ class SkillRepository(BaseRepository[Skill]):
     def update_student_skill_description(self, student_id: str, skill_id: str, description: str):
         query = """
             match
-                $student isa student, has id @student_id;
-                $skill isa skill, has id @skill_id;
+                $student isa student, has id ~student_id;
+                $skill isa skill, has id ~skill_id;
                 $hasSkill isa hasSkill (student: $student, skill: $skill);
             update
-                $hasSkill has description @description;
+                $hasSkill has description ~description;
         """
         Db.write_transact(query, {
             "student_id": student_id,
@@ -123,10 +123,10 @@ class SkillRepository(BaseRepository[Skill]):
         query = """
             insert
                 $skill isa skill,
-                has id @id,
-                has name @name,
-                has isPending @is_pending,
-                has createdAt @created_at;
+                has id ~id,
+                has name ~name,
+                has isPending ~is_pending,
+                has createdAt ~created_at;
         """
 
         Db.write_transact(query, {
@@ -178,7 +178,7 @@ class SkillRepository(BaseRepository[Skill]):
     def get_task_skills(self, task_id: str) -> list[Skill]:
         query = """
             match
-                $task isa task, has id @task_id;
+                $task isa task, has id ~task_id;
                 $taskSkill isa requiresSkill (task: $task, skill: $skill);
                 $skill isa skill, has id $skill_id, has name $skill_name;
             fetch {

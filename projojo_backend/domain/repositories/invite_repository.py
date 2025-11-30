@@ -23,13 +23,13 @@ class InviteRepository:
         if invite_type == "business" and business_id:
             query = """
                 match
-                    $business isa business, has id @business_id;
+                    $business isa business, has id ~business_id;
                 insert
                     $inviteKey isa inviteKey,
-                        has key @key,
-                        has inviteType @invite_type,
-                        has isUsed @is_used,
-                        has createdAt @created_at;
+                        has key ~key,
+                        has inviteType ~invite_type,
+                        has isUsed ~is_used,
+                        has createdAt ~created_at;
                     (business: $business, key: $inviteKey) isa businessInvite;
             """
             Db.write_transact(query, {
@@ -43,10 +43,10 @@ class InviteRepository:
             query = """
                 insert
                     $inviteKey isa inviteKey,
-                        has key @key,
-                        has inviteType @invite_type,
-                        has isUsed @is_used,
-                        has createdAt @created_at;
+                        has key ~key,
+                        has inviteType ~invite_type,
+                        has isUsed ~is_used,
+                        has createdAt ~created_at;
             """
             Db.write_transact(query, {
                 "key": key,

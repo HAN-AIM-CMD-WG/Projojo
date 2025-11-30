@@ -45,7 +45,7 @@ class UserRepository(BaseRepository[User]):
         query = """
             match
                 $supervisor isa supervisor,
-                has id @id,
+                has id ~id,
                 has id $id,
                 has email $email,
                 has fullName $fullName,
@@ -68,7 +68,7 @@ class UserRepository(BaseRepository[User]):
         project_query = """
             match
                 $supervisor isa supervisor,
-                has id @id;
+                has id ~id;
                 $project isa project;
                 $creates isa creates( $supervisor, $project);
             fetch {
@@ -100,7 +100,7 @@ class UserRepository(BaseRepository[User]):
         query = """
             match
                 $student isa student,
-                has id @id;
+                has id ~id;
             fetch {
                 'id': $student.id,
                 'email': $student.email,
@@ -146,7 +146,7 @@ class UserRepository(BaseRepository[User]):
         query = """
             match
                 $teacher isa teacher,
-                has id @id,
+                has id ~id,
                 has id $id,
                 has email $email,
                 has fullName $fullName,
@@ -351,7 +351,7 @@ class UserRepository(BaseRepository[User]):
         """
         query = """
             match
-                $task isa task, has id @task_id;
+                $task isa task, has id ~task_id;
                 $student isa student,
                 has id $id,
                 has email $email,
@@ -406,7 +406,7 @@ class UserRepository(BaseRepository[User]):
         """
         query = """
             match
-                $student isa student, has id @student_id;
+                $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
             fetch {
                 'id': $task.id,
@@ -427,7 +427,7 @@ class UserRepository(BaseRepository[User]):
         """
         query = """
             match
-                $auth_supervisor isa supervisor, has id @supervisor_id;
+                $auth_supervisor isa supervisor, has id ~supervisor_id;
                 $manages_auth isa manages (supervisor: $auth_supervisor, business: $business);
                 $manages_colleague isa manages (supervisor: $colleague, business: $business);
                 $colleague isa supervisor,
@@ -452,11 +452,11 @@ class UserRepository(BaseRepository[User]):
         params = {"id": id}
 
         if description is not None:
-            update_statements.append('$student has description "@description";')
+            update_statements.append('$student has description ~description;')
             params["description"] = description
 
         if image_path is not None:
-            update_statements.append('$student has imagePath "@image_path";')
+            update_statements.append('$student has imagePath ~image_path;')
             params["image_path"] = image_path
 
         if cv_path is not None:
@@ -465,21 +465,21 @@ class UserRepository(BaseRepository[User]):
                 delete_query = """
                     match
                         $student isa student,
-                        has id "@id",
+                        has id ~id,
                         has cvPath $cvPath;
                     delete
                         has $cvPath of $student;
                 """
                 Db.write_transact(delete_query, {"id": id})
             else:
-                update_statements.append('$student has cvPath "@cv_path";')
+                update_statements.append('$student has cvPath ~cv_path;')
                 params["cv_path"] = cv_path
 
         # Only execute if there are updates to make
         if update_statements:
             update_query = f"""
                 match
-                    $student isa student, has id "@id";
+                    $student isa student, has id ~id;
                 update
                     {' '.join(update_statements)}
             """
@@ -490,9 +490,9 @@ class UserRepository(BaseRepository[User]):
         query = """
             match
                 $user isa user;
-                $provider isa oauthProvider, has name @provider_name;
+                $provider isa oauthProvider, has name ~provider_name;
                 $auth isa oauthAuthentication($user, $provider),
-                has oauthSub @oauth_sub;
+                has oauthSub ~oauth_sub;
                 $user isa $usertype;
             fetch {
                 'id': $user.id,
@@ -536,7 +536,7 @@ class UserRepository(BaseRepository[User]):
         provider_query = """
             match
                 $provider isa oauthProvider, has name $name;
-                $name like @provider_pattern;
+                $name like ~provider_pattern;
             fetch { 'name': $provider.name };
         """
         provider_results = Db.read_transact(provider_query, {
@@ -561,15 +561,15 @@ class UserRepository(BaseRepository[User]):
 
         create_user_query = """
             match
-                $provider isa oauthProvider, has name @provider_name;
+                $provider isa oauthProvider, has name ~provider_name;
             insert
                 $student isa student,
-                has id @id,
-                has email @email,
-                has fullName @full_name,
-                has imagePath @image_path;
+                has id ~id,
+                has email ~email,
+                has fullName ~full_name,
+                has imagePath ~image_path;
                 $auth isa oauthAuthentication($student, $provider),
-                has oauthSub @oauth_sub;
+                has oauthSub ~oauth_sub;
         """
 
         Db.write_transact(create_user_query, {

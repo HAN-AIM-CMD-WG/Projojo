@@ -15,7 +15,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $project isa project,
-                has id @id,
+                has id ~id,
                 has id $id,
                 has name $name,
                 has description $description,
@@ -64,7 +64,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $business isa business,
-                has id @business_id,
+                has id ~business_id,
                 has id $business_id;
                 $hasProjects isa hasProjects (business: $business, project: $project);
                 $project isa project,
@@ -95,7 +95,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $project isa project,
-                has id @project_id;
+                has id ~project_id;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $business has id $business_id;
             fetch {
@@ -137,8 +137,8 @@ class ProjectRepository(BaseRepository[Project]):
     def check_project_exists(self, project_name: str, business_id: str) -> bool:
         query = """
             match
-                $business isa business, has id @business_id;
-                $project isa project, has name @project_name;
+                $business isa business, has id ~business_id;
+                $project isa project, has name ~project_name;
                 $hasProjects isa hasProjects (business: $business, project: $project);
             fetch {
                 'name': $project.name
@@ -152,7 +152,7 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $project isa project,
-                has id @project_id;
+                has id ~project_id;
                 $creates isa creates( $supervisor, $project ),
                 has createdAt $createdAt;
                 $supervisor isa supervisor,
@@ -184,14 +184,14 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $business isa business,
-                has id @business_id;
+                has id ~business_id;
             insert
                 $project isa project,
-                has id @id,
-                has name @name,
-                has description @description,
-                has imagePath @image_path,
-                has createdAt @created_at;
+                has id ~id,
+                has name ~name,
+                has description ~description,
+                has imagePath ~image_path,
+                has createdAt ~created_at;
                 $hasProjects isa hasProjects($business, $project);
         """
         Db.write_transact(query, {
@@ -207,11 +207,11 @@ class ProjectRepository(BaseRepository[Project]):
         query = """
             match
                 $supervisor isa supervisor,
-                has id @supervisor_id;
+                has id ~supervisor_id;
                 $project isa project,
-                has id @project_id;
+                has id ~project_id;
             insert $creates isa creates($supervisor, $project),
-                has createdAt @created_at;
+                has createdAt ~created_at;
         """
         Db.write_transact(query, {
             "supervisor_id": project.supervisor_id,

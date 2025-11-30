@@ -12,10 +12,10 @@ class BaseRepository(Generic[T]):
     def get_by_id(self, id: str) -> T | None:
         query = f"""
             match
-                ${self.entity_type} isa {self.entity_type}, has id @id;
+                ${self.entity_type} isa {self.entity_type}, has id ~id;
             get ${self.entity_type};
         """
-        results = Db.read_transact(query, {{"id": id}})
+        results = Db.read_transact(query, {"id": id})
         if not results:
             return None
         return self._map_to_model(results[0])

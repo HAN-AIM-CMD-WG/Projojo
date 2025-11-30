@@ -14,7 +14,7 @@ class BusinessRepository(BaseRepository[Business]):
         query = """
             match
                 $business isa business,
-                has id @id,
+                has id ~id,
                 has id $id,
                 has name $name,
                 has description $description,
@@ -75,7 +75,7 @@ class BusinessRepository(BaseRepository[Business]):
     def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
         query = """
             match
-                $business isa business, has id @business_id;
+                $business isa business, has id ~business_id;
                 $manages isa manages,
                     has location $location,
                     (supervisor: $supervisor, business: $business);
@@ -174,8 +174,8 @@ class BusinessRepository(BaseRepository[Business]):
         query = """
             insert
                 $business isa business,
-                has id @id,
-                has name @name,
+                has id ~id,
+                has name ~name,
                 has description "",
                 has imagePath "default.png",
                 has location "";
