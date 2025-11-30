@@ -28,7 +28,7 @@ entity business,
     owns name @card(1), # was `name @key` before UUID migration
     owns description @card(1),
     owns imagePath @card(1),
-    owns location @card(1..),
+    owns location @card(1),
     plays manages:business @card(0..),
     plays hasProjects:business @card(0..),
     plays businessInvite:business @card(0..);

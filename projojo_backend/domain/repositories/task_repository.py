@@ -126,9 +126,10 @@ class TaskRepository(BaseRepository[Task]):
 
         validation_query = """
             match
-                $project isa project, has id ~project_id;
+                $project isa project, has id ~project_id, has name $project_name;
             fetch {
                 'exists': true,
+                'project_name': $project_name,
                 'duplicate_tasks': [
                     match
                         $existingTask isa task, has name ~task_name;
@@ -147,7 +148,8 @@ class TaskRepository(BaseRepository[Task]):
 
         # Check if duplicate tasks were found
         if validation_results[0].get('duplicate_tasks'):
-            raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{task.project_id}'.")
+            project_name = validation_results[0].get('project_name')
+            raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{project_name}'.")
 
         query = """
             match
