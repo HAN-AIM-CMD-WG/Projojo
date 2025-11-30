@@ -40,6 +40,11 @@ export default function LoginPage() {
           Inloggen met GitHub
         </a>
 
+        <a href={`${API_BASE_URL}auth/login/surf`} className="w-full bg-white text-gray-900 font-semibold py-3 px-6 rounded-lg border border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center gap-3">
+          <div className="w-5 h-5 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-bold">S</div>
+          Inloggen met SURF
+        </a>
+
         <div className="text-center">
           <p className="text-sm text-gray-500">
             Je wordt doorgestuurd om de authenticatie te voltooien

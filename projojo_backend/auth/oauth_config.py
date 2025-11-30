@@ -41,6 +41,17 @@ def setup_oauth() -> OAuth:
         },
     )
 
+    oauth.register(
+        name='surf',
+        client_id=os.getenv("SURF_CLIENT_ID"),
+        client_secret=os.getenv("SURF_CLIENT_SECRET"),
+        server_metadata_url='https://connect.test.surfconext.nl/.well-known/openid-configuration', # Testing
+        # server_metadata_url='https://connect.surfconext.nl/.well-known/openid-configuration', # Production
+        client_kwargs={'scope': 'openid email name picture'}, # profile ?
+        # TODO: ik weet niet of de afbeelding wel te krijgen is via surf, of dat dit via de key van surf bij de HAN moet worden opgehaald?
+        # TODO: mogelijk is er ook een scope voor type gebruiker (student/docent)
+    )
+
     return oauth
 
 

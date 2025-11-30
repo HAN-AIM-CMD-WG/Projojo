@@ -44,6 +44,9 @@ insert
     $op3 isa oauthProvider,
         has name "github";
 
+    $op4 isa oauthProvider,
+        has name "surf";
+
     # Businesses
     $b1 isa business,
         has id "978556ff-3c15-4b7a-b559-5e7e131a4c28",
