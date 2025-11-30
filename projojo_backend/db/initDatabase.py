@@ -1,9 +1,12 @@
+from typing import Any
 from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
+import re
 import pprint
+from datetime import datetime, date
 import time
 from dotenv import load_dotenv
-from .tql_safe_formatter import TQLSafeFormatter
+from uuid import UUID
 
 # Load environment variables from .env file
 load_dotenv()
@@ -55,18 +58,41 @@ class Db:
             cls.connect_with_retry()
 
     @staticmethod
-    def schema_transact(query):
+    def schema_transact(query: str):
+        """
+        Execute a schema transaction.
+
+        Note: Schema queries do not support parameterization as they typically
+        contain static schema definitions loaded from .tql files.
+
+        Args:
+            query: TypeQL schema query string
+        """
         Db.ensure_connection()
         with Db.driver.transaction(Db.name, TransactionType.SCHEMA) as tx:
             tx.query(query).resolve()
             tx.commit()
 
     @staticmethod
-    def read_transact(template: str, params: dict | None = None, sort_fields = True):
-        if params is None:
-            params = {}
-        query = TQLSafeFormatter.build_query(template, params)
+    def read_transact(query: str, params: dict[str, Any] = None, sort_fields: bool = True):
+        """
+        Execute a read transaction.
+
+        Args:
+            query: TypeQL query string or template with ~param placeholders
+            params: Optional dictionary of parameters to safely interpolate.
+                    None values will raise ValueError (use negation patterns instead).
+            sort_fields: Whether to sort result dictionary keys
+
+        Returns:
+            List of query results
+
+        Raises:
+            ValueError: If any parameter value is None
+        """
         Db.ensure_connection()
+        if params:
+            query = build_query(query, params, allow_none=False)
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
             results = list(tx.query(query).resolve())
 
@@ -77,11 +103,18 @@ class Db:
             return results
 
     @staticmethod
-    def write_transact(template: str, params: dict | None = None):
-        if params is None:
-            params = {}
-        query = TQLSafeFormatter.build_query(template, params)
+    def write_transact(query: str, params: dict[str, Any] = None):
+        """
+        Execute a write transaction.
+
+        Args:
+            query: TypeQL query string or template with ~param placeholders
+            params: Optional dictionary of parameters to safely interpolate.
+                    None values will remove the containing clause (for optional attributes).
+        """
         Db.ensure_connection()
+        if params:
+            query = build_query(query, params, allow_none=True)
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
             tx.commit()
@@ -99,6 +132,159 @@ class Db:
         Db.close()
         Db.connect_with_retry()
         create_database_if_needed()
+
+def sanitize_string(value: str) -> str:
+    """
+    Sanitize a string value for safe interpolation into TypeQL queries.
+
+    Escapes:
+    - Backslashes (\ -> \\) - MUST be first to avoid double-escaping
+    - Double quotes (" -> \")
+
+    Args:
+        value: The string to sanitize
+
+    Returns:
+        Sanitized string safe for TypeQL interpolation
+    """
+    return value.replace('\\', '\\\\').replace('"', '\\"')
+
+
+def format_value(value: Any) -> str:
+    """
+    Format a Python value for TypeQL query interpolation.
+
+    Automatically detects the type and applies appropriate formatting:
+    - str: Quoted and escaped
+    - UUID: Converted to quoted string
+    - int/float: Raw number
+    - bool: Lowercase true/false
+    - datetime/date: ISO format (unquoted for TypeQL datetime literals)
+    - list: TypeQL list format
+
+    Args:
+        value: The Python value to format
+
+    Returns:
+        TypeQL-formatted string representation
+
+    Note:
+        None values should be filtered out before calling this function.
+        This function raises ValueError if it receives None.
+    """
+    if value is None:
+        raise ValueError(
+            "format_value received None - this is a bug. "
+            "None values should be filtered before formatting."
+        )
+
+    if isinstance(value, bool):  # Must check before int (bool is subclass of int)
+        return 'true' if value else 'false'
+
+    if isinstance(value, UUID):
+        return f'"{str(value)}"'
+
+    if isinstance(value, int):
+        return str(value)
+
+    if isinstance(value, float):
+        return str(value)
+
+    if isinstance(value, datetime):
+        return value.strftime('%Y-%m-%dT%H:%M:%S')
+
+    if isinstance(value, date):
+        return value.strftime('%Y-%m-%d')
+
+    if isinstance(value, (list, tuple)):
+        formatted_items = [format_value(item) for item in value]
+        return f"[{', '.join(formatted_items)}]"
+
+    # Default: treat as string
+    return f'"{sanitize_string(str(value))}"'
+
+
+def _remove_none_clauses(template: str, none_params: list[str]) -> str:
+    """
+    Remove lines/clauses containing None placeholders from the template.
+
+    Handles TypeQL syntax by:
+    1. Removing the entire line containing ~param_name
+    2. Cleaning up dangling commas
+    3. Preserving valid TypeQL structure
+
+    Args:
+        template: Query template
+        none_params: List of parameter names with None values
+
+    Returns:
+        Template with None clauses removed
+    """
+    result = template
+
+    for param in none_params:
+        # Remove entire line containing the placeholder
+        # This regex matches a line (with leading whitespace) containing ~param_name
+        # and handles both comma-terminated and semicolon-terminated lines
+        pattern = rf'^\s*.*~{re.escape(param)}(?![a-zA-Z0-9_]).*$\n?'
+        result = re.sub(pattern, '', result, flags=re.MULTILINE)
+
+    # Clean up dangling commas before semicolons or closing braces
+    # e.g., "has name "x",\n    ;" -> "has name "x";"
+    result = re.sub(r',\s*;', ';', result)
+    result = re.sub(r',\s*\)', ')', result)
+    result = re.sub(r',\s*}', '}', result)
+
+    return result
+
+
+def build_query(template: str, params: dict[str, Any], allow_none: bool = False) -> str:
+    """
+    Build a TypeQL query from a template and parameters.
+
+    Replaces ~param_name placeholders with properly formatted and sanitized values.
+
+    Args:
+        template: Query template with ~param_name placeholders
+        params: Dictionary of parameter names to values
+        allow_none: If True, None values remove the containing clause (for writes).
+                    If False, None values raise ValueError (for reads).
+
+    Returns:
+        Complete TypeQL query string with interpolated values
+
+    Raises:
+        KeyError: If a placeholder in the template has no matching parameter
+        ValueError: If None is passed and allow_none is False
+    """
+    # Handle None values based on allow_none flag
+    none_params = [k for k, v in params.items() if v is None]
+
+    if none_params and not allow_none:
+        raise ValueError(
+            f"Cannot use None in read queries. Parameters with None: {none_params}. "
+            "TypeQL has no null literal. Use negation patterns to match absent attributes: "
+            "not {{ $x has attr $v; }};"
+        )
+
+    # For write queries, None values remove the clause
+    regular_params = {k: v for k, v in params.items() if v is not None}
+
+    # First, remove clauses for None params (only when allow_none=True)
+    result = _remove_none_clauses(template, none_params) if none_params else template
+
+    # Then substitute regular params
+    for key, value in regular_params.items():
+        formatted_value = format_value(value)
+        # Use word boundary to avoid partial replacements (e.g., ~id vs ~id_name)
+        result = re.sub(rf'~{re.escape(key)}(?![a-zA-Z0-9_])', formatted_value, result)
+
+    # Check for any remaining unsubstituted placeholders
+    remaining = re.findall(r'~([a-zA-Z_][a-zA-Z0-9_]*)', result)
+    if remaining:
+        raise KeyError(f"Missing parameters: {remaining}")
+
+    return result
 
 
 print(f"Using database: {Db.name}")
