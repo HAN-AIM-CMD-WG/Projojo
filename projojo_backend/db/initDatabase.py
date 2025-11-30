@@ -134,7 +134,7 @@ class Db:
         create_database_if_needed()
 
 def sanitize_string(value: str) -> str:
-    """
+    r"""
     Sanitize a string value for safe interpolation into TypeQL queries.
 
     Escapes:
@@ -254,9 +254,32 @@ def build_query(template: str, params: dict[str, Any], allow_none: bool = False)
         Complete TypeQL query string with interpolated values
 
     Raises:
-        KeyError: If a placeholder in the template has no matching parameter
-        ValueError: If None is passed and allow_none is False
+        ValueError: If a placeholder in the template has no matching parameter,
+                    if None is passed and allow_none is False,
+                    if duplicate placeholders exist,
+                    or if params contains keys not used in template
     """
+    # Validate placeholders and parameters
+    placeholders = re.findall(r'~([a-zA-Z_][a-zA-Z0-9_]*)', template)
+    unique_placeholders = set(placeholders)
+    param_keys = set(params.keys())
+
+    if len(placeholders) != len(unique_placeholders):
+        duplicates = sorted({p for p in placeholders if placeholders.count(p) > 1})
+        raise ValueError(
+            f"Duplicate placeholders in template: {duplicates}. "
+            "Each placeholder must appear exactly once."
+        )
+
+    if unused_params := param_keys - unique_placeholders:
+        raise ValueError(
+            f"Unused parameters: {sorted(unused_params)}. "
+            "All params must correspond to placeholders in the template."
+        )
+
+    if missing_params := unique_placeholders - param_keys:
+        raise ValueError(f"Missing parameters: {sorted(missing_params)}")
+
     # Handle None values based on allow_none flag
     none_params = [k for k, v in params.items() if v is None]
 
@@ -278,11 +301,6 @@ def build_query(template: str, params: dict[str, Any], allow_none: bool = False)
         formatted_value = format_value(value)
         # Use word boundary to avoid partial replacements (e.g., ~id vs ~id_name)
         result = re.sub(rf'~{re.escape(key)}(?![a-zA-Z0-9_])', formatted_value, result)
-
-    # Check for any remaining unsubstituted placeholders
-    remaining = re.findall(r'~([a-zA-Z_][a-zA-Z0-9_]*)', result)
-    if remaining:
-        raise KeyError(f"Missing parameters: {remaining}")
 
     return result
 
