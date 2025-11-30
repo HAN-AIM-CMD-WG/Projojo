@@ -191,7 +191,7 @@ def format_value(value: Any) -> str:
         return str(value)
 
     if isinstance(value, datetime):
-        return value.strftime('%Y-%m-%dT%H:%M:%S')
+        return value.strftime('%Y-%m-%dT%H:%M:%S.%f+0000')
 
     if isinstance(value, date):
         return value.strftime('%Y-%m-%d')
