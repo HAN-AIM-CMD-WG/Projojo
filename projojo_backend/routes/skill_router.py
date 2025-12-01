@@ -57,11 +57,16 @@ async def update_skill_acceptance(
         raise HTTPException(status_code=404, detail="Skill niet gevonden")
 
     try:
-        # For now both accept/decline result in removing from pending
-        skill_repo.update_is_pending(id, False)
-        return {"message": "Skill bijgewerkt"}
+        if bool(accepted):
+            # Accept: mark as approved (isPending -> false)
+            skill_repo.update_is_pending(id, False)
+            return {"message": "Skill geaccepteerd"}
+        else:
+            # Decline: remove the pending skill entirely
+            skill_repo.delete_by_id(id)
+            return {"message": "Skill afgewezen en verwijderd"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van de skill: " + str(e))
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken/verwijderen van de skill: " + str(e))
 
 @router.patch("/{id}/name")
 async def update_skill_name(

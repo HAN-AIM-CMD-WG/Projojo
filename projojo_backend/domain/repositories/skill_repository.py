@@ -240,3 +240,16 @@ class SkillRepository(BaseRepository[Skill]):
                 $skill has name "{escaped_name}";
         """
         Db.write_transact(query)
+
+    def delete_by_id(self, skill_id: str) -> None:
+        """
+        Permanently delete a skill by id. Intended for declining pending skills.
+        """
+        escaped_skill_id = skill_id.replace('"', '\\"')
+        query = f"""
+            match
+                $skill isa skill, has id "{escaped_skill_id}";
+            delete
+                $skill;
+        """
+        Db.write_transact(query)
