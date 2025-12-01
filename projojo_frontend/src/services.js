@@ -488,3 +488,29 @@ export function getStudentEmailAddresses(selection, taskId) {
 export function getColleaguesEmailAddresses() {
     return fetchWithError(`${API_BASE_URL}tasks/emails/colleagues`);
 }
+
+/**
+ * Mark a skill as accepted/declined (both remove pending state)
+ * @param {string} skillId
+ * @param {boolean} accepted
+ * @returns {Promise<void>}
+ */
+export function updateSkillAcceptance(skillId, accepted) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}/acceptance`, {
+        method: "PATCH",
+        body: JSON.stringify({ accepted }),
+    }, true);
+}
+
+/**
+ * Rename a skill (teacher-only)
+ * @param {string} skillId
+ * @param {string} name
+ * @returns {Promise<void>}
+ */
+export function updateSkillName(skillId, name) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}/name`, {
+        method: "PATCH",
+        body: JSON.stringify({ name }),
+    }, true);
+}
