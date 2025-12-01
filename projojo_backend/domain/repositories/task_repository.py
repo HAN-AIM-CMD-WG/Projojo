@@ -117,6 +117,23 @@ class TaskRepository(BaseRepository[Task]):
 
         return tasks
 
+    def get_business_id_by_task(self, task_id: str) -> str | None:
+        escaped_task_id = task_id.replace('"', '\\"')
+
+        query = f"""
+            match
+                $task isa task, has id "{escaped_task_id}";
+                $contains isa containsTask (project: $project, task: $task);
+                $hasProjects isa hasProjects (business: $business, project: $project);
+            fetch {{
+                'business_id': $business.id
+            }};
+        """
+        results = Db.read_transact(query)
+        if not results:
+            return None
+        return results[0].get("business_id")
+
     def create(self, task: Task) -> Task:
         if not task.project_id:
             raise ValueError("De taak moet bij een bestaand project horen.")
