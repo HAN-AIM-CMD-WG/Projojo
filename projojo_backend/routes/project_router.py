@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException
-from typing import Annotated
+from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Body, Depends
+from typing import Annotated, Optional
 from datetime import datetime
+import traceback
 
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
+from auth.jwt_utils import get_token_payload
 
 project_repo = ProjectRepository()
 
@@ -49,6 +51,37 @@ async def get_project_tasks(id: str = Path(..., description="Project ID")):
     tasks = task_service.get_tasks_with_skills_by_project(id)
     return tasks
 
+@router.patch("/{id}/location")
+async def update_project_location(
+    id: str = Path(..., description="Project ID"),
+    body: dict = Body(...),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update the location for a project.
+    Only a teacher or the supervisor who created the project may update the location.
+    """
+    location = body.get("location", "")
+
+    # Fetch project to get its business for authorization
+    try:
+        existing = project_repo.get_by_id(id)
+    except Exception:
+        existing = None
+
+    if not existing:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+
+    allowed = (
+        payload.get("role") == "teacher" or
+        (payload.get("role") == "supervisor" and payload.get("businessId") == existing.business_id)
+    )
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Je bent niet bevoegd om de projectlocatie bij te werken")
+
+    project_repo.update_location(id, location)
+    return {"message": "Project locatie bijgewerkt"}
+
 @router.post("/", response_model=ProjectCreation, status_code=201)
 async def create_project(
     name: Annotated[str, Form(...)],
@@ -90,3 +123,49 @@ async def create_project(
     # Create the project in the database
     created_project = project_repo.create(project_creation)
     return created_project
+
+@router.put("/{id}")
+async def update_project(
+    id: str = Path(..., description="Project ID to update"),
+    name: str = Form(...),
+    description: str = Form(...),
+    location: str = Form(...),
+    image: Optional[UploadFile] = File(None),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update project information with optional photo upload.
+    Only a teacher or a supervisor of the same business may update the project.
+    """
+    # Verify project exists (and retrieve its business_id for authorization)
+    try:
+        existing = project_repo.get_by_id(id)
+    except Exception:
+        existing = None
+
+    if not existing:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+
+    # Authorization: teacher or supervisor belonging to the same business
+    allowed = (
+        payload.get("role") == "teacher" or
+        (payload.get("role") == "supervisor" and payload.get("businessId") == existing.business_id)
+    )
+    if not allowed:
+        raise HTTPException(status_code=403, detail="Je bent niet bevoegd om het project bij te werken")
+
+    # Handle photo upload if provided
+    image_filename = None
+    if image and image.filename:
+        try:
+            image_filename = save_image(image)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
+
+    try:
+        project_repo.update(id, name, description, location, image_filename)
+        return {"message": "Project succesvol bijgewerkt"}
+    except Exception as e:
+        # Log full traceback to console for debugging
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project: " + str(e))
