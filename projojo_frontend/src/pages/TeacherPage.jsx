@@ -120,8 +120,8 @@ export default function TeacherPage() {
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="btn-primary mb-4">Bedrijf aanmaken</button>
             </div>
             <BusinessesOverview businesses={businesses} />
-            {/* <hr className="mt-8 mb-3" />
-            <NewSkillsManagement /> */}
+            <hr className="mt-8 mb-3" />
+            <NewSkillsManagement />
 
             <Modal
                 modalHeader={`Collega toevoegen`}
