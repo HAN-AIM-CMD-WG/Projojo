@@ -348,31 +348,31 @@ insert
         has id "7b5d3a2e-0e8a-4d3c-8c02-3f2c6d8a9f10",
         has name "Kas Klimaat Test",
         has isPending true,
-        has createdAt 2025-02-22T10:00:00;
+        has createdAt 2025-02-22T10:00:00+0000;
 
     $psk2 isa skill,
         has id "c3f2a4d1-9a8b-47f5-bc1e-9e3a2c1d5f77",
         has name "Drone Inspectie",
         has isPending true,
-        has createdAt 2025-02-22T10:05:00;
+        has createdAt 2025-02-22T10:05:00+0000;
 
     $psk3 isa skill,
         has id "e9a1b5c3-4d7f-4b2e-9c18-1a2b3c4d5e6f",
         has name "AI Validatie mettypfout",
         has isPending true,
-        has createdAt 2025-02-22T10:10:00;
+        has createdAt 2025-02-22T10:10:00+0000;
 
     $psk4 isa skill,
         has id "f0e1d2c3-b4a5-6789-9abc-def012345678",
         has name "Data Schoonmaak (Pending)",
         has isPending true,
-        has createdAt 2025-02-22T10:15:00;
+        has createdAt 2025-02-22T10:15:00+0000;
 
     $psk5 isa skill,
         has id "a1b2c3d4-e5f6-4789-abcd-0123456789ff",
         has name "Nieuwe Skill Voor Review (Pending)",
         has isPending true,
-        has createdAt 2025-02-22T10:20:00;
+        has createdAt 2025-02-22T10:20:00+0000;
 
     # Projects - 30 total (2-6 per business)
     # De Gouden Akker projects (4)

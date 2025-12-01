@@ -209,41 +209,34 @@ class SkillRepository(BaseRepository[Skill]):
         """
         Update the isPending attribute of a skill.
         """
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        is_pending_value = "true" if is_pending else "false"
-
-        query = f"""
+        query = """
             match
-                $skill isa skill, has id "{escaped_skill_id}";
+                $skill isa skill, has id ~skill_id;
             update
-                $skill has isPending {is_pending_value};
+                $skill has isPending ~is_pending;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"skill_id": skill_id, "is_pending": is_pending})
 
     def update_name(self, skill_id: str, new_name: str) -> None:
         """
         Update the name of a skill (unique).
         """
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        escaped_name = new_name.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $skill isa skill, has id "{escaped_skill_id}";
+                $skill isa skill, has id ~skill_id;
             update
-                $skill has name "{escaped_name}";
+                $skill has name ~new_name;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"skill_id": skill_id, "new_name": new_name})
 
     def delete_by_id(self, skill_id: str) -> None:
         """
         Permanently delete a skill by id. Intended for declining pending skills.
         """
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        query = f"""
+        query = """
             match
-                $skill isa skill, has id "{escaped_skill_id}";
+                $skill isa skill, has id ~skill_id;
             delete
                 $skill;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"skill_id": skill_id})
