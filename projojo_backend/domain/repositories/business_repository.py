@@ -194,11 +194,17 @@ class BusinessRepository(BaseRepository[Business]):
             '$business has description ~description;',
             '$business has location ~location;',
         ]
+        update_params = {
+            "business_id": business_id,
+            "name": name,
+            "description": description,
+            "location": location,
+        }
 
         # Only update imagePath if a new image filename is provided
         if image_filename is not None:
             update_clauses.append('$business has imagePath ~image_filename;')
-
+            update_params["image_filename"] = image_filename
         query = f"""
             match
                 $business isa business, has id ~business_id;
@@ -206,10 +212,4 @@ class BusinessRepository(BaseRepository[Business]):
                 {' '.join(update_clauses)}
         """
 
-        Db.write_transact(query, {
-            "business_id": business_id,
-            "name": name,
-            "description": description,
-            "location": location,
-            "image_filename": image_filename
-        })
+        Db.write_transact(query, update_params)

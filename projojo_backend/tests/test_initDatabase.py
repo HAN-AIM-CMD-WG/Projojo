@@ -41,7 +41,7 @@ class TestFormatValue:
 
     def test_datetime(self):
         dt = datetime(2024, 1, 15, 10, 30, 0)
-        assert format_value(dt) == '2024-01-15T10:30:00'
+        assert format_value(dt) == '2024-01-15T10:30:00.000000+0000'
 
     def test_date(self):
         d = date(2024, 1, 15)
