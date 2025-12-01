@@ -129,6 +129,34 @@ source .venv/bin/activate
 deactivate
 ```
 
+## Running Tests
+
+Tests should be run inside the Docker container to ensure they run in the correct environment.
+
+### Option 1: Using Docker Desktop Exec Tab
+1. Go to the **Exec** tab of the `projojo_backend` container in Docker Desktop.
+2. Run the tests:
+   ```bash
+   uv run pytest
+
+   # Use -v for verbose output (shows individual test results)
+   uv run pytest -v
+   ```
+
+### Option 2: Using Terminal
+1. Enter the container:
+   ```bash
+   docker exec -it projojo_backend bash
+   ```
+2. Run the tests:
+   ```bash
+   uv run pytest
+   ```
+3. Exit the container:
+   ```bash
+   exit
+   ```
+
 ## Project Structure
 
 - **`pyproject.toml`** - Project metadata and dependencies

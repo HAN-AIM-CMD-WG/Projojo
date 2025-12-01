@@ -14,22 +14,21 @@ class SkillRepository(BaseRepository[Skill]):
         super().__init__(Skill, "skill")
 
     def get_by_id(self, id: str) -> Skill | None:
-        escaped_id = id.replace('"', '\\"')
-        query = f"""
+        query = """
             match
                 $skill isa skill,
-                has id "{escaped_id}",
+                has id ~id,
                 has name $name,
                 has isPending $isPending,
                 has createdAt $createdAt;
-            fetch {{
+            fetch {
                 'id': $skill.id,
                 'name': $name,
                 'isPending': $isPending,
                 'createdAt': $createdAt
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             raise ItemRetrievalException(Skill, f"Skill with ID {id} not found.")
         return self._map_to_model(results[0])
@@ -50,101 +49,96 @@ class SkillRepository(BaseRepository[Skill]):
         return [self._map_to_model(result) for result in results]
 
     def get_student_skills(self, student_id: str) -> list[Skill | StudentSkill]:
-        # Escape the student_id to prevent injection
-        escaped_student_id = student_id.replace('"', '\\"')
-        query = f"""
+        query = """
             match
                 $student isa student,
-                has id "{escaped_student_id}";
+                has id ~student_id;
                 $hasSkill isa hasSkill( $student, $skill),
                 has description $description;
                 $skill isa skill,
                 has id $skill_id,
                 has createdAt $createdAt,
                 has name $skill_name;
-            fetch {{
+            fetch {
                 'id': $skill_id,
                 'name': $skill_name,
                 'description': $description,
                 'isPending': $skill.isPending,
                 'createdAt': $createdAt
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"student_id": student_id})
 
         return [self._map_to_model(result) for result in results]
 
     def update_student_skills(self, student_id: str, updated_skills: list[str]) -> None:
-        escaped_student_id = student_id.replace('"', '\\"')
-        current_skills = self.get_student_skills(escaped_student_id)
+        current_skills = self.get_student_skills(student_id)
         current_skill_ids = {skill.id for skill in current_skills}
 
         to_add = set(updated_skills) - (current_skill_ids)
         to_remove = (current_skill_ids) - set(updated_skills)
 
         for skill_id in to_add:
-            escaped_skill_id = skill_id.replace('"', '\\"')
-            query = f"""
+            query = """
                 match
-                    $student isa student, has id "{escaped_student_id}";
-                    $skill isa skill, has id "{escaped_skill_id}";
+                    $student isa student, has id ~student_id;
+                    $skill isa skill, has id ~skill_id;
                 insert
                     $hasSkill isa hasSkill (student: $student, skill: $skill),
                     has description "";
             """
-            Db.write_transact(query)
+            Db.write_transact(query, {"student_id": student_id, "skill_id": skill_id})
 
         for skill_id in to_remove:
-            escaped_skill_id = skill_id.replace('"', '\\"')
-            query = f"""
+            query = """
                 match
-                    $student isa student, has id "{escaped_student_id}";
-                    $skill isa skill, has id "{escaped_skill_id}";
+                    $student isa student, has id ~student_id;
+                    $skill isa skill, has id ~skill_id;
                     $hasSkill isa hasSkill (student: $student, skill: $skill);
                 delete
                     $hasSkill;
             """
-            Db.write_transact(query)
+            Db.write_transact(query, {"student_id": student_id, "skill_id": skill_id})
 
     def update_student_skill_description(self, student_id: str, skill_id: str, description: str):
-        escaped_student_id = student_id.replace('"', '\\"')
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        escaped_description = description.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $student isa student, has id "{escaped_student_id}";
-                $skill isa skill, has id "{escaped_skill_id}";
+                $student isa student, has id ~student_id;
+                $skill isa skill, has id ~skill_id;
                 $hasSkill isa hasSkill (student: $student, skill: $skill);
             update
-                $hasSkill has description "{escaped_description}";
+                $hasSkill has description ~description;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {
+            "student_id": student_id,
+            "skill_id": skill_id,
+            "description": description
+        })
 
     def create(self, skill: Skill) -> Skill:
         id = generate_uuid()
         # Generate a creation timestamp if not provided
-        created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-        # Convert boolean to string for TypeDB query
-        is_pending_value = "true" if skill.is_pending else "false"
+        created_at = datetime.now()
 
-        # Escape any double quotes
-        escaped_name = skill.name.replace('"', '\\"')
-
-        query = f"""
+        query = """
             insert
                 $skill isa skill,
-                has id "{id}",
-                has name "{escaped_name}",
-                has isPending {is_pending_value},
-                has createdAt {created_at};
+                has id ~id,
+                has name ~name,
+                has isPending ~is_pending,
+                has createdAt ~created_at;
         """
 
-        Db.write_transact(query)
+        Db.write_transact(query, {
+            "id": id,
+            "name": skill.name,
+            "is_pending": skill.is_pending,
+            "created_at": created_at
+        })
 
         # Update the created_at in the returned skill if it wasn't provided
         if not skill.created_at:
-            skill.created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            skill.created_at = created_at
 
         return skill
 
@@ -182,18 +176,18 @@ class SkillRepository(BaseRepository[Skill]):
         )
 
     def get_task_skills(self, task_id: str) -> list[Skill]:
-        query = f"""
+        query = """
             match
-                $task isa task, has id "{task_id}";
+                $task isa task, has id ~task_id;
                 $taskSkill isa requiresSkill (task: $task, skill: $skill);
                 $skill isa skill, has id $skill_id, has name $skill_name;
-            fetch {{
+            fetch {
                 'id': $skill_id,
                 'name': $skill_name,
                 'isPending': $skill.isPending
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"task_id": task_id})
 
         skills = []
         for result in results:
@@ -215,41 +209,34 @@ class SkillRepository(BaseRepository[Skill]):
         """
         Update the isPending attribute of a skill.
         """
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        is_pending_value = "true" if is_pending else "false"
-
-        query = f"""
+        query = """
             match
-                $skill isa skill, has id "{escaped_skill_id}";
+                $skill isa skill, has id ~skill_id;
             update
-                $skill has isPending {is_pending_value};
+                $skill has isPending ~is_pending;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"skill_id": skill_id, "is_pending": is_pending})
 
     def update_name(self, skill_id: str, new_name: str) -> None:
         """
         Update the name of a skill (unique).
         """
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        escaped_name = new_name.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $skill isa skill, has id "{escaped_skill_id}";
+                $skill isa skill, has id ~skill_id;
             update
-                $skill has name "{escaped_name}";
+                $skill has name ~new_name;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"skill_id": skill_id, "new_name": new_name})
 
     def delete_by_id(self, skill_id: str) -> None:
         """
         Permanently delete a skill by id. Intended for declining pending skills.
         """
-        escaped_skill_id = skill_id.replace('"', '\\"')
-        query = f"""
+        query = """
             match
-                $skill isa skill, has id "{escaped_skill_id}";
+                $skill isa skill, has id ~skill_id;
             delete
                 $skill;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"skill_id": skill_id})
