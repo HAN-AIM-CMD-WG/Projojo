@@ -51,37 +51,6 @@ async def get_project_tasks(id: str = Path(..., description="Project ID")):
     tasks = task_service.get_tasks_with_skills_by_project(id)
     return tasks
 
-@router.patch("/{id}/location")
-async def update_project_location(
-    id: str = Path(..., description="Project ID"),
-    body: dict = Body(...),
-    payload: dict = Depends(get_token_payload)
-):
-    """
-    Update the location for a project.
-    Only a teacher or the supervisor who created the project may update the location.
-    """
-    location = body.get("location", "")
-
-    # Fetch project to get its business for authorization
-    try:
-        existing = project_repo.get_by_id(id)
-    except Exception:
-        existing = None
-
-    if not existing:
-        raise HTTPException(status_code=404, detail="Project niet gevonden")
-
-    allowed = (
-        payload.get("role") == "teacher" or
-        (payload.get("role") == "supervisor" and payload.get("businessId") == existing.business_id)
-    )
-    if not allowed:
-        raise HTTPException(status_code=403, detail="Je bent niet bevoegd om de projectlocatie bij te werken")
-
-    project_repo.update_location(id, location)
-    return {"message": "Project locatie bijgewerkt"}
-
 @router.post("/", response_model=ProjectCreation, status_code=201)
 async def create_project(
     name: Annotated[str, Form(...)],
