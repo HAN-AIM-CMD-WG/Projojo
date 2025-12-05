@@ -11,7 +11,7 @@
 - **Repository**: [HAN-AIM-CMD-WG/Projojo](https://github.com/HAN-AIM-CMD-WG/Projojo)
 - **Demo**: https://projojo.dp.demopreview.nl/
 - **Timeline**: September - December 2024
-- **Current Version**: Dashboard V4 (Advanced Personalization)
+- **Current Version**: Dashboard V9 (Realistische Student Dashboard - MVP)
 
 ---
 
@@ -62,7 +62,7 @@ Projojo is een educatief project management platform dat bedrijven, studenten, s
 - **Enhanced progress bars** with flow animations
 - **Maintained V4 personalization** features
 
-### ✅ V6 (Comprehensive Student Features) - CURRENT
+### ✅ V6 (Comprehensive Student Features)
 - **Task Registration Hub** - Complete status tracking & management
 - **Smart Project Matching** - AI-powered skill compatibility scoring
 - **Progress Analytics** - Performance metrics, trends & insights
@@ -72,6 +72,49 @@ Projojo is een educatief project management platform dat bedrijven, studenten, s
 - **Collaboration & Networking** - Team connections & study groups
 - **Extensive Info System** - Every feature explained with tooltips
 - **Crystal Clear UX** - Designed for first-time student users
+
+### ✅ V7 (Enhanced Kanban & Collapsible Sections)
+- **Full-width Kanban board** - Mobile-responsive task management
+- **Drag & drop functionality** - Intuitive task organization
+- **Collapsible footer widgets** - Portfolio, Analytics, Networking
+- **Enhanced mobile experience** - Stacked columns on mobile devices
+
+### ✅ V8 (Kanban Task Management)
+- **Complete Kanban system** - To Do, In Progress, Review, Done columns
+- **Task creation modal** - Add new tasks with priorities
+- **Visual task states** - Active, pending, completed indicators
+- **Mobile-optimized Kanban** - Responsive column layouts
+
+### ✅ V9 (Realistische Student Dashboard) - CURRENT MVP
+**Focus: Essentiële functionaliteit voor eerste prototype**
+
+#### Core Features (User Story Based):
+- **Lopende Projecten Overzicht** - Gegroepeerd per bedrijf met voortgang
+- **Sollicitaties Tracking** - Status van uitstaande sollicitaties
+- **Slimme Matches** - Projecten die passen bij student skills
+- **Geïntegreerde Zoekfunctie** - Quick access naar zoekpagina
+- **Profiel Samenvatting** - Stats, skills en edit functionaliteit
+
+#### Design Principes V9:
+- **Clean & Focused** - Alleen essentiële features, geen overbodige widgets
+- **Modern Top Navigation** - Zoekbalk, notificaties, profiel in header
+- **Neumorphic Design** - Consistent met design system
+- **Mobile-First** - Responsive layout voor alle schermformaten
+- **Accessibility First** - Keyboard navigatie, reduced motion support
+
+#### UX Improvements:
+- Primary action button "Zoek Projecten" prominent zichtbaar
+- Match percentages voor sollicitaties en aanbevelingen
+- Progress bars bij actieve projecten
+- Status badges (Actief, In Review, In behandeling)
+- Notificatie badges voor nieuwe items
+
+#### What's NOT in V9 (Future Iterations):
+- Kanban board (V7/V8 feature - te complex voor MVP)
+- Achievement system (gamification later toevoegen)
+- Analytics dashboard (nice-to-have)
+- Portfolio builder (advanced feature)
+- Collaboration tools (phase 2)
 
 ---
 
