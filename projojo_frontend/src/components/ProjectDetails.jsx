@@ -87,8 +87,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                     </Link>
                                     <p className="text-black-600 text-sm flex gap-1">
                                         <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                        {project.business.location}
-                                        {/* {project.business.location.join(", ")} */}
+                                        {project.location && project.location.length > 0 ? project.location : project.business.location}
                                     </p>
                                 </div>
                             </>}
@@ -120,11 +119,21 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         </li>
                     ))}
                 </ul>
-                {isOwner && (
-                    <div className="w-fit p-4 pt-0 flex">
-                        <button className="btn-primary w-full border border-gray-400" onClick={handleOpenModal}>Taak toevoegen</button>
-                    </div>
-                )}
+                <div className="w-fit p-4 pt-0 flex gap-2">
+                    {(isOwner || (authData && authData.type === "teacher")) && (
+                        <Link to={`/projects/${project.id}/update`} className="btn-primary border border-gray-400 px-4 py-0 text-sm">
+                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 512 512" className='h-4 w-4'>
+                                <path fill="#ffffff" d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z" />
+                            </svg>
+                            <p>Project aanpassen</p>
+                        </Link>
+                    )}
+                    {isOwner && (
+                        <div>
+                            <button className="btn-primary border border-gray-400 px-3 py-2 text-sm" onClick={handleOpenModal}>Taak toevoegen</button>
+                        </div>
+                    )}
+                </div>
             </div>
             {isOwner && (
                 <Modal

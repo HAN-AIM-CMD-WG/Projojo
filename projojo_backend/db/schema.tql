@@ -39,6 +39,7 @@ entity project,
     owns description @card(1),
     owns imagePath @card(1),
     owns createdAt @card(1),
+    owns location @card(0..1),
     plays hasProjects:project @card(1),
     plays containsTask:project @card(0..),
     plays creates:project @card(0..);

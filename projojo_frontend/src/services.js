@@ -359,6 +359,18 @@ export function updateBusiness(businessId, formData) {
 }
 
 /**
+ * Update a project's full data (name, description, location, image)
+ * @param {string} projectId
+ * @param {FormData} formData
+ */
+export function updateProject(projectId, formData) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
+}
+
+/**
  * @param {string} skillId
  * @returns {Promise<void>}
  */

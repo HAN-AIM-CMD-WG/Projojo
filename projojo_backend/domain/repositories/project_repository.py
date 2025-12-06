@@ -29,6 +29,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
+                'location': [$project.location],
                 'createdAt': $createdAt,
                 'business': $business_id
             }};
@@ -54,6 +55,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
+                'location': [$project.location],
                 'createdAt': $createdAt,
                 'business': $business_id
             };
@@ -77,6 +79,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
+                'location': [$project.location],
                 'createdAt': $createdAt,
                 'business': "{business_id}"
             }};
@@ -116,6 +119,10 @@ class ProjectRepository(BaseRepository[Project]):
         name = result.get("name", "")
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
+        location = result.get("location", "")
+        # handle if location came back as list like [$project.location]
+        if isinstance(location, list):
+            location = location[0] if len(location) > 0 else ""
         created_at_str = result.get("createdAt", "")
         business = result.get("business", "")
 
@@ -129,6 +136,7 @@ class ProjectRepository(BaseRepository[Project]):
             name=name,
             description=description,
             image_path=image_path,
+            location=location,
             created_at=created_at,
             business_id=business,
         )
@@ -185,6 +193,7 @@ class ProjectRepository(BaseRepository[Project]):
         escaped_description = project.description.replace('"', '\\"')
         escaped_image_path = project.image_path.replace('"', '\\"')
         escaped_business_id = project.business_id.replace('"', '\\"')
+        escaped_location = (project.location.replace('"', '\\"') if getattr(project, "location", None) else "")
 
         query = f"""
             match
@@ -196,6 +205,7 @@ class ProjectRepository(BaseRepository[Project]):
                 has name "{escaped_name}",
                 has description "{escaped_description}",
                 has imagePath "{escaped_image_path}",
+                has location "{escaped_location}",
                 has createdAt {created_at};
                 $hasProjects isa hasProjects($business, $project);
         """
@@ -222,5 +232,32 @@ class ProjectRepository(BaseRepository[Project]):
             image_path=project.image_path,
             created_at=created_at,
             business_id=project.business_id,
+            location=project.location,
             supervisor_id=project.supervisor_id,
         )
+
+    def update(self, project_id: str, name: str, description: str, location: str, image_filename: str = None) -> None:
+        """
+        Update project attributes. image_filename is optional.
+        """
+        escaped_project_id = project_id.replace('"', '\\"')
+        escaped_name = name.replace('"', '\\"')
+        escaped_description = description.replace('"', '\\"')
+        escaped_location = location.replace('"', '\\"')
+
+        update_clauses = [
+            f'$project has name "{escaped_name}";',
+            f'$project has description "{escaped_description}";',
+            f'$project has location "{escaped_location}";'
+        ]
+
+        if image_filename is not None:
+            update_clauses.append(f'$project has imagePath "{image_filename}";')
+
+        query = f"""
+            match
+                $project isa project, has id "{escaped_project_id}";
+            update
+                {' '.join(update_clauses)}
+        """
+        Db.write_transact(query)

@@ -14,6 +14,7 @@ class Project(BaseModel):
         examples=["2025-04-21T10:02:58"]
     )]
     business_id: str | None = None
+    location: str | None = None
     tasks: list[Task] | None = None
 
     class Config:
