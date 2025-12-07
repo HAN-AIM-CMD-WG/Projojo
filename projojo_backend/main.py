@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
+from auth.jwt_middleware import JWTMiddleware
 
 # Import routers
 from routes.auth_router import router as auth_router
@@ -56,6 +57,9 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+# Add JWT validation middleware
+app.add_middleware(JWTMiddleware)
 
 # Add session middleware (required by authlib for OAuth state)
 app.add_middleware(

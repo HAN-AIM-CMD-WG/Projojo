@@ -1,8 +1,11 @@
 from datetime import datetime, timedelta, timezone
 import os
 import jwt
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Security scheme for extracting Bearer tokens
 security = HTTPBearer()
@@ -39,21 +42,22 @@ def create_jwt_token(user_id: str, role: str = "student", business_id: str | Non
     token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return token
 
-def get_token_payload(token: str = Depends(security)) -> dict:
+def get_token_payload(request: Request) -> dict:
     """
     FastAPI dependency to extract and validate JWT token
     Returns the decoded payload if valid, raises HTTPException if invalid
     """
-    # Remove 'Bearer ' prefix if present (HTTPBearer should handle this, but just in case)
-    if token.credentials.startswith("Bearer "):
-        token_str = token.credentials[7:]
-    else:
-        token_str = token.credentials
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+
+    token_str = auth_header[7:]
 
     try:
         return jwt.decode(token_str, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-    # Token could be expired or invalid (tampered with)
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid or tampered token")
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
