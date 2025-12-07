@@ -19,7 +19,7 @@ export default function Modal({ isModalOpen, setIsModalOpen, modalHeader, maxWid
 
     return (
         <div>
-            <div id="crud-modal" onClick={handleClickOutside} aria-hidden={!isModalOpen} className={`${isModalOpen ? 'flex' : 'hidden'} overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-dvh max-h-full px-4 py-12 bg-black bg-opacity-30`}>
+            <div id="crud-modal" onClick={handleClickOutside} aria-hidden={!isModalOpen} className={`${isModalOpen ? 'flex' : 'hidden'} overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-dvh max-h-full px-4 py-12 bg-black/30`}>
                 <div className={`relative w-full ${maxWidth} max-h-full`}>
                     <div ref={modalRef} className="relative bg-white rounded-lg shadow ">
                         <div className="flex items-center justify-between p-4 border-b rounded-t">
