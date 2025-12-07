@@ -117,18 +117,16 @@ class TaskRepository(BaseRepository[Task]):
         return tasks
 
     def get_business_id_by_task(self, task_id: str) -> str | None:
-        escaped_task_id = task_id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $task isa task, has id "{escaped_task_id}";
+                $task isa task, has id ~task_id;
                 $contains isa containsTask (project: $project, task: $task);
                 $hasProjects isa hasProjects (business: $business, project: $project);
-            fetch {{
+            fetch {
                 'business_id': $business.id
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"task_id": task_id})
         if not results:
             return None
         return results[0].get("business_id")

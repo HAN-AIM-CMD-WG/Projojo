@@ -209,10 +209,8 @@ class SkillRepository(BaseRepository[Skill]):
         """
         Set-based update of a task's required skills (requiresSkill relation).
         """
-        escaped_task_id = task_id.replace('"', '\\"')
-
         # Current skills on the task
-        current_skills = self.get_task_skills(escaped_task_id)
+        current_skills = self.get_task_skills(task_id)
         current_skill_ids = {skill.id for skill in current_skills}
 
         updated_skill_ids = set(updated_skills)
@@ -221,28 +219,25 @@ class SkillRepository(BaseRepository[Skill]):
 
         # Add new relations
         for skill_id in to_add:
-            escaped_skill_id = skill_id.replace('"', '\\"')
-            query = f"""
+            query = """
                 match
-                    $task isa task, has id "{escaped_task_id}";
-                    $skill isa skill, has id "{escaped_skill_id}";
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
                 insert
                     $requiresSkill isa requiresSkill (task: $task, skill: $skill);
             """
-            Db.write_transact(query)
-
+            Db.write_transact(query, {"task_id": task_id, "skill_id": skill_id})
         # Remove stale relations
         for skill_id in to_remove:
-            escaped_skill_id = skill_id.replace('"', '\\"')
-            query = f"""
+            query = """
                 match
-                    $task isa task, has id "{escaped_task_id}";
-                    $skill isa skill, has id "{escaped_skill_id}";
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
                     $requiresSkill isa requiresSkill (task: $task, skill: $skill);
                 delete
                     $requiresSkill;
             """
-            Db.write_transact(query)
+            Db.write_transact(query, {"task_id": task_id, "skill_id": skill_id})
 
     def update_is_pending(self, skill_id: str, is_pending: bool) -> None:
         """
