@@ -175,7 +175,8 @@ async def create_registration(
     try:
         task_repo.create_registration(task_id, student_id, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
-    except Exception:
+    except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
 
 @router.put("/{task_id}/registrations/{student_id}")

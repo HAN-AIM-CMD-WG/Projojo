@@ -132,7 +132,7 @@ attribute oauthSub value string;
 attribute description value string;
 attribute location value string;
 attribute isPending value boolean;
-attribute createdAt value datetime;
+attribute createdAt value datetime-tz;
 attribute totalNeeded value integer;
 attribute isAccepted value boolean;
 attribute response value string;
