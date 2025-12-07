@@ -17,7 +17,7 @@
     --radius-large: 2rem;
 }
 
-/* Custom keyframes and animations */
+/* pulse task after navigating to specific task in project */
 @keyframes highlight {
     0% {
         background-color: var(--color-primary);
@@ -36,37 +36,19 @@
 
 @layer components {
     .btn {
-        @apply font-medium text-sm text-nowrap 
-               rounded-md px-5 py-2.5 focus:outline-none 
-               focus:ring-4 focus:ring-pink-300 transition-all 
-               duration-200 transform hover:-translate-y-0.5 
-               shadow-md hover:shadow-lg;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-pink-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg hover:cursor-pointer;
     }
+
     .btn-primary {
-        @apply font-medium text-sm text-nowrap 
-               rounded-md px-5 py-2.5 focus:outline-none 
-               focus:ring-4 focus:ring-pink-300 transition-all 
-               duration-200 transform hover:-translate-y-0.5 
-               shadow-md hover:shadow-lg 
-               bg-pink-600 hover:bg-pink-700 text-white;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-pink-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-primary hover:bg-pink-700 text-white hover:cursor-pointer;
     }
 
     .btn-primary:disabled {
-        @apply font-medium text-sm text-nowrap 
-               rounded-md px-5 py-2.5 focus:outline-none 
-               focus:ring-4 transition-all 
-               duration-200 transform hover:-translate-y-0.5 
-               shadow-md hover:shadow-lg
-               bg-gray-400 hover:bg-gray-500 focus:ring-gray-400 text-white;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-gray-400 hover:bg-gray-500 focus:ring-gray-400 text-white hover:cursor-not-allowed;
     }
 
     .btn-secondary {
-        @apply font-medium text-sm text-nowrap 
-               rounded-md px-5 py-2.5 focus:outline-none 
-               focus:ring-4 transition-all 
-               duration-200 transform hover:-translate-y-0.5 
-               shadow-md hover:shadow-lg
-               bg-gray-500 hover:bg-gray-600 focus:ring-gray-400 text-white;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-gray-500 hover:bg-gray-600 focus:ring-gray-400 text-white hover:cursor-pointer;
     }
 }
 
@@ -116,7 +98,8 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
+    --primary: #e50056;
+    /* oklch(0.205 0 0); */
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -178,10 +161,11 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
+
+    body {
+        @apply bg-background text-foreground;
     }
 }
