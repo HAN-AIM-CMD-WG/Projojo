@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
 import Alert from "./Alert";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
 import InfoBox from "./InfoBox";
 import Modal from "./Modal";
@@ -103,7 +103,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     }
 
     const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId);
+        const skillIds = skills.map((skill) => skill.skillId || skill.id);
 
         setTaskSkillsError("");
 
@@ -140,9 +140,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
                             {task.skills && task.skills.map((skill) => (
                                 <SkillBadge
-                                    key={skill.id}
+                                    key={skill.skillId ?? skill.id}
                                     skillName={skill.name}
-                                    isPending={skill.is_pending}
+                                    isPending={skill.isPending ?? skill.is_pending}
                                 />
                             ))}
                             {/* {isOwner && !isEditing && (
@@ -224,9 +224,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     <span>Skills:</span>
                                     {registration.student.skills.map((skill) => (
                                         <SkillBadge
-                                            key={skill.id}
+                                            key={skill.skillId ?? skill.id}
                                             skillName={skill.name}
-                                            isPending={skill.is_pending}
+                                            isPending={skill.isPending ?? skill.is_pending}
                                         />
                                     ))}
                                 </div>

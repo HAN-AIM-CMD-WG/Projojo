@@ -3,25 +3,23 @@ from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Task
 from datetime import datetime
+from service.uuid_service import generate_uuid
 
 class TaskRepository(BaseRepository[Task]):
     def __init__(self):
         super().__init__(Task, "task")
 
     def get_by_id(self, id: str) -> Task | None:
-        # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $task isa task,
-                has name "{escaped_id}",
+                has id ~id,
                 has name $name,
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
-            fetch {{
-                'id': $name,
+            fetch {
+                'id': $task.id,
                 'name': $name,
                 'description': $description,
                 'total_needed': $totalNeeded,
@@ -29,7 +27,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
-                    not {{ $registration has isAccepted $any_value; }};
+                    not { $registration has isAccepted $any_value; };
                     return count;
                 ),
                 'total_accepted': (
@@ -38,9 +36,9 @@ class TaskRepository(BaseRepository[Task]):
                         has isAccepted true;
                     return count;
                 )
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             raise ItemRetrievalException(Task, f"Task with ID {id} not found.")
 
@@ -51,12 +49,13 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task,
+                has id $id,
                 has name $name,
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
             fetch {
-                'id': $name,
+                'id': $id,
                 'name': $name,
                 'description': $description,
                 'total_needed': $totalNeeded,
@@ -64,7 +63,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
-                    not {{ $registration has isAccepted $any_value; }};
+                    not { $registration has isAccepted $any_value; };
                     return count;
                 ),
                 'total_accepted': (
@@ -79,26 +78,29 @@ class TaskRepository(BaseRepository[Task]):
         return [Task.model_validate(result) for result in results]
 
     def get_tasks_by_project(self, project_id: str) -> list[Task]:
-        query = f"""
+        query = """
             match
-                $project isa project, has name "{project_id}";
+                $project isa project,
+                has id ~project_id,
+                has id $project_id;
                 $projectTask isa containsTask (project: $project, task: $task);
                 $task isa task,
+                has id $id,
                 has name $name,
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
-            fetch {{
-                'id': $name,  # Using name as the ID
+            fetch {
+                'id': $id,
                 'name': $name,
                 'description': $description,
                 'total_needed': $totalNeeded,
                 'created_at': $createdAt,
-                'project_id': "{project_id}",
+                'project_id': $project_id,
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
-                    not {{ $registration has isAccepted $any_value; }};
+                    not { $registration has isAccepted $any_value; };
                     return count;
                 ),
                 'total_accepted': (
@@ -107,151 +109,170 @@ class TaskRepository(BaseRepository[Task]):
                         has isAccepted true;
                     return count;
                 )
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"project_id": project_id})
         tasks = [Task.model_validate(result) for result in results]
 
         return tasks
 
     def create(self, task: Task) -> Task:
+        if not task.project_id:
+            raise ValueError("De taak moet bij een bestaand project horen.")
+
+        id = generate_uuid()
         # Generate a creation timestamp
-        created_at = datetime.now().isoformat()
+        created_at = datetime.now()
 
-        # Escape any double quotes in strings
-        escaped_name = task.name.replace('"', '\\"')
-        escaped_description = task.description.replace('"', '\\"')
+        validation_query = """
+            match
+                $project isa project, has id ~project_id, has name $project_name;
+            fetch {
+                'exists': true,
+                'project_name': $project_name,
+                'duplicate_tasks': [
+                    match
+                        $existingTask isa task, has name ~task_name;
+                        $projectTask isa containsTask (project: $project, task: $existingTask);
+                    fetch { 'exists': true };
+                ]
+            };
+        """
+        validation_results = Db.read_transact(validation_query, {
+            "project_id": task.project_id,
+            "task_name": task.name
+        })
 
-        # Create the task
-        task_query = f"""
+        if not validation_results:
+            raise ItemRetrievalException("Project", f"Project with ID '{task.project_id}' not found.")
+
+        # Check if duplicate tasks were found
+        if validation_results[0].get('duplicate_tasks'):
+            project_name = validation_results[0].get('project_name')
+            raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{project_name}'.")
+
+        query = """
+            match
+                $project isa project, has id ~project_id;
             insert
                 $task isa task,
-                has name "{escaped_name}",
-                has description "{escaped_description}",
-                has totalNeeded {task.total_needed},
-                has createdAt {created_at};
+                has id ~id,
+                has name ~name,
+                has description ~description,
+                has totalNeeded ~total_needed,
+                has createdAt ~created_at;
+                $projectTask isa containsTask (project: $project, task: $task);
         """
-        Db.write_transact(task_query)
+        Db.write_transact(query, {
+            "project_id": task.project_id,
+            "id": id,
+            "name": task.name,
+            "description": task.description,
+            "total_needed": task.total_needed,
+            "created_at": created_at
+        })
 
-        # If project_id is provided, create project-task relation
-        if task.project_id:
-            escaped_project_id = task.project_id.replace('"', '\\"')
-
-            project_task_query = f"""
-                match
-                    $project isa project, has name "{escaped_project_id}";
-                    $task isa task, has name "{escaped_name}";
-                insert
-                    $projectTask isa containsTask (project: $project, task: $task);
-            """
-            Db.write_transact(project_task_query)
-
-        # Update the created_at in the returned task
-        task.created_at = datetime.fromisoformat(created_at)
+        # Update the task with the generated ID and created_at
+        task.id = id
+        task.created_at = created_at
         return task
 
     def update(self, id: str, task: Task) -> Task | None:
         # First delete the old task
-        # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
-        delete_query = f"""
+        delete_query = """
             match
                 $task isa task,
-                has name "{escaped_id}";
+                has id ~id;
             delete $task isa task;
         """
-        Db.write_transact(delete_query)
+        Db.write_transact(delete_query, {"id": id})
 
         # Then create a new one with updated values
         return self.create(task)
 
     def delete(self, id: str) -> bool:
-        # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $task isa task,
-                has name "{escaped_id}";
+                has id ~id;
             delete $task isa task;
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"id": id})
         return True
 
-    def get_registrations(self, task_name: str) -> list[dict]:
+    def get_registrations(self, task_id: str) -> list[dict]:
         """
         Get all registrations for a task with student details and skills
         """
-        escaped_task_name = task_name.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $task isa task, has name "{escaped_task_name}";
-                $student isa student;
+                $task isa task, has id ~task_id;
+                $student isa student, has id $student_id;
                 $registration isa registersForTask (student: $student, task: $task);
-            not {{ $registration has isAccepted $any_value; }};
-            fetch {{
+            not { $registration has isAccepted $any_value; };
+            fetch {
                 'reason': $registration.description,
-                'student': {{
-                    'id': $student.email,
+                'student': {
+                    'id': $student_id,
                     'full_name': $student.fullName,
                     'skills': [
                         match
                             $hasSkill isa hasSkill (student: $student, skill: $skill);
-                        fetch {{
-                            'id': $skill.name,
+                        fetch {
+                            'id': $skill.id,
                             'name': $skill.name,
                             'is_pending': $skill.isPending,
                             'created_at': $skill.createdAt,
                             'description': $hasSkill.description
-                        }};
+                        };
                     ]
-                }}
-            }};
+                }
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"task_id": task_id})
         return results
 
-    def create_registration(self, task_name: str, student_email: str, motivation: str) -> None:
+    def create_registration(self, task_id: str, student_id: str, motivation: str) -> None:
         """
         Create a new registration for a student to a task
         """
-        escaped_task_name = task_name.replace('"', '\\"')
-        escaped_student_email = student_email.replace('"', '\\"')
-        escaped_motivation = motivation.replace('"', '\\"')
-        created_at = datetime.now().isoformat()
+        created_at = datetime.now()
 
-        query = f"""
+        query = """
             match
-                $task isa task, has name "{escaped_task_name}";
-                $student isa student, has email "{escaped_student_email}";
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
             insert
                 $registration isa registersForTask (student: $student, task: $task),
-                has description "{escaped_motivation}",
-                has createdAt {created_at};
+                has description ~motivation,
+                has createdAt ~created_at;
         """
 
-        Db.write_transact(query)
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+            "motivation": motivation,
+            "created_at": created_at
+        })
 
-    def update_registration(self, task_name: str, student_email: str, accepted: bool, response: str = "") -> None:
+    def update_registration(self, task_id: str, student_id: str, accepted: bool, response: str = "") -> None:
         """
         Update a registration status (accept/reject) with optional response
         """
-        escaped_task_name = task_name.replace('"', '\\"')
-        escaped_student_email = student_email.replace('"', '\\"')
-        escaped_response = response.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $task isa task, has name "{escaped_task_name}";
-                $student isa student, has email "{escaped_student_email}";
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
             update
-                $registration has isAccepted {str(accepted).lower()};
-                $registration has response "{escaped_response}";
+                $registration has isAccepted ~accepted;
+                $registration has response ~response;
         """
 
-        Db.write_transact(query)
-
-
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+            "accepted": accepted,
+            "response": response
+        })

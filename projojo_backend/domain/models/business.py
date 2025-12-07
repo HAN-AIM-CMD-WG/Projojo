@@ -4,11 +4,11 @@ from .project import Project
 
 
 class Business(BaseModel):
-    id: str
+    id: str | None = None
     name: str
     description: str
     image_path: str
-    location: list[str]
+    location: str
     projects: list[Project] | None = None
 
     class Config:
@@ -18,7 +18,7 @@ class Business(BaseModel):
 class BusinessAssociation(BaseModel):
     business_id: str
     supervisor_id: str
-    location: list[str]
+    location: str
 
     class Config:
         from_attributes = True

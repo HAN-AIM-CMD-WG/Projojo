@@ -2,7 +2,8 @@ import { useParams } from "react-router-dom";
 import Alert from "../components/Alert";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
-import { getBusinessByName, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
+import { getBusinessById, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
+import { normalizeSkill } from '../utils/skills';
 import useFetch from '../useFetch';
 import NotFound from './NotFound';
 import PageHeader from '../components/PageHeader';
@@ -13,9 +14,8 @@ import PageHeader from '../components/PageHeader';
  */
 export default function BusinessPage() {
     const { businessId } = useParams();
-    const businessName = businessId || "Celestial Innovations";
 
-    const { data: projectsData, error: projectsError } = useFetch(() => getProjectsWithBusinessId(businessName).then(async projects => {
+    const { data: projectsData, error: projectsError } = useFetch(() => getProjectsWithBusinessId(businessId).then(async projects => {
         const promises = [];
         for (let i = 0; i < projects.length; i++) {
             const project = projects[i];
@@ -28,16 +28,16 @@ export default function BusinessPage() {
         for (let i = 0; i < projects.length; i++) {
             projects[i].tasks = awaited[i];
         }
-        
-        return projects.map((project) => { 
-            // Ensure project has the expected format for the components
-            project.projectId = project.name;
-            project.title = project.name;
-            return project; 
-        });
-    }), [businessName]);
 
-    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusinessByName(businessName), [businessName]);
+        return projects.map((project) => {
+            // Ensure project has the expected format for the components
+            project.projectId = project.id;
+            project.title = project.name;
+            return project;
+        });
+    }), [businessId]);
+
+    const { data: businessData, error: businessError, isLoading: isBusinessLoading } = useFetch(() => getBusinessById(businessId), [businessId]);
 
     let businessErrorMessage = undefined;
     if (businessError !== undefined) {
@@ -69,6 +69,28 @@ export default function BusinessPage() {
 
     // No need to set imagePath as it's already in image_path field in the new API response
 
+    // Compute topSkills for the business from the loaded projects' tasks (normalize shapes)
+    const computedTopSkills = (() => {
+        if (!projectsData) return [];
+        const allSkills = projectsData.flatMap(project =>
+            (project.tasks || []).flatMap(task => (task.skills || []).map(s => normalizeSkill(s)))
+        );
+
+        const skillCounts = allSkills.reduce((acc, skill) => {
+            const key = skill.skillId;
+            if (!acc[key]) {
+                acc[key] = { count: 0, isPending: skill.isPending, name: skill.name, skillId: key };
+            }
+            acc[key].count++;
+            return acc;
+        }, {});
+
+        return Object.values(skillCounts)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 5)
+            .map(({ skillId, name, isPending }) => ({ skillId, name, isPending }));
+    })();
+
     return (
         <>
             <PageHeader name={'Bedrijfspagina'} />
@@ -76,7 +98,18 @@ export default function BusinessPage() {
                 <Alert text={businessErrorMessage} />
                 <Alert text={projectsErrorMessage} />
             </div>
-            {isBusinessLoading ? (<Loading />) : (<BusinessProjectDashboard showDescription={true} showUpdateButton={true} isAlwaysExtended={true} business={businessData} projects={projectsData} />)}
+            {isBusinessLoading ? (
+                <Loading />
+            ) : (
+                <BusinessProjectDashboard
+                    showDescription={true}
+                    showUpdateButton={true}
+                    isAlwaysExtended={true}
+                    business={businessData}
+                    projects={projectsData}
+                    topSkills={computedTopSkills}
+                />
+            )}
         </>
     );
 }

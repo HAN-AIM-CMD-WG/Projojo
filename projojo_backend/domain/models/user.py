@@ -1,16 +1,17 @@
 from pydantic import BaseModel
 
 from .skill import StudentSkill
+from .authentication import OAuthProvider
 
 
 class User(BaseModel):
-    id: str
+    id: str | None = None
     email: str
     full_name: str
-    image_path: str | None = None
-    password_hash: str | None = None
+    image_path: str
+    oauth_providers: list[OAuthProvider] | None = None
     type: str | None = None
-    
+
     # fill the `type` field based on the class name of the inheriting class
     def __init__(self, **data):
         super().__init__(**data)
@@ -21,17 +22,17 @@ class User(BaseModel):
         from_attributes = True
 
 class Supervisor(User):
-    authentication_ids: list[str] = []
     business_association_id: str | None = None
     created_project_ids: list[str] = []
 
 class Student(User):
-    school_account_name: str
     skill_ids: list[str] = []
     registered_task_ids: list[str] = []
+    description: str | None = None
+    cv_path: str | None = None
 
 class Teacher(User):
-    school_account_name: str
+    pass
 
 class StudentSkills(Student):
     Skills: list[StudentSkill] = []

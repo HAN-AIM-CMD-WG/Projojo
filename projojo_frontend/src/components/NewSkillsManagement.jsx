@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { getSkills, /*updateSkillAcceptance, updateSkillName as updateSkillNameService*/ } from "../services";
+import { getSkills, updateSkillAcceptance, updateSkillName as updateSkillNameService } from "../services";
+import { normalizeSkill } from "../utils/skills";
 import Alert from "./Alert";
 import Modal from "./Modal";
 
@@ -18,7 +19,12 @@ export default function NewSkillsManagement() {
         getSkills()
             .then(data => {
                 if (ignore) return;
-                setPendingSkills(data.filter(skill => skill.isPending === true).sort((a, b) => a.name.localeCompare(b.name)));
+                const normalized = (data || []).map(normalizeSkill).filter(Boolean);
+                setPendingSkills(
+                    normalized
+                        .filter(skill => skill.isPending === true)
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                );
             })
             .catch(() => {
                 if (ignore) return;
@@ -101,7 +107,7 @@ export default function NewSkillsManagement() {
                             </tr>
                         )}
                         {pendingSkills.map(skill => (
-                            <tr key={skill.skillId} className="border-b hover:bg-gray-100">
+                            <tr key={skill.skillId || skill.id} className="border-b hover:bg-gray-100">
                                 <th scope="row" className="px-3 md:px-6 py-2 font-medium text-gray-900 whitespace-nowrap w-full">
                                     {skill.name}
                                 </th>
