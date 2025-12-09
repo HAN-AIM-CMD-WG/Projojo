@@ -294,24 +294,26 @@
         box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2);
     }
 
-    /* --- Outline Button - Tertiary actions --- */
+    /* --- Outline Button - Tertiary actions with neumorphic style --- */
     .neu-btn-outline {
         @apply font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
-        background: transparent;
+        background: #EFEEEE;
         color: #FF7F50;
         border: 2px solid #FF7F50;
         border-radius: 0.75rem;
         padding: 0.5rem 1.125rem;
+        box-shadow: 4px 4px 8px #D1D9E6, -4px -4px 8px #FFFFFF;
     }
 
     .neu-btn-outline:hover {
-        background: rgba(255, 127, 80, 0.1);
+        background: rgba(255, 127, 80, 0.08);
         transform: translateY(-2px);
+        box-shadow: 5px 5px 12px #D1D9E6, -5px -5px 12px #FFFFFF;
     }
 
     .neu-btn-outline:active {
         transform: translateY(0);
-        background: rgba(255, 127, 80, 0.15);
+        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
     }
 
     /* --- Icon Button - Circulair zoals Gemini --- */
