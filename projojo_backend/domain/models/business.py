@@ -9,6 +9,9 @@ class Business(BaseModel):
     description: str
     image_path: str
     location: str
+    sector: str | None = None
+    company_size: str | None = None
+    website: str | None = None
     projects: list[Project] | None = None
 
     class Config:

@@ -29,6 +29,9 @@ entity business,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1),
+    owns sector @card(0..1),
+    owns companySize @card(0..1),
+    owns website @card(0..1),
     plays manages:business @card(0..),
     plays hasProjects:business @card(0..),
     plays businessInvite:business @card(0..);
@@ -139,3 +142,6 @@ attribute response value string;
 attribute key value string;
 attribute inviteType value string @values("business", "teacher");
 attribute isUsed value boolean;
+attribute sector value string;
+attribute companySize value string;
+attribute website value string;

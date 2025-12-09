@@ -23,14 +23,41 @@ export default function EmailNotFound() {
         });
     }
 
-    return <form className="flex items-center flex-col" onSubmit={onSubmit}>
-        <h2 className="mb-4 text-2xl tracking-tight font-extrabold text-primary-600">Uw email kon niet opgehaald worden bij het maken van uw account</h2>
-        <h3 className="mb-4 text-1xl tracking-tight font-bold text-primary-600">Wilt u hier alsnog uw email invoeren</h3>
-        <div className="flex flex-col gap-3 w-64">
-            <FormInput label="Email" type="email" autocomplete="email" required />
-            {saving ? <button className="btn-primary" type="button" disabled><Loading /></button> : <input type="submit" className="btn-primary" />}
-            {error && <span className="text-primary">{error}</span>}
+    return (
+        <div className="max-w-md mx-auto px-4 py-12">
+            <div className="neu-flat rounded-2xl p-8">
+                <div className="text-center mb-6">
+                    <span className="material-symbols-outlined text-5xl text-primary mb-4">mail</span>
+                    <h2 className="text-2xl font-extrabold text-gray-800">Email niet gevonden</h2>
+                    <p className="text-gray-500 mt-2">Uw email kon niet opgehaald worden bij het maken van uw account. Voer deze hieronder in.</p>
+                </div>
+                
+                <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+                    <FormInput label="Email" type="email" name="email" autocomplete="email" required />
+                    
+                    <button 
+                        type="submit" 
+                        disabled={saving}
+                        className="neu-btn-primary w-full py-3 font-bold flex items-center justify-center gap-2"
+                    >
+                        {saving ? (
+                            <Loading />
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined">check</span>
+                                Opslaan
+                            </>
+                        )}
+                    </button>
+                    
+                    {error && (
+                        <p className="text-primary text-sm text-center flex items-center justify-center gap-1">
+                            <span className="material-symbols-outlined text-base">error</span>
+                            {error}
+                        </p>
+                    )}
+                </form>
+            </div>
         </div>
-    </form>
-
+    );
 }

@@ -92,6 +92,9 @@ async def update_business(
     description: str = Form(...),
     location: str = Form(...),
     image: Optional[UploadFile] = File(None),
+    sector: Optional[str] = Form(None),
+    company_size: Optional[str] = Form(None),
+    website: Optional[str] = Form(None),
     payload: dict = Depends(get_token_payload)
 ):
     """
@@ -119,7 +122,7 @@ async def update_business(
             raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
 
     try:        
-        business_repo.update(business_id, name, description, location, image_filename)
+        business_repo.update(business_id, name, description, location, image_filename, sector, company_size, website)
         return {"message": "Bedrijf succesvol bijgewerkt"}
     except Exception as e:
         raise HTTPException(

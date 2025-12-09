@@ -50,70 +50,100 @@ insert
         has name "De Gouden Akker",
         has description "Biologische akkerbouw en duurzame gewasproductie",
         has imagePath "logo_gouden_akker.png",
-        has location "Gelderland";
+        has location "Gelderland",
+        has sector "Agri & Food",
+        has companySize "11-50",
+        has website "https://goudenakker.nl";
 
     $b2 isa business,
         has id "13d56397-fdd5-4846-a333-007ab188f403",
         has name "Veeteelt Groep Nederland",
         has description "Moderne rundveehouderij en melkproductie optimalisatie",
         has imagePath "logo_veeteelt_groep.png",
-        has location "Noord-Brabant";
+        has location "Noord-Brabant",
+        has sector "Agri & Food",
+        has companySize "51-200",
+        has website "https://veeteeltgroep.nl";
 
     $b3 isa business,
         has id "a9986c4d-60b6-404c-9eb3-2e6d16822852",
         has name "SmartFarm Solutions",
         has description "Agtech innovaties voor precisie landbouw",
         has imagePath "logo_smartfarm.png",
-        has location "Zuid-Holland";
+        has location "Zuid-Holland",
+        has sector "Technology",
+        has companySize "11-50",
+        has website "https://smartfarmsolutions.nl";
 
     $b4 isa business,
         has id "1b9bd6a1-3b32-4309-8b0a-6acaf611bcad",
         has name "Groene Kassen BV",
         has description "Hightech glastuinbouw en vertical farming",
         has imagePath "logo_groene_kassen.png",
-        has location "Limburg";
+        has location "Limburg",
+        has sector "Agri & Food",
+        has companySize "51-200",
+        has website "https://groenekassen.nl";
 
     $b5 isa business,
         has id "abebaa2f-711b-4558-80ca-a9ac9ee6d558",
         has name "Bodemexperts Nederland",
         has description "Bodemanalyse en bemestingsadvies",
         has imagePath "logo_bodemexperts.png",
-        has location "Overijssel";
+        has location "Overijssel",
+        has sector "Advies & Consultancy",
+        has companySize "1-10",
+        has website "https://bodemexperts.nl";
 
     $b6 isa business,
         has id "31baf4a8-c4be-4d63-9e0c-c71bea59d144",
         has name "AquaCultuur Innovatie",
         has description "Duurzame viskweek en aquaponics systemen",
         has imagePath "logo_aquacultuur.png",
-        has location "Flevoland";
+        has location "Flevoland",
+        has sector "Agri & Food",
+        has companySize "11-50",
+        has website "https://aquacultuurinnovatie.nl";
 
     $b7 isa business,
         has id "70a5d893-6368-4833-ab12-48703670117d",
         has name "Fruitboomgaarden Van Dijk",
         has description "Moderne fruitteelt en oogstoptimalisatie",
         has imagePath "logo_fruitboom.png",
-        has location "Zeeland";
+        has location "Zeeland",
+        has sector "Agri & Food",
+        has companySize "11-50",
+        has website "https://fruitboomgaardenvandijk.nl";
 
     $b8 isa business,
         has id "f9a953b8-dec4-4ebf-b04a-12b24a3911c6",
         has name "Akkerbouw Mechanisatie",
         has description "Landbouwmachines en automatisering",
         has imagePath "logo_mechanisatie.png",
-        has location "Groningen";
+        has location "Groningen",
+        has sector "Technology",
+        has companySize "51-200",
+        has website "https://akkerbouwmechanisatie.nl";
 
     $b9 isa business,
         has id "3205714b-859c-4ecb-aea3-c6f736e6f8db",
         has name "Biodynamische Boerderij",
         has description "Holistische landbouw en biodiversiteit",
         has imagePath "logo_biodynamisch.png",
-        has location "Friesland";
+        has location "Friesland",
+        has sector "Agri & Food",
+        has companySize "1-10",
+        has website "https://biodynamischeboerderij.nl";
 
     $b10 isa business,
         has id "7a48c8c1-2d4a-498a-adb4-4198032de610",
         has name "Agri-Logistiek Centrum",
         has description "Transport en opslag van landbouwproducten",
         has imagePath "logo_agrilogistiek.png",
-        has location "Utrecht";
+        has location "Utrecht",
+        has sector "Logistiek",
+        has companySize "51-200",
+        has website "https://agrilogistiek.nl";
 
     # Supervisor users (1 per business, 10 total)
     $s1 isa supervisor,

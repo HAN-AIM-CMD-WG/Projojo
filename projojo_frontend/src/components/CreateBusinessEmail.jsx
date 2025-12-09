@@ -69,21 +69,34 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
 
     return (
         <>
-            <button data-testid="open-create-mail-button" className="btn-primary w-full" onClick={onCreateMailButtonClick}>Creeër email</button>
-            <Modal modalHeader="Genereer email" isModalOpen={isCreateMailModalOpen} setIsModalOpen={setIsCreateMailModalOpen}>                <form onSubmit={onMailtoButtonClick} className="flex flex-col gap-3">
-                <div>
-                    <FormInput label="Mail naar aangemelde studenten" type="checkbox" name="registered" />
-                    <FormInput label="Mail naar geaccepteerde studenten" type="checkbox" name="accepted" />
-                    <FormInput label="Mail naar afgewezen studenten" type="checkbox" name="rejected" />
-                    <FormInput label="CC naar collega's" type="checkbox" name="colleagues" onChange={value => setSendCCToColleagues(value)} />
-                    {checkboxError && <span className="text-primary">{checkboxError}</span>}
-                </div>
+            <button data-testid="open-create-mail-button" className="neu-btn-primary w-full flex items-center justify-center gap-2" onClick={onCreateMailButtonClick}>
+                <span className="material-symbols-outlined text-lg">mail</span>
+                Creëer email
+            </button>
+            <Modal modalHeader="Genereer email" isModalOpen={isCreateMailModalOpen} setIsModalOpen={setIsCreateMailModalOpen}>
+                <form onSubmit={onMailtoButtonClick} className="flex flex-col gap-4">
+                    <div className="space-y-2">
+                        <FormInput label="Mail naar aangemelde studenten" type="checkbox" name="registered" />
+                        <FormInput label="Mail naar geaccepteerde studenten" type="checkbox" name="accepted" />
+                        <FormInput label="Mail naar afgewezen studenten" type="checkbox" name="rejected" />
+                        <FormInput label="CC naar collega's" type="checkbox" name="colleagues" onChange={value => setSendCCToColleagues(value)} />
+                        {checkboxError && <span className="text-primary text-sm">{checkboxError}</span>}
+                    </div>
 
-                <FormInput label="Onderwerp" type="text" name="subject" required />
+                    <FormInput label="Onderwerp" type="text" name="subject" required />
 
-                <button className="btn-primary" type="submit" disabled={isMailLoading}>{!isMailLoading ? "Genereer mail" : <Loading />}</button>
-                {fetchError && <span className="text-primary font-bold">{fetchError}</span>}
-            </form>
+                    <button className="neu-btn-primary w-full flex items-center justify-center gap-2" type="submit" disabled={isMailLoading}>
+                        {!isMailLoading ? (
+                            <>
+                                <span className="material-symbols-outlined text-lg">send</span>
+                                Genereer mail
+                            </>
+                        ) : (
+                            <Loading />
+                        )}
+                    </button>
+                    {fetchError && <span className="text-primary font-bold text-sm">{fetchError}</span>}
+                </form>
             </Modal>
         </>
     )

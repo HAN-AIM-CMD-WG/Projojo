@@ -25,7 +25,10 @@ class BusinessRepository(BaseRepository[Business]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'location': $location
+                'location': $location,
+                'sector': [ $business.sector ],
+                'companySize': [ $business.companySize ],
+                'website': [ $business.website ]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -48,6 +51,9 @@ class BusinessRepository(BaseRepository[Business]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'location': $location,
+                'sector': [ $business.sector ],
+                'companySize': [ $business.companySize ],
+                'website': [ $business.website ]
             };
         """
         results = Db.read_transact(query)
@@ -59,11 +65,17 @@ class BusinessRepository(BaseRepository[Business]):
         name = result.get("name", "")
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
-        # Handle locations as a list
-        # locations = result.get("location", [])
-        # if not isinstance(locations, list):
-        #     locations = [locations]
         location = result.get("location", "")
+        
+        # Handle optional fields that come as lists from TypeDB
+        sector_list = result.get("sector", [])
+        sector = sector_list[0] if sector_list else None
+        
+        company_size_list = result.get("companySize", [])
+        company_size = company_size_list[0] if company_size_list else None
+        
+        website_list = result.get("website", [])
+        website = website_list[0] if website_list else None
 
         return Business(
             id=id,
@@ -71,6 +83,9 @@ class BusinessRepository(BaseRepository[Business]):
             description=description,
             image_path=image_path,
             location=location,
+            sector=sector,
+            company_size=company_size,
+            website=website,
         )
 
     def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
@@ -118,6 +133,9 @@ class BusinessRepository(BaseRepository[Business]):
             "description": $business.description,
             "image_path": $business.imagePath,
             "location": [$business.location],
+            "sector": [$business.sector],
+            "company_size": [$business.companySize],
+            "website": [$business.website],
             "projects": [
                 match
                     ($business, $project) isa hasProjects;
@@ -187,7 +205,7 @@ class BusinessRepository(BaseRepository[Business]):
             id=id, name=name, description="", image_path="default.png", location=""
         )
 
-    def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None) -> Business:
+    def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None, sector: str = None, company_size: str = None, website: str = None) -> Business:
         # Build the update query dynamically based on what needs to be updated
         update_clauses = [
             '$business has name ~name;',
@@ -205,6 +223,20 @@ class BusinessRepository(BaseRepository[Business]):
         if image_filename is not None:
             update_clauses.append('$business has imagePath ~image_filename;')
             update_params["image_filename"] = image_filename
+        
+        # Optional fields - sector, company_size, website
+        if sector is not None:
+            update_clauses.append('$business has sector ~sector;')
+            update_params["sector"] = sector
+        
+        if company_size is not None:
+            update_clauses.append('$business has companySize ~company_size;')
+            update_params["company_size"] = company_size
+        
+        if website is not None:
+            update_clauses.append('$business has website ~website;')
+            update_params["website"] = website
+
         query = f"""
             match
                 $business isa business, has id ~business_id;

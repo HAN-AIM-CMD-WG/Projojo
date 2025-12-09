@@ -8,6 +8,9 @@ export default function BusinessProjectDashboard({ business, projects, topSkills
                 name={business?.name}
                 image={business?.image_path}
                 location={business?.location}
+                sector={business?.sector}
+                companySize={business?.company_size}
+                website={business?.website}
                 showUpdateButton={showUpdateButton}
                 businessId={business?.id}
                 showDescription={showDescription}

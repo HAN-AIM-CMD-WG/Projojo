@@ -1,361 +1,127 @@
-# Projojo Development Guidelines & Standards
+# Projojo - UI/UX & Development Guidelines
 
 ## 🎯 Project Context
-Projojo is an educational project management platform connecting businesses, students, supervisors, and teachers. Focus on creating a professional, accessible, and modern neumorphic design system.
+Projojo is een educatief projectmanagement platform dat bedrijven, studenten, begeleiders en docenten verbindt.
 
-**Timeline**: September - December 2024 (Demo deadline)
-**Current Version**: Dashboard V5 (Active Task Indicators)
-**Active Branch**: next-ui
+**Tech Stack**: React + Tailwind CSS v4 + FastAPI + TypeDB
 
-## 📋 Central Documentation
-**CRITICAL**: Always maintain `/design-planning/FEATURE_ROADMAP.md` as the single source of truth for:
-- Feature tracking and versioning
-- User stories with acceptance criteria  
-- Technical implementation roadmap
-- Design system specifications
-- Development progress status
+## 🎨 Design System
 
-## 🎨 Design System Standards
+### Neumorphic Principles
+- **Accessibility First**: Hoog contrast, keyboard navigatie, screen reader support
+- **Functional Beauty**: Aesthetiek ondersteunt functionaliteit
+- **Consistent Interactions**: Voorspelbare hover/focus/active states
+- **Professional Appearance**: Geschikt voor educatie/business
 
-### Neumorphic Design Principles
-- **Accessibility First**: High contrast text, keyboard navigation, screen reader support
-- **Functional Beauty**: Aesthetics support functionality, not override it
-- **Consistent Interactions**: Predictable hover/focus/active states
-- **Professional Appearance**: Suitable for educational/business environment
+### Kleuren & Styling
+Zie `projojo_frontend/src/index.css` voor volledige definities:
+- **Primary**: `#FF7F50` (Coral)
+- **Background**: `#EFEEEE` (Neumorphic)
+- **Shadows**: `#D1D9E6` / `#FFFFFF`
 
-### Color Palette (STRICT)
+### CSS Classes
+- `.neu-flat` - Elevated cards
+- `.neu-pressed` - Inset elements
+- `.neu-btn` / `.neu-btn-primary` - Buttons
 
-**Note**: Using Tailwind CSS v4 with `@theme` blocks in `projojo_frontend/src/index.css`
-
-```css
-/* Tailwind v4 @theme block syntax */
-@theme {
-    --color-primary: #FF7F50;        /* Coral Primary */
-    --color-dark-primary: #FF6347;   /* Darker variant (Tomato) */
-    --color-light-primary: #FFA07A;  /* Lighter accent (Light Salmon) */
-    
-    /* Neumorphic Colors */
-    --color-neu-bg: #EFEEEE;
-    --color-neu-light: #FFFFFF;
-    --color-neu-dark: #D1D9E6;
-    
-    /* Text Colors */
-    --color-text-primary: #2D3748;
-    --color-text-secondary: #4A5568;
-    --color-text-muted: #718096;
-}
-
-:root {
-    --primary: #FF7F50;              /* Coral - warm and inviting */
-    
-    /* Semantic Colors */
-    --success: #22bb33;
-    --warning: #ffa502;
-    --error: #ff4757;
-    --info: #4c79ff;
-}
-```
-
-### Component Standards
-
-#### Neumorphic Cards
-```css
-.neu-flat {
-  background: #EFEEEE;
-  box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.4);
-}
-
-.neu-pressed {
-  background: #EFEEEE;
-  box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
-  border-radius: 1rem;
-}
-
-.neu-card-lg {
-  background: #EFEEEE;
-  box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-  border-radius: 2rem;
-  padding: 2rem;
-  border: 1px solid rgba(255,255,255,0.4);
-}
-```
-
-#### Buttons
-- Use `.neu-btn` for secondary actions
-- Use `.neu-btn-primary` for primary actions
-- Legacy `.btn-primary` still available for compatibility
-- Inset shadow for active states
-- Focus rings for accessibility (Indigo with 30% opacity)
-- Smooth transitions (0.2s ease)
-
-#### Activity Indicators (V5 Standard)
-- Subtle pulse animations (2s cycle)
-- Green activity dots with soft glow
-- Border-left accents for active states
-- "Working" badges with consistent styling
-- Priority color coding: High(red), Medium(orange), Low(green)
-
-## 🏗️ File Structure Standards
-
-### Design Planning Structure
-```
-design-planning/
-├── FEATURE_ROADMAP.md           # 🎯 CENTRAL HUB - ALWAYS UPDATE
-├── technical-specs/
-│   └── neumorphic-design-system.md  # CSS/Component specs
-└── mockups/
-    ├── dashboard-v2.html        # Historical reference
-    ├── dashboard-v3.html        # Historical reference  
-    ├── dashboard-v4.html        # Advanced personalization
-    ├── dashboard-v5.html        # 🎯 CURRENT - Active indicators
-    └── assets/                  # Design assets (26 files)
-```
-
-### Code Organization
-- Frontend: React components in `src/components/`
-- Backend: Domain-driven design in `projojo_backend/`
-- New components: Create in separate directories (e.g., `/components/v2/`)
-- Use feature flags for gradual rollout
-
-## 🚀 Development Workflow
-
-### Before Starting ANY Feature
-1. **READ** `/design-planning/FEATURE_ROADMAP.md` completely
-2. **UPDATE** roadmap with new feature status
-3. **CHECK** if feature conflicts with active development
-4. **COORDINATE** with existing dev team if needed
-
-### Design Changes
-1. **Version Control**: Always create new version (V6, V7, etc.)
-2. **Maintain Quality**: Match or exceed V5 professional standards
-3. **Document Changes**: Update FEATURE_ROADMAP.md immediately
-4. **Asset Management**: Keep all assets in `/mockups/assets/`
-
-### Code Standards
-- **TypeScript**: Use strict typing
-- **React**: Functional components with hooks
-- **CSS**: Use neumorphic design system variables
-- **Naming**: Clear, descriptive component and file names
-- **Comments**: Document complex animations and interactions
-
-## 👥 User Roles & Priorities
-
-### Current Focus (Priority Order)
-1. **Student Dashboard** ✅ (V5 Complete)
-2. **Business Dashboard** 🔄 (Next Priority)
-3. **Supervisor Dashboard** 📅 (Planned)
-4. **Teacher Dashboard** 📅 (Planned)
-
-### User Story Format (REQUIRED)
-```
-Als [rol] wil ik [functionaliteit]
-Zodat [business value/reden]
-
-Acceptance Criteria:
-- [ ] Specific measurable requirement
-- [ ] User interaction requirement  
-- [ ] Technical requirement
-- [ ] Accessibility requirement
-```
-
-## 🎯 Dashboard Evolution Standards
-
-### Version Progression
-- **V1**: Baseline (current demo)
-- **V2**: Neumorphic foundation ✅
-- **V3**: Enhanced UX ✅
-- **V4**: Advanced personalization ✅
-- **V5**: Active task indicators ✅
-- **V6**: Comprehensive student features ✅
-- **V7+**: Future enhancements
-
-### V6 Quality Benchmarks (MAINTAIN OR EXCEED)
-- **Comprehensive feature set** with 7 core student functionalities
-- **Extensive info button system** - every feature must be explained
-- **Crystal clear UX** - accessible for first-time users
-- **Smart tooltips** with detailed explanations
-- **Professional appearance** suitable for education/business
-- **Consistent neumorphic styling** throughout
-- **Accessible animations** (respect reduced motion)
-- **Smooth performance** (60fps animations)
-- **Mobile-friendly tooltips** (click-based, not hover-only)
-
-## 🔧 Technical Requirements
-
-### Responsive Design
-- Mobile-first approach
-- Breakpoints: 640px, 768px, 1024px, 1280px, 1536px
-- Touch-friendly interactions on mobile
-- Consistent experience across devices
-
-### Accessibility (NON-NEGOTIABLE)
+## ✅ Accessibility (NON-NEGOTIABLE)
 - WCAG 2.1 AA compliance minimum
-- Keyboard navigation for all interactive elements
+- Keyboard navigatie voor alle interactieve elementen
 - Screen reader compatibility
-- High contrast mode support
-- Reduced motion preferences respected
-- Focus indicators clearly visible (3px primary color rings)
+- `prefers-reduced-motion` respecteren
+- Focus indicators (3px primary color rings)
 
-### Performance
-- CSS bundle optimization
-- Efficient shadow rendering
-- No layout shifts during interactions
-- Smooth 60fps animations
-- Minimal JavaScript for UI interactions
+## 🎪 Animaties
 
-## 🎪 Animation Guidelines
+### Toegestaan
+- Subtle hover elevations (2px translateY)
+- Soft pulse effects (scale 1.0-1.1)
+- Gentle fade transitions
+- Activity indicators (max 2-4s cycles)
 
-### Approved Animation Types
-- **Subtle hover elevations** (2px translateY)
-- **Soft pulse effects** (scale 1.0 to 1.1)
-- **Gentle fade transitions** (opacity changes)
-- **Progress flow animations** (shimmer effects)
-- **Activity indicators** (2-4s cycles maximum)
+### Constraints
+- **Duration**: 0.2s interacties, 2-4s ambient
+- **Performance**: Alleen `transform` en `opacity`
+- **Easing**: `cubic-bezier(0.4, 0, 0.2, 1)`
 
-### Animation Constraints
-- **Duration**: 0.2s for interactions, 2-4s for ambient
-- **Easing**: `cubic-bezier(0.4, 0, 0.2, 1)` preferred
-- **Performance**: Use `transform` and `opacity` only
-- **Accessibility**: Respect `prefers-reduced-motion`
+## ⚠️ Backend Voorzichtigheid
 
-## 🚧 Development Constraints
+### Database Schema - WEES TERUGHOUDEND
+Extra velden is OK, maar let op impact op business rules.
 
-### Active Development Coordination
-- **Backend Team**: Actively developing - coordinate changes
-- **Database**: TypeDB 3.4.0 - complex relationships supported
-- **API**: FastAPI with domain-driven design
-- **Deployment**: Docker Compose setup
+**Veilig** (geen overleg nodig):
+- Display-only velden
+- Optionele velden: `@card(0..1)`
+- Geen dependencies op andere entiteiten
 
-### Technical Debt Avoidance
-- Don't create duplicate components
-- Maintain consistent naming conventions
-- Document all custom CSS classes
-- Keep component library organized
+## 🗄️ Database & Schema Guidelines
 
-## 📈 Success Metrics
+### Schema Wijzigingen - WEES TERUGHOUDEND
+Extra data-velden bij een entiteit is OK, maar let op:
+1. **Minimale impact op business rules** - spelregels van de applicatie
+2. **Documenteer benodigde aanpassingen** als business rules geraakt worden
 
-### User Experience
-- Dashboard customization usage rate
-- Search query success rate  
-- Task completion efficiency
-- User engagement time
+### Veilige Schema Wijzigingen (OK)
+- **Display-only velden**: Velden die alleen in UI worden getoond
+- **Optionele velden**: `@card(0..1)` zodat bestaande data blijft werken
+- **Geen dependencies**: Geen andere entiteiten verwijzen naar het veld
 
-### Technical Performance
-- Page load times < 2s
-- Animation frame rate 60fps
-- Accessibility audit scores > 95%
-- Cross-browser compatibility maintained
+Voorbeeld veilige toevoeging:
+```tql
+entity business,
+    owns sector @card(0..1),      # Optioneel, alleen display
+    owns companySize @card(0..1), # Optioneel, alleen display
+    owns website @card(0..1);     # Optioneel, alleen display
+```
 
-## 🎨 Component Library (Current V5)
+### Risicovolle Schema Wijzigingen (DOCUMENTEER)
+Wijzigingen die impact hebben op:
+- Filtering/zoeken (als veld in queries gebruikt wordt)
+- Matching logica (student-project matching)
+- Validaties (verplichte velden, constraints)
+- Relaties (nieuwe relations tussen entiteiten)
+- Autorisatie (wie mag wat zien/doen)
 
-### Completed Components
-- [x] NeuroCard (elevated surfaces)
-- [x] NeuroButton (interactive elements)
-- [x] NeuroInput (form elements)
-- [x] SkillBadge (competency indicators)
-- [x] AchievementBadge (gamification with earned/locked states)
-- [x] ProgressBar (with active animations)
-- [x] ActivityIndicator (pulse dots)
-- [x] TaskCard (with priority coding & status indicators)
-- [x] SearchPopup (stable positioning)
-- [x] NotificationBanner (professional styling)
-- [x] InfoButton (comprehensive tooltip system)
-- [x] TaskRegistrationHub (status tracking & management)
-- [x] SmartMatching (AI-powered skill compatibility)
-- [x] ProgressAnalytics (performance metrics & trends)
-- [x] NotificationCenter (prioritized alerts & actions)
-- [x] PortfolioBuilder (automated CV generation)
-- [x] CollaborationPanel (networking & team features)
+### Bij Risicovolle Wijzigingen - Documenteer:
+1. Welke bestaande logica moet worden aangepast
+2. Welke nieuwe validaties nodig zijn
+3. Backward compatibility overwegingen
+4. Impact op bestaande data
+5. Migratie strategie indien nodig
 
-### Planned Components
-- [ ] BusinessCard (project submission focus)
-- [ ] WorkflowStepper (approval processes)
-- [ ] TimelineView (project progression)
-- [ ] AnalyticsDashboard (metrics visualization)
-- [ ] CollaborationPanel (team features)
+### TypeDB Specifiek
+```python
+# Optionele velden komen als arrays terug
+sector_list = result.get("sector", [])
+sector = sector_list[0] if sector_list else None
+```
 
-## 📝 Documentation Requirements
+### Database Reset
+```bash
+docker-compose down && docker-compose up -d --build
+```
 
-### Code Documentation
-- All components must have JSDoc comments
-- CSS classes documented with purpose
-- Animation keyframes explained
-- Accessibility features noted
+### API/Backend Wijzigingen
+- Coördineer met backend team
+- Minimale changes - voeg toe, wijzig niet
+- Backward compatible houden
+- Test lokaal voor commit
 
-### Design Documentation
-- Update FEATURE_ROADMAP.md for ANY design change
-- Version notes in dashboard HTML comments
-- Asset management tracked
-- User story completion status maintained
+## 🚫 NEVER DO
+- Neumorphic design consistency breken
+- Flashy/onprofessionele animaties
+- Accessibility negeren
+- Backend logica wijzigen zonder overleg
+- Database relaties aanpassen zonder documentatie
 
-## 🔄 Version Control Best Practices
+## ✅ ALWAYS DO
+- Bestaande design patterns volgen
+- Responsive gedrag testen
+- Accessibility valideren
+- Coördineren bij backend changes
+- Optionele velden voor nieuwe data (`@card(0..1)`)
 
-### File Naming
-- Dashboard versions: `dashboard-v[number].html`
-- Components: `ComponentName.jsx` (PascalCase)
-- Utilities: `utilityName.js` (camelCase)
-- Styles: `component-name.css` (kebab-case)
-
-### Git Workflow
-- Branch: `next-ui` for design work
-- Commit messages: Clear, descriptive
-- Feature branches for major changes
-- Coordinate with main development team
-
-## 🎯 Current Priority Tasks
-
-### Immediate (This Sprint)
-1. Business Dashboard creation (V5 quality standards)
-2. Role-switching functionality design
-3. User stories documentation completion
-
-### Short Term (2-3 Weeks)
-1. Widget drag & drop implementation
-2. Advanced search filters
-3. Project submission workflow design
-
-### Medium Term (1-2 Months)
-1. LLM integration for smart matching
-2. Real-time collaboration features
-3. Mobile PWA development
-
-## ⚠️ Critical Rules
-
-### NEVER DO
-- Break neumorphic design consistency
-- Create flashy or unprofessional animations
-- Ignore accessibility requirements
-- Skip FEATURE_ROADMAP.md updates
-- Create duplicate documentation
-
-### ALWAYS DO
-- Maintain V5+ quality standards
-- Update central documentation
-- Test responsive behavior
-- Validate accessibility
-- Coordinate with active dev team
-- Use established component patterns
-
-## 🤝 Stakeholder Communication
-
-### Design Reviews
-- Present mockups before implementation
-- Validate accessibility compliance
-- Test cross-browser compatibility
-- Confirm mobile responsiveness
-
-### Development Handoff
-- Provide complete technical specifications
-- Document all custom CSS classes
-- Include interaction behavior descriptions
-- Supply assets in correct formats
-
----
-
-**Last Updated**: $(date)
-**Current Version**: V5 (Active Task Indicators)
-**Next Priority**: Business Dashboard V5
-
-*This file should be updated whenever design standards evolve or new patterns are established.*
+## 📁 Code Organisatie
+- **Frontend**: `projojo_frontend/src/components/`
+- **Backend**: `projojo_backend/` (domain-driven design)
+- **Naming**: PascalCase components, camelCase utilities
