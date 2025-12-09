@@ -197,13 +197,13 @@ export default function BusinessCard({
                             {visibleSkills.map((skill) => (
                                 <span
                                     key={skill.skillId ?? skill.id}
-                                    className="px-3.5 py-2 text-sm font-bold text-white bg-primary rounded-full shadow-sm"
+                                    className="px-3 py-1.5 text-xs font-bold text-white bg-primary rounded-full shadow-sm"
                                 >
                                     {skill.name}
                                 </span>
                             ))}
                             {remainingSkills > 0 && (
-                                <span className="px-3.5 py-2 text-sm font-bold rounded-full bg-gray-200 text-gray-500">
+                                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-gray-200 text-gray-500">
                                     +{remainingSkills}
                                 </span>
                             )}

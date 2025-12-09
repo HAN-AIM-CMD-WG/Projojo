@@ -155,7 +155,7 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
               <div className="flex items-center gap-2 mt-2">
                 <span className="material-symbols-outlined text-emerald-600 text-lg w-[18px] text-center">local_fire_department</span>
                 <span className="text-sm text-emerald-600 font-bold">
-                  {matchingPositions}x match!
+                  {matchingPositions} skill {matchingPositions === 1 ? 'match' : 'matches'}
                 </span>
               </div>
             )}

@@ -203,7 +203,7 @@ export default function OverviewPage() {
         <p className="text-sm text-gray-500 font-medium mt-1">
           {matchingOpenPositions > 0 && studentSkills.length > 0 ? (
             <>
-              <span className="text-primary font-bold">{matchingOpenPositions}x</span> match!
+              <span className="text-primary font-bold">{matchingOpenPositions}</span> skill {matchingOpenPositions === 1 ? 'match' : 'matches'}
             </>
           ) : totalOpenPositions > 0 ? (
             <>
