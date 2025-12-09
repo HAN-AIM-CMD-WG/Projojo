@@ -30,9 +30,9 @@ Projojo is an educational project management platform connecting businesses, stu
 ```css
 /* Tailwind v4 @theme block syntax */
 @theme {
-    --color-primary: #6366F1;        /* Indigo Primary */
-    --color-dark-primary: #4F46E5;   /* Darker variant */
-    --color-light-primary: #818CF8;  /* Lighter accent */
+    --color-primary: #FF7F50;        /* Coral Primary */
+    --color-dark-primary: #FF6347;   /* Darker variant (Tomato) */
+    --color-light-primary: #FFA07A;  /* Lighter accent (Light Salmon) */
     
     /* Neumorphic Colors */
     --color-neu-bg: #EFEEEE;
@@ -46,7 +46,7 @@ Projojo is an educational project management platform connecting businesses, stu
 }
 
 :root {
-    --primary: #6366F1;              /* Indigo for students */
+    --primary: #FF7F50;              /* Coral - warm and inviting */
     
     /* Semantic Colors */
     --success: #22bb33;

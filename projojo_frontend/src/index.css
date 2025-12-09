@@ -5,8 +5,8 @@
 
 /* Your custom configuration as CSS variables */
 @theme {
-    --color-primary: #6366F1;
-    --color-dark-primary: #4F46E5;
+    --color-primary: #FF7F50;
+    --color-dark-primary: #FF6347;
 
     --radius-none: 0;
     --radius-sm: 0.125rem;
@@ -36,11 +36,11 @@
 
 @layer components {
     .btn {
-        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg hover:cursor-pointer;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-orange-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg hover:cursor-pointer;
     }
 
     .btn-primary {
-        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-primary hover:bg-indigo-700 text-white hover:cursor-pointer;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-orange-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-primary hover:bg-orange-600 text-white hover:cursor-pointer;
     }
 
     .btn-primary:disabled {
@@ -98,8 +98,8 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: #6366F1;
-    /* Indigo primary color for student focus */
+    --primary: #FF7F50;
+    /* Coral primary color - warm and inviting */
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -171,7 +171,7 @@
 }
 
 /* ===========================================
-   NEUMORPHIC DESIGN SYSTEM - Indigo Theme
+   NEUMORPHIC DESIGN SYSTEM - Coral Theme
    Gebaseerd op Gemini Design (Projojo_design.html)
    =========================================== */
 
@@ -186,8 +186,8 @@
     --color-text-secondary: #4A5568;
     --color-text-muted: #718096;
     
-    /* Indigo Primary */
-    --color-light-primary: #818CF8;
+    /* Coral Primary */
+    --color-light-primary: #FFA07A;
 }
 
 @layer components {
@@ -301,14 +301,14 @@
     /* --- Skill Badge/Pill --- */
     .neu-pill {
         @apply px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-default;
-        background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%);
+        background: linear-gradient(135deg, #FF7F50 0%, #FFA07A 100%);
         color: white;
-        box-shadow: 3px 3px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8);
+        box-shadow: 3px 3px 8px rgba(255, 127, 80, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8);
     }
 
     .neu-pill:hover {
         transform: translateY(-1px);
-        box-shadow: 4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.9);
+        box-shadow: 4px 4px 12px rgba(255, 127, 80, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.9);
     }
 
     /* Variant: Subtiele pill (voor secundaire skills) */
@@ -435,8 +435,8 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: white;
-        background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        background: linear-gradient(135deg, #FF7F50 0%, #FF6347 100%);
+        box-shadow: 0 2px 8px rgba(255, 127, 80, 0.3);
     }
 
     /* --- Custom Scrollbar --- */
