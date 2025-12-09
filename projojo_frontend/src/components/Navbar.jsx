@@ -104,8 +104,11 @@ export default function Navbar() {
                     </button>
 
                     {/* Navigation */}
-                    <div className={`${isCollapsed ? 'hidden' : ''} w-full md:block md:w-auto`} id="navbar-default">
-                        <ul className="flex flex-col p-4 md:p-0 mt-4 gap-2 md:flex-row md:items-center md:gap-2 md:mt-0">
+                    <div 
+                        className={`${isCollapsed ? 'hidden' : 'absolute top-full left-0 right-0 bg-neu-bg border-b border-white/20 shadow-lg'} md:relative md:block md:w-auto md:bg-transparent md:border-0 md:shadow-none`} 
+                        id="navbar-default"
+                    >
+                        <ul className="flex flex-col p-4 md:p-0 gap-2 md:flex-row md:items-center md:gap-2">
                             {routes.map(route => (
                                 <li key={route.name}>
                                     <NavLink 
