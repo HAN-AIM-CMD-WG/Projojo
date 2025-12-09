@@ -1,13 +1,8 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
-import Card from "../../components/Card";
-import DragDrop from "../../components/DragDrop";
-import FormInput from "../../components/FormInput";
-import Page from "../../components/paged_component/page";
-import PagedComponent from "../../components/paged_component/paged_component";
-import PdfPreview from "../../components/PdfPreview";
 import RichTextEditor from "../../components/RichTextEditor";
+import PdfPreview from "../../components/PdfPreview";
 import { createErrorMessage, getUser, updateStudent } from "../../services";
 import useFetch from "../../useFetch";
 import { IMAGE_BASE_URL, PDF_BASE_URL } from "../../services";
@@ -19,36 +14,51 @@ const authErrorMessages = {
 }
 
 /**
- * Creates a UpdateStudentPage component
+ * Single-page profile editor with neumorphic design
  */
 export default function UpdateStudentPage() {
     const { authData } = useAuth();
 
-    const [cv, setCV] = useState([]);
     const [description, setDescription] = useState();
     const [serverError, setServerError] = useState();
-    const [nameError, setNameError] = useState();
     const [descriptionError, setDescriptionError] = useState();
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
+
+    // Photo state
+    const [photoFile, setPhotoFile] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
+    
+    // CV state
+    const [cvFile, setCvFile] = useState(null);
+    const [cvPreview, setCvPreview] = useState(null);
+    const [cvDeleted, setCvDeleted] = useState(false);
 
     useEffect(() => {
         if (authData.type !== "student" && !authData.isLoading) {
             navigate("/home");
         }
-    }, [authData.isLoading]);
-
+    }, [authData.isLoading, authData.type, navigate]);
 
     const { data, error, isLoading } = useFetch(
         () => authData.userId ? getUser(authData.userId) : Promise.resolve(null),
         [authData.userId, authData.isLoading]
     );
 
-    // Initialize description when data is loaded
+    // Initialize data when loaded
     useEffect(() => {
-        if (!isLoading && data && description === undefined) {
-            setDescription(data.description || '');
+        if (!isLoading && data) {
+            if (description === undefined) {
+                setDescription(data.description || '');
+            }
+            if (data.image_path && !photoPreview) {
+                setPhotoPreview(IMAGE_BASE_URL + data.image_path);
+            }
+            if (data.cv_path && !cvPreview && !cvDeleted) {
+                setCvPreview(PDF_BASE_URL + data.cv_path);
+            }
         }
-    }, [data, isLoading, description]);
+    }, [data, isLoading, description, photoPreview, cvPreview, cvDeleted]);
 
     useEffect(() => {
         if (error !== undefined && serverError === undefined) {
@@ -59,20 +69,55 @@ export default function UpdateStudentPage() {
         }
     }, [error, serverError]);
 
+    function handlePhotoChange(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                notification.error('Alleen afbeeldingen zijn toegestaan');
+                return;
+            }
+            setPhotoFile(file);
+            setPhotoPreview(URL.createObjectURL(file));
+        }
+    }
+
+    function handleCvChange(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.type !== 'application/pdf') {
+                notification.error('Alleen PDF-bestanden zijn toegestaan');
+                return;
+            }
+            setCvFile(file);
+            setCvPreview(URL.createObjectURL(file));
+            setCvDeleted(false);
+        }
+    }
+
+    function handleCvDelete() {
+        setCvFile(null);
+        setCvPreview(null);
+        setCvDeleted(true);
+    }
+
     function onSubmit(event) {
         event.preventDefault();
-        if (nameError !== undefined || descriptionError !== undefined) {
+        if (descriptionError !== undefined) {
             return;
         }
 
-        const formData = new FormData(event.target);
+        setIsSubmitting(true);
+        const formData = new FormData();
         formData.set("description", description);
 
-        if (formData.get("profilePicture") === null || formData.get("profilePicture").size === 0) {
-            formData.delete("profilePicture");
+        if (photoFile) {
+            formData.set("profilePicture", photoFile);
         }
-        if (formData.get("cv") === null || formData.get("cv").size === 0) {
-            formData.delete("cv");
+        if (cvFile) {
+            formData.set("cv", cvFile);
+        }
+        if (cvDeleted) {
+            formData.set("cv_deleted", "true");
         }
 
         updateStudent(authData.userId, formData)
@@ -88,33 +133,131 @@ export default function UpdateStudentPage() {
                     ...authErrorMessages,
                 }));
             })
-    }
-
-    function onCVAdded(files) {
-        setCV(files);
+            .finally(() => {
+                setIsSubmitting(false);
+            });
     }
 
     const isDataLoading = authData.isLoading || isLoading || !data || description === undefined;
 
+    if (isDataLoading) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="neu-flat p-8 rounded-2xl">
+                    <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-gray-600 font-medium">Profiel laden...</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <form onSubmit={onSubmit} className="flex flex-col gap-3" data-testid="update_student_page">
-            <Card header={"Pagina aanpassen"} className={"px-6 py-12 sm:rounded-lg sm:px-12"} isLoading={isDataLoading}>
-                {!isDataLoading && (
-                    <PagedComponent finishButtonText="Opslaan">
-                        <Page className="flex flex-col gap-4">
-                            <FormInput
-                                label="Gebruikersnaam"
-                                type="text"
-                                name="username"
-                                max={255}
-                                error={nameError}
-                                setError={setNameError}
-                                initialValue={data?.full_name}
-                                required
-                                readonly
-                            />
+        <div className="max-w-4xl mx-auto px-4 py-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                    <Link 
+                        to={`/student/${authData.userId}`}
+                        className="neu-btn !p-3 !rounded-full"
+                        title="Terug naar profiel"
+                    >
+                        <span className="material-symbols-outlined">arrow_back</span>
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-extrabold text-gray-800">Profiel bewerken</h1>
+                        <p className="text-sm text-gray-500">Pas je gegevens aan</p>
+                    </div>
+                </div>
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-6">
+                {/* Top Section: Photo + Basic Info */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Photo Section */}
+                    <div className="neu-flat p-6 rounded-2xl">
+                        <h2 className="font-bold text-gray-700 flex items-center gap-2 mb-4">
+                            <span className="material-symbols-outlined text-primary">photo_camera</span>
+                            Profielfoto
+                        </h2>
+                        
+                        <div className="flex flex-col items-center">
+                            {/* Photo Preview */}
+                            <div className="relative group mb-4">
+                                <div className="w-32 h-32 rounded-full neu-pressed p-1 overflow-hidden">
+                                    {photoPreview ? (
+                                        <img 
+                                            src={photoPreview} 
+                                            alt="Profielfoto" 
+                                            className="w-full h-full object-cover rounded-full"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-4xl text-gray-400">person</span>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {/* Hover Overlay */}
+                                <label 
+                                    className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
+                                >
+                                    <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={handlePhotoChange}
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
+
+                            {/* Upload Button */}
+                            <label className="neu-btn text-sm cursor-pointer flex items-center gap-2">
+                                <span className="material-symbols-outlined text-lg">upload</span>
+                                Foto wijzigen
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={handlePhotoChange}
+                                    className="hidden"
+                                />
+                            </label>
+                            
+                            <p className="text-xs text-gray-400 mt-3 text-center">
+                                JPG, PNG of GIF<br/>Max 5MB
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Bio Section */}
+                    <div className="lg:col-span-2 neu-flat p-6 rounded-2xl">
+                        <h2 className="font-bold text-gray-700 flex items-center gap-2 mb-4">
+                            <span className="material-symbols-outlined text-primary">person</span>
+                            Over jou
+                        </h2>
+
+                        {/* Name (readonly) */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-600 mb-2">
+                                Naam
+                            </label>
+                            <div className="neu-pressed px-4 py-3 rounded-xl text-gray-700 font-medium flex items-center gap-2">
+                                <span className="material-symbols-outlined text-gray-400 text-lg">badge</span>
+                                {data?.full_name}
+                            </div>
+                            <p className="text-xs text-gray-400 mt-1">
+                                Neem contact op met een docent om je naam te wijzigen
+                            </p>
+                        </div>
+
+                        {/* Bio */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-2">
+                                Bio <span className="text-primary">*</span>
+                            </label>
                             <RichTextEditor
-                                label="Zeg iets over jezelf"
                                 onSave={setDescription}
                                 defaultText={description}
                                 max={4000}
@@ -122,29 +265,110 @@ export default function UpdateStudentPage() {
                                 error={descriptionError}
                                 setError={setDescriptionError}
                             />
-                            <DragDrop
-                                accept="image/*"
-                                name="profilePicture"
-                                label="Upload je profielfoto"
-                                initialFilePath={IMAGE_BASE_URL + data?.image_path}
-                            />
-                        </Page>
-                        <Page className="flex flex-col gap-4">
-                            <DragDrop
-                                accept="application/pdf"
-                                onFileChanged={onCVAdded}
-                                name="cv"
-                                label="Upload je CV (PDF)"
-                                required={false}
-                                initialFilePath={PDF_BASE_URL + data?.cv_path}
-                            />
-                        </Page>
-                    </PagedComponent>
-                )}
-                <div className="text-center mt-6">
-                    {serverError && <span className="text-primary">{serverError}</span>}
+                        </div>
+                    </div>
                 </div>
-            </Card>
-        </form>
+
+                {/* CV Section */}
+                <div className="neu-flat p-6 rounded-2xl">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-bold text-gray-700 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-primary">description</span>
+                            Curriculum Vitae
+                            <span className="text-xs font-normal text-gray-400 ml-1">(optioneel)</span>
+                        </h2>
+                        
+                        {cvPreview && (
+                            <div className="flex items-center gap-2">
+                                <a 
+                                    href={cvPreview}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="neu-btn text-sm flex items-center gap-2"
+                                >
+                                    <span className="material-symbols-outlined text-lg">open_in_new</span>
+                                    <span className="hidden sm:inline">Openen</span>
+                                </a>
+                                <button
+                                    type="button"
+                                    onClick={handleCvDelete}
+                                    className="neu-btn text-sm flex items-center gap-2 text-red-500 hover:text-red-600"
+                                >
+                                    <span className="material-symbols-outlined text-lg">delete</span>
+                                    <span className="hidden sm:inline">Verwijderen</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {cvPreview ? (
+                        /* CV Preview */
+                        <div className="neu-pressed p-2 rounded-xl overflow-hidden">
+                            <PdfPreview url={cvPreview} className="h-[20rem]" />
+                        </div>
+                    ) : (
+                        /* Upload Area */
+                        <label className="block cursor-pointer">
+                            <div className="neu-pressed p-8 rounded-xl border-2 border-dashed border-gray-300 hover:border-primary/50 transition-colors">
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="neu-flat p-4 rounded-full mb-4">
+                                        <span className="material-symbols-outlined text-3xl text-primary">upload_file</span>
+                                    </div>
+                                    <p className="font-medium text-gray-700 mb-1">
+                                        Sleep je CV hierheen of klik om te uploaden
+                                    </p>
+                                    <p className="text-sm text-gray-400">
+                                        Alleen PDF-bestanden • Max 10MB
+                                    </p>
+                                </div>
+                            </div>
+                            <input 
+                                type="file" 
+                                accept="application/pdf" 
+                                onChange={handleCvChange}
+                                className="hidden"
+                            />
+                        </label>
+                    )}
+                </div>
+
+                {/* Error Message */}
+                {serverError && (
+                    <div className="neu-flat p-4 rounded-xl border-l-4 border-red-500 flex items-center gap-3">
+                        <span className="material-symbols-outlined text-red-500">error</span>
+                        <span className="text-red-600 font-medium">{serverError}</span>
+                    </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex items-center justify-between pt-4">
+                    <Link 
+                        to={`/student/${authData.userId}`}
+                        className="neu-btn flex items-center gap-2"
+                    >
+                        <span className="material-symbols-outlined">close</span>
+                        Annuleren
+                    </Link>
+                    
+                    <button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="neu-btn-primary flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Opslaan...
+                            </>
+                        ) : (
+                            <>
+                                <span className="material-symbols-outlined">save</span>
+                                Wijzigingen opslaan
+                            </>
+                        )}
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 }

@@ -73,18 +73,17 @@ export default function Navbar() {
     return (
         <header>
             <nav className="bg-neu-bg fixed w-full z-40 top-0 start-0 border-b border-white/20" style={{ boxShadow: '0 4px 20px rgba(209, 217, 230, 0.6)' }}>
-                <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 lg:px-12 h-24">
+                <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 h-20">
                     {/* Logo */}
-                    <Link to="/home" className="flex items-center gap-4 group">
-                        <div className="w-12 h-12 rounded-2xl neu-pressed flex items-center justify-center text-primary shrink-0 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 pointer-events-none"></div>
-                            <span className="material-symbols-outlined text-3xl drop-shadow-sm">school</span>
+                    <Link to="/home" className="flex items-center gap-3 group">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-2xl text-primary">school</span>
                         </div>
                         <div className="hidden sm:block">
-                            <h1 className="font-extrabold text-xl text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
+                            <h1 className="font-extrabold text-lg text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
                                 Opdrachtenbox
                             </h1>
-                            <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-0.5">
+                            <p className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase mt-0.5">
                                 Student Hub
                             </p>
                         </div>
@@ -153,7 +152,7 @@ export default function Navbar() {
                 </div>
             </nav>
             {/* Spacer for fixed navbar */}
-            <div className="h-24"></div>
+            <div className="h-20"></div>
         </header>
     );
 }

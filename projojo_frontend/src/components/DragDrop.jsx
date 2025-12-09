@@ -219,7 +219,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
 
             {/* Show initial file preview if no new files are added */}
             {files.length === 0 && initialPreview && (
-                <div className='flex flex-col items-center gap-2'>
+                <div className='flex flex-col items-center gap-4'>
                     <div className='flex justify-center w-full'>
                         {accept.includes("image") ? (
                             <img
@@ -238,13 +238,23 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                         )}
                     </div>
                     {!required && (
-                        <button
-                            type="button"
-                            onClick={handleDelete}
-                            className="btn-secondary text-sm px-4 py-2"
-                        >
-                            Verwijder {accept.includes("image") ? "afbeelding" : accept.includes("pdf") ? "pdf" : "bestand"}
-                        </button>
+                        <div className="flex gap-3">
+                            <a
+                                href={initialPreview}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn-secondary text-sm px-4 py-2"
+                            >
+                                Bekijk {accept.includes("pdf") ? "PDF" : "bestand"}
+                            </a>
+                            <button
+                                type="button"
+                                onClick={handleDelete}
+                                className="btn-primary text-sm px-4 py-2"
+                            >
+                                Verwijder {accept.includes("image") ? "afbeelding" : accept.includes("pdf") ? "PDF" : "bestand"}
+                            </button>
+                        </div>
                     )}
                 </div>
             )}
