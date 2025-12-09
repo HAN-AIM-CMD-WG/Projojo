@@ -158,17 +158,23 @@ export default function StudentDashboard() {
                             </div>
 
                             {activeTasks.length === 0 ? (
-                                <div className="neu-pressed p-6 text-center">
-                                    <span className="material-symbols-outlined text-3xl text-gray-400 mb-2">inbox</span>
-                                    <p className="text-gray-500 text-sm font-medium">
-                                        Je hebt nog geen actieve taken.
+                                <div className="neu-pressed p-8 text-center">
+                                    <div className="neu-icon-container mx-auto mb-4">
+                                        <span className="material-symbols-outlined text-2xl text-gray-400">inbox</span>
+                                    </div>
+                                    <p className="text-gray-600 font-semibold mb-1">
+                                        Nog geen actieve taken
                                     </p>
-                                    <Link to="/ontdek" className="text-primary text-sm font-bold hover:underline mt-2 inline-block">
-                                        Ontdek beschikbare projecten →
+                                    <p className="text-gray-400 text-sm mb-4">
+                                        Zodra je bent aangenomen voor een taak, verschijnt deze hier.
+                                    </p>
+                                    <Link to="/ontdek" className="neu-btn-primary !py-2 !px-4 text-sm">
+                                        <span className="material-symbols-outlined text-lg mr-1">explore</span>
+                                        Ontdek projecten
                                     </Link>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {activeTasks.map((task) => (
                                         <TaskCard key={task.id} task={task} status="active" />
                                     ))}
@@ -181,13 +187,13 @@ export default function StudentDashboard() {
                             <section className="neu-flat p-6">
                                 <div className="flex items-center justify-between mb-5">
                                     <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
-                                        <span className="material-symbols-outlined text-amber-500">pending</span>
-                                        In Behandeling
+                                        <span className="material-symbols-outlined text-amber-500">schedule</span>
+                                        Aanmeldingen
                                     </h2>
-                                    <span className="neu-badge-warning">{pendingRegistrations.length} wachtend</span>
+                                    <span className="neu-badge-warning-solid">{pendingRegistrations.length} in behandeling</span>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {pendingRegistrations.map((task) => (
                                         <TaskCard key={task.id} task={task} status="pending" />
                                     ))}
@@ -271,63 +277,91 @@ function TaskCard({ task, status }) {
         active: {
             badge: 'neu-badge-success-solid',
             badgeText: 'Actief',
-            borderColor: 'border-l-green-500'
+            borderColor: 'border-l-green-500',
+            icon: 'check_circle',
+            iconColor: 'text-green-500'
         },
         pending: {
             badge: 'neu-badge-warning',
             badgeText: 'In behandeling',
-            borderColor: 'border-l-amber-500'
+            borderColor: 'border-l-amber-400',
+            icon: 'hourglass_top',
+            iconColor: 'text-amber-500'
         },
         rejected: {
             badge: 'neu-badge-error',
             badgeText: 'Afgewezen',
-            borderColor: 'border-l-red-500'
+            borderColor: 'border-l-red-400',
+            icon: 'cancel',
+            iconColor: 'text-red-500'
         }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
 
+    // Strip HTML from description
+    const cleanDescription = task.description 
+        ? task.description.replace(/<[^>]*>/g, '').trim()
+        : '';
+
     return (
         <Link 
             to={`/projects/${task.project_id}#task-${task.id}`}
-            className={`block neu-pressed p-4 border-l-4 ${config.borderColor} hover:bg-gray-50/50 transition-colors group`}
+            className={`block neu-flat p-5 border-l-4 ${config.borderColor} hover:translate-x-1 transition-all duration-200 group`}
         >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-4">
+                {/* Status icon */}
+                <div className={`neu-icon-container-sm shrink-0 ${config.iconColor}`}>
+                    <span className="material-symbols-outlined text-lg">{config.icon}</span>
+                </div>
+
+                {/* Content */}
                 <div className="flex-1 min-w-0">
-                    {/* Project info */}
+                    {/* Task name - always show */}
+                    <h4 className="font-bold text-gray-700 group-hover:text-primary transition-colors">
+                        {task.name || 'Taak'}
+                    </h4>
+                    
+                    {/* Project info if available */}
                     {task.project && (
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mt-1">
                             {task.project.business?.image_path && (
                                 <img 
                                     src={`${IMAGE_BASE_URL}${task.project.business.image_path}`}
                                     alt=""
-                                    className="w-6 h-6 rounded-lg object-cover"
+                                    className="w-5 h-5 rounded-md object-cover"
                                 />
                             )}
-                            <span className="text-xs font-medium text-gray-500 truncate">
+                            <span className="text-xs font-medium text-gray-400">
                                 {task.project.name}
                                 {task.project.business && ` • ${task.project.business.name}`}
                             </span>
                         </div>
                     )}
                     
-                    {/* Task name */}
-                    <h4 className="font-bold text-gray-700 group-hover:text-primary transition-colors truncate">
-                        {task.name}
-                    </h4>
-                    
                     {/* Task description preview */}
-                    {task.description && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                            {task.description.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                    {cleanDescription && (
+                        <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                            {cleanDescription.substring(0, 120)}{cleanDescription.length > 120 ? '...' : ''}
                         </p>
                     )}
+
+                    {/* Task metadata */}
+                    <div className="flex items-center gap-3 mt-3">
+                        <span className={config.badge}>{config.badgeText}</span>
+                        {task.total_needed && (
+                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                                <span className="material-symbols-outlined text-sm">group</span>
+                                {task.total_needed} {task.total_needed === 1 ? 'plek' : 'plekken'}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                    <span className={config.badge}>{config.badgeText}</span>
-                    <span className="material-symbols-outlined text-gray-400 group-hover:text-primary transition-colors">
-                        arrow_forward
+                {/* Arrow */}
+                <div className="shrink-0 self-center">
+                    <span className="material-symbols-outlined text-gray-300 group-hover:text-primary group-hover:translate-x-1 transition-all">
+                        chevron_right
                     </span>
                 </div>
             </div>
