@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createTask, IMAGE_BASE_URL } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
+import LocationMap from "./LocationMap";
 import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
@@ -135,6 +136,21 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         </button>
                     )}
                 </div>
+
+                {/* Location Map */}
+                {!isLoading && project.business?.location && (
+                    <div className="mt-6">
+                        <p className="neu-label mb-3 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm text-primary">location_on</span>
+                            Locatie
+                        </p>
+                        <LocationMap 
+                            address={project.business.location}
+                            name={project.business.name}
+                            height="200px"
+                        />
+                    </div>
+                )}
             </div>
             {isOwner && (
                 <Modal

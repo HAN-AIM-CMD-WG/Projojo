@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import Alert from "../components/Alert";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
+import LocationMap from '../components/LocationMap';
 import { getBusinessById, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import useFetch from '../useFetch';
@@ -101,14 +102,31 @@ export default function BusinessPage() {
             {isBusinessLoading ? (
                 <Loading />
             ) : (
-                <BusinessProjectDashboard
-                    showDescription={true}
-                    showUpdateButton={true}
-                    isAlwaysExtended={true}
-                    business={businessData}
-                    projects={projectsData}
-                    topSkills={computedTopSkills}
-                />
+                <>
+                    <BusinessProjectDashboard
+                        showDescription={true}
+                        showUpdateButton={true}
+                        isAlwaysExtended={true}
+                        business={businessData}
+                        projects={projectsData}
+                        topSkills={computedTopSkills}
+                    />
+                    
+                    {/* Location Map */}
+                    {businessData?.location && (
+                        <div className="mt-6">
+                            <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700 mb-4">
+                                <span className="material-symbols-outlined text-primary">location_on</span>
+                                Locatie
+                            </h2>
+                            <LocationMap 
+                                address={Array.isArray(businessData.location) ? businessData.location[0] : businessData.location}
+                                name={businessData.name}
+                                height="280px"
+                            />
+                        </div>
+                    )}
+                </>
             )}
         </>
     );

@@ -18,6 +18,14 @@ export default function Navbar() {
         });
     }
 
+    // Add "Ontdek" for students to find projects
+    if (authData.type === "student") {
+        routes.push({
+            name: "Ontdek",
+            ref: "/ontdek",
+        });
+    }
+
     if (authData.type === "teacher") {
         routes.push({
             name: "Beheer",
