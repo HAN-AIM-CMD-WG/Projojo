@@ -218,17 +218,26 @@
         border: 1px solid rgba(255,255,255,0.4);
     }
 
-    /* Hover-effect voor interactieve cards */
+    /* Hover-effect voor interactieve cards - Subtle & Elegant */
     .neu-flat-interactive {
-        @apply bg-neu-bg transition-all duration-300;
+        @apply bg-neu-bg;
         border-radius: 1.5rem;
         box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
         border: 1px solid rgba(255,255,255,0.4);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    border-color 0.3s ease;
     }
 
     .neu-flat-interactive:hover {
-        transform: translateY(-4px);
-        box-shadow: 8px 8px 20px #D1D9E6, -8px -8px 20px #FFFFFF;
+        transform: translateY(-6px);
+        box-shadow: 10px 10px 24px #D1D9E6, -10px -10px 24px #FFFFFF;
+        border-color: rgba(255, 127, 80, 0.2);
+    }
+
+    .neu-flat-interactive:active {
+        transform: translateY(-2px);
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
     }
 
     /* --- Pressed/Inset (Level -1) - Voor inputs & containers --- */

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createSkill, getUser } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import SkillBadge from "./SkillBadge";
@@ -27,6 +27,9 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
     const [showAllSkills, setShowAllSkills] = useState(false)
     const [onlyShowStudentsSkills, setOnlyShowStudentsSkills] = useState(false)
     const [studentsSkills, setStudentsSkills] = useState([])
+    
+    // Ref for click outside detection
+    const containerRef = useRef(null)
 
     const isSearchInString = (search, string) => string.toLowerCase().includes(search.toLowerCase())
 
@@ -116,12 +119,39 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
         }
     }, [authData.isLoading])
 
+    // Click outside to close - UX pattern for dismissing dialogs
+    useEffect(() => {
+        if (!isEditing) return
+
+        const handleClickOutside = (event) => {
+            if (containerRef.current && !containerRef.current.contains(event.target)) {
+                handleCancel()
+            }
+        }
+
+        // Use mousedown for better UX (triggers before focus changes)
+        document.addEventListener('mousedown', handleClickOutside)
+        
+        // Also handle Escape key for accessibility
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                handleCancel()
+            }
+        }
+        document.addEventListener('keydown', handleEscape)
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+            document.removeEventListener('keydown', handleEscape)
+        }
+    }, [isEditing])
+
     if (!isEditing) {
         return children
     }
 
     return (
-        <div className="flex flex-col gap-2 relative">
+        <div ref={containerRef} className="flex flex-col gap-2 relative">
             <div className="flex flex-wrap gap-2 items-center">
                 {selectedSkills.length === 0 && <span>Er zijn geen skills geselecteerd.</span>}
                 {selectedSkills.map((skill) => (
@@ -130,7 +160,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     </SkillBadge>
                 ))}
             </div>
-            <div className={`${isAbsolute && 'absolute bottom-0 translate-y-full -mb-2 z-30'} flex flex-col gap-3 p-4 neu-flat min-w-full`} role="dialog" aria-label="Skill editor dialog">
+            <div className={`${isAbsolute && 'absolute bottom-0 translate-y-full -mb-2 z-30'} flex flex-col gap-3 p-4 neu-flat min-w-full sm:min-w-[400px] md:min-w-[480px]`} role="dialog" aria-label="Skill editor dialog">
                 <div>
                     <label className="block text-sm font-bold leading-6 text-text-primary mb-1" htmlFor="search">
                         Zoeken

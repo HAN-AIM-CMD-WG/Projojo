@@ -5,9 +5,10 @@ import Filter from "../components/Filter";
 import Loading from '../components/Loading';
 import { getBusinessesComplete } from '../services';
 import { normalizeSkill } from '../utils/skills';
-import PageHeader from '../components/PageHeader';
+import { useStudentSkills } from '../context/StudentSkillsContext';
 
 export default function OverviewPage() {
+  const { studentName, studentSkills } = useStudentSkills();
   const [initialBusinesses, setInitialBusinesses] = useState([]);
   const [shownBusinesses, setShownBusinesses] = useState([]);
   const [error, setError] = useState(null);
@@ -164,9 +165,56 @@ export default function OverviewPage() {
     setShownBusinesses(filteredData);
   };
 
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Goedemorgen';
+    if (hour < 18) return 'Goedemiddag';
+    return 'Goedenavond';
+  };
+
+  // Count OPEN POSITIONS that match student skills (marketplace model)
+  const studentSkillIds = new Set(studentSkills.map(s => s.id));
+  
+  const { totalOpenPositions, matchingOpenPositions } = shownBusinesses.reduce((acc, business) => {
+    business.projects.forEach(project => {
+      project.tasks?.forEach(task => {
+        const available = Math.max(0, (task.total_needed || 0) - (task.total_accepted || 0));
+        acc.totalOpenPositions += available;
+        
+        // Check if task matches student skills
+        const taskSkillIds = new Set(task.skills?.map(s => s.skillId || s.id) || []);
+        const hasMatchingSkill = [...taskSkillIds].some(id => studentSkillIds.has(id));
+        if (hasMatchingSkill) {
+          acc.matchingOpenPositions += available;
+        }
+      });
+    });
+    return acc;
+  }, { totalOpenPositions: 0, matchingOpenPositions: 0 });
+
   return (
     <>
-      <PageHeader name={'Home'} />
+      {/* Personalized welcome - UX: Recognition > Recall, Personal context */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+          {studentName ? `${getGreeting()}, ${studentName}!` : `${getGreeting()}!`}
+        </h1>
+        <p className="text-sm text-gray-500 font-medium mt-1">
+          {matchingOpenPositions > 0 && studentSkills.length > 0 ? (
+            <>
+              <span className="text-primary font-bold">{matchingOpenPositions}</span> open {matchingOpenPositions === 1 ? 'plek past' : 'plekken passen'} bij jouw skills
+            </>
+          ) : totalOpenPositions > 0 ? (
+            <>
+              <span className="text-gray-700 font-bold">{totalOpenPositions}</span> open {totalOpenPositions === 1 ? 'plek' : 'plekken'} beschikbaar
+            </>
+          ) : (
+            'Ontdek projecten en taken die bij jouw skills passen'
+          )}
+        </p>
+      </div>
+
       <Filter onFilter={handleFilter} />
       <div className={`flex flex-col gap-2 ${(error != null) && 'mb-4'}`}>
         <Alert text={error} isCloseable={false} />

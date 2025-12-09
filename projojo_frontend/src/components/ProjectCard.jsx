@@ -1,127 +1,209 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { IMAGE_BASE_URL } from '../services';
+import { useStudentSkills } from '../context/StudentSkillsContext';
 import RichTextViewer from "./RichTextViewer";
-import TaskCard from "./TaskCard";
 
-// Status mapping voor badges
+// Status mapping - Clean, small badges
+// Green = available (universal), others only for special cases
 const statusConfig = {
-  'active': { label: 'In Progress', className: 'neu-badge-success' },
-  'in_progress': { label: 'In Progress', className: 'neu-badge-success' },
-  'planning': { label: 'Planning', className: 'neu-badge-gray' },
-  'pending': { label: 'Pending', className: 'neu-badge-warning' },
-  'review': { label: 'Review', className: 'neu-badge-info' },
-  'completed': { label: 'Completed', className: 'neu-badge-success-solid' },
-  'default': { label: 'Active', className: 'neu-badge-success' }
+  'active': { 
+    label: 'Open', 
+    className: 'bg-emerald-500 text-white shadow-sm'
+  },
+  'in_progress': { 
+    label: 'Loopt', 
+    className: 'bg-emerald-500 text-white shadow-sm'
+  },
+  'planning': { 
+    label: 'Binnenkort', 
+    className: 'bg-gray-500 text-white shadow-sm'
+  },
+  'pending': { 
+    label: 'In behandeling', 
+    className: 'bg-amber-500 text-white shadow-sm'
+  },
+  'review': { 
+    label: 'In review', 
+    className: 'bg-blue-500 text-white shadow-sm'
+  },
+  'completed': { 
+    label: 'Afgerond', 
+    className: 'bg-gray-400 text-white shadow-sm'
+  },
+  'default': { 
+    label: 'Open', 
+    className: 'bg-emerald-500 text-white shadow-sm'
+  }
 };
 
+/**
+ * ProjectCard Component
+ * 
+ * Design Principles Applied:
+ * - Progressive Disclosure: Card shows summary, detail page shows full info
+ * - Recognition over Recall: Consistent layout, no hidden content
+ * - Aesthetic & Minimalist: Only essential info visible
+ * - Entire card clickable: Primary action = navigate to detail
+ * - Subtle hover feedback: Elevation change, no content replacement
+ */
 export default function ProjectCard({ project, index = 0, isExpanded = false }) {
-  const navigate = useNavigate();
-
-  const handleTaskClick = (taskId) => (e) => {
-    e.preventDefault();
-    navigate(`/projects/${project.id}#task-${taskId}`);
-  }
-
-  // Get status config
+  const { studentSkills } = useStudentSkills();
+  
+  // Get status config (Student-friendly Dutch labels)
   const status = project.status?.toLowerCase() || 'default';
   const { label: statusLabel, className: statusClassName } = statusConfig[status] || statusConfig.default;
 
-  // Calculate progress (mock for now, can be derived from tasks)
-  const completedTasks = project.tasks?.filter(t => t.status === 'completed').length || 0;
-  const totalTasks = project.tasks?.length || 1;
-  const progress = Math.round((completedTasks / totalTasks) * 100);
+  // Calculate OPEN POSITIONS (marketplace model)
+  // Sum up available spots across all tasks
+  const openPositions = project.tasks?.reduce((sum, task) => {
+    const available = (task.total_needed || 0) - (task.total_accepted || 0);
+    return sum + Math.max(0, available);
+  }, 0) || 0;
 
-  // Animation delay based on index
+  const totalPositions = project.tasks?.reduce((sum, task) => {
+    return sum + (task.total_needed || 0);
+  }, 0) || 0;
+
+  // Collect all unique skills required by this project's tasks
+  const projectSkills = [];
+  const seenSkillIds = new Set();
+  project.tasks?.forEach(task => {
+    task.skills?.forEach(skill => {
+      const skillId = skill.skillId || skill.id;
+      if (skillId && !seenSkillIds.has(skillId)) {
+        seenSkillIds.add(skillId);
+        projectSkills.push({
+          id: skillId,
+          name: skill.name,
+          isPending: skill.isPending || skill.is_pending || false
+        });
+      }
+    });
+  });
+
+  // Calculate skill match with student
+  const studentSkillIds = new Set(studentSkills.map(s => s.id));
+  const matchingSkills = projectSkills.filter(s => studentSkillIds.has(s.id));
+  const missingSkills = projectSkills.filter(s => !studentSkillIds.has(s.id));
+  
+  // Count positions that match student skills
+  const matchingPositions = project.tasks?.reduce((sum, task) => {
+    const taskSkillIds = new Set(task.skills?.map(s => s.skillId || s.id) || []);
+    const hasMatchingSkill = [...taskSkillIds].some(id => studentSkillIds.has(id));
+    if (hasMatchingSkill) {
+      const available = (task.total_needed || 0) - (task.total_accepted || 0);
+      return sum + Math.max(0, available);
+    }
+    return sum;
+  }, 0) || 0;
+
+  // Animation delay based on index for staggered entrance
   const animationClass = `fade-in-up-${(index % 4) + 1}`;
 
+  // Responsive visibility classes
+  const visibilityClass = !isExpanded 
+    ? (index === 2 ? 'hidden [@media(min-width:1195px)]:block' : index === 1 ? 'hidden [@media(min-width:813px)]:block' : '')
+    : '';
+
   return (
-    <article className={`neu-project-card h-[400px] w-full relative group fade-in-up ${animationClass} ${!isExpanded && (index == 2 ? 'hidden [@media(min-width:1195px)]:block' : index == 1 && 'hidden [@media(min-width:813px)]:block')}`}>
+    <article className={`fade-in-up ${animationClass} ${visibilityClass}`}>
       <Link
         to={`/projects/${project.id}`}
-        className="block h-full focus:outline-none"
+        className="block neu-flat-interactive h-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/30 group"
       >
         {/* Image section with gradient overlay */}
-        <div className="h-44 w-full relative overflow-hidden">
+        <div className="h-40 w-full relative overflow-hidden">
           <img
-            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             src={`${IMAGE_BASE_URL}${project.image_path}`}
             alt={project.title || project.name}
           />
-          {/* Gradient overlay */}
-          <div className="neu-image-overlay" />
+          {/* Gradient overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           
-          {/* Title overlay at bottom of image */}
-          <div className="absolute bottom-4 left-4 right-4 text-white">
-            <h4 className="font-bold text-lg leading-tight drop-shadow-sm line-clamp-2">
-              {project.title || project.name}
-            </h4>
-            {project.role && (
-              <p className="text-xs font-semibold opacity-90 mt-1">{project.role}</p>
-            )}
+          {/* Status badge - small, clean, no glass effect */}
+          <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
+            {statusLabel}
           </div>
 
-          {/* Status badge - top right */}
-          <div className={`absolute top-3 right-3 ${statusClassName}`}>
-            {statusLabel}
+          {/* Title overlay at bottom of image */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <h4 className="font-extrabold text-white text-lg leading-tight drop-shadow-md line-clamp-2">
+              {project.title || project.name}
+            </h4>
           </div>
         </div>
         
         {/* Content section */}
-        <div className="p-5 flex flex-col flex-1">
-          {/* Progress bar */}
-          <div className="mb-5">
-            <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
-              <span>Progress</span>
-              <span>{progress}%</span>
+        <div className="p-5">
+          {/* Open positions - Marketplace model */}
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`material-symbols-outlined text-lg ${openPositions > 0 ? 'text-primary' : 'text-gray-400'}`}>
+                {openPositions > 0 ? 'work' : 'block'}
+              </span>
+              <span className="text-sm font-bold text-gray-700">
+                {openPositions > 0 ? (
+                  <>{openPositions} {openPositions === 1 ? 'plek' : 'plekken'} beschikbaar</>
+                ) : (
+                  'Geen plekken beschikbaar'
+                )}
+              </span>
             </div>
-            <div className="neu-progress">
-              <div className="neu-progress-bar" style={{ width: `${progress}%` }} />
-            </div>
+            {/* Show matching positions if student has skills */}
+            {studentSkills.length > 0 && matchingPositions > 0 && (
+              <p className="text-xs text-primary font-semibold ml-7">
+                {matchingPositions} {matchingPositions === 1 ? 'past' : 'passen'} bij jouw skills
+              </p>
+            )}
           </div>
 
-          {/* Description */}
-          <div className="line-clamp-2 text-sm text-text-muted mb-4 flex-1">
+          {/* Skills match indicator - Outline style for visual harmony */}
+          {projectSkills.length > 0 && (
+            <div className="mb-4">
+              <span className="neu-label mb-2 block">Gevraagde skills</span>
+              <div className="flex flex-wrap gap-1.5">
+                {matchingSkills.slice(0, 3).map(skill => (
+                  <span 
+                    key={skill.id} 
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold text-primary border-2 border-primary/40 bg-primary/5"
+                    title={`Je hebt deze skill: ${skill.name}`}
+                  >
+                    <span className="material-symbols-outlined text-[12px]">check</span>
+                    {skill.name}
+                  </span>
+                ))}
+                {missingSkills.slice(0, 2).map(skill => (
+                  <span 
+                    key={skill.id} 
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold text-gray-400 border border-gray-200 bg-transparent"
+                    title={`Gevraagde skill: ${skill.name}`}
+                  >
+                    {skill.name}
+                  </span>
+                ))}
+                {(matchingSkills.length + missingSkills.length > 5) && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold text-gray-400 border border-gray-200">
+                    +{projectSkills.length - 5}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Description - brief */}
+          <div className="line-clamp-2 text-sm text-text-muted mb-4">
             <RichTextViewer text={project.description} flatten={true} />
           </div>
 
-          {/* Action buttons */}
-          <div className="flex gap-3">
-            <button className="flex-1 neu-flat py-2.5 text-xs hover:text-primary transition-colors font-bold uppercase tracking-wide">
-              Details
-            </button>
-            <button className="neu-icon-btn w-10 h-10">
-              <span className="material-symbols-outlined text-lg">chat</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Hover overlay with tasks */}
-        <div className="hidden sm:group-hover:flex group-focus:flex absolute inset-0 z-10 bg-neu-bg/98 backdrop-blur-sm overflow-y-auto p-6 custom-scroll flex-col">
-          <div className="space-y-3 flex-1">
-            {/* Header card */}
-            <div className="neu-flat p-4 mb-4 hover:ring-2 hover:ring-primary/30 transition-all duration-300">
-              <h4 className="text-lg font-extrabold tracking-tight text-primary mb-1">
-                {project.title || project.name}
-              </h4>
-              <span className="text-xs font-bold text-text-muted flex items-center gap-2 uppercase tracking-wide">
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                Naar projectpagina
-              </span>
-            </div>
-
-            {/* Tasks */}
-            {project.tasks && project.tasks.length > 0 ? (
-              project.tasks.slice(0, 3).map((task) => (
-                <div key={task.id} onClick={handleTaskClick(task.id)}>
-                  <TaskCard task={task} compact />
-                </div>
-              ))
-            ) : (
-              <div className="neu-task-box">
-                <span className="material-symbols-outlined">assignment</span>
-                <span className="truncate">Geen taken beschikbaar</span>
-              </div>
-            )}
+          {/* Call-to-action hint - subtle */}
+          <div className="mt-4 flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide group-hover:text-primary transition-colors">
+              Bekijk project
+            </span>
+            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all">
+              arrow_forward
+            </span>
           </div>
         </div>
       </Link>
