@@ -67,51 +67,82 @@ export default function Navbar() {
         setIsCollapsed(!isCollapsed);
     };
 
-    const activeNavLink = "block py-2 px-3 text-white bg-primary rounded md:bg-transparent md:text-primary md:p-0 transition-colors"
-    const inactiveNavLink = "block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-primary md:p-0"
+    const activeNavLink = "flex items-center gap-2 py-2 px-4 text-primary font-bold rounded-xl bg-primary/10 md:bg-transparent md:px-0 transition-all duration-200"
+    const inactiveNavLink = "flex items-center gap-2 py-2 px-4 text-text-secondary font-semibold rounded-xl hover:text-primary hover:bg-primary/5 md:hover:bg-transparent md:px-0 transition-all duration-200"
 
-    // Source: https://flowbite.com/docs/components/navbar/
     return (
         <header>
-            <nav className="bg-gray-100 border-gray-200 fixed w-full z-20 top-0 start-0">
-                <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-                    <Link to="/home" className="flex items-center space-x-3">
-                        <img src="/han_logo.png" className="h-6 mt-1" alt="Han Logo" />
-                        <span className="self-center text-2xl font-semibold whitespace-nowrap">Opdrachtenbox</span>
+            <nav className="bg-neu-bg fixed w-full z-40 top-0 start-0 border-b border-white/50" style={{ boxShadow: '0 4px 12px rgba(209, 217, 230, 0.5)' }}>
+                <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 py-4">
+                    {/* Logo */}
+                    <Link to="/home" className="flex items-center space-x-3 group">
+                        <img src="/han_logo.png" className="h-7 mt-0.5" alt="Han Logo" />
+                        <span className="self-center text-xl font-extrabold text-text-primary whitespace-nowrap group-hover:text-primary transition-colors">
+                            Opdrachtenbox
+                        </span>
                     </Link>
-                    <button data-collapse-toggle="navbar-default" type="button" onClick={toggleCollapse} className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="navbar-default" aria-expanded={!isCollapsed}>
+
+                    {/* Mobile menu button */}
+                    <button 
+                        type="button" 
+                        onClick={toggleCollapse} 
+                        className="inline-flex items-center p-2 w-10 h-10 justify-center text-text-muted rounded-xl md:hidden neu-flat hover:text-primary transition-colors" 
+                        aria-controls="navbar-default" 
+                        aria-expanded={!isCollapsed}
+                    >
                         <span className="sr-only">Hoofdmenu openen</span>
-                        <svg className="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
-                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h15M1 7h15M1 13h15" />
-                        </svg>
+                        <span className="material-symbols-outlined">
+                            {isCollapsed ? 'menu' : 'close'}
+                        </span>
                     </button>
+
+                    {/* Navigation */}
                     <div className={`${isCollapsed ? 'hidden' : ''} w-full md:block md:w-auto`} id="navbar-default">
-                        <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg md:flex-row md:space-x-8 md:mt-0 md:border-0">
+                        <ul className="flex flex-col p-4 md:p-0 mt-4 gap-2 md:gap-1 md:flex-row md:items-center md:space-x-6 md:mt-0">
                             {routes.map(route => (
-                                <li key={route.name} className="flex items-center">
-                                    <NavLink to={route.ref} className={({ isActive }) => isActive ? activeNavLink : inactiveNavLink} aria-current="page">
+                                <li key={route.name}>
+                                    <NavLink 
+                                        to={route.ref} 
+                                        className={({ isActive }) => isActive ? activeNavLink : inactiveNavLink} 
+                                        aria-current="page"
+                                    >
                                         {route.name}
                                     </NavLink>
                                 </li>
                             ))}
-                            <li key="sign-out" className="flex items-center">
-                                <button onClick={signOut} className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-primary md:p-0">
-                                    Uitloggen
+                            
+                            {/* Divider (desktop) */}
+                            <li className="hidden md:block w-px h-6 bg-gray-300 mx-2"></li>
+                            
+                            {/* Sign out */}
+                            <li>
+                                <button 
+                                    onClick={signOut} 
+                                    className="flex items-center gap-2 py-2 px-4 md:px-0 text-text-secondary font-semibold rounded-xl hover:text-red-500 transition-all duration-200 w-full md:w-auto"
+                                >
+                                    <span className="material-symbols-outlined text-lg">logout</span>
+                                    <span className="md:hidden lg:inline">Uitloggen</span>
                                 </button>
                             </li>
-                            {
-                                // profile picture, only for students
-                                authData.type === "student" || authData.type === "supervisor" ?
-                                    <li key="profile-picture" className="flex items-center ml-2">
-                                        <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
-                                    </li>
-                                    : null
-                            }
+                            
+                            {/* Profile picture */}
+                            {(authData.type === "student" || authData.type === "supervisor") && (
+                                <li className="flex items-center ml-2">
+                                    <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-br from-primary to-lightPrimary">
+                                        <img 
+                                            src={profilePicture} 
+                                            className="w-full h-full rounded-full object-cover border-2 border-neu-bg" 
+                                            alt="Profielfoto" 
+                                        />
+                                    </div>
+                                </li>
+                            )}
                         </ul>
                     </div>
                 </div>
             </nav>
-            <div className="h-32"></div>
+            {/* Spacer for fixed navbar */}
+            <div className="h-20"></div>
         </header>
     );
 }

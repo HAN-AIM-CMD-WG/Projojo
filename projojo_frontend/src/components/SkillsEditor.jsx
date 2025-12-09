@@ -130,9 +130,9 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     </SkillBadge>
                 ))}
             </div>
-            <div className={`${isAbsolute && 'absolute bottom-0 translate-y-full -mb-2 z-10'} flex flex-col gap-2 p-2 border bg-white border-gray-400 rounded-lg shadow-lg min-w-full`} role="dialog" aria-label="Skill editor dialog">
+            <div className={`${isAbsolute && 'absolute bottom-0 translate-y-full -mb-2 z-30'} flex flex-col gap-3 p-4 neu-flat min-w-full`} role="dialog" aria-label="Skill editor dialog">
                 <div>
-                    <label className="block text-sm font-medium leading-6 text-gray-900" htmlFor="search">
+                    <label className="block text-sm font-bold leading-6 text-text-primary mb-1" htmlFor="search">
                         Zoeken
                     </label>
                     <input
@@ -142,7 +142,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         value={search}
                         maxLength={50}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 placeholder:text-gray-400 sm:text-sm sm:leading-6 p-3"
+                        className="neu-input w-full"
                     />
                 </div>
                 {showOwnSkillsOption && authData.type === 'student' && (
@@ -152,20 +152,20 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                             id="only-show-students-skills"
                             checked={onlyShowStudentsSkills}
                             onChange={() => setOnlyShowStudentsSkills((prev) => !prev)}
-                            className="w-4 h-4 accent-primary"
+                            className="w-4 h-4 accent-primary rounded"
                         />
-                        <label htmlFor="only-show-students-skills" className="text-sm font-medium text-gray-900">Laat alleen mijn eigen skills zien</label>
+                        <label htmlFor="only-show-students-skills" className="text-sm font-medium text-text-secondary">Laat alleen mijn eigen skills zien</label>
                     </div>
                 )}
-                <div className="flex flex-wrap gap-2 items-center border bg-gray-100 border-gray-600 rounded-md p-2">
+                <div className="flex flex-wrap gap-2 items-center neu-pressed p-3 max-h-64 overflow-y-auto custom-scroll">
                     {filteredSkills.length === 0 && search.length <= 0 && (
-                        <p>Geen skills beschikbaar.</p>
+                        <p className="text-text-muted text-sm">Geen skills beschikbaar.</p>
                     )}
                     {filteredSkills.length === 0 && search.length > 0 && (
                         <>
-                            <p>Geen skills gevonden.</p>
+                            <p className="text-text-muted text-sm">Geen skills gevonden.</p>
                             {isAllowedToAddSkill && !searchedSkillExists && (
-                                <button className="btn-primary px-3 py-1" onClick={handleCreateSkill}>&ldquo;{formattedSearch}&rdquo; toevoegen</button>
+                                <button className="neu-btn-primary !py-2 !px-3 text-sm" onClick={handleCreateSkill}>&ldquo;{formattedSearch}&rdquo; toevoegen</button>
                             )}
                         </>
                     )}
@@ -176,7 +176,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                             </SkillBadge>
                         ))}
                         {(filteredSkills.length > maxSkillsDisplayed && !showAllSkills) && (
-                            <button className="btn-secondary px-2 py-1" onClick={() => setShowAllSkills(true)}>+{filteredSkills.length - maxSkillsDisplayed} tonen</button>
+                            <button className="neu-btn !py-1 !px-3 text-sm" onClick={() => setShowAllSkills(true)}>+{filteredSkills.length - maxSkillsDisplayed} tonen</button>
                         )}
                         {filteredSkills.length > maxSkillsDisplayed && showAllSkills && (
                             <>
@@ -185,14 +185,14 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                                         <span className="ps-1 font-bold text-xl leading-3">+</span>
                                     </SkillBadge>
                                 ))}
-                                <button className="btn-secondary px-2 py-1" onClick={() => setShowAllSkills(false)}>Minder tonen</button>
+                                <button className="neu-btn !py-1 !px-3 text-sm" onClick={() => setShowAllSkills(false)}>Minder tonen</button>
                             </>
                         )}
                     </div>
                 </div>
-                <div className="flex flex-wrap justify-end gap-2">
-                    <button className="btn-secondary" onClick={handleCancel}>Annuleren</button>
-                    <button className="btn-primary" onClick={handleSave}>Opslaan</button>
+                <div className="flex flex-wrap justify-end gap-3 pt-2">
+                    <button className="neu-btn" onClick={handleCancel}>Annuleren</button>
+                    <button className="neu-btn-primary" onClick={handleSave}>Opslaan</button>
                 </div>
             </div>
         </div>

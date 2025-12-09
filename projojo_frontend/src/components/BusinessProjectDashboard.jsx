@@ -3,7 +3,7 @@ import ProjectDashboard from './ProjectDashboard';
 
 export default function BusinessProjectDashboard({ business, projects, topSkills, showDescription = false, showUpdateButton = false, isAlwaysExtended = false }) {
     return (
-        <div className="bg-slate-100 rounded-lg overflow-hidden">
+        <div className="neu-flat overflow-hidden">
             <BusinessCard
                 name={business?.name}
                 image={business?.image_path}

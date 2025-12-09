@@ -73,8 +73,8 @@ export default function Filter({ onFilter }) {
     };
 
     return (
-        <div>
-            <div className="flex flex-col justify-between items-stretch gap-3 mb-5 sm:flex-row sm:items-center bg-gray-100 p-2 rounded-lg shadow">
+        <div className="relative">
+            <div className="flex flex-col justify-between items-stretch gap-4 mb-6 sm:flex-row sm:items-center neu-flat p-4">
                 <div className="sm:w-96">
                     <SkillsEditor
                         allSkills={allSkills}
@@ -85,38 +85,42 @@ export default function Filter({ onFilter }) {
                         setError={setError}
                         showOwnSkillsOption={true}
                     >
-                        <button className="btn-primary" onClick={() => setIsEditing(true)}>Filter op skills</button>
+                        <button className="neu-btn flex items-center gap-2" onClick={() => setIsEditing(true)}>
+                            <span className="material-symbols-outlined text-lg">filter_list</span>
+                            <span>Filter op skills</span>
+                        </button>
                     </SkillsEditor>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <form onSubmit={handleSearch} className="flex w-full gap-2">
-                        <div className="relative flex-1 sm:w-60">
-                            <label className="sr-only" htmlFor="search">Zoek op bedrijfs- of projectnaam</label>
+                <div className="flex items-center gap-3">
+                    <form onSubmit={handleSearch} className="flex w-full gap-3">
+                        <div className="relative flex-1 sm:w-72">
+                            <label className="sr-only" htmlFor="search">Zoek een bedrijf of project</label>
+                            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">search</span>
                             <input
                                 id="search"
                                 type="text"
-                                placeholder="Zoek op bedrijfs- of projectnaam"
+                                placeholder="Zoek een bedrijf of project"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 maxLength={50}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset h-full placeholder:text-gray-400 sm:text-sm sm:leading-6 p-3"
+                                className="neu-input w-full pl-12 py-3"
                             />
                         </div>
-                        <button type="submit" className="btn-primary" aria-label="Zoeken op bedrijfs- of projectnaam">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="18" height="18" ><path fill="#ffffff" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" /></svg>
+                        <button type="submit" className="neu-btn-primary !px-4" aria-label="Zoeken op bedrijfs- of projectnaam">
+                            <span className="material-symbols-outlined">search</span>
                         </button>
 
                         {search && (
-                            <button className="btn-secondary" onClick={handleSearchClear} aria-label="Wis zoekopdracht">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="18" height="18"><path fill="#ffffff" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" /></svg>
+                            <button className="neu-btn !px-4" onClick={handleSearchClear} aria-label="Wis zoekopdracht">
+                                <span className="material-symbols-outlined">close</span>
                             </button>
                         )}
                     </form>
                 </div>
-            </div >
+            </div>
             {selectedSkills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 mb-6">
                     {selectedSkills.map((skill) => (
                         <SkillBadge
                             key={skill.skillId}
@@ -125,7 +129,12 @@ export default function Filter({ onFilter }) {
                         />
                     ))}
                     {!isEditing && (
-                        <button className="btn-secondary py-1 px-3" onClick={handleSkillsClear}>Wis skills</button>
+                        <button className="neu-btn !py-2 !px-4 text-sm" onClick={handleSkillsClear}>
+                            <span className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-base">close</span>
+                                Wis skills
+                            </span>
+                        </button>
                     )}
                 </div>
             )}

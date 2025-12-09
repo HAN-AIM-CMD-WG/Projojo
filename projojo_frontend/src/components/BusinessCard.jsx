@@ -62,21 +62,22 @@ export default function BusinessCard({ name, image, location, businessId, topSki
     }
 
     return (
-        <div className="flex flex-col items-center bg-slate-200 border border-gray-200 rounded-lg shadow md:flex-row w-full  ">
-            <img className="w-full max-h-64 rounded-t-lg md:h-48 md:w-48 md:rounded-none md:rounded-s-lg object-cover" src={`${IMAGE_BASE_URL}${image}`} alt="Bedrijfslogo" />
-            <div className="flex flex-col justify-between p-4 leading-normal">
-                <h2 className="mb-1 text-4xl font-bold tracking-tight text-gray-900">{name}</h2>
-                <h3 className="mb-1 text-xl font-bold tracking-tight text-gray-900 flex gap-1">
-                    <svg className="w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+        <div className="flex flex-col items-center neu-flat md:flex-row w-full overflow-hidden">
+            <img className="w-full max-h-64 rounded-t-2xl md:h-48 md:w-48 md:rounded-none md:rounded-l-2xl object-cover" src={`${IMAGE_BASE_URL}${image}`} alt="Bedrijfslogo" />
+            <div className="flex flex-col justify-between p-6 leading-normal flex-1">
+                <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-text-primary">{name}</h2>
+                <h3 className="mb-2 text-lg font-semibold tracking-tight text-text-secondary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-xl">location_on</span>
                     {location && location.length > 0 ?
                         (Array.isArray(location) ? location[0] : location) :
-                        <p className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</p>
+                        <span className="italic text-text-muted font-normal">Geen locatie bekend</span>
                     }
                 </h3>
-                {showDescription && <div className="mb-1 tracking-tight text-gray-900 "><RichTextViewer text={description} /></div>}
+                {showDescription && <div className="mb-2 tracking-tight text-text-secondary"><RichTextViewer text={description} /></div>}
                 {topSkills && (
                     <>
-                        <p className="mb-3 font-normal text-gray-700 ">Top {topSkills.length} skills in dit bedrijf: </p><div className="flex flex-wrap gap-2 pt-1 pb-4">
+                        <p className="mb-3 font-semibold text-text-muted text-sm">Top {topSkills.length} skills in dit bedrijf:</p>
+                        <div className="flex flex-wrap gap-2 pt-1 pb-4">
                             {topSkills.map((skill) => (
                                 <SkillBadge key={skill.skillId ?? skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                             ))}
@@ -85,30 +86,24 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                 )
                 }
             </div>
-            <div className="md:ml-auto p-4 flex gap-3 flex-col">
-                {!showUpdateButton && <Link to={`/business/${businessId}`} className="btn-primary">Bekijk bedrijf</Link>}
+            <div className="md:ml-auto p-6 flex gap-3 flex-col">
+                {!showUpdateButton && <Link to={`/business/${businessId}`} className="neu-btn-primary text-center">Bekijk bedrijf</Link>}
                 {showUpdateButton && authData.businessId === businessId && (
                     <>
-                        <Link to={`/projects/add`} className="btn-primary ps-3 flex flex-row gap-2 justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 448 512" className='h-5 w-5' stroke='#fff'>
-                                <path fill="#ffffff" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
-                            </svg>
-                            <p>Project toevoegen</p>
+                        <Link to={`/projects/add`} className="neu-btn-primary flex flex-row gap-2 justify-center items-center">
+                            <span className="material-symbols-outlined text-lg">add</span>
+                            <span>Project toevoegen</span>
                         </Link>
-                        <Link className="btn-primary ps-2 flex flex-row gap-2 justify-center items-center" to={`/business/update`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 512 512" className='h-4 w-4'>
-                                <path fill="#ffffff" d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z" />
-                            </svg>
-                            <p>Bedrijf aanpassen</p>
+                        <Link className="neu-btn flex flex-row gap-2 justify-center items-center" to={`/business/update`}>
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                            <span>Bedrijf aanpassen</span>
                         </Link>
                     </>
                 )}
                 {(showUpdateButton && (authData.type === "teacher" || authData.businessId === businessId)) && (
-                    <button className='btn-primary ps-4 flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
-                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 640 512" className='h-5 w-5'>
-                            <path fill="#ffffff" d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
-                        </svg>
-                        <p>Collega toevoegen</p>
+                    <button className='neu-btn flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
+                        <span className="material-symbols-outlined text-lg">person_add</span>
+                        <span>Collega toevoegen</span>
                     </button>
                 )}
             </div>

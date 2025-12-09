@@ -31,9 +31,9 @@ export default function App() {
   }, [location, setAuthData]);
 
   return (
-    <>
+    <div className="min-h-screen bg-neu-bg">
       {location.pathname !== "/" && <Navbar />}
-      <div className="max-w-7xl min-h-dvh px-4 mx-auto relative">
+      <main className="max-w-7xl min-h-dvh px-6 mx-auto relative py-6">
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />
           <Route path="/" element={<LoginPage />} />
@@ -54,9 +54,9 @@ export default function App() {
           <Route path="/teacher" element={<TeacherPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
+      </main>
       {location.pathname !== "/" && <Footer />}
-    </>
+    </div>
   )
 }
 
