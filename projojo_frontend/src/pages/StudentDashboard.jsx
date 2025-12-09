@@ -237,7 +237,7 @@ export default function StudentDashboard() {
                                     <span className="material-symbols-outlined text-primary">explore</span>
                                     Ontdek projecten
                                 </Link>
-                                <Link to="/profile" className="neu-btn w-full justify-start gap-3 !text-sm">
+                                <Link to={`/student/${authData.userId}`} className="neu-btn w-full justify-start gap-3 !text-sm">
                                     <span className="material-symbols-outlined text-primary">person</span>
                                     Mijn profiel
                                 </Link>
@@ -289,7 +289,7 @@ function TaskCard({ task, status }) {
 
     return (
         <Link 
-            to={`/project/${task.project_id}#task-${task.id}`}
+            to={`/projects/${task.project_id}#task-${task.id}`}
             className={`block neu-pressed p-4 border-l-4 ${config.borderColor} hover:bg-gray-50/50 transition-colors group`}
         >
             <div className="flex items-start justify-between gap-4">
