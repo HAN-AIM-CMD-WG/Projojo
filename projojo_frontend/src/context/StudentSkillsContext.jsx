@@ -17,8 +17,15 @@ export function StudentSkillsProvider({ children }) {
     useEffect(() => {
         let ignore = false;
 
+        // Wait for auth to finish loading
+        if (authData.isLoading) {
+            setIsLoading(true);
+            return;
+        }
+
         // Only fetch skills for students
-        if (authData.isLoading || authData.type !== 'student' || !authData.userId) {
+        if (authData.type !== 'student' || !authData.userId) {
+            setStudentSkills([]);
             setIsLoading(false);
             return;
         }
