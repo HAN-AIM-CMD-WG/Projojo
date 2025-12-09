@@ -195,16 +195,16 @@ export default function BusinessCard({
                         </p>
                         <div className="flex flex-wrap items-center gap-2">
                             {visibleSkills.map((skill) => (
-                                <span 
-                                    key={skill.skillId ?? skill.id} 
-                                    className="px-4 py-2 text-sm font-bold text-primary border-2 border-primary/30 rounded-full bg-white/50"
+                                <span
+                                    key={skill.skillId ?? skill.id}
+                                    className="px-3.5 py-2 text-sm font-bold text-white bg-primary rounded-full shadow-sm"
                                 >
                                     {skill.name}
                                 </span>
                             ))}
                             {remainingSkills > 0 && (
-                                <span className="px-4 py-2 text-sm font-bold rounded-full border-2 border-gray-200 text-gray-500 bg-white/50">
-                                    +{remainingSkills} meer
+                                <span className="px-3.5 py-2 text-sm font-bold rounded-full bg-gray-200 text-gray-500">
+                                    +{remainingSkills}
                                 </span>
                             )}
                         </div>
