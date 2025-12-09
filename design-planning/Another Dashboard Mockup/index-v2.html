@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard v2.0 - Werkspot Campus</title>
+    <link rel="stylesheet" href="styles-v2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" id="themeToggle" title="Wissel thema">
+        <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                        <path d="M12 10L16 14L20 10" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 18L16 22L20 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <span class="logo-text">Werkspot</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                </div>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </div>
+                <span>Opdrachten</span>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    </svg>
+                </div>
+                <span>Bedrijven</span>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <span>Sollicitaties</span>
+                <span class="nav-badge">3</span>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                </div>
+                <span>Berichten</span>
+                <span class="nav-badge accent">5</span>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                </div>
+                <span>Agenda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <div class="nav-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span>Profiel</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar-large">SP</div>
+                <div class="user-info">
+                    <div class="user-name">Sophie Peters</div>
+                    <div class="user-role">HBO Student</div>
+                </div>
+                <button class="user-menu-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="1"/>
+                        <circle cx="12" cy="5" r="1"/>
+                        <circle cx="12" cy="19" r="1"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            
+            <div class="topbar-left">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="breadcrumb">
+                    <span>Home</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                    <span class="active">Overzicht</span>
+                </div>
+            </div>
+
+            <div class="topbar-center">
+                <div class="search-bar-v2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" placeholder="Zoek naar opdrachten, bedrijven...">
+                    <kbd>⌘K</kbd>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <button class="topbar-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span class="notification-dot">3</span>
+                </button>
+                <button class="topbar-icon-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6m5.66-13.66l-4.24 4.24m-2.83 2.83l-4.24 4.24M23 12h-6m-6 0H1m18.66 5.66l-4.24-4.24m-2.83-2.83l-4.24-4.24"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-content-v2">
+            <!-- Welcome Hero with Stats -->
+            <section class="hero-card-v2">
+                <div class="hero-header">
+                    <div class="hero-text">
+                        <h2>Welkom terug, Sophie 👋</h2>
+                        <p>Hier is een overzicht van je activiteiten vandaag</p>
+                    </div>
+                    <div class="hero-avatar">
+                        <img src="data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='40' cy='40' r='40' fill='url(%23gradient)'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='white' font-family='Inter' font-size='28' font-weight='600'%3ESP%3C/text%3E%3Cdefs%3E%3ClinearGradient id='gradient' x1='0' y1='0' x2='80' y2='80'%3E%3Cstop offset='0%25' stop-color='%232563EB'/%3E%3Cstop offset='100%25' stop-color='%23F97316'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E" alt="Sophie">
+                        <div class="status-indicator"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon applications">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Actieve sollicitaties</div>
+                            <div class="stat-value">3</div>
+                            <div class="stat-change positive">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="18 15 12 9 6 15"/>
+                                </svg>
+                                +2 deze week
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon matches">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Nieuwe matches</div>
+                            <div class="stat-value">12</div>
+                            <div class="stat-change positive">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="18 15 12 9 6 15"/>
+                                </svg>
+                                5 vandaag
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon messages">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Ongelezen berichten</div>
+                            <div class="stat-value">5</div>
+                            <div class="stat-change neutral">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                3 uitnodigingen
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon calendar">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Aankomende afspraken</div>
+                            <div class="stat-value">2</div>
+                            <div class="stat-change neutral">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                Deze week
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Two Column Layout -->
+            <div class="two-column-grid">
+                <!-- Left Column -->
+                <div class="left-column">
+                    <!-- Profile Progress -->
+                    <section class="glass-card profile-progress-card">
+                        <div class="card-header-v2">
+                            <h3>Profiel Compleetheid</h3>
+                            <button class="icon-btn-small">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div class="progress-circle-container">
+                            <svg class="progress-circle" width="160" height="160" viewBox="0 0 160 160">
+                                <circle cx="80" cy="80" r="70" class="progress-circle-bg"/>
+                                <circle cx="80" cy="80" r="70" class="progress-circle-fill" style="stroke-dasharray: 439.8; stroke-dashoffset: 131.94;"/>
+                                <text x="80" y="75" text-anchor="middle" class="progress-percentage">70%</text>
+                                <text x="80" y="95" text-anchor="middle" class="progress-label">Compleet</text>
+                            </svg>
+                        </div>
+
+                        <div class="checklist">
+                            <div class="checklist-item completed">
+                                <div class="check-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <span>Basisgegevens ingevuld</span>
+                            </div>
+                            <div class="checklist-item completed">
+                                <div class="check-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                                <span>Profielfoto toegevoegd</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="check-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                    </svg>
+                                </div>
+                                <span>CV uploaden (PDF)</span>
+                                <span class="urgent-badge">Urgent</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="check-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                    </svg>
+                                </div>
+                                <span>Vaardigheden toevoegen</span>
+                            </div>
+                            <div class="checklist-item">
+                                <div class="check-icon">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                    </svg>
+                                </div>
+                                <span>LinkedIn koppelen</span>
+                            </div>
+                        </div>
+
+                        <button class="btn-v2 btn-primary-v2 btn-block">
+                            Profiel Completeren
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                                <polyline points="12 5 19 12 12 19"/>
+                            </svg>
+                        </button>
+                    </section>
+
+                    <!-- Activity Timeline -->
+                    <section class="glass-card activity-card">
+                        <div class="card-header-v2">
+                            <h3>Recente Activiteit</h3>
+                            <div class="filter-tabs-mini">
+                                <button class="tab-mini active">Alles</button>
+                                <button class="tab-mini">Sollicitaties</button>
+                                <button class="tab-mini">Berichten</button>
+                            </div>
+                        </div>
+
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-marker new"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <strong>Nieuwe match!</strong>
+                                        <span class="timeline-time">2 min geleden</span>
+                                    </div>
+                                    <p>TechLabs B.V. komt overeen met jouw profiel</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-marker message"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <strong>Nieuw bericht</strong>
+                                        <span class="timeline-time">1 uur geleden</span>
+                                    </div>
+                                    <p>Design Studio heeft je een bericht gestuurd</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-marker success"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <strong>Sollicitatie verzonden</strong>
+                                        <span class="timeline-time">3 uur geleden</span>
+                                    </div>
+                                    <p>Je hebt gesolliciteerd bij MediaCorp</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <strong>Profiel bekeken</strong>
+                                        <span class="timeline-time">5 uur geleden</span>
+                                    </div>
+                                    <p>3 bedrijven hebben je profiel bekeken</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-marker"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <strong>Agenda update</strong>
+                                        <span class="timeline-time">Gisteren</span>
+                                    </div>
+                                    <p>Gesprek gepland met Design Studio</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Right Column -->
+                <div class="right-column">
+                    <!-- Applications Overview -->
+                    <section class="glass-card applications-overview-card">
+                        <div class="card-header-v2">
+                            <div>
+                                <h3>Sollicitaties Overzicht</h3>
+                                <p class="card-subtitle">Je lopende sollicitaties</p>
+                            </div>
+                            <button class="btn-v2 btn-secondary-v2 btn-small">
+                                Alle bekijken
+                            </button>
+                        </div>
+
+                        <div class="applications-stats">
+                            <div class="app-stat-item">
+                                <div class="app-stat-number">3</div>
+                                <div class="app-stat-label">Actief</div>
+                                <div class="app-stat-bar">
+                                    <div class="app-stat-bar-fill" style="width: 60%; background: var(--color-primary);"></div>
+                                </div>
+                            </div>
+                            <div class="app-stat-item">
+                                <div class="app-stat-number">2</div>
+                                <div class="app-stat-label">Gesprekken</div>
+                                <div class="app-stat-bar">
+                                    <div class="app-stat-bar-fill" style="width: 40%; background: var(--color-success);"></div>
+                                </div>
+                            </div>
+                            <div class="app-stat-item">
+                                <div class="app-stat-number">1</div>
+                                <div class="app-stat-label">Afgewezen</div>
+                                <div class="app-stat-bar">
+                                    <div class="app-stat-bar-fill" style="width: 20%; background: var(--color-text-tertiary);"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="applications-list-v2">
+                            <div class="app-item-v2">
+                                <div class="app-item-header">
+                                    <div class="app-company">
+                                        <div class="company-avatar blue">TL</div>
+                                        <div>
+                                            <div class="app-company-name">TechLabs B.V.</div>
+                                            <div class="app-position">Junior Frontend Stage</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-pill ingediend">Ingediend</span>
+                                </div>
+                                <div class="app-item-meta">
+                                    <span class="meta-chip">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        12 nov 2025
+                                    </span>
+                                    <span class="meta-chip">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        Amsterdam
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="app-item-v2 highlight">
+                                <div class="app-item-header">
+                                    <div class="app-company">
+                                        <div class="company-avatar green">DS</div>
+                                        <div>
+                                            <div class="app-company-name">Design Studio</div>
+                                            <div class="app-position">UX Design Bijbaan</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-pill uitnodiging">Uitnodiging</span>
+                                </div>
+                                <div class="app-item-meta">
+                                    <span class="meta-chip">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        8 nov 2025
+                                    </span>
+                                    <span class="meta-chip">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        Utrecht
+                                    </span>
+                                </div>
+                                <div class="app-action-required">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="8" x2="12" y2="12"/>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    </svg>
+                                    Gesprek gepland voor di 18 nov, 15:30
+                                </div>
+                            </div>
+
+                            <div class="app-item-v2">
+                                <div class="app-item-header">
+                                    <div class="app-company">
+                                        <div class="company-avatar orange">MC</div>
+                                        <div>
+                                            <div class="app-company-name">MediaCorp</div>
+                                            <div class="app-position">Data Science Afstuderen</div>
+                                        </div>
+                                    </div>
+                                    <span class="status-pill behandeling">In behandeling</span>
+                                </div>
+                                <div class="app-item-meta">
+                                    <span class="meta-chip">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        5 nov 2025
+                                    </span>
+                                    <span class="meta-chip">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        Rotterdam
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Upcoming Events -->
+                    <section class="glass-card upcoming-events-card">
+                        <div class="card-header-v2">
+                            <h3>Aankomende Afspraken</h3>
+                            <button class="icon-btn-small">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="events-list">
+                            <div class="event-item priority">
+                                <div class="event-date">
+                                    <div class="event-day">18</div>
+                                    <div class="event-month">Nov</div>
+                                </div>
+                                <div class="event-content">
+                                    <div class="event-title">Kennismakingsgesprek</div>
+                                    <div class="event-company">Design Studio</div>
+                                    <div class="event-time">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        15:30 - 16:30 • Online (Teams)
+                                    </div>
+                                </div>
+                                <button class="event-action">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                        <polyline points="15 3 21 3 21 9"/>
+                                        <line x1="10" y1="14" x2="21" y2="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <div class="event-item">
+                                <div class="event-date">
+                                    <div class="event-day">19</div>
+                                    <div class="event-month">Nov</div>
+                                </div>
+                                <div class="event-content">
+                                    <div class="event-title">Sollicitatie Deadline</div>
+                                    <div class="event-company">TechLabs - Afstudeeropdracht</div>
+                                    <div class="event-time">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        23:59
+                                    </div>
+                                </div>
+                                <span class="deadline-badge">Deadline</span>
+                            </div>
+
+                            <div class="event-item">
+                                <div class="event-date">
+                                    <div class="event-day">20</div>
+                                    <div class="event-month">Nov</div>
+                                </div>
+                                <div class="event-content">
+                                    <div class="event-title">Carrièrebeurs</div>
+                                    <div class="event-company">Rotterdam Ahoy</div>
+                                    <div class="event-time">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        14:00 - 18:00
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Quick Actions -->
+                    <section class="glass-card quick-actions-v2">
+                        <h3 style="margin-bottom: 16px; font-size: 16px;">Snelle Acties</h3>
+                        <div class="quick-actions-grid-v2">
+                            <button class="quick-action-v2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <span>Upload CV</span>
+                            </button>
+                            <button class="quick-action-v2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="M21 21l-4.35-4.35"/>
+                                </svg>
+                                <span>Zoek Stage</span>
+                            </button>
+                            <button class="quick-action-v2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="4" y1="21" x2="4" y2="14"/>
+                                    <line x1="4" y1="10" x2="4" y2="3"/>
+                                    <line x1="12" y1="21" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12" y2="3"/>
+                                    <line x1="20" y1="21" x2="20" y2="16"/>
+                                    <line x1="20" y1="12" x2="20" y2="3"/>
+                                </svg>
+                                <span>Skills</span>
+                            </button>
+                            <button class="quick-action-v2">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                </svg>
+                                <span>Interesses</span>
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script-v2.js"></script>
+</body>
+</html>
+
+

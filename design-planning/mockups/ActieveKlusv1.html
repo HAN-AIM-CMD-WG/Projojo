@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projojo - IoT Sensoren Dashboard Project</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e50056',
+                        darkPrimary: '#CF004E',
+                        neuro: {
+                            bg: '#f0f0f3',
+                            light: '#ffffff',
+                            dark: '#d0d0d3',
+                            darker: '#a0a0a3'
+                        }
+                    },
+                    boxShadow: {
+                        'neuro': '20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff',
+                        'neuro-inset': 'inset 20px 20px 60px #d0d0d3, inset -20px -20px 60px #ffffff',
+                        'neuro-sm': '8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff',
+                        'neuro-hover': '25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: #f0f0f3; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .neuro-card {
+            background: #f0f0f3;
+            box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
+            transition: all 0.3s ease;
+        }
+        .neuro-card:hover {
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+            transform: translateY(-2px);
+        }
+        .neuro-button {
+            background: #f0f0f3;
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            transition: all 0.2s ease;
+        }
+        .neuro-button:hover {
+            box-shadow: 12px 12px 24px #d0d0d3, -12px -12px 24px #ffffff;
+        }
+        .neuro-button:active {
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+        }
+
+        /* Primary Action Button */
+        .neuro-button-primary {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neuro-button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 12px 12px 24px #d0d0d3, -12px -12px 24px #ffffff;
+        }
+
+        .neuro-button-primary:active {
+            transform: translateY(0);
+            box-shadow: 4px 4px 12px #d0d0d3, -4px -4px 12px #ffffff;
+        }
+
+        /* Premium Skills Design System */
+        .skill-badge {
+            background: linear-gradient(145deg, #e50056, #cf004e);
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+        
+        /* Compact Skills Design */
+        .skills-category {
+            margin-bottom: 1rem;
+        }
+        
+        .skills-category-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            padding-left: 0.125rem;
+        }
+        
+        .skills-compact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        /* Subtle Skill Tags */
+        .skill-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+        }
+        
+        .skill-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Status Styles */
+        .skill-tag.mastered {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: rgba(34, 197, 94, 0.2);
+        }
+        
+        .skill-tag.learning {
+            background: #fffbeb;
+            color: #a16207;
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        
+        .skill-tag.todo {
+            background: #f8fafc;
+            color: #64748b;
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        
+        /* Minimal Icons */
+        .skill-icon-mini {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .mastered .skill-icon-mini {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .learning .skill-icon-mini {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .todo .skill-icon-mini {
+            background: #cbd5e1;
+            color: #64748b;
+        }
+        
+        /* Compact Legend */
+        .skills-legend-compact {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.6875rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+        
+        .legend-item-compact {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .legend-dot-mini {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .legend-dot-mini.mastered {
+            background: #22c55e;
+        }
+        
+        .legend-dot-mini.learning {
+            background: #f59e0b;
+        }
+        
+        .legend-dot-mini.todo {
+            background: #cbd5e1;
+        }
+
+        /* Project Header Styling */
+        .project-header {
+            background: linear-gradient(135deg, #f0f0f3 0%, #f8f8fb 100%);
+            border-left: 6px solid #e50056;
+        }
+
+        /* Activity Pulse */
+        .activity-pulse {
+            position: relative;
+        }
+
+        .activity-pulse::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background: #22bb33;
+            border: 2px solid #f0f0f3;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Working Indicator */
+        .working-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.25rem 0.75rem;
+            background: #f0f0f3;
+            box-shadow: inset 4px 4px 8px #d0d0d3, inset -4px -4px 8px #ffffff;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            color: #e50056;
+            font-weight: 600;
+        }
+        
+        .working-indicator::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #e50056;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 4px rgba(229, 0, 86, 0.4);
+        }
+
+        /* Progress Indicators */
+        .progress-bar {
+            background: #a0a0a3;
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #e50056, #ff1a70);
+            height: 100%;
+            border-radius: 1rem;
+            transition: width 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: progressFlow 2s ease-in-out infinite;
+        }
+
+        @keyframes progressFlow {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Status Indicators */
+        .status-active {
+            background: rgba(34, 187, 51, 0.1);
+            color: #22bb33;
+            border: 2px solid rgba(34, 187, 51, 0.2);
+        }
+
+        .status-blocked {
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            border: 2px solid rgba(255, 71, 87, 0.2);
+        }
+
+        .status-review {
+            background: rgba(255, 165, 2, 0.1);
+            color: #ffa502;
+            border: 2px solid rgba(255, 165, 2, 0.2);
+        }
+
+        /* Timeline */
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 10px;
+            height: 10px;
+            background: #e50056;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px #f0f0f3, 0 0 0 5px rgba(229, 0, 86, 0.3);
+        }
+
+        .timeline-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 1.5rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: #d0d0d3;
+        }
+
+        /* Tool Link Cards */
+        .tool-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+        }
+
+        /* Code Style */
+        .code {
+            background: #a0a0a3;
+            color: #2d3748;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+        }
+
+        /* External Links */
+        .external-link {
+            color: #e50056;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .external-link:hover {
+            color: #cf004e;
+            text-decoration: underline;
+        }
+
+        /* Interactive Stat Cards */
+        .stat-card-interactive {
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card-interactive::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(229, 0, 86, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .stat-card-interactive:hover::before {
+            left: 100%;
+        }
+
+        /* Subtle Card Backgrounds */
+        .subtle-card {
+            background: linear-gradient(135deg, #f0f0f3 0%, #f8f8fb 100%);
+        }
+
+        /* Enhanced Timeline */
+        .timeline-fade {
+            background: linear-gradient(135deg, #f0f0f3 0%, rgba(240, 240, 243, 0.5) 100%);
+        }
+
+        /* Role Indicator */
+        .role-indicator {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-neuro-bg">
+    <!-- Header -->
+    <header class="neuro-card rounded-none mb-8 p-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="neuro-button rounded-full p-2">
+                    <img src="assets/han_logo.png" alt="HAN Logo" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h1 class="text-2xl font-bold text-gray-800">IoT Sensoren Dashboard</h1>
+                        <span class="role-indicator">Student</span>
+                    </div>
+                    <p class="text-gray-600 mt-1">SmartFarm Technologies • Actieve Klus</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Navigation Actions -->
+                <button onclick="goBackToDashboard()" class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all" title="Terug naar dashboard">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                </button>
+
+                <button onclick="window.location.href='ZoekpaginaV1.html'" class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all" title="Zoeken">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+
+                <button class="neuro-button rounded-full p-3 relative hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">2</span>
+                </button>
+                    
+                <!-- Dashboard Customization -->
+                <button class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+                
+                <div class="neuro-button rounded-full p-1">
+                    <img src="assets/student_female.png" alt="Profile" class="w-10 h-10 rounded-full">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Project Header -->
+        <div class="neuro-card project-header rounded-3xl p-8 mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Project Info -->
+                <div class="lg:col-span-2">
+                    <div class="flex items-start space-x-6">
+                        <div class="activity-pulse">
+                            <img src="assets/logo_smartfarm.png" alt="SmartFarm Technologies" class="w-20 h-20 rounded-xl object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <h1 class="text-3xl font-bold text-gray-800">IoT Sensoren Dashboard</h1>
+                                <span class="status-active px-3 py-1 rounded-full text-sm font-medium">Actief</span>
+                            </div>
+                            <p class="text-lg text-gray-600 mb-4">Real-time monitoring dashboard voor IoT sensoren in kas omgevingen</p>
+                            
+                            <!-- Company Info -->
+                            <div class="flex items-center space-x-4 mb-4">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H7m2 0v-4a2 2 0 012-2h2a2 2 0 012 2v4"/>
+                                    </svg>
+                                    <a href="https://smartfarm-tech.nl" target="_blank" class="external-link">SmartFarm Technologies</a>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    <span class="text-gray-600">Mark van der Berg (Supervisor)</span>
+                                </div>
+                            </div>
+
+                            <!-- Project Meta -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Deadline</div>
+                                    <div class="font-semibold text-gray-800">15 oktober 2024</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Prioriteit</div>
+                                    <div class="font-semibold text-orange-600">Hoog</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Studieload</div>
+                                    <div class="font-semibold text-gray-800">15 ECTS</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Duration</div>
+                                    <div class="font-semibold text-gray-800">12 weken</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Overview -->
+                <div class="neuro-card rounded-2xl p-6" style="background: linear-gradient(135deg, #f0f0f3 0%, #f8f8fb 100%);">
+                    <h3 class="font-semibold text-gray-800 mb-4">Project Voortgang</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-gray-600">Algemeen</span>
+                                <span class="font-semibold text-primary">75%</span>
+                            </div>
+                            <div class="progress-bar h-3">
+                                <div class="progress-fill" style="width: 75%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-center">
+                            <div class="stat-card-interactive p-3 rounded-lg transition-all">
+                                <div class="text-2xl font-bold text-primary">8</div>
+                                <div class="text-xs text-gray-500">Dagen resterend</div>
+                            </div>
+                            <div class="stat-card-interactive p-3 rounded-lg transition-all">
+                                <div class="text-2xl font-bold text-green-600">23</div>
+                                <div class="text-xs text-gray-500">Commits deze week</div>
+                            </div>
+                        </div>
+
+                        <button class="neuro-button-primary w-full rounded-lg py-3 font-semibold text-white">
+                            Doorgaan met werken
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Current Challenge -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Huidige Challenge</h2>
+                        <span class="status-active px-3 py-1 rounded-full text-sm font-medium">Sprint 3</span>
+                    </div>
+                    
+                    <div class="neuro-card rounded-xl p-4 mb-4 subtle-card">
+                        <h3 class="font-semibold text-gray-800 mb-2">Real-time Data Visualization</h3>
+                        <p class="text-gray-600 mb-4">Implementeer een real-time dashboard dat sensor data visualiseert met Chart.js en WebSocket verbindingen.</p>
+                        
+                        <!-- Acceptance Criteria -->
+                        <div class="space-y-2">
+                            <h4 class="font-medium text-gray-700">Acceptance Criteria:</h4>
+                            <div class="space-y-1">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-600">WebSocket verbinding opzetten</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                                    </svg>
+                                    <span class="text-sm text-gray-600">Chart.js integratie implementeren</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded-full border-2 border-orange-500 bg-orange-500 opacity-50"></div>
+                                    <span class="text-sm text-gray-600">Real-time updates (WIP)</span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+                                    <span class="text-sm text-gray-600">Error handling & fallbacks</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Blocker -->
+                    <div class="neuro-card rounded-xl p-4" style="background: linear-gradient(135deg, #fff5f5 0%, #fef2f2 100%); border-left: 4px solid #ff6b7a;">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-5 h-5 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                            </svg>
+                            <div>
+                                <h4 class="font-medium text-red-700">Hulp Nodig</h4>
+                                <p class="text-sm text-gray-600 mb-2">WebSocket auth tokens verlopen te snel. Heb hulp nodig met refresh token implementatie.</p>
+                                <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium text-primary hover:text-darkPrimary transition-all">
+                                    Vraag hulp aan mentor
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Development Tools & Links -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Development Tools</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- GitHub -->
+                        <a href="https://github.com/smartfarm/iot-dashboard" target="_blank" class="tool-card neuro-card rounded-xl p-4 flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">GitHub Repository</h3>
+                                <p class="text-sm text-gray-600">23 commits • 3 branches</p>
+                            </div>
+                        </a>
+
+                        <!-- Figma -->
+                        <a href="https://figma.com/design/iot-dashboard" target="_blank" class="tool-card neuro-card rounded-xl p-4 flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M15.852 8.981h-4.588V0h4.588c2.476 0 4.49 2.014 4.49 4.49s-2.014 4.491-4.49 4.491zM12.735 7.51h3.117c1.665 0 3.019-1.355 3.019-3.019s-1.354-3.019-3.019-3.019h-3.117V7.51zm0 1.471H8.148c-2.476 0-4.49-2.015-4.49-4.491S5.672 0 8.148 0h4.588v8.981zm-4.587-7.51c-1.665 0-3.019 1.355-3.019 3.019s1.354 3.02 3.019 3.02h3.117V1.471H8.148zm4.587 15.019H8.148c-2.476 0-4.49-2.014-4.49-4.49s2.014-4.49 4.49-4.49h4.588v8.98zM8.148 8.981c-1.665 0-3.019 1.355-3.019 3.019s1.355 3.019 3.019 3.019h3.117V8.981H8.148zM8.172 24c-2.489 0-4.515-2.014-4.515-4.49s2.014-4.49 4.49-4.49h4.588v4.441c0 2.503-2.047 4.539-4.563 4.539zm-.024-7.51a3.023 3.023 0 0 0-3.019 3.019c0 1.665 1.365 3.019 3.044 3.019 1.705 0 3.093-1.376 3.093-3.068v-2.97H8.148z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Design System</h3>
+                                <p class="text-sm text-gray-600">UI Components & Wireframes</p>
+                            </div>
+                        </a>
+
+                        <!-- Miro -->
+                        <a href="https://miro.com/board/smartfarm-planning" target="_blank" class="tool-card neuro-card rounded-xl p-4 flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17.392 0H23.04l-5.648 24H11.744zM0 8.064h5.648L17.392 0h-5.648z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Planning Board</h3>
+                                <p class="text-sm text-gray-600">User stories & Sprint planning</p>
+                            </div>
+                        </a>
+
+                        <!-- Deployment -->
+                        <a href="https://iot-dashboard-dev.netlify.app" target="_blank" class="tool-card neuro-card rounded-xl p-4 flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Live Preview</h3>
+                                <p class="text-sm text-gray-600">Development deployment</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Timeline -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Recent Activity</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="timeline-item">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">WebSocket connection geïmplementeerd</h4>
+                                    <p class="text-sm text-gray-600">Socket.io client setup en basis event handlers</p>
+                                    <span class="text-xs text-gray-500">2 uur geleden</span>
+                                </div>
+                                <span class="code">feat/websocket</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Chart.js component toegevoegd</h4>
+                                    <p class="text-sm text-gray-600">Real-time line chart voor temperatuur data</p>
+                                    <span class="text-xs text-gray-500">6 uur geleden</span>
+                                </div>
+                                <span class="code">feat/charts</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Meeting met Mark (Supervisor)</h4>
+                                    <p class="text-sm text-gray-600">Sprint review en planning volgende features</p>
+                                    <span class="text-xs text-gray-500">1 dag geleden</span>
+                                </div>
+                                <span class="status-review px-2 py-1 rounded text-xs font-medium">Review</span>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">API endpoints gedocumenteerd</h4>
+                                    <p class="text-sm text-gray-600">Swagger documentatie bijgewerkt</p>
+                                    <span class="text-xs text-gray-500">2 dagen geleden</span>
+                                </div>
+                                <span class="code">docs/api</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Skills & Technologies -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Skills & Tech Stack</h2>
+                    
+                    <!-- Compact Legend -->
+                    <div class="skills-legend-compact">
+                        <div class="legend-item-compact">
+                            <div class="legend-dot-mini mastered"></div>
+                            <span>Beheerst</span>
+                        </div>
+                        <div class="legend-item-compact">
+                            <div class="legend-dot-mini learning"></div>
+                            <span>Leren</span>
+                        </div>
+                        <div class="legend-item-compact">
+                            <div class="legend-dot-mini todo"></div>
+                            <span>Te doen</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Frontend -->
+                    <div class="skills-category">
+                        <h3 class="skills-category-title">Frontend</h3>
+                        <div class="skills-compact">
+                            <div class="skill-tag mastered">
+                                <div class="skill-icon-mini">R</div>
+                                <span>React</span>
+                            </div>
+                            <div class="skill-tag mastered">
+                                <div class="skill-icon-mini">TS</div>
+                                <span>TypeScript</span>
+                            </div>
+                            <div class="skill-tag learning">
+                                <div class="skill-icon-mini">C</div>
+                                <span>Chart.js</span>
+                            </div>
+                            <div class="skill-tag learning">
+                                <div class="skill-icon-mini">S</div>
+                                <span>Socket.io</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Backend -->
+                    <div class="skills-category">
+                        <h3 class="skills-category-title">Backend</h3>
+                        <div class="skills-compact">
+                            <div class="skill-tag mastered">
+                                <div class="skill-icon-mini">Py</div>
+                                <span>Python</span>
+                            </div>
+                            <div class="skill-tag mastered">
+                                <div class="skill-icon-mini">F</div>
+                                <span>FastAPI</span>
+                            </div>
+                            <div class="skill-tag learning">
+                                <div class="skill-icon-mini">P</div>
+                                <span>PostgreSQL</span>
+                            </div>
+                            <div class="skill-tag todo">
+                                <div class="skill-icon-mini">R</div>
+                                <span>Redis</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- IoT & Hardware -->
+                    <div class="skills-category">
+                        <h3 class="skills-category-title">IoT & Hardware</h3>
+                        <div class="skills-compact">
+                            <div class="skill-tag learning">
+                                <div class="skill-icon-mini">M</div>
+                                <span>MQTT</span>
+                            </div>
+                            <div class="skill-tag learning">
+                                <div class="skill-icon-mini">S</div>
+                                <span>Sensor Networks</span>
+                            </div>
+                            <div class="skill-tag todo">
+                                <div class="skill-icon-mini">E</div>
+                                <span>Edge Computing</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- DevOps -->
+                    <div class="skills-category">
+                        <h3 class="skills-category-title">DevOps</h3>
+                        <div class="skills-compact">
+                            <div class="skill-tag mastered">
+                                <div class="skill-icon-mini">G</div>
+                                <span>Git</span>
+                            </div>
+                            <div class="skill-tag learning">
+                                <div class="skill-icon-mini">D</div>
+                                <span>Docker</span>
+                            </div>
+                            <div class="skill-tag todo">
+                                <div class="skill-icon-mini">CI</div>
+                                <span>CI/CD</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team & Communication -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Team & Contact</h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Supervisor -->
+                        <div class="flex items-center space-x-3 p-3 neuro-card rounded-xl subtle-card">
+                            <img src="assets/supervisor_male1.png" alt="Mark" class="w-12 h-12 rounded-full">
+                            <div>
+                                <h3 class="font-semibold text-gray-800">Mark van der Berg</h3>
+                                <p class="text-sm text-gray-600">Senior IoT Developer</p>
+                                <p class="text-xs text-gray-500">Supervisor • SmartFarm</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Team Members -->
+                        <div class="space-y-3">
+                            <h4 class="font-medium text-gray-700">Development Team</h4>
+                            
+                            <div class="flex items-center space-x-3 p-2 rounded-lg hover:shadow-neuro-sm transition-all">
+                                <img src="assets/student_male.png" alt="Lars" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Lars Janssen</h4>
+                                    <p class="text-xs text-gray-500">Backend Developer • Student</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3 p-2 rounded-lg hover:shadow-neuro-sm transition-all">
+                                <img src="assets/student_female.png" alt="Sophie" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <h4 class="font-medium text-gray-800">Sophie de Vries</h4>
+                                    <p class="text-xs text-gray-500">UX Designer • Student</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Communication -->
+                        <div class="space-y-2">
+                            <button class="neuro-button w-full rounded-lg py-2 px-4 text-sm font-medium flex items-center justify-center space-x-2 hover:shadow-neuro-hover transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                <span>Slack: #iot-dashboard</span>
+                            </button>
+                            
+                            <button class="neuro-button w-full rounded-lg py-2 px-4 text-sm font-medium flex items-center justify-center space-x-2 hover:shadow-neuro-hover transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                </svg>
+                                <span>Daily Standup: 09:00</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Milestones -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Project Milestones</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-3 neuro-card rounded-lg" style="background: linear-gradient(135deg, #f0fff4 0%, #ecfdf5 100%);">
+                            <div>
+                                <h4 class="font-medium text-gray-800">Sprint 1: Setup</h4>
+                                <p class="text-xs text-gray-500">Project initialisatie</p>
+                            </div>
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 neuro-card rounded-lg" style="background: linear-gradient(135deg, #f0fff4 0%, #ecfdf5 100%);">
+                            <div>
+                                <h4 class="font-medium text-gray-800">Sprint 2: API Development</h4>
+                                <p class="text-xs text-gray-500">Backend & database</p>
+                            </div>
+                            <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 neuro-card rounded-lg" style="background: linear-gradient(135deg, #fef7f7 0%, #fef2f2 100%); border-left: 4px solid #e50056;">
+                            <div>
+                                <h4 class="font-medium text-primary">Sprint 3: Real-time Dashboard</h4>
+                                <p class="text-xs text-gray-500">Huidige sprint</p>
+                            </div>
+                            <div class="w-5 h-5 rounded-full bg-primary animate-pulse"></div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-3 neuro-card rounded-lg" style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); opacity: 0.7;">
+                            <div>
+                                <h4 class="font-medium text-gray-600">Sprint 4: Testing & Deploy</h4>
+                                <p class="text-xs text-gray-500">Afronding project</p>
+                            </div>
+                            <div class="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Information -->
+                <div class="neuro-card rounded-3xl p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Over SmartFarm Technologies</h2>
+                    
+                    <div class="space-y-4">
+                        <p class="text-sm text-gray-600">
+                            SmartFarm Technologies is een innovatief bedrijf gespecialiseerd in IoT-oplossingen voor de agrarische sector. 
+                            Ze ontwikkelen slimme sensorsystemen voor optimale kasomgevingen.
+                        </p>
+                        
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">Wageningen, Nederland</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">25-50 medewerkers</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"/>
+                                </svg>
+                                <span class="text-sm text-gray-600">AgTech & IoT</span>
+                            </div>
+                        </div>
+                        
+                        <a href="https://smartfarm-tech.nl" target="_blank" class="neuro-button w-full rounded-lg py-2 px-4 text-sm font-medium text-center external-link hover:shadow-neuro-hover transition-all block">
+                            Bezoek website
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 p-6 text-center text-gray-600 text-sm">
+        <p>Projojo - Actieve Klus Detail Pagina</p>
+    </footer>
+
+    <script>
+        function goBackToDashboard() {
+            // Navigate back to dashboard V8
+            window.location.href = 'dashboard-v8.html';
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Actieve Klus Detail Pagina geladen');
+        });
+    </script>
+</body>
+</html>
