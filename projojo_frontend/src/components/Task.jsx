@@ -116,113 +116,50 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
+    // Calculate available spots
+    const spotsAvailable = task.total_needed - task.total_accepted;
+
     return (
         <div id={`task-${task.id}`} className="group">
-            <div className="target flex flex-col sm:flex-row gap-4 justify-between items-center w-full p-5 bg-white rounded-lg shadow-md border border-gray-300 transition hover:shadow-lg">
-                <div className="space-y-3 flex-grow">
-                    <h2 className="text-2xl font-bold text-gray-800">
-                        {task.name}
-                    </h2>
-                    <RichTextViewer
-                        text={task.description}
-                    />
-                    <Alert text={taskSkillsError} onClose={() => { setTaskSkillsError("") }} />
-                    <SkillsEditor
-                        allSkills={allSkills}
-                        initialSkills={task.skills}
-                        isEditing={isEditing && isOwner}
-                        onSave={handleSave}
-                        onCancel={() => setIsEditing(false)}
-                        setError={setTaskSkillsError}
-                        isAllowedToAddSkill={isOwner}
-                    >
-                        <div className="flex flex-wrap gap-2 items-center">
-                            {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
-                            {task.skills && task.skills.map((skill) => (
-                                <SkillBadge
-                                    key={skill.skillId ?? skill.id}
-                                    skillName={skill.name}
-                                    isPending={skill.isPending ?? skill.is_pending}
-                                />
-                            ))}
-                            {/* {isOwner && !isEditing && (
-                                <button className="btn-secondary py-1 px-3" onClick={() => setIsEditing(true)}>
-                                    Aanpassen ✏️
-                                </button>
-                            )} */}
-                        </div>
-                    </SkillsEditor>
-                </div>
-
-                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto">
-                    <InfoBox>
-                        <strong className="text-primary mr-1">
-                            {task.total_needed - task.total_accepted}
-                        </strong>
-                        van de {task.total_needed} plekken beschikbaar
-                    </InfoBox>
-                    <InfoBox>
-                        <strong className="text-primary mr-1">
-                            {task.total_registered}
-                        </strong>
-                        openstaande aanmeldingen
-                    </InfoBox>
-                    {authData.type === "student" && (
-                        <button className={`btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "cursor-not-allowed opacity-50" : ""}`} disabled={(studentAlreadyRegistered || isFull)} onClick={() => setIsModalOpen(true)}>{studentAlreadyRegistered ? "Aanmelding ontvangen" : isFull ? "Taak is vol" : "Aanmelden"}</button>
-                    )}
-                    {isOwner && (<>
-                        <button className="btn-primary w-full" onClick={() => setIsRegistrationsModalOpen(true)}>Bekijk aanmeldingen</button>
-                        <CreateBusinessEmail taskId={task.id} />
-                    </>
-                    )}
-                </div>
-            </div>
-            {!(studentAlreadyRegistered || isFull) && (
-                <Modal
-                    modalHeader={`Aanmelden voor ${task.name}`}
-                    isModalOpen={isModalOpen}
-                    setIsModalOpen={setIsModalOpen}
-                >
-                    <form className="p-4" onSubmit={handleSubmit}>
-                        <div className="flex flex-col gap-4">
-                            <Alert text={error} />
-                            <RichTextEditor
-                                label="Motivatiebrief"
-                                onSave={setMotivation}
-                                setCanSubmit={setCanSubmit}
-                            />
-                            <div className="col-span-2">
+            <div className="target neu-flat p-6 transition-all duration-300 hover:shadow-lg">
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Main content */}
+                    <div className="flex-grow space-y-4">
+                        <div className="flex items-start gap-3">
+                            <div className="neu-icon-container text-primary shrink-0">
+                                <span className="material-symbols-outlined">assignment</span>
                             </div>
-                            <div className="flex gap-4 flex-wrap">
-                                <button type="button" className="flex-1 btn-secondary" onClick={() => setIsModalOpen(false)}>Annuleren</button>
-                                <button type="submit" className="flex-1 btn-primary">Verzenden</button>
+                            <div>
+                                <h2 className="text-xl font-extrabold text-gray-700 tracking-tight">
+                                    {task.name}
+                                </h2>
+                                <span className="neu-label">Taak</span>
                             </div>
                         </div>
-                    </form>
-                </Modal>
-            )}
 
-            {isOwner && (
-                <Modal maxWidth={"max-w-2xl"} modalHeader={`Aanmeldingen voor "${task.name}"`} isModalOpen={isRegistrationsModalOpen} setIsModalOpen={setIsRegistrationsModalOpen}>
-                    <div className="flex flex-col gap-4">
-                        {registrations.length === 0 && (
-                            <p>Er zijn geen open aanmeldingen voor deze taak</p>
-                        )}
-                        {isFull && (
-                            <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
-                        )}
-                        {registrations.map((registration) => (
-                            <InfoBox key={registration.student.id} className="flex flex-col gap-2 px-4 py-4">
-                                <div>
-                                    <Link to={`/student/${registration.student.id}`} className="inline-flex gap-2 text-lg font-bold underline text-black hover:text-primary" target="_blank" rel="noopener noreferrer">
-                                        <svg className="w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" fill="currentColor"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z" /></svg>
-                                        {registration.student.full_name}
-                                    </Link>
-                                    <RichTextViewer text={registration.reason} />
-                                </div>
-                                <div className="flex flex-wrap items-center gap-2 my-3">
-                                    <span>Skills:</span>
-                                    {registration.student.skills.map((skill) => (
+                        <div className="text-gray-600 text-sm">
+                            <RichTextViewer text={task.description} />
+                        </div>
+
+                        <Alert text={taskSkillsError} onClose={() => { setTaskSkillsError("") }} />
+                        
+                        {/* Skills */}
+                        <div>
+                            <p className="neu-label mb-2">Vereiste skills</p>
+                            <SkillsEditor
+                                allSkills={allSkills}
+                                initialSkills={task.skills}
+                                isEditing={isEditing && isOwner}
+                                onSave={handleSave}
+                                onCancel={() => setIsEditing(false)}
+                                setError={setTaskSkillsError}
+                                isAllowedToAddSkill={isOwner}
+                            >
+                                <div className="flex flex-wrap gap-2 items-center">
+                                    {task.skills && task.skills.length === 0 && (
+                                        <span className="text-gray-400 text-sm">Geen specifieke skills vereist</span>
+                                    )}
+                                    {task.skills && task.skills.map((skill) => (
                                         <SkillBadge
                                             key={skill.skillId ?? skill.id}
                                             skillName={skill.name}
@@ -230,20 +167,165 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         />
                                     ))}
                                 </div>
+                            </SkillsEditor>
+                        </div>
+                    </div>
+
+                    {/* Sidebar with stats and actions */}
+                    <div className="lg:w-64 shrink-0 flex flex-col gap-3">
+                        {/* Stats */}
+                        <div className="neu-pressed p-4 rounded-xl space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className={`material-symbols-outlined ${spotsAvailable > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                    {spotsAvailable > 0 ? 'check_circle' : 'cancel'}
+                                </span>
+                                <span className="text-sm font-bold text-gray-700">
+                                    {spotsAvailable > 0 ? (
+                                        <><span className="text-emerald-600">{spotsAvailable}</span> van {task.total_needed} plekken</>
+                                    ) : (
+                                        'Taak is vol'
+                                    )}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-amber-500">pending</span>
+                                <span className="text-sm text-gray-600">
+                                    <span className="font-bold text-amber-600">{task.total_registered}</span> aanmeldingen
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Action buttons */}
+                        {authData.type === "student" && (
+                            <button 
+                                className={`neu-btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "opacity-50 cursor-not-allowed" : ""}`} 
+                                disabled={(studentAlreadyRegistered || isFull)} 
+                                onClick={() => setIsModalOpen(true)}
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined">
+                                        {studentAlreadyRegistered ? 'check' : isFull ? 'block' : 'send'}
+                                    </span>
+                                    {studentAlreadyRegistered ? "Aangemeld" : isFull ? "Vol" : "Aanmelden"}
+                                </span>
+                            </button>
+                        )}
+                        {isOwner && (
+                            <>
+                                <button className="neu-btn w-full" onClick={() => setIsRegistrationsModalOpen(true)}>
+                                    <span className="flex items-center justify-center gap-2">
+                                        <span className="material-symbols-outlined">group</span>
+                                        Aanmeldingen ({task.total_registered})
+                                    </span>
+                                </button>
+                                <CreateBusinessEmail taskId={task.id} />
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+            {/* Registration modal for students */}
+            {!(studentAlreadyRegistered || isFull) && (
+                <Modal
+                    modalHeader={`Aanmelden voor ${task.name}`}
+                    isModalOpen={isModalOpen}
+                    setIsModalOpen={setIsModalOpen}
+                >
+                    <form className="p-5" onSubmit={handleSubmit}>
+                        <div className="flex flex-col gap-4">
+                            <Alert text={error} />
+                            <RichTextEditor
+                                label="Motivatiebrief"
+                                onSave={setMotivation}
+                                setCanSubmit={setCanSubmit}
+                            />
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" className="flex-1 neu-btn" onClick={() => setIsModalOpen(false)}>
+                                    Annuleren
+                                </button>
+                                <button type="submit" className="flex-1 neu-btn-primary">
+                                    <span className="flex items-center justify-center gap-2">
+                                        <span className="material-symbols-outlined">send</span>
+                                        Verzenden
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </Modal>
+            )}
+
+            {/* Registrations modal for owners */}
+            {isOwner && (
+                <Modal maxWidth={"max-w-2xl"} modalHeader={`Aanmeldingen voor "${task.name}"`} isModalOpen={isRegistrationsModalOpen} setIsModalOpen={setIsRegistrationsModalOpen}>
+                    <div className="flex flex-col gap-4 p-5">
+                        {registrations.length === 0 && (
+                            <p className="text-gray-500 text-center py-4">Er zijn geen open aanmeldingen voor deze taak</p>
+                        )}
+                        {isFull && (
+                            <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
+                        )}
+                        {registrations.map((registration) => (
+                            <div key={registration.student.id} className="neu-pressed p-5 rounded-xl">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <span className="material-symbols-outlined text-primary text-2xl">person</span>
+                                    <Link 
+                                        to={`/student/${registration.student.id}`} 
+                                        className="text-lg font-bold text-gray-700 hover:text-primary transition" 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                    >
+                                        {registration.student.full_name}
+                                    </Link>
+                                </div>
+                                <div className="text-gray-600 text-sm mb-3">
+                                    <RichTextViewer text={registration.reason} />
+                                </div>
+                                <div className="mb-4">
+                                    <span className="neu-label mb-2 block">Skills</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {registration.student.skills.map((skill) => (
+                                            <SkillBadge
+                                                key={skill.skillId ?? skill.id}
+                                                skillName={skill.name}
+                                                isPending={skill.isPending ?? skill.is_pending}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
                                 <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
                                 <form onSubmit={handleRegistrationResponse}>
                                     <FormInput label={`Reden (optioneel)`} max={400} min={0} type="textarea" name={`response`} rows={1} />
                                     <input type="hidden" name="userId" value={registration.student.id} />
-                                    <div className="flex gap-2 flex-wrap mt-3">
-                                        <button type="submit" value={true} disabled={isFull} className={`btn px-3 ${isFull ? "bg-gray-400" : "bg-green-700 hover:bg-green-800 focus:ring-green-500"} text-white`}>Accepteren</button>
-                                        <button type="submit" value={false} className="btn px-3 bg-red-600 hover:bg-red-700 focus:ring-red-200 text-white">Weigeren</button>
+                                    <div className="flex gap-3 mt-4">
+                                        <button 
+                                            type="submit" 
+                                            value={true} 
+                                            disabled={isFull} 
+                                            className={`flex-1 neu-btn ${isFull ? "opacity-50" : "!bg-emerald-500 !text-white hover:!bg-emerald-600"}`}
+                                        >
+                                            <span className="flex items-center justify-center gap-2">
+                                                <span className="material-symbols-outlined">check</span>
+                                                Accepteren
+                                            </span>
+                                        </button>
+                                        <button 
+                                            type="submit" 
+                                            value={false} 
+                                            className="flex-1 neu-btn !bg-red-500 !text-white hover:!bg-red-600"
+                                        >
+                                            <span className="flex items-center justify-center gap-2">
+                                                <span className="material-symbols-outlined">close</span>
+                                                Weigeren
+                                            </span>
+                                        </button>
                                     </div>
                                 </form>
-                            </InfoBox>
+                            </div>
                         ))}
                     </div>
-                    <div className="flex justify-center mt-4">
-                        <button className="btn-primary" onClick={() => setIsRegistrationsModalOpen(false)}>Sluiten</button>
+                    <div className="flex justify-center p-5 pt-0">
+                        <button className="neu-btn" onClick={() => setIsRegistrationsModalOpen(false)}>Sluiten</button>
                     </div>
                 </Modal>
             )}

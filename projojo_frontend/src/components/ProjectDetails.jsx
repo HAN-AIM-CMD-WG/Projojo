@@ -55,76 +55,86 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     }
 
     return (
-        <div className="inset-0 bg-gradient-to-b from-slate-100 via-slate-200 to-slate-300 z-10 rounded-lg shadow">
-            <div className="flex flex-col rounded-t-lg overflow-hidden">
-                <div className="flex flex-row items-start">
-                    <div>
-                        <img
-                            className="w-full sm:w-48 h-52 sm:h-48 aspect-square object-cover"
-                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                            alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
-                        />
-                    </div>
-                    <div className="w-full">
-                        <h1 className="text-3xl font-semibold text-gray-800 tracking-wide leading-tight border-b-2 border-primary m-4 pb-2">
-                            {project.name}
-                        </h1>
-                        <div className="flex flex-row gap-4 ms-4">
-                            {!isLoading && <>
-                                <Link to={`/business/${project.business.id}`} className="group">
-                                    <img
-                                        className="h-14 w-14 sm:h-16 sm:w-16 aspect-square object-cover rounded-full border border-gray-300 shadow-sm"
-                                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.business.image_path}`}
-                                        alt={isLoading ? "Aan het laden" : "Bedrijfslogo"}
-                                    />
-                                </Link>
-                                <div className="max-w-[75%]">
-                                    <Link
-                                        to={`/business/${project.business.id}`}
-                                        className="font-bold text-lg break-words text-black-800 hover:text-primary transition"
-                                    >
-                                        {project.business.name}
-                                    </Link>
-                                    <p className="text-black-600 text-sm flex gap-1">
-                                        <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                        {project.business.location}
-                                        {/* {project.business.location.join(", ")} */}
-                                    </p>
-                                </div>
-                            </>}
-                        </div>
-                    </div>
+        <div className="bg-neu-bg">
+            {/* Hero section with image */}
+            <div className="relative">
+                <div className="h-48 sm:h-64 w-full overflow-hidden">
+                    <img
+                        className="w-full h-full object-cover"
+                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                        alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                 </div>
-                <div className="flex flex-row">
-                    {project.description &&
-                        <div className="flex flex-col w-full m-4">
-                            <div className="mt-2 rounded-lg w-full bg-gray-100 shadow-lg">
-                                <p className="text-black text-sm tracking-wider font-semibold p-4 pt-3 pb-3 border-b border-gray-300 border-solid">Beschrijving</p>
-                                <div className="p-4 pt-3">
-                                    <RichTextViewer text={project.description} />
-                                </div>
-                            </div>
-                        </div>
-                    }
+                
+                {/* Project title overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
+                        {project.name}
+                    </h1>
                 </div>
             </div>
 
-            <h2 className="text-lg font-semibold text-black-700 pt-3 px-4">
-                Top {project.topSkills?.length || 0} skills van het project
-            </h2>
-            <div className="flex flex-row justify-between">
-                <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
-                    {project.topSkills?.map((skill) => (
-                        <li key={skill.skillId}>
-                            <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
-                        </li>
-                    ))}
-                </ul>
-                {isOwner && (
-                    <div className="w-fit p-4 pt-0 flex">
-                        <button className="btn-primary w-full border border-gray-400" onClick={handleOpenModal}>Taak toevoegen</button>
+            {/* Business info */}
+            <div className="p-6">
+                {!isLoading && project.business && (
+                    <div className="flex items-center gap-4 mb-6">
+                        <Link to={`/business/${project.business.id}`} className="shrink-0">
+                            <img
+                                className="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-2xl neu-flat"
+                                src={`${IMAGE_BASE_URL}${project.business.image_path}`}
+                                alt="Bedrijfslogo"
+                            />
+                        </Link>
+                        <div>
+                            <Link
+                                to={`/business/${project.business.id}`}
+                                className="font-bold text-lg text-gray-700 hover:text-primary transition"
+                            >
+                                {project.business.name}
+                            </Link>
+                            <p className="text-gray-500 text-sm flex items-center gap-1.5 mt-0.5">
+                                <span className="material-symbols-outlined text-base text-primary">location_on</span>
+                                {project.business.location}
+                            </p>
+                        </div>
                     </div>
                 )}
+
+                {/* Description */}
+                {project.description && (
+                    <div className="neu-pressed p-5 rounded-2xl mb-6">
+                        <p className="neu-label mb-3">Beschrijving</p>
+                        <div className="text-gray-600">
+                            <RichTextViewer text={project.description} />
+                        </div>
+                    </div>
+                )}
+
+                {/* Skills section */}
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p className="neu-label mb-3">Gevraagde skills</p>
+                        <ul className="flex flex-wrap gap-2">
+                            {project.topSkills?.map((skill) => (
+                                <li key={skill.skillId}>
+                                    <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
+                                </li>
+                            ))}
+                            {(!project.topSkills || project.topSkills.length === 0) && (
+                                <li className="text-gray-400 text-sm">Geen skills gespecificeerd</li>
+                            )}
+                        </ul>
+                    </div>
+                    {isOwner && (
+                        <button className="neu-btn-primary" onClick={handleOpenModal}>
+                            <span className="flex items-center gap-2">
+                                <span className="material-symbols-outlined">add</span>
+                                Taak toevoegen
+                            </span>
+                        </button>
+                    )}
+                </div>
             </div>
             {isOwner && (
                 <Modal
@@ -134,7 +144,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                 >
                     <form
                         key={formKey}
-                        className="p-4 md:p-5"
+                        className="p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
                             const formData = new FormData(e.target);
@@ -142,7 +152,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                             handleSubmit(formData);
                         }}
                     >
-                        <div className="flex flex-col gap-4 mb-4">
+                        <div className="flex flex-col gap-4 mb-6">
                             {error && <Alert text={error} onClose={() => setError("")} />}
                             <FormInput type="text" label={`Titel voor nieuwe taak`} placeholder={"Titel"} name={`title`} required />
                             <RichTextEditor
@@ -154,8 +164,11 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
                         </div>
-                        <button type="submit" name="Taak Toevoegen" className="btn-primary w-full">
-                            Taak Toevoegen
+                        <button type="submit" name="Taak Toevoegen" className="neu-btn-primary w-full">
+                            <span className="flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined">add_task</span>
+                                Taak toevoegen
+                            </span>
                         </button>
                     </form>
                 </Modal>

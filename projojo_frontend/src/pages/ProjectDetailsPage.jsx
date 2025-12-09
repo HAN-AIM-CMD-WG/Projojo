@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import ProjectDetails from "../components/ProjectDetails";
 import ProjectTasks from "../components/ProjectTasks";
-import { getProject, getProjectsWithBusinessId, getTasks, getTaskSkills } from "../services";
+import { getProject } from "../services";
 import { normalizeSkill } from "../utils/skills";
 import NotFoundPage from "./NotFound";
-import PageHeader from '../components/PageHeader';
 
 
 export default function ProjectDetailsPage() {
@@ -68,8 +67,7 @@ export default function ProjectDetailsPage() {
 
     return (
         <>
-            <PageHeader name={'Projectpagina'} />
-            <div className="bg-gray-100 rounded-lg">
+            <div className="neu-flat overflow-hidden">
                 <ProjectDetails project={project} businessId={project?.business_id} refreshData={() => {
                     fetchProjectAndTasks();
                     scrollToLastTask();

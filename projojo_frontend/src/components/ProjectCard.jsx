@@ -138,8 +138,8 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
         <div className="p-5">
           {/* Open positions - Marketplace model */}
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`material-symbols-outlined text-lg ${openPositions > 0 ? 'text-primary' : 'text-gray-400'}`}>
+            <div className="flex items-center gap-2">
+              <span className={`material-symbols-outlined text-lg w-[18px] text-center ${openPositions > 0 ? 'text-primary' : 'text-gray-400'}`}>
                 {openPositions > 0 ? 'work' : 'block'}
               </span>
               <span className="text-sm font-bold text-gray-700">
@@ -150,11 +150,14 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
                 )}
               </span>
             </div>
-            {/* Show matching positions if student has skills */}
+            {/* Show matching positions - icon aligned under work icon */}
             {studentSkills.length > 0 && matchingPositions > 0 && (
-              <p className="text-xs text-primary font-semibold ml-7">
-                {matchingPositions} {matchingPositions === 1 ? 'past' : 'passen'} bij jouw skills
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="material-symbols-outlined text-emerald-600 text-lg w-[18px] text-center">check_circle</span>
+                <span className="text-sm text-emerald-600 font-medium">
+                  {matchingPositions} {matchingPositions === 1 ? 'past' : 'passen'} bij jouw skills
+                </span>
+              </div>
             )}
           </div>
 

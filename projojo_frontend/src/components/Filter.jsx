@@ -37,10 +37,13 @@ export default function Filter({ onFilter }) {
         }
     }, []);
 
-    const handleSave = (skills) => {
+    const handleSave = (skills, keepOpen = false) => {
         const normalized = (skills || []).map(normalizeSkill).filter(Boolean);
         setSelectedSkills(normalized);
-        setIsEditing(false);
+        // Don't close when in instant apply mode (keepOpen from SkillsEditor)
+        if (!keepOpen) {
+            setIsEditing(false);
+        }
         onFilter({
             searchInput: search,
             selectedSkills: normalized
@@ -52,6 +55,18 @@ export default function Filter({ onFilter }) {
         onFilter({
             searchInput: search,
             selectedSkills: []
+        });
+    };
+
+    // Remove individual skill filter
+    const handleRemoveSkill = (skillToRemove) => {
+        const newSkills = selectedSkills.filter(s => 
+            (s.skillId || s.id) !== (skillToRemove.skillId || skillToRemove.id)
+        );
+        setSelectedSkills(newSkills);
+        onFilter({
+            searchInput: search,
+            selectedSkills: newSkills
         });
     };
 
@@ -75,8 +90,31 @@ export default function Filter({ onFilter }) {
     return (
         <div className="relative mb-8">
             <div className="flex flex-col justify-between items-stretch gap-5 sm:flex-row sm:items-center neu-flat p-5 sm:p-6">
-                {/* Skills filter button */}
-                <div className="sm:w-auto">
+                {/* Skills filter - integrated button/panel */}
+                <div className="sm:w-auto relative">
+                    {/* Toggle button - transforms when open */}
+                    <button 
+                        className={`flex items-center gap-2 text-sm transition-all duration-200 ${
+                            isEditing 
+                                ? 'neu-pressed px-4 py-2.5 rounded-xl text-primary' 
+                                : 'neu-btn'
+                        }`}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => setIsEditing(!isEditing)}
+                    >
+                        <span className="material-symbols-outlined text-lg">
+                            {isEditing ? 'expand_less' : 'filter_list'}
+                        </span>
+                        <span className="font-bold">Filter op skills</span>
+                        {/* Badge: show selected count only when closed */}
+                        {selectedSkills.length > 0 && !isEditing && (
+                            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                {selectedSkills.length}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* Skills editor panel - appears below button */}
                     <SkillsEditor
                         allSkills={allSkills}
                         initialSkills={selectedSkills}
@@ -85,11 +123,11 @@ export default function Filter({ onFilter }) {
                         onCancel={() => setIsEditing(false)}
                         setError={setError}
                         showOwnSkillsOption={true}
+                        hideSelectedSkills={true}
+                        instantApply={true}
                     >
-                        <button className="neu-btn flex items-center gap-2 text-sm" onClick={() => setIsEditing(true)}>
-                            <span className="material-symbols-outlined text-lg">filter_list</span>
-                            <span className="font-bold">Filter op skills</span>
-                        </button>
+                        {/* Empty children - button is above */}
+                        <></>
                     </SkillsEditor>
                 </div>
 
@@ -133,22 +171,26 @@ export default function Filter({ onFilter }) {
                 </div>
             </div>
 
-            {/* Selected skills display */}
-            {selectedSkills.length > 0 && (
+            {/* Selected skills display with individual remove buttons */}
+            {selectedSkills.length > 0 && !isEditing && (
                 <div className="flex flex-wrap items-center gap-3 mt-5">
                     <span className="neu-label">Actieve filters:</span>
                     {selectedSkills.map((skill) => (
-                        <SkillBadge
-                            key={skill.skillId}
-                            skillName={skill.name}
-                            isPending={skill.isPending}
-                        />
+                        <button
+                            key={skill.skillId || skill.id}
+                            onClick={() => handleRemoveSkill(skill)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 hover:border-primary/50 transition-all group"
+                            aria-label={`Verwijder filter ${skill.name}`}
+                        >
+                            {skill.name}
+                            <span className="material-symbols-outlined text-sm opacity-60 group-hover:opacity-100">close</span>
+                        </button>
                     ))}
-                    {!isEditing && (
-                        <button className="neu-btn !py-2 !px-4 text-xs" onClick={handleSkillsClear}>
+                    {selectedSkills.length > 1 && (
+                        <button className="neu-btn !py-1.5 !px-3 text-xs" onClick={handleSkillsClear}>
                             <span className="flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">close</span>
-                                <span className="font-bold">Wis filters</span>
+                                <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                                <span className="font-bold">Alles wissen</span>
                             </span>
                         </button>
                     )}
