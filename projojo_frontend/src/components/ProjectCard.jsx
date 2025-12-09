@@ -153,9 +153,9 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
             {/* Show matching positions - icon aligned under work icon */}
             {studentSkills.length > 0 && matchingPositions > 0 && (
               <div className="flex items-center gap-2 mt-2">
-                <span className="material-symbols-outlined text-emerald-600 text-lg w-[18px] text-center">check_circle</span>
-                <span className="text-sm text-emerald-600 font-medium">
-                  {matchingPositions} {matchingPositions === 1 ? 'past' : 'passen'} bij jouw skills
+                <span className="material-symbols-outlined text-emerald-600 text-lg w-[18px] text-center">local_fire_department</span>
+                <span className="text-sm text-emerald-600 font-bold">
+                  {matchingPositions}x match!
                 </span>
               </div>
             )}

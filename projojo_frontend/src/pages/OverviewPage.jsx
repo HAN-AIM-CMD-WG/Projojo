@@ -203,14 +203,14 @@ export default function OverviewPage() {
         <p className="text-sm text-gray-500 font-medium mt-1">
           {matchingOpenPositions > 0 && studentSkills.length > 0 ? (
             <>
-              <span className="text-primary font-bold">{matchingOpenPositions}</span> open {matchingOpenPositions === 1 ? 'plek past' : 'plekken passen'} bij jouw skills
+              <span className="text-primary font-bold">{matchingOpenPositions}x</span> match!
             </>
           ) : totalOpenPositions > 0 ? (
             <>
               <span className="text-gray-700 font-bold">{totalOpenPositions}</span> open {totalOpenPositions === 1 ? 'plek' : 'plekken'} beschikbaar
             </>
           ) : (
-            'Ontdek projecten en taken die bij jouw skills passen'
+            'Ontdek projecten die matchen met jouw skills'
           )}
         </p>
       </div>

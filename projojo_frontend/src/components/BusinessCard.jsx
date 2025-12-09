@@ -165,11 +165,11 @@ export default function BusinessCard({
                             </div>
                         )}
                         {websiteUrl && (
-                            <a 
+                            <a
                                 href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="neu-btn-primary !py-2 !px-4 rounded-xl flex items-center gap-2 text-sm font-bold"
+                                className="neu-btn-outline !py-2 !px-4 rounded-xl flex items-center gap-2 text-sm"
                             >
                                 <span className="material-symbols-outlined text-base">language</span>
                                 Website

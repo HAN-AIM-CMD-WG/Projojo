@@ -294,6 +294,26 @@
         box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2);
     }
 
+    /* --- Outline Button - Tertiary actions --- */
+    .neu-btn-outline {
+        @apply font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
+        background: transparent;
+        color: #FF7F50;
+        border: 2px solid #FF7F50;
+        border-radius: 0.75rem;
+        padding: 0.5rem 1.125rem;
+    }
+
+    .neu-btn-outline:hover {
+        background: rgba(255, 127, 80, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .neu-btn-outline:active {
+        transform: translateY(0);
+        background: rgba(255, 127, 80, 0.15);
+    }
+
     /* --- Icon Button - Circulair zoals Gemini --- */
     .neu-icon-btn {
         @apply bg-neu-bg transition-all duration-200 cursor-pointer flex items-center justify-center;
