@@ -31,6 +31,9 @@ services:
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
+      - JWT_SECRET_KEY=projojo-dev-secret-key-change-in-production-2024
+      - SESSIONS_SECRET_KEY=projojo-sessions-secret-key-2024
+      - ENVIRONMENT=development
     networks:
       - projojo-network
 

@@ -117,7 +117,7 @@ class BusinessRepository(BaseRepository[Business]):
             "name": $business.name,
             "description": $business.description,
             "image_path": $business.imagePath,
-            "location": $business.location,
+            "location": [$business.location],
             "projects": [
                 match
                     ($business, $project) isa hasProjects;

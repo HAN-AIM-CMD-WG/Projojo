@@ -24,29 +24,35 @@ Projojo is an educational project management platform connecting businesses, stu
 - **Professional Appearance**: Suitable for educational/business environment
 
 ### Color Palette (STRICT)
+
+**Note**: Using Tailwind CSS v4 with `@theme` blocks in `projojo_frontend/src/index.css`
+
 ```css
+/* Tailwind v4 @theme block syntax */
+@theme {
+    --color-primary: #6366F1;        /* Indigo Primary */
+    --color-dark-primary: #4F46E5;   /* Darker variant */
+    --color-light-primary: #818CF8;  /* Lighter accent */
+    
+    /* Neumorphic Colors */
+    --color-neu-bg: #EFEEEE;
+    --color-neu-light: #FFFFFF;
+    --color-neu-dark: #D1D9E6;
+    
+    /* Text Colors */
+    --color-text-primary: #2D3748;
+    --color-text-secondary: #4A5568;
+    --color-text-muted: #718096;
+}
+
 :root {
-  /* HAN Brand Colors (NEVER CHANGE) */
-  --primary: #e50056;           /* HAN Primary */
-  --primary-dark: #cf004e;      /* Darker variant */
-  --primary-light: #ff1a70;     /* Lighter accent */
-  
-  /* Neumorphic Background System */
-  --neuro-bg: #f0f0f3;         /* Main background */
-  --neuro-light: #ffffff;      /* Light shadow/highlight */
-  --neuro-dark: #d0d0d3;       /* Dark shadow */
-  --neuro-darker: #a0a0a3;     /* Progress bars, disabled */
-  
-  /* Semantic Colors */
-  --success: #22bb33;          /* Success states */
-  --warning: #ffa502;          /* Warning states */
-  --error: #ff4757;            /* Error states */
-  --info: #4c79ff;             /* Info states */
-  
-  /* Text Colors (High Contrast) */
-  --text-primary: #2d3748;     /* Primary text */
-  --text-secondary: #4a5568;   /* Secondary text */
-  --text-muted: #718096;       /* Muted text */
+    --primary: #6366F1;              /* Indigo for students */
+    
+    /* Semantic Colors */
+    --success: #22bb33;
+    --warning: #ffa502;
+    --error: #ff4757;
+    --info: #4c79ff;
 }
 ```
 
@@ -54,18 +60,34 @@ Projojo is an educational project management platform connecting businesses, stu
 
 #### Neumorphic Cards
 ```css
-.neuro-card {
-  background: #f0f0f3;
-  box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.neu-flat {
+  background: #EFEEEE;
+  box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.4);
+}
+
+.neu-pressed {
+  background: #EFEEEE;
+  box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
+  border-radius: 1rem;
+}
+
+.neu-card-lg {
+  background: #EFEEEE;
+  box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+  border-radius: 2rem;
+  padding: 2rem;
+  border: 1px solid rgba(255,255,255,0.4);
 }
 ```
 
 #### Buttons
-- Use `.neuro-button` class consistently
+- Use `.neu-btn` for secondary actions
+- Use `.neu-btn-primary` for primary actions
+- Legacy `.btn-primary` still available for compatibility
 - Inset shadow for active states
-- Focus rings for accessibility (3px primary with 30% opacity)
+- Focus rings for accessibility (Indigo with 30% opacity)
 - Smooth transitions (0.2s ease)
 
 #### Activity Indicators (V5 Standard)
@@ -302,7 +324,6 @@ Acceptance Criteria:
 ## ⚠️ Critical Rules
 
 ### NEVER DO
-- Change HAN brand colors (#e50056)
 - Break neumorphic design consistency
 - Create flashy or unprofessional animations
 - Ignore accessibility requirements

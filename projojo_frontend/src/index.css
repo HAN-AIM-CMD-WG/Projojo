@@ -5,8 +5,8 @@
 
 /* Your custom configuration as CSS variables */
 @theme {
-    --color-primary: #e50056;
-    --color-dark-primary: #cf004e;
+    --color-primary: #6366F1;
+    --color-dark-primary: #4F46E5;
 
     --radius-none: 0;
     --radius-sm: 0.125rem;
@@ -36,11 +36,11 @@
 
 @layer components {
     .btn {
-        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-pink-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg hover:cursor-pointer;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg hover:cursor-pointer;
     }
 
     .btn-primary {
-        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-pink-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-primary hover:bg-pink-700 text-white hover:cursor-pointer;
+        @apply font-medium text-sm text-nowrap rounded-md px-5 py-2.5 focus:outline-none focus:ring-4 focus:ring-indigo-300 transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg bg-primary hover:bg-indigo-700 text-white hover:cursor-pointer;
     }
 
     .btn-primary:disabled {
@@ -98,8 +98,8 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: #e50056;
-    /* oklch(0.205 0 0); */
+    --primary: #6366F1;
+    /* Indigo primary color for student focus */
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
@@ -167,5 +167,309 @@
 
     body {
         @apply bg-background text-foreground;
+    }
+}
+
+/* ===========================================
+   NEUMORPHIC DESIGN SYSTEM - Indigo Theme
+   Gebaseerd op Gemini Design (Projojo_design.html)
+   =========================================== */
+
+@theme {
+    /* Neumorphic Colors */
+    --color-neu-bg: #EFEEEE;
+    --color-neu-light: #FFFFFF;
+    --color-neu-dark: #D1D9E6;
+    
+    /* Text Colors */
+    --color-text-primary: #2D3748;
+    --color-text-secondary: #4A5568;
+    --color-text-muted: #718096;
+    
+    /* Indigo Primary */
+    --color-light-primary: #818CF8;
+}
+
+@layer components {
+    /* --- Base: Elevated Card (Level 1) --- */
+    .neu-flat {
+        @apply bg-neu-bg rounded-2xl;
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    /* Alleen hover-effect voor interactieve elementen */
+    .neu-flat-interactive {
+        @apply bg-neu-bg rounded-2xl transition-all duration-200;
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    .neu-flat-interactive:hover {
+        transform: translateY(-2px);
+        box-shadow: 8px 8px 16px #D1D9E6, -8px -8px 16px #FFFFFF;
+    }
+
+    /* --- Pressed/Inset (Level -1) --- */
+    .neu-pressed {
+        @apply bg-neu-bg rounded-xl;
+        box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
+    }
+
+    /* --- Interactive Buttons --- */
+    .neu-btn {
+        @apply bg-neu-bg text-text-secondary font-bold rounded-xl px-6 py-3 transition-all duration-200 cursor-pointer;
+        box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
+    }
+
+    .neu-btn:hover {
+        @apply text-primary;
+        transform: translateY(-1px);
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+    }
+
+    .neu-btn:active {
+        transform: translateY(0);
+        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+    }
+
+    /* --- Primary Button --- */
+    .neu-btn-primary {
+        @apply bg-primary text-white font-bold rounded-xl px-6 py-3 transition-all duration-200 cursor-pointer;
+        box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
+    }
+
+    .neu-btn-primary:hover {
+        @apply bg-dark-primary;
+        transform: translateY(-1px);
+    }
+
+    .neu-btn-primary:active {
+        transform: translateY(0);
+        box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    /* --- Icon Button --- */
+    .neu-icon-btn {
+        @apply bg-neu-bg text-text-muted rounded-xl w-12 h-12 flex items-center justify-center transition-all duration-200 cursor-pointer;
+        box-shadow: 4px 4px 8px #D1D9E6, -4px -4px 8px #FFFFFF;
+    }
+
+    .neu-icon-btn:hover {
+        @apply text-primary;
+        box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
+    }
+
+    .neu-icon-btn:active {
+        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
+    }
+
+    /* --- Input Fields --- */
+    .neu-input {
+        @apply bg-neu-bg rounded-xl px-5 py-4 text-text-primary font-semibold outline-none transition-all duration-200 placeholder-text-muted;
+        box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
+    }
+
+    .neu-input:focus {
+        @apply ring-2 ring-primary/20;
+    }
+
+    /* --- Card Variants --- */
+    .neu-card-lg {
+        @apply bg-neu-bg rounded-3xl p-8 transition-all duration-200;
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    /* --- Stat Card --- */
+    .neu-stat-card {
+        @apply bg-neu-bg rounded-2xl p-5 flex flex-col justify-center items-center text-center;
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    /* --- Progress Bar --- */
+    .neu-progress {
+        @apply w-full h-2.5 bg-gray-200 rounded-full overflow-hidden;
+        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
+    }
+
+    .neu-progress-bar {
+        @apply h-full bg-primary rounded-full transition-all duration-1000;
+    }
+
+    /* --- Skill Badge/Pill --- */
+    .neu-pill {
+        @apply px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-default;
+        background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%);
+        color: white;
+        box-shadow: 3px 3px 8px rgba(99, 102, 241, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8);
+    }
+
+    .neu-pill:hover {
+        transform: translateY(-1px);
+        box-shadow: 4px 4px 12px rgba(99, 102, 241, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.9);
+    }
+
+    /* Variant: Subtiele pill (voor secundaire skills) */
+    .neu-pill-subtle {
+        @apply px-4 py-2 text-xs font-bold text-primary rounded-xl bg-primary/10 border border-primary/20 transition-all duration-200;
+    }
+
+    .neu-pill-subtle:hover {
+        @apply bg-primary/20;
+    }
+
+    /* Variant: Outline pill */
+    .neu-pill-outline {
+        @apply px-4 py-2 text-xs font-bold text-primary rounded-xl border-2 border-primary/40 bg-transparent transition-all duration-200;
+    }
+
+    .neu-pill-outline:hover {
+        @apply bg-primary/10 border-primary;
+    }
+
+    /* --- Status Badges (Modern Glass Effect) --- */
+    .neu-badge-success {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+    }
+
+    .neu-badge-warning {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
+        color: #b45309;
+        border: 1px solid #fde68a;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.05) 100%);
+        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+    }
+
+    .neu-badge-error {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+    }
+
+    .neu-badge-info {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(4px);
+        transition: all 0.2s;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
+
+    /* Solid variant voor meer nadruk */
+    .neu-badge-success-solid {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: white;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    }
+
+    .neu-badge-warning-solid {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: white;
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .neu-badge-error-solid {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: white;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .neu-badge-primary-solid {
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: white;
+        background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    }
+
+    /* --- Custom Scrollbar --- */
+    .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb {
+        @apply bg-gray-300 rounded-full;
+    }
+
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+        @apply bg-gray-400;
+    }
+
+    /* --- Animations --- */
+    .fade-in-up {
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 }
