@@ -125,28 +125,31 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
     useEffect(() => {
         let ignore = false
 
-        if (authData.type === 'student') {
-            getUser(authData.userId)
-                .then(data => {
-                    if (ignore) return
-                    // Handle the new API response format
-                    if (data.skill_ids) {
-                        setStudentsSkills(data.skill_ids.map(skill => skill.skill_id))
-                    } else if (data.Skills) {
-                        // If we have a Skills array
-                        setStudentsSkills(data.Skills.map(skill => skill.skillId ?? skill.id))
-                    }
-                })
-                .catch(() => {
-                    if (ignore) return
-                    showOwnSkillsOption = false
-                })
+        // Wait for auth to be ready and user to be a student
+        if (authData.isLoading || authData.type !== 'student' || !authData.userId) {
+            return
         }
+
+        getUser(authData.userId)
+            .then(data => {
+                if (ignore) return
+                // Handle the new API response format
+                if (data.skill_ids) {
+                    setStudentsSkills(data.skill_ids.map(skill => skill.skill_id))
+                } else if (data.Skills) {
+                    // If we have a Skills array
+                    setStudentsSkills(data.Skills.map(skill => skill.skillId ?? skill.id))
+                }
+            })
+            .catch(() => {
+                if (ignore) return
+                // Silent fail - just won't show own skills section
+            })
 
         return () => {
             ignore = true
         }
-    }, [authData.isLoading])
+    }, [authData.isLoading, authData.type, authData.userId])
 
     // Handle open/close animation
     useEffect(() => {
