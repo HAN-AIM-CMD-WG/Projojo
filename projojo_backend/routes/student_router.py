@@ -81,9 +81,9 @@ async def update_student_skill_description(
         )
 
 @router.get("/registrations")
-async def get_student_registrations(payload: dict = Depends(get_token_payload)) -> list[str]:
+async def get_student_registrations(payload: dict = Depends(get_token_payload)) -> list[dict]:
     """
-    Get all student registrations for debugging purposes
+    Get all task registrations for the current student with task details and acceptance status
     """
     if payload["role"] != "student":
         raise HTTPException(status_code=403, detail="Alleen studenten kunnen hun registraties bekijken")

@@ -601,8 +601,34 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: white;
-        background: linear-gradient(135deg, #FF7F50 0%, #FF6347 100%);
-        box-shadow: 0 2px 8px rgba(255, 127, 80, 0.3);
+        background: var(--color-primary);
+        box-shadow: 0 2px 8px rgba(229, 0, 86, 0.25);
+    }
+
+    /* Primary badge - outline style */
+    .neu-badge-primary {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-primary);
+        background: rgba(229, 0, 86, 0.1);
+        border: 1px solid rgba(229, 0, 86, 0.3);
+    }
+
+    /* Generic outline badge */
+    .neu-badge-outline {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-primary);
+        background: transparent;
+        border: 1.5px solid var(--color-primary);
     }
 
     /* --- Segmented Control (Tab buttons) --- */

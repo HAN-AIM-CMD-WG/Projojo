@@ -400,16 +400,27 @@ class UserRepository(BaseRepository[User]):
 
         return students
 
-    def get_student_registrations(self, studentId) -> list[str]:
+    def get_student_registrations(self, studentId) -> list[dict]:
         """
-        Get all registrations for a student
+        Get all registrations for a student with task details and registration status
         """
         query = """
             match
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+                $task has id $task_id,
+                    has name $task_name,
+                    has description $task_description,
+                    has totalNeeded $total_needed;
+                $projectTask isa containsTask (project: $project, task: $task);
+                $project has id $project_id;
             fetch {
-                'id': $task.id,
+                'id': $task_id,
+                'name': $task_name,
+                'description': $task_description,
+                'total_needed': $total_needed,
+                'project_id': $project_id,
+                'is_accepted': $registration.isAccepted,
             };
         """
 
@@ -417,9 +428,7 @@ class UserRepository(BaseRepository[User]):
         if not results:
             return []
 
-        # Extract task IDs from results
-        task_ids = [result['id'] for result in results]
-        return task_ids
+        return results
 
     def get_colleagues(self, supervisor_id: str) -> list[User]:
         """

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
-import { getStudentRegistrations, getTaskById, IMAGE_BASE_URL } from '../services';
+import { getStudentRegistrations, IMAGE_BASE_URL } from '../services';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
 
@@ -35,42 +35,25 @@ export default function StudentDashboard() {
 
         const fetchRegistrations = async () => {
             try {
-                // Get all task IDs the student registered for
-                const taskIds = await getStudentRegistrations();
+                // Get all registrations with task details and status
+                const tasks = await getStudentRegistrations();
                 
                 if (ignore) return;
                 
-                if (!taskIds || taskIds.length === 0) {
+                if (!tasks || tasks.length === 0) {
                     setRegistrations([]);
                     setIsLoading(false);
                     return;
                 }
 
-                // Fetch details for each task
-                const taskDetails = await Promise.all(
-                    taskIds.map(async (taskId) => {
-                        try {
-                            const task = await getTaskById(taskId);
-                            return task;
-                        } catch {
-                            return null;
-                        }
-                    })
-                );
+                // Sort by status (accepted first, then pending)
+                const sortedTasks = tasks.sort((a, b) => {
+                    if (a.is_accepted === true && b.is_accepted !== true) return -1;
+                    if (a.is_accepted !== true && b.is_accepted === true) return 1;
+                    return 0;
+                });
 
-                if (ignore) return;
-
-                // Filter out failed fetches and sort by status (accepted first, then pending)
-                const validTasks = taskDetails
-                    .filter(t => t !== null)
-                    .sort((a, b) => {
-                        // Accepted tasks first
-                        if (a.is_accepted && !b.is_accepted) return -1;
-                        if (!a.is_accepted && b.is_accepted) return 1;
-                        return 0;
-                    });
-
-                setRegistrations(validTasks);
+                setRegistrations(sortedTasks);
             } catch (err) {
                 if (ignore) return;
                 setError(err.message);
@@ -87,10 +70,11 @@ export default function StudentDashboard() {
         };
     }, [authData.isLoading, authData.type]);
 
-    // Separate active (accepted) and pending registrations
-    const activeTasks = registrations.filter(t => t.is_accepted);
-    const pendingRegistrations = registrations.filter(t => !t.is_accepted && !t.is_rejected);
-    const rejectedRegistrations = registrations.filter(t => t.is_rejected);
+    // Separate active (accepted), pending, and rejected registrations
+    // is_accepted: true = accepted, false = rejected, null/undefined = pending
+    const activeTasks = registrations.filter(t => t.is_accepted === true);
+    const pendingRegistrations = registrations.filter(t => t.is_accepted === null || t.is_accepted === undefined);
+    const rejectedRegistrations = registrations.filter(t => t.is_accepted === false);
 
     // Show different dashboard for non-students
     if (authData.type !== 'student') {
@@ -187,10 +171,10 @@ export default function StudentDashboard() {
                             <section className="neu-flat p-6">
                                 <div className="flex items-center justify-between mb-5">
                                     <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
-                                        <span className="material-symbols-outlined text-amber-500">schedule</span>
+                                        <span className="material-symbols-outlined text-primary">schedule</span>
                                         Aanmeldingen
                                     </h2>
-                                    <span className="neu-badge-warning-solid">{pendingRegistrations.length} in behandeling</span>
+                                    <span className="neu-badge-primary">{pendingRegistrations.length} in behandeling</span>
                                 </div>
 
                                 <div className="space-y-3">
@@ -282,11 +266,11 @@ function TaskCard({ task, status }) {
             iconColor: 'text-green-500'
         },
         pending: {
-            badge: 'neu-badge-warning',
+            badge: 'neu-badge-outline',
             badgeText: 'In behandeling',
-            borderColor: 'border-l-amber-400',
+            borderColor: 'border-l-primary',
             icon: 'hourglass_top',
-            iconColor: 'text-amber-500'
+            iconColor: 'text-primary'
         },
         rejected: {
             badge: 'neu-badge-error',
@@ -304,9 +288,14 @@ function TaskCard({ task, status }) {
         ? task.description.replace(/<[^>]*>/g, '').trim()
         : '';
 
+    // Build the correct link - use project_id if available, otherwise link to task directly
+    const linkTo = task.project_id 
+        ? `/projects/${task.project_id}#task-${task.id}`
+        : `/tasks/${task.id}`;
+
     return (
         <Link 
-            to={`/projects/${task.project_id}#task-${task.id}`}
+            to={linkTo}
             className={`block neu-flat p-5 border-l-4 ${config.borderColor} hover:translate-x-1 transition-all duration-200 group`}
         >
             <div className="flex items-start gap-4">

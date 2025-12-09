@@ -18,12 +18,15 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+                $projectTask isa containsTask (project: $project, task: $task);
+                $project has id $project_id;
             fetch {
                 'id': $task.id,
                 'name': $name,
                 'description': $description,
                 'total_needed': $totalNeeded,
                 'created_at': $createdAt,
+                'project_id': $project_id,
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
@@ -54,12 +57,15 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+                $projectTask isa containsTask (project: $project, task: $task);
+                $project has id $project_id;
             fetch {
                 'id': $id,
                 'name': $name,
                 'description': $description,
                 'total_needed': $totalNeeded,
                 'created_at': $createdAt,
+                'project_id': $project_id,
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
