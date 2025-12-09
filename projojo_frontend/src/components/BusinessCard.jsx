@@ -62,46 +62,87 @@ export default function BusinessCard({ name, image, location, businessId, topSki
     }
 
     return (
-        <div className="flex flex-col items-center neu-flat md:flex-row w-full overflow-hidden">
-            <img className="w-full max-h-64 rounded-t-2xl md:h-48 md:w-48 md:rounded-none md:rounded-l-2xl object-cover" src={`${IMAGE_BASE_URL}${image}`} alt="Bedrijfslogo" />
-            <div className="flex flex-col justify-between p-6 leading-normal flex-1">
-                <h2 className="mb-2 text-3xl font-extrabold tracking-tight text-text-primary">{name}</h2>
-                <h3 className="mb-2 text-lg font-semibold tracking-tight text-text-secondary flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-xl">location_on</span>
+        <div className="neu-card-lg !p-0 flex flex-col md:flex-row w-full overflow-hidden fade-in-up">
+            {/* Image section */}
+            <div className="relative w-full md:w-56 h-48 md:h-auto shrink-0">
+                <img 
+                    className="w-full h-full object-cover" 
+                    src={`${IMAGE_BASE_URL}${image}`} 
+                    alt={`Logo van ${name}`} 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent md:bg-gradient-to-r opacity-50"></div>
+            </div>
+
+            {/* Content section */}
+            <div className="flex flex-col justify-between p-6 lg:p-8 leading-normal flex-1">
+                {/* Header */}
+                <div className="flex items-start gap-4 mb-4 pb-4 border-b border-gray-200/40">
+                    <div className="neu-icon-container text-primary shrink-0">
+                        <span className="material-symbols-outlined text-2xl">business</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-2xl font-extrabold tracking-tight text-gray-800 truncate">{name}</h2>
+                        <p className="neu-label mt-1">Bedrijf</p>
+                    </div>
+                </div>
+
+                {/* Location */}
+                <div className="flex items-center gap-2 mb-4 text-sm font-semibold text-text-secondary">
+                    <span className="material-symbols-outlined text-primary text-lg">location_on</span>
                     {location && location.length > 0 ?
                         (Array.isArray(location) ? location[0] : location) :
                         <span className="italic text-text-muted font-normal">Geen locatie bekend</span>
                     }
-                </h3>
-                {showDescription && <div className="mb-2 tracking-tight text-text-secondary"><RichTextViewer text={description} /></div>}
-                {topSkills && (
-                    <>
-                        <p className="mb-3 font-semibold text-text-muted text-sm">Top {topSkills.length} skills in dit bedrijf:</p>
-                        <div className="flex flex-wrap gap-2 pt-1 pb-4">
+                </div>
+
+                {/* Description */}
+                {showDescription && (
+                    <div className="mb-4 text-sm text-text-secondary line-clamp-3">
+                        <RichTextViewer text={description} />
+                    </div>
+                )}
+
+                {/* Skills */}
+                {topSkills && topSkills.length > 0 && (
+                    <div className="space-y-2">
+                        <span className="neu-label">Top {topSkills.length} skills</span>
+                        <div className="flex flex-wrap gap-2">
                             {topSkills.map((skill) => (
-                                <SkillBadge key={skill.skillId ?? skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
+                                <SkillBadge 
+                                    key={skill.skillId ?? skill.id} 
+                                    skillName={skill.name} 
+                                    isPending={skill.isPending ?? skill.is_pending} 
+                                />
                             ))}
                         </div>
-                    </>
-                )
-                }
+                    </div>
+                )}
             </div>
-            <div className="md:ml-auto p-6 flex gap-3 flex-col">
-                {!showUpdateButton && <Link to={`/business/${businessId}`} className="neu-btn-primary text-center">Bekijk bedrijf</Link>}
+
+            {/* Actions section */}
+            <div className="p-6 lg:p-8 flex gap-3 flex-col justify-center border-t md:border-t-0 md:border-l border-gray-200/40 bg-gray-50/30">
+                {!showUpdateButton && (
+                    <Link to={`/business/${businessId}`} className="neu-btn-primary text-center text-sm">
+                        <span className="flex items-center gap-2 justify-center">
+                            <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                            Bekijk bedrijf
+                        </span>
+                    </Link>
+                )}
                 {showUpdateButton && authData.businessId === businessId && (
                     <>
-                        <Link to={`/projects/add`} className="neu-btn-primary flex flex-row gap-2 justify-center items-center">
+                        <Link to={`/projects/add`} className="neu-btn-primary flex flex-row gap-2 justify-center items-center text-sm">
                             <span className="material-symbols-outlined text-lg">add</span>
                             <span>Project toevoegen</span>
                         </Link>
-                        <Link className="neu-btn flex flex-row gap-2 justify-center items-center" to={`/business/update`}>
+                        <Link className="neu-btn flex flex-row gap-2 justify-center items-center text-sm" to={`/business/update`}>
                             <span className="material-symbols-outlined text-lg">edit</span>
                             <span>Bedrijf aanpassen</span>
                         </Link>
                     </>
                 )}
                 {(showUpdateButton && (authData.type === "teacher" || authData.businessId === businessId)) && (
-                    <button className='neu-btn flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
+                    <button className='neu-btn flex flex-row gap-2 justify-center items-center text-sm' onClick={openGenerateLinkModel}>
                         <span className="material-symbols-outlined text-lg">person_add</span>
                         <span>Collega toevoegen</span>
                     </button>

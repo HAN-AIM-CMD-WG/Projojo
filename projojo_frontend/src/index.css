@@ -172,7 +172,7 @@
 
 /* ===========================================
    NEUMORPHIC DESIGN SYSTEM - Coral Theme
-   Gebaseerd op Gemini Design (Projojo_design.html)
+   Verfijnd gebaseerd op Gemini Design (Projojo_design.html)
    =========================================== */
 
 @theme {
@@ -181,51 +181,83 @@
     --color-neu-light: #FFFFFF;
     --color-neu-dark: #D1D9E6;
     
-    /* Text Colors */
+    /* Text Colors - Gemini Design Exact */
     --color-text-primary: #2D3748;
     --color-text-secondary: #4A5568;
     --color-text-muted: #718096;
+    --color-text-light: #A0AEC0;
     
     /* Coral Primary */
     --color-light-primary: #FFA07A;
+    --color-primary-dark: #E06A3D;
+    
+    /* Gray Scale - Gemini */
+    --color-gray-200: #E5E7EB;
+    --color-gray-300: #D1D5DB;
+    --color-gray-400: #9CA3AF;
+    --color-gray-500: #6B7280;
+    --color-gray-600: #4B5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1F2937;
 }
 
 @layer components {
-    /* --- Base: Elevated Card (Level 1) --- */
+    /* --- Base: Elevated Card (Level 1) - Verfijnd --- */
     .neu-flat {
-        @apply bg-neu-bg rounded-2xl;
+        @apply bg-neu-bg;
+        border-radius: 1.5rem;
         box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
         border: 1px solid rgba(255,255,255,0.4);
     }
 
-    /* Alleen hover-effect voor interactieve elementen */
+    /* Grote card variant (2rem radius) */
+    .neu-flat-xl {
+        @apply bg-neu-bg;
+        border-radius: 2rem;
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        border: 1px solid rgba(255,255,255,0.4);
+    }
+
+    /* Hover-effect voor interactieve cards */
     .neu-flat-interactive {
-        @apply bg-neu-bg rounded-2xl transition-all duration-200;
+        @apply bg-neu-bg transition-all duration-300;
+        border-radius: 1.5rem;
         box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
         border: 1px solid rgba(255,255,255,0.4);
     }
 
     .neu-flat-interactive:hover {
-        transform: translateY(-2px);
-        box-shadow: 8px 8px 16px #D1D9E6, -8px -8px 16px #FFFFFF;
+        transform: translateY(-4px);
+        box-shadow: 8px 8px 20px #D1D9E6, -8px -8px 20px #FFFFFF;
     }
 
-    /* --- Pressed/Inset (Level -1) --- */
+    /* --- Pressed/Inset (Level -1) - Voor inputs & containers --- */
     .neu-pressed {
-        @apply bg-neu-bg rounded-xl;
+        @apply bg-neu-bg;
+        border-radius: 1rem;
         box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
     }
 
-    /* --- Interactive Buttons --- */
+    /* Extra diepe pressed variant */
+    .neu-pressed-deep {
+        @apply bg-neu-bg;
+        border-radius: 1rem;
+        box-shadow: inset 5px 5px 10px #D1D9E6, inset -5px -5px 10px #FFFFFF;
+    }
+
+    /* --- Interactive Buttons - Verfijnd --- */
     .neu-btn {
-        @apply bg-neu-bg text-text-secondary font-bold rounded-xl px-6 py-3 transition-all duration-200 cursor-pointer;
+        @apply bg-neu-bg font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
+        color: #4A5568;
+        border-radius: 0.75rem;
+        padding: 0.625rem 1.25rem;
         box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
     }
 
     .neu-btn:hover {
-        @apply text-primary;
-        transform: translateY(-1px);
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        color: #FF7F50;
+        transform: translateY(-2px);
+        box-shadow: 6px 6px 14px #D1D9E6, -6px -6px 14px #FFFFFF;
     }
 
     .neu-btn:active {
@@ -233,74 +265,135 @@
         box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
     }
 
-    /* --- Primary Button --- */
+    /* --- Primary Button - Verfijnd --- */
     .neu-btn-primary {
-        @apply bg-primary text-white font-bold rounded-xl px-6 py-3 transition-all duration-200 cursor-pointer;
+        @apply font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
+        background: #FF7F50;
+        color: white;
+        border-radius: 0.75rem;
+        padding: 0.625rem 1.25rem;
         box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
     }
 
     .neu-btn-primary:hover {
-        @apply bg-dark-primary;
-        transform: translateY(-1px);
+        background: #FF6347;
+        transform: translateY(-2px);
     }
 
     .neu-btn-primary:active {
         transform: translateY(0);
-        box-shadow: inset 2px 2px 4px rgba(0,0,0,0.2);
+        box-shadow: inset 3px 3px 6px rgba(0,0,0,0.2);
     }
 
-    /* --- Icon Button --- */
+    /* --- Icon Button - Circulair zoals Gemini --- */
     .neu-icon-btn {
-        @apply bg-neu-bg text-text-muted rounded-xl w-12 h-12 flex items-center justify-center transition-all duration-200 cursor-pointer;
-        box-shadow: 4px 4px 8px #D1D9E6, -4px -4px 8px #FFFFFF;
-    }
-
-    .neu-icon-btn:hover {
-        @apply text-primary;
+        @apply bg-neu-bg transition-all duration-200 cursor-pointer flex items-center justify-center;
+        color: #718096;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
         box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
     }
 
+    .neu-icon-btn:hover {
+        color: #FF7F50;
+        transform: scale(1.05);
+    }
+
     .neu-icon-btn:active {
+        transform: scale(0.98);
         box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
     }
 
-    /* --- Input Fields --- */
+    /* --- Icon Container (voor iconen met achtergrond) --- */
+    .neu-icon-container {
+        @apply flex items-center justify-center;
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+        background: #EFEEEE;
+    }
+
+    .neu-icon-container-sm {
+        @apply flex items-center justify-center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
+        background: #EFEEEE;
+    }
+
+    /* --- Input Fields - Verfijnd --- */
     .neu-input {
-        @apply bg-neu-bg rounded-xl px-5 py-4 text-text-primary font-semibold outline-none transition-all duration-200 placeholder-text-muted;
+        @apply bg-neu-bg outline-none transition-all duration-200;
+        color: #4A5568;
+        font-weight: 600;
+        border-radius: 1rem;
+        padding: 1rem 1.5rem;
         box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
     }
 
+    .neu-input::placeholder {
+        color: #A0AEC0;
+    }
+
     .neu-input:focus {
-        @apply ring-2 ring-primary/20;
+        box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF, 0 0 0 2px rgba(255, 127, 80, 0.2);
     }
 
     /* --- Card Variants --- */
     .neu-card-lg {
-        @apply bg-neu-bg rounded-3xl p-8 transition-all duration-200;
+        @apply bg-neu-bg transition-all duration-200;
+        border-radius: 2rem;
+        padding: 1.5rem;
         box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
         border: 1px solid rgba(255,255,255,0.4);
     }
 
-    /* --- Stat Card --- */
+    @media (min-width: 640px) {
+        .neu-card-lg {
+            padding: 2rem;
+        }
+    }
+
+    /* --- Stat Card - Verfijnd --- */
     .neu-stat-card {
-        @apply bg-neu-bg rounded-2xl p-5 flex flex-col justify-center items-center text-center;
+        @apply bg-neu-bg flex flex-col justify-center items-center text-center transition-transform duration-300;
+        border-radius: 1.5rem;
+        padding: 1.25rem;
         box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
         border: 1px solid rgba(255,255,255,0.4);
     }
 
-    /* --- Progress Bar --- */
+    .neu-stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+    /* --- Progress Bar - Met shadow-inner --- */
     .neu-progress {
-        @apply w-full h-2.5 bg-gray-200 rounded-full overflow-hidden;
-        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
+        @apply w-full overflow-hidden;
+        height: 0.625rem;
+        background: #E5E7EB;
+        border-radius: 9999px;
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
     }
 
     .neu-progress-bar {
-        @apply h-full bg-primary rounded-full transition-all duration-1000;
+        @apply h-full transition-all duration-1000;
+        background: #FF7F50;
+        border-radius: 9999px;
     }
 
-    /* --- Skill Badge/Pill --- */
+    /* --- Skill Badge/Pill - Verfijnd --- */
     .neu-pill {
-        @apply px-4 py-2 text-xs font-bold rounded-xl transition-all duration-200 cursor-default;
+        @apply transition-all duration-200 cursor-default;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 0.75rem;
         background: linear-gradient(135deg, #FF7F50 0%, #FFA07A 100%);
         color: white;
         box-shadow: 3px 3px 8px rgba(255, 127, 80, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8);
@@ -311,89 +404,130 @@
         box-shadow: 4px 4px 12px rgba(255, 127, 80, 0.4), -2px -2px 8px rgba(255, 255, 255, 0.9);
     }
 
-    /* Variant: Subtiele pill (voor secundaire skills) */
+    /* Variant: Subtiele pill */
     .neu-pill-subtle {
-        @apply px-4 py-2 text-xs font-bold text-primary rounded-xl bg-primary/10 border border-primary/20 transition-all duration-200;
+        @apply transition-all duration-200;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #FF7F50;
+        border-radius: 0.75rem;
+        background: rgba(255, 127, 80, 0.1);
+        border: 1px solid rgba(255, 127, 80, 0.2);
     }
 
     .neu-pill-subtle:hover {
-        @apply bg-primary/20;
+        background: rgba(255, 127, 80, 0.2);
     }
 
     /* Variant: Outline pill */
     .neu-pill-outline {
-        @apply px-4 py-2 text-xs font-bold text-primary rounded-xl border-2 border-primary/40 bg-transparent transition-all duration-200;
+        @apply transition-all duration-200;
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #FF7F50;
+        border-radius: 0.75rem;
+        border: 2px solid rgba(255, 127, 80, 0.4);
+        background: transparent;
     }
 
     .neu-pill-outline:hover {
-        @apply bg-primary/10 border-primary;
+        background: rgba(255, 127, 80, 0.1);
+        border-color: #FF7F50;
     }
 
-    /* --- Status Badges (Modern Glass Effect) --- */
-    .neu-badge-success {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+    /* --- Status Badges (Glassmorphism - Gemini Style) --- */
+    .neu-badge-glass {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .neu-badge-success {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(12px);
         transition: all 0.2s;
         color: #15803d;
-        border: 1px solid #bbf7d0;
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.05) 100%);
-        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+        background: rgba(220, 252, 231, 0.9);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .neu-badge-warning {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(12px);
         transition: all 0.2s;
         color: #b45309;
-        border: 1px solid #fde68a;
-        background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.05) 100%);
-        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15);
+        background: rgba(254, 249, 195, 0.9);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .neu-badge-error {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(12px);
         transition: all 0.2s;
         color: #dc2626;
-        border: 1px solid #fecaca;
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.15);
+        background: rgba(254, 226, 226, 0.9);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
     .neu-badge-info {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(12px);
         transition: all 0.2s;
-        color: #2563eb;
-        border: 1px solid #bfdbfe;
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+        color: #1d4ed8;
+        background: rgba(219, 234, 254, 0.9);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
 
-    /* Solid variant voor meer nadruk */
+    .neu-badge-gray {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(12px);
+        transition: all 0.2s;
+        color: #4B5563;
+        background: rgba(229, 231, 235, 0.9);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Solid variants */
     .neu-badge-success-solid {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
@@ -404,8 +538,8 @@
     }
 
     .neu-badge-warning-solid {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
@@ -416,8 +550,8 @@
     }
 
     .neu-badge-error-solid {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
@@ -428,8 +562,8 @@
     }
 
     .neu-badge-primary-solid {
-        padding: 0.375rem 0.75rem;
-        border-radius: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
@@ -439,37 +573,154 @@
         box-shadow: 0 2px 8px rgba(255, 127, 80, 0.3);
     }
 
+    /* --- Segmented Control (Tab buttons) --- */
+    .neu-segment-container {
+        @apply flex gap-2 p-1.5;
+        background: #EFEEEE;
+        border-radius: 0.75rem;
+        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+    }
+
+    .neu-segment-btn {
+        @apply transition-all duration-200;
+        padding: 0.5rem 1.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 0.5rem;
+        color: #718096;
+    }
+
+    .neu-segment-btn:hover {
+        color: #4A5568;
+        background: rgba(229, 231, 235, 0.5);
+    }
+
+    .neu-segment-btn.active {
+        color: #FF7F50;
+        background: #EFEEEE;
+        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+    }
+
+    /* --- Project Card (Inner Card) --- */
+    .neu-project-card {
+        @apply overflow-hidden flex flex-col transition-all duration-300;
+        background: #EFEEEE;
+        border-radius: 1rem;
+        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+    }
+
+    /* --- Section Header --- */
+    .neu-section-header {
+        @apply flex items-center gap-3;
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #374151;
+    }
+
+    .neu-section-header .material-symbols-outlined {
+        font-size: 1.875rem;
+        color: #FF7F50;
+    }
+
+    /* --- Label Styling --- */
+    .neu-label {
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #9CA3AF;
+    }
+
+    .neu-label-sm {
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #9CA3AF;
+    }
+
     /* --- Custom Scrollbar --- */
-    .custom-scroll::-webkit-scrollbar {
+    ::-webkit-scrollbar {
         width: 6px;
     }
 
-    .custom-scroll::-webkit-scrollbar-track {
+    ::-webkit-scrollbar-track {
         background: transparent;
     }
 
-    .custom-scroll::-webkit-scrollbar-thumb {
-        @apply bg-gray-300 rounded-full;
+    ::-webkit-scrollbar-thumb {
+        background: #CBD5E0;
+        border-radius: 3px;
     }
 
-    .custom-scroll::-webkit-scrollbar-thumb:hover {
-        @apply bg-gray-400;
+    ::-webkit-scrollbar-thumb:hover {
+        background: #A0AEC0;
     }
 
     /* --- Animations --- */
     .fade-in-up {
         animation: fadeInUp 0.5s ease-out forwards;
         opacity: 0;
+        transform: translateY(10px);
     }
 
     @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
         to {
             opacity: 1;
             transform: translateY(0);
         }
+    }
+
+    /* Staggered animation delays */
+    .fade-in-up-1 { animation-delay: 0s; }
+    .fade-in-up-2 { animation-delay: 0.1s; }
+    .fade-in-up-3 { animation-delay: 0.2s; }
+    .fade-in-up-4 { animation-delay: 0.3s; }
+
+    /* --- Image Overlay Gradient --- */
+    .neu-image-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+        opacity: 0.6;
+    }
+
+    /* --- Task/Next Action Box --- */
+    .neu-task-box {
+        @apply flex items-center gap-3;
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #6B7280;
+        background: rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .neu-task-box .material-symbols-outlined {
+        font-size: 0.875rem;
+        color: #FF7F50;
+    }
+
+    /* --- Online Status Indicator --- */
+    .neu-status-online {
+        width: 0.75rem;
+        height: 0.75rem;
+        background: #4ade80;
+        border-radius: 9999px;
+        border: 2px solid #EFEEEE;
+    }
+
+    /* --- Nav Link Active State --- */
+    .nav-link.active {
+        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+        color: #FF7F50;
+    }
+
+    /* --- Selection Color --- */
+    ::selection {
+        background: #FF7F50;
+        color: white;
     }
 }

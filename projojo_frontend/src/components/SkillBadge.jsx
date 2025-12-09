@@ -5,15 +5,31 @@ import Tooltip from "./Tooltip";
  * @param {{
  * children: React.ReactNode,
  * skillName: string,
- * isPending?: boolean
+ * isPending?: boolean,
+ * variant?: 'default' | 'subtle' | 'outline'
  * }} props
  * @returns {JSX.Element}
  */
-export default function SkillBadge({ children, skillName, isPending, onClick = null, ariaLabel = null }) {
+export default function SkillBadge({ children, skillName, isPending, onClick = null, ariaLabel = null, variant = 'default' }) {
     const toolTipRef = useRef(null);
 
-    let classNames = isPending ? 'bg-gray-300 text-black border border-gray-400' : 'bg-primary text-white';
-    classNames += ' px-3 py-1 text-nowrap text-sm font-medium rounded-full shadow-md';
+    // Base styling - using neumorphic pill styles
+    let classNames;
+    
+    if (isPending) {
+        classNames = 'neu-pill-subtle !bg-gray-200 !text-gray-600 !border-gray-300';
+    } else if (variant === 'subtle') {
+        classNames = 'neu-pill-subtle';
+    } else if (variant === 'outline') {
+        classNames = 'neu-pill-outline';
+    } else {
+        classNames = 'neu-pill';
+    }
+
+    // Add cursor pointer if clickable
+    if (onClick) {
+        classNames += ' cursor-pointer';
+    }
 
     const content = (
         <>

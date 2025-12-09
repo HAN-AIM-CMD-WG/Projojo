@@ -67,26 +67,34 @@ export default function Navbar() {
         setIsCollapsed(!isCollapsed);
     };
 
-    const activeNavLink = "flex items-center gap-2 py-2 px-4 text-primary font-bold rounded-xl bg-primary/10 md:bg-transparent md:px-0 transition-all duration-200"
-    const inactiveNavLink = "flex items-center gap-2 py-2 px-4 text-text-secondary font-semibold rounded-xl hover:text-primary hover:bg-primary/5 md:hover:bg-transparent md:px-0 transition-all duration-200"
+    const activeNavLink = "flex items-center gap-2 py-2.5 px-5 text-primary font-bold rounded-2xl transition-all duration-200 md:px-4 md:py-2"
+    const inactiveNavLink = "flex items-center gap-2 py-2.5 px-5 text-text-secondary font-semibold rounded-2xl hover:text-primary hover:bg-gray-200/30 transition-all duration-200 md:px-4 md:py-2"
 
     return (
         <header>
-            <nav className="bg-neu-bg fixed w-full z-40 top-0 start-0 border-b border-white/50" style={{ boxShadow: '0 4px 12px rgba(209, 217, 230, 0.5)' }}>
-                <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 py-4">
+            <nav className="bg-neu-bg fixed w-full z-40 top-0 start-0 border-b border-white/20" style={{ boxShadow: '0 4px 20px rgba(209, 217, 230, 0.6)' }}>
+                <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 lg:px-12 h-24">
                     {/* Logo */}
-                    <Link to="/home" className="flex items-center space-x-3 group">
-                        <img src="/han_logo.png" className="h-7 mt-0.5" alt="Han Logo" />
-                        <span className="self-center text-xl font-extrabold text-text-primary whitespace-nowrap group-hover:text-primary transition-colors">
-                            Opdrachtenbox
-                        </span>
+                    <Link to="/home" className="flex items-center gap-4 group">
+                        <div className="w-12 h-12 rounded-2xl neu-pressed flex items-center justify-center text-primary shrink-0 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 pointer-events-none"></div>
+                            <span className="material-symbols-outlined text-3xl drop-shadow-sm">school</span>
+                        </div>
+                        <div className="hidden sm:block">
+                            <h1 className="font-extrabold text-xl text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
+                                Opdrachtenbox
+                            </h1>
+                            <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mt-0.5">
+                                Student Hub
+                            </p>
+                        </div>
                     </Link>
 
                     {/* Mobile menu button */}
                     <button 
                         type="button" 
                         onClick={toggleCollapse} 
-                        className="inline-flex items-center p-2 w-10 h-10 justify-center text-text-muted rounded-xl md:hidden neu-flat hover:text-primary transition-colors" 
+                        className="neu-icon-btn md:hidden" 
                         aria-controls="navbar-default" 
                         aria-expanded={!isCollapsed}
                     >
@@ -98,7 +106,7 @@ export default function Navbar() {
 
                     {/* Navigation */}
                     <div className={`${isCollapsed ? 'hidden' : ''} w-full md:block md:w-auto`} id="navbar-default">
-                        <ul className="flex flex-col p-4 md:p-0 mt-4 gap-2 md:gap-1 md:flex-row md:items-center md:space-x-6 md:mt-0">
+                        <ul className="flex flex-col p-4 md:p-0 mt-4 gap-2 md:flex-row md:items-center md:gap-2 md:mt-0">
                             {routes.map(route => (
                                 <li key={route.name}>
                                     <NavLink 
@@ -112,13 +120,13 @@ export default function Navbar() {
                             ))}
                             
                             {/* Divider (desktop) */}
-                            <li className="hidden md:block w-px h-6 bg-gray-300 mx-2"></li>
+                            <li className="hidden md:block w-px h-6 bg-gray-300/50 mx-3"></li>
                             
                             {/* Sign out */}
                             <li>
                                 <button 
                                     onClick={signOut} 
-                                    className="flex items-center gap-2 py-2 px-4 md:px-0 text-text-secondary font-semibold rounded-xl hover:text-red-500 transition-all duration-200 w-full md:w-auto"
+                                    className="flex items-center gap-2 py-2.5 px-5 md:px-4 md:py-2 text-text-secondary font-semibold rounded-2xl hover:text-red-500 hover:bg-red-50/50 transition-all duration-200 w-full md:w-auto"
                                 >
                                     <span className="material-symbols-outlined text-lg">logout</span>
                                     <span className="md:hidden lg:inline">Uitloggen</span>
@@ -128,12 +136,15 @@ export default function Navbar() {
                             {/* Profile picture */}
                             {(authData.type === "student" || authData.type === "supervisor") && (
                                 <li className="flex items-center ml-2">
-                                    <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-br from-primary to-lightPrimary">
-                                        <img 
-                                            src={profilePicture} 
-                                            className="w-full h-full rounded-full object-cover border-2 border-neu-bg" 
-                                            alt="Profielfoto" 
-                                        />
+                                    <div className="relative">
+                                        <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary">
+                                            <img 
+                                                src={profilePicture} 
+                                                className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
+                                                alt="Profielfoto" 
+                                            />
+                                        </div>
+                                        <div className="neu-status-online absolute bottom-0 right-0"></div>
                                     </div>
                                 </li>
                             )}
@@ -142,7 +153,7 @@ export default function Navbar() {
                 </div>
             </nav>
             {/* Spacer for fixed navbar */}
-            <div className="h-20"></div>
+            <div className="h-24"></div>
         </header>
     );
 }
