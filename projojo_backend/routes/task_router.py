@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends
 
-from domain.repositories import TaskRepository, UserRepository
+from domain.repositories import TaskRepository, UserRepository, SkillRepository
 from auth.jwt_utils import get_token_payload
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
@@ -8,6 +8,7 @@ from datetime import datetime
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
+skill_repo = SkillRepository()
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -73,8 +74,68 @@ async def get_task_skills(id: str = Path(..., description="Task ID")):
     """
     Get all skills required for a task
     """
-    task_skills = task_service.get_task_with_skills(id)
-    return task_skills
+    # Ensure task exists
+    try:
+        task_repo.get_by_id(id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    skills = skill_repo.get_task_skills(id)
+    return skills
+
+@router.put("/{task_id}/skills")
+async def update_task_skills_endpoint(
+    task_id: str = Path(..., description="Task ID"),
+    body: list[str] = Body(..., description="Array of skill IDs"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Update required skills for a task (set-based). Allowed for teachers or owning supervisors.
+    """
+    role = payload.get("role")
+    if role not in ["teacher", "supervisor"]:
+        raise HTTPException(status_code=403, detail="Je bent niet geautoriseerd om skills te beheren")
+
+    # Validate task exists
+    try:
+        task_repo.get_by_id(task_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    # Ownership check for supervisors
+    if role == "supervisor":
+        supervisor = user_repo.get_supervisor_by_id(payload.get("sub"))
+        if not supervisor:
+            raise HTTPException(status_code=403, detail="Je bent niet geautoriseerd om skills te beheren")
+        task_business_id = task_repo.get_business_id_by_task(task_id)
+        if not task_business_id or str(supervisor.business_association_id) != str(task_business_id):
+            raise HTTPException(status_code=403, detail="Je bent niet geautoriseerd om deze taak te beheren")
+
+    # Validate body
+    if body is None or not isinstance(body, list):
+        raise HTTPException(status_code=400, detail="Ongeldige invoer: verwacht een lijst met skill-IDs")
+
+    # Deduplicate and normalize to string IDs; allow empty list to clear all skills
+    try:
+        unique_ids = list(dict.fromkeys([str(sid) for sid in body]))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Ongeldige invoer: kan skill-IDs niet verwerken")
+
+    # Verify that all skill IDs exist
+    missing: list[str] = []
+    for sid in unique_ids:
+        try:
+            skill_repo.get_by_id(sid)
+        except Exception:
+            missing.append(sid)
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Onbekende skill IDs: {', '.join(missing)}")
+
+    try:
+        skill_repo.update_task_skills(task_id, unique_ids)
+        return {"message": "Skills bijgewerkt"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van de skills: " + str(e))
 
 @router.get("/{id}/registrations")
 async def get_registrations(id: str = Path(..., description="Task ID")):
