@@ -87,7 +87,7 @@ export default function LocationMap({ address, name, coordinates, height = "200p
     }
 
     return (
-        <div className={`neu-flat overflow-hidden ${className}`} style={{ height }}>
+        <div className={`neu-flat overflow-hidden relative z-0 ${className}`} style={{ height }}>
             {loading ? (
                 <div className="flex items-center justify-center h-full bg-neu-bg">
                     <div className="flex items-center gap-2 text-gray-500">
