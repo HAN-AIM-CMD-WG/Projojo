@@ -89,7 +89,7 @@ export default function Navbar() {
                         </div>
                         <div className="hidden sm:block">
                             <h1 className="font-extrabold text-lg text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
-                                Opdrachtenbox
+                                Projojo
                             </h1>
                             <p className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase mt-0.5">
                                 Student Hub

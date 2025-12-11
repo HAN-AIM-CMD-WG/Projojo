@@ -57,51 +57,53 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
 
     return (
         <div className="bg-neu-bg">
-            {/* Hero section with image */}
-            <div className="relative">
-                <div className="h-48 sm:h-64 w-full overflow-hidden">
-                    <img
-                        className="w-full h-full object-cover"
-                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                        alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                </div>
-                
-                {/* Project title overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                        {project.name}
-                    </h1>
+            {/* Project header - compact style matching home */}
+            <div className="neu-flat p-6 mb-6">
+                <div className="flex items-start gap-4">
+                    {/* Project image thumbnail */}
+                    <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden neu-pressed">
+                        <img
+                            className="w-full h-full object-cover"
+                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                            alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                        />
+                    </div>
+                    
+                    {/* Project info */}
+                    <div className="flex-1 min-w-0">
+                        <span className="neu-badge-primary text-[10px] mb-2 inline-block">Project</span>
+                        <h1 className="text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight">
+                            {project.name}
+                        </h1>
+                        
+                        {/* Business link */}
+                        {!isLoading && project.business && (
+                            <Link 
+                                to={`/business/${project.business.id}`}
+                                className="flex items-center gap-2 mt-2 group"
+                            >
+                                <img
+                                    className="h-6 w-6 object-cover rounded-lg"
+                                    src={`${IMAGE_BASE_URL}${project.business.image_path}`}
+                                    alt="Bedrijfslogo"
+                                />
+                                <span className="text-sm font-semibold text-gray-500 group-hover:text-primary transition">
+                                    {project.business.name}
+                                </span>
+                                {project.business.location && (
+                                    <span className="text-xs text-gray-400 flex items-center gap-0.5">
+                                        <span className="material-symbols-outlined text-xs">location_on</span>
+                                        {project.business.location}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Business info */}
-            <div className="p-6">
-                {!isLoading && project.business && (
-                    <div className="flex items-center gap-4 mb-6">
-                        <Link to={`/business/${project.business.id}`} className="shrink-0">
-                            <img
-                                className="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-2xl neu-flat"
-                                src={`${IMAGE_BASE_URL}${project.business.image_path}`}
-                                alt="Bedrijfslogo"
-                            />
-                        </Link>
-                        <div>
-                            <Link
-                                to={`/business/${project.business.id}`}
-                                className="font-bold text-lg text-gray-700 hover:text-primary transition"
-                            >
-                                {project.business.name}
-                            </Link>
-                            <p className="text-gray-500 text-sm flex items-center gap-1.5 mt-0.5">
-                                <span className="material-symbols-outlined text-base text-primary">location_on</span>
-                                {project.business.location}
-                            </p>
-                        </div>
-                    </div>
-                )}
-
+            {/* Content */}
+            <div>
                 {/* Description */}
                 {project.description && (
                     <div className="neu-pressed p-5 rounded-2xl mb-6">

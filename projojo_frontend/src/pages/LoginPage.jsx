@@ -12,7 +12,7 @@ export default function LoginPage() {
             <span className="material-symbols-outlined text-5xl drop-shadow-sm">school</span>
           </div>
           <h1 className="text-3xl text-center font-extrabold text-gray-700 tracking-tight">
-            Opdrachtenbox
+            Projojo
           </h1>
           <p className="neu-label text-center mt-2">
             Student Hub
