@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { AuthProvider } from './auth/AuthProvider.jsx';
 import './index.css';
+import 'leaflet/dist/leaflet.css';
 import NotifySystem from './components/notifications/NotifySystem.jsx';
 
 createRoot(document.getElementById('root')).render(
