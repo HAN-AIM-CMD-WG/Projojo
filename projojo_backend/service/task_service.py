@@ -10,12 +10,9 @@ def get_task_with_skills (task_id: str) -> Task:
     Get a task along with its skills.
     """
     task = task_repo.get_by_id(task_id)
-    # skills = skill_repo.get_task_skills(task_id)
-
-    task_dict = task.model_dump()
-    task_dict.pop('skills', None)  # Remove skills key to avoid duplicate
-
-    return Task(**task_dict)
+    task.skills = skill_repo.get_task_skills(task_id)
+    
+    return task
 
 def get_tasks_with_skills_by_project(project_id: str) -> list[Task]:
     """

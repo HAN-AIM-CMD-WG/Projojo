@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
-import { getStudentRegistrations } from '../services';
+import { getStudentRegistrations, getTaskSkills } from '../services';
+import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
 
@@ -46,8 +47,22 @@ export default function StudentDashboard() {
                     return;
                 }
 
+                // Fetch skills for each task
+                const tasksWithSkills = await Promise.all(
+                    tasks.map(async (task) => {
+                        try {
+                            const skillsData = await getTaskSkills(task.id);
+                            return { ...task, skills: skillsData.skills || [] };
+                        } catch {
+                            return { ...task, skills: [] };
+                        }
+                    })
+                );
+
+                if (ignore) return;
+
                 // Sort by status (accepted first, then pending)
-                const sortedTasks = tasks.sort((a, b) => {
+                const sortedTasks = tasksWithSkills.sort((a, b) => {
                     if (a.is_accepted === true && b.is_accepted !== true) return -1;
                     if (a.is_accepted !== true && b.is_accepted === true) return 1;
                     return 0;
@@ -263,36 +278,30 @@ function TaskCard({ task, status }) {
         active: {
             badge: 'neu-badge-success-solid',
             badgeText: 'Aangenomen',
-            icon: 'check_circle',
-            iconColor: 'text-green-500',
             borderColor: 'border-l-green-500'
         },
         pending: {
             badge: 'neu-badge-outline',
             badgeText: 'In behandeling',
-            icon: 'hourglass_top',
-            iconColor: 'text-primary',
             borderColor: 'border-l-primary'
         },
         rejected: {
             badge: 'neu-badge-error',
             badgeText: 'Afgewezen',
-            icon: 'cancel',
-            iconColor: 'text-red-500',
             borderColor: 'border-l-red-500'
         }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
 
-    // Strip HTML from description and limit to ~50 words
+    // Strip HTML from description and limit to ~40 words
     const cleanDescription = task.description 
         ? task.description.replace(/<[^>]*>/g, '').trim()
         : '';
     const truncatedDescription = cleanDescription
         .split(' ')
-        .slice(0, 50)
-        .join(' ') + (cleanDescription.split(' ').length > 50 ? '...' : '');
+        .slice(0, 40)
+        .join(' ') + (cleanDescription.split(' ').length > 40 ? '...' : '');
 
     // Build the correct link
     const linkTo = task.project_id 
@@ -304,34 +313,52 @@ function TaskCard({ task, status }) {
             to={linkTo}
             className={`block neu-btn !p-4 !text-left border-l-4 ${config.borderColor}`}
         >
-            {/* Header with name and status */}
-            <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-center gap-2 min-w-0">
-                    <span className={`material-symbols-outlined ${config.iconColor}`}>{config.icon}</span>
-                    <h4 className="font-bold text-gray-700 truncate">
-                        {task.name || 'Taak'}
-                    </h4>
-                </div>
-                <span className={`${config.badge} shrink-0`}>{config.badgeText}</span>
+            {/* Status badge */}
+            <div className="mb-2">
+                <span className={config.badge}>{config.badgeText}</span>
             </div>
 
-            {/* Description */}
+            {/* Task name */}
+            <h4 className="font-bold text-gray-700 mb-2">
+                {task.name || 'Taak'}
+            </h4>
+
+            {/* Description - normal weight */}
             {truncatedDescription && (
-                <p className="text-sm text-gray-500 mb-3 line-clamp-3">
+                <p className="text-sm text-gray-500 font-normal mb-3">
                     {truncatedDescription}
                 </p>
             )}
 
+            {/* Skills */}
+            {task.skills && task.skills.length > 0 && (
+                <div className="mb-3">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Vereiste skills</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {task.skills.slice(0, 5).map((skill) => (
+                            <SkillBadge 
+                                key={skill.skillId || skill.id} 
+                                skillName={skill.name} 
+                                isPending={skill.isPending ?? skill.is_pending}
+                            />
+                        ))}
+                        {task.skills.length > 5 && (
+                            <span className="text-xs text-gray-400">+{task.skills.length - 5} meer</span>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Footer with metadata */}
-            <div className="flex items-center gap-4 text-xs text-gray-400">
-                {task.total_needed && (
+            <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-100">
+                {task.total_needed ? (
                     <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">group</span>
                         {task.total_needed} {task.total_needed === 1 ? 'plek' : 'plekken'}
                     </span>
-                )}
-                <span className="flex items-center gap-1 ml-auto">
-                    <span>Bekijk taak</span>
+                ) : <span />}
+                <span className="flex items-center gap-1 text-primary font-medium">
+                    Bekijk
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </span>
             </div>
