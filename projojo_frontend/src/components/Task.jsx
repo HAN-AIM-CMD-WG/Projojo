@@ -131,8 +131,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             </div>
                             <div>
                                 <h2 className="text-xl font-extrabold text-gray-700 tracking-tight">
-                                    {task.name}
-                                </h2>
+                        {task.name}
+                    </h2>
                                 <span className="neu-label">Taak</span>
                             </div>
                         </div>
@@ -141,34 +141,34 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             <RichTextViewer text={task.description} />
                         </div>
 
-                        <Alert text={taskSkillsError} onClose={() => { setTaskSkillsError("") }} />
+                    <Alert text={taskSkillsError} onClose={() => { setTaskSkillsError("") }} />
                         
                         {/* Skills */}
                         <div>
                             <p className="neu-label mb-2">Vereiste skills</p>
-                            <SkillsEditor
-                                allSkills={allSkills}
-                                initialSkills={task.skills}
-                                isEditing={isEditing && isOwner}
-                                onSave={handleSave}
-                                onCancel={() => setIsEditing(false)}
-                                setError={setTaskSkillsError}
-                                isAllowedToAddSkill={isOwner}
-                            >
-                                <div className="flex flex-wrap gap-2 items-center">
+                    <SkillsEditor
+                        allSkills={allSkills}
+                        initialSkills={task.skills}
+                        isEditing={isEditing && isOwner}
+                        onSave={handleSave}
+                        onCancel={() => setIsEditing(false)}
+                        setError={setTaskSkillsError}
+                        isAllowedToAddSkill={isOwner}
+                    >
+                        <div className="flex flex-wrap gap-2 items-center">
                                     {task.skills && task.skills.length === 0 && (
                                         <span className="text-gray-400 text-sm">Geen specifieke skills vereist</span>
                                     )}
-                                    {task.skills && task.skills.map((skill) => (
-                                        <SkillBadge
-                                            key={skill.skillId ?? skill.id}
-                                            skillName={skill.name}
-                                            isPending={skill.isPending ?? skill.is_pending}
-                                        />
-                                    ))}
-                                </div>
-                            </SkillsEditor>
+                            {task.skills && task.skills.map((skill) => (
+                                <SkillBadge
+                                    key={skill.skillId ?? skill.id}
+                                    skillName={skill.name}
+                                    isPending={skill.isPending ?? skill.is_pending}
+                                />
+                            ))}
                         </div>
+                    </SkillsEditor>
+                </div>
                     </div>
 
                     {/* Sidebar with stats and actions */}
@@ -196,7 +196,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         </div>
 
                         {/* Action buttons */}
-                        {authData.type === "student" && (
+                    {authData.type === "student" && (
                             <button 
                                 className={`neu-btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "opacity-50 cursor-not-allowed" : ""}`} 
                                 disabled={(studentAlreadyRegistered || isFull)} 
@@ -209,7 +209,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     {studentAlreadyRegistered ? "Aangemeld" : isFull ? "Vol" : "Aanmelden"}
                                 </span>
                             </button>
-                        )}
+                    )}
                         {isOwner && (
                             <>
                                 <button className="neu-btn w-full" onClick={() => setIsRegistrationsModalOpen(true)}>
@@ -218,9 +218,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         Aanmeldingen ({task.total_registered})
                                     </span>
                                 </button>
-                                <CreateBusinessEmail taskId={task.id} />
-                            </>
-                        )}
+                        <CreateBusinessEmail taskId={task.id} />
+                    </>
+                    )}
                     </div>
                 </div>
             </div>
@@ -284,13 +284,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 <div className="mb-4">
                                     <span className="neu-label mb-2 block">Skills</span>
                                     <div className="flex flex-wrap gap-2">
-                                        {registration.student.skills.map((skill) => (
-                                            <SkillBadge
-                                                key={skill.skillId ?? skill.id}
-                                                skillName={skill.name}
-                                                isPending={skill.isPending ?? skill.is_pending}
-                                            />
-                                        ))}
+                                    {registration.student.skills.map((skill) => (
+                                        <SkillBadge
+                                            key={skill.skillId ?? skill.id}
+                                            skillName={skill.name}
+                                            isPending={skill.isPending ?? skill.is_pending}
+                                        />
+                                    ))}
                                     </div>
                                 </div>
                                 <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />

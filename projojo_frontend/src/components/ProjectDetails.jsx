@@ -60,28 +60,28 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             {/* Hero section with image */}
             <div className="relative">
                 <div className="h-48 sm:h-64 w-full overflow-hidden neu-flat">
-                    <img
+                        <img
                         className="w-full h-full object-cover"
-                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                        alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
-                    />
+                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                            alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                        />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                </div>
+                    </div>
                 
                 {/* Project title overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                     <span className="neu-badge-glass mb-2 inline-block">Project</span>
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                        {project.name}
-                    </h1>
+                            {project.name}
+                        </h1>
                 </div>
             </div>
 
             {/* Business info card */}
             <div className="p-6">
                 {!isLoading && project.business && (
-                    <Link 
-                        to={`/business/${project.business.id}`}
+                                    <Link
+                                        to={`/business/${project.business.id}`}
                         className="flex items-center gap-4 mb-6 neu-flat p-4 hover:translate-y-[-2px] transition-all duration-200 group"
                     >
                         <div className="shrink-0">
@@ -94,13 +94,13 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         <div className="flex-1">
                             <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Aangeboden door</span>
                             <p className="font-bold text-lg text-gray-700 group-hover:text-primary transition">
-                                {project.business.name}
+                                        {project.business.name}
                             </p>
                             <p className="text-gray-500 text-sm flex items-center gap-1.5 mt-0.5">
                                 <span className="material-symbols-outlined text-base text-primary">location_on</span>
-                                {project.business.location}
-                            </p>
-                        </div>
+                                        {project.business.location}
+                                    </p>
+                                </div>
                         <span className="material-symbols-outlined text-gray-300 group-hover:text-primary transition">
                             chevron_right
                         </span>
@@ -122,17 +122,17 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     <div>
                         <p className="neu-label mb-3">Gevraagde skills</p>
                         <ul className="flex flex-wrap gap-2">
-                            {project.topSkills?.map((skill) => (
-                                <li key={skill.skillId}>
-                                    <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
-                                </li>
-                            ))}
+                    {project.topSkills?.map((skill) => (
+                        <li key={skill.skillId}>
+                            <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
+                        </li>
+                    ))}
                             {(!project.topSkills || project.topSkills.length === 0) && (
                                 <li className="text-gray-400 text-sm">Geen skills gespecificeerd</li>
                             )}
-                        </ul>
+                </ul>
                     </div>
-                    {isOwner && (
+                {isOwner && (
                         <button className="neu-btn-primary" onClick={handleOpenModal}>
                             <span className="flex items-center gap-2">
                                 <span className="material-symbols-outlined">add</span>

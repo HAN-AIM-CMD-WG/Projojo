@@ -150,7 +150,7 @@ export default function StudentDashboard() {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {activeTasks.map((task) => (
                                             <TaskCard key={task.id} task={task} status="active" />
                                         ))}
@@ -178,7 +178,7 @@ export default function StudentDashboard() {
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-2">
+                                    <div className="space-y-3">
                                         {pendingRegistrations.map((task) => (
                                             <TaskCard key={task.id} task={task} status="pending" />
                                         ))}
@@ -256,30 +256,43 @@ export default function StudentDashboard() {
 }
 
 /**
- * Task Card component for the dashboard - styled like neu-btn
+ * Task Card component for the dashboard
  */
 function TaskCard({ task, status }) {
     const statusConfig = {
         active: {
+            badge: 'neu-badge-success-solid',
+            badgeText: 'Aangenomen',
             icon: 'check_circle',
-            iconColor: 'text-green-500'
+            iconColor: 'text-green-500',
+            borderColor: 'border-l-green-500'
         },
         pending: {
+            badge: 'neu-badge-outline',
+            badgeText: 'In behandeling',
             icon: 'hourglass_top',
-            iconColor: 'text-primary'
+            iconColor: 'text-primary',
+            borderColor: 'border-l-primary'
         },
         rejected: {
+            badge: 'neu-badge-error',
+            badgeText: 'Afgewezen',
             icon: 'cancel',
-            iconColor: 'text-red-500'
+            iconColor: 'text-red-500',
+            borderColor: 'border-l-red-500'
         }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
 
-    // Strip HTML from description
+    // Strip HTML from description and limit to ~50 words
     const cleanDescription = task.description 
         ? task.description.replace(/<[^>]*>/g, '').trim()
         : '';
+    const truncatedDescription = cleanDescription
+        .split(' ')
+        .slice(0, 50)
+        .join(' ') + (cleanDescription.split(' ').length > 50 ? '...' : '');
 
     // Build the correct link
     const linkTo = task.project_id 
@@ -289,18 +302,38 @@ function TaskCard({ task, status }) {
     return (
         <Link 
             to={linkTo}
-            className="neu-btn w-full justify-start gap-3 !text-sm !py-3"
+            className={`block neu-btn !p-4 !text-left border-l-4 ${config.borderColor}`}
         >
-            <span className={`material-symbols-outlined ${config.iconColor}`}>{config.icon}</span>
-            <div className="flex-1 text-left min-w-0">
-                <span className="block font-semibold text-gray-700 truncate">
-                    {task.name || 'Taak'}
-                </span>
-                {cleanDescription && (
-                    <span className="block text-xs text-gray-400 truncate mt-0.5">
-                        {cleanDescription.substring(0, 50)}{cleanDescription.length > 50 ? '...' : ''}
+            {/* Header with name and status */}
+            <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="flex items-center gap-2 min-w-0">
+                    <span className={`material-symbols-outlined ${config.iconColor}`}>{config.icon}</span>
+                    <h4 className="font-bold text-gray-700 truncate">
+                        {task.name || 'Taak'}
+                    </h4>
+                </div>
+                <span className={`${config.badge} shrink-0`}>{config.badgeText}</span>
+            </div>
+
+            {/* Description */}
+            {truncatedDescription && (
+                <p className="text-sm text-gray-500 mb-3 line-clamp-3">
+                    {truncatedDescription}
+                </p>
+            )}
+
+            {/* Footer with metadata */}
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+                {task.total_needed && (
+                    <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">group</span>
+                        {task.total_needed} {task.total_needed === 1 ? 'plek' : 'plekken'}
                     </span>
                 )}
+                <span className="flex items-center gap-1 ml-auto">
+                    <span>Bekijk taak</span>
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </span>
             </div>
         </Link>
     );

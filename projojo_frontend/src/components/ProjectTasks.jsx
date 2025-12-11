@@ -94,14 +94,14 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                     </div>
                 ) : (
                     tasks.map((task, index) => {
-                        const isLast = index === tasks.length - 1;
-                        return (
-                            <div
-                                ref={(el) => {
-                                    taskRefs.current[task.id] = el;
-                                    if (isLast && lastTaskRef) lastTaskRef.current = el;
-                                }}
-                                key={task.id}
+                    const isLast = index === tasks.length - 1;
+                    return (
+                        <div
+                            ref={(el) => {
+                                taskRefs.current[task.id] = el;
+                                if (isLast && lastTaskRef) lastTaskRef.current = el;
+                            }}
+                            key={task.id}
                                 id={`task-${task.id}`}
                             >
                                 <Task 

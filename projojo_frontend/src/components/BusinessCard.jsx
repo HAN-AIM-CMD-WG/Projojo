@@ -208,7 +208,7 @@ export default function BusinessCard({
                                 </span>
                             )}
                         </div>
-                    </div>
+            </div>
                 )}
 
                 {/* Management buttons (only for supervisors/teachers) */}
@@ -235,7 +235,7 @@ export default function BusinessCard({
                         <button onClick={openGenerateLinkModel} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-lg">person_add</span>
                             Collega toevoegen
-                        </button>
+                    </button>
                     </div>
                 )}
             </div>

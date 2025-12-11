@@ -106,18 +106,18 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                                 </span>
                             </button>
                         )}
-                    </div>
+                </div>
                 )}
 
                 {/* Skills editor / list */}
-                <SkillsEditor
-                    allSkills={allSkills}
-                    initialSkills={currentSkills}
-                    isEditing={(isEditing && isOwnProfile)}
-                    onSave={handleSave}
-                    onCancel={() => setIsEditing(false)}
-                    setError={setStudentSkillsError}
-                    isAbsolute={false}
+                    <SkillsEditor
+                        allSkills={allSkills}
+                        initialSkills={currentSkills}
+                        isEditing={(isEditing && isOwnProfile)}
+                        onSave={handleSave}
+                        onCancel={() => setIsEditing(false)}
+                        setError={setStudentSkillsError}
+                        isAbsolute={false}
                     isAllowedToAddSkill={true}
                 >
                     <div className="space-y-3">
@@ -129,7 +129,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                             />
                         ))}
                     </div>
-                </SkillsEditor>
+                    </SkillsEditor>
             </div>
         </div>
     )

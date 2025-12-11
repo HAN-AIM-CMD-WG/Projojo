@@ -42,7 +42,7 @@ export default function Filter({ onFilter }) {
         setSelectedSkills(normalized);
         // Don't close when in instant apply mode (keepOpen from SkillsEditor)
         if (!keepOpen) {
-            setIsEditing(false);
+        setIsEditing(false);
         }
         onFilter({
             searchInput: search,
