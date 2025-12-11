@@ -24,6 +24,11 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   useEffect(() => {
     let ignore = false;
 
