@@ -126,13 +126,14 @@ class BusinessRepository(BaseRepository[Business]):
     def get_all_with_full_nesting(self):
         query = """
         match
-            $business isa business;
+            $business isa business,
+                has location $location;
         fetch {
             "id": $business.id,
             "name": $business.name,
             "description": $business.description,
             "image_path": $business.imagePath,
-            "location": [$business.location],
+            "location": $location,
             "sector": [$business.sector],
             "company_size": [$business.companySize],
             "website": [$business.website],

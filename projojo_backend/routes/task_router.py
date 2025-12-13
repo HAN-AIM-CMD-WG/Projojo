@@ -107,8 +107,9 @@ async def create_registration(
         raise HTTPException(status_code=400, detail="Deze taak heeft geen beschikbare plekken meer")
 
     # check if the student is already registered for this task
-    existing_registration = user_repo.get_student_registrations(student_id)
-    if task_id in existing_registration:
+    existing_registrations = user_repo.get_student_registrations(student_id)
+    existing_task_ids = [reg.get('id') for reg in existing_registrations]
+    if task_id in existing_task_ids:
         raise HTTPException(status_code=400, detail="Je bent al geregistreerd voor deze taak")
 
     try:
