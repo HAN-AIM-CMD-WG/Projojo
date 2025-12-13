@@ -12,6 +12,7 @@ class Business(BaseModel):
     sector: str | None = None
     company_size: str | None = None
     website: str | None = None
+    is_archived: bool = False
     projects: list[Project] | None = None
 
     class Config:

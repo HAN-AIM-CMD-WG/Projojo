@@ -28,7 +28,8 @@ class BusinessRepository(BaseRepository[Business]):
                 'location': $location,
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
-                'website': [ $business.website ]
+                'website': [ $business.website ],
+                'isArchived': [ $business.isArchived ]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -36,7 +37,11 @@ class BusinessRepository(BaseRepository[Business]):
             raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
 
-    def get_all(self) -> list[Business]:
+    def get_all(self, include_archived: bool = False) -> list[Business]:
+        """
+        Get all businesses. By default, excludes archived businesses.
+        Set include_archived=True to include all businesses.
+        """
         query = """
             match
                 $business isa business,
@@ -53,11 +58,46 @@ class BusinessRepository(BaseRepository[Business]):
                 'location': $location,
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
-                'website': [ $business.website ]
+                'website': [ $business.website ],
+                'isArchived': [ $business.isArchived ]
             };
         """
         results = Db.read_transact(query)
-        return [self._map_to_model(result) for result in results]
+        businesses = [self._map_to_model(result) for result in results]
+        
+        # Filter archived businesses in Python
+        if not include_archived:
+            businesses = [b for b in businesses if not b.is_archived]
+        
+        return businesses
+    
+    def get_archived(self) -> list[Business]:
+        """Get all archived businesses."""
+        query = """
+            match
+                $business isa business,
+                has id $id,
+                has name $name,
+                has description $description,
+                has imagePath $imagePath,
+                has location $location;
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'imagePath': $imagePath,
+                'location': $location,
+                'sector': [ $business.sector ],
+                'companySize': [ $business.companySize ],
+                'website': [ $business.website ],
+                'isArchived': [ $business.isArchived ]
+            };
+        """
+        results = Db.read_transact(query)
+        businesses = [self._map_to_model(result) for result in results]
+        
+        # Filter to only archived businesses
+        return [b for b in businesses if b.is_archived]
 
     def _map_to_model(self, result: dict[str, Any]) -> Business:
         # Extract relevant information from the query result
@@ -76,6 +116,9 @@ class BusinessRepository(BaseRepository[Business]):
         
         website_list = result.get("website", [])
         website = website_list[0] if website_list else None
+        
+        is_archived_list = result.get("isArchived", [])
+        is_archived = is_archived_list[0] if is_archived_list else False
 
         return Business(
             id=id,
@@ -86,6 +129,7 @@ class BusinessRepository(BaseRepository[Business]):
             sector=sector,
             company_size=company_size,
             website=website,
+            is_archived=is_archived,
         )
 
     def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
@@ -189,21 +233,33 @@ class BusinessRepository(BaseRepository[Business]):
         """
         return Db.read_transact(query)
 
-    def create(self, name: str) -> Business:
+    def create(self, name: str, as_draft: bool = False) -> Business:
         id = generate_uuid()
 
-        query = """
-            insert
-                $business isa business,
-                has id ~id,
-                has name ~name,
-                has description "",
-                has imagePath "default.png",
-                has location "";
-        """
+        if as_draft:
+            query = """
+                insert
+                    $business isa business,
+                    has id ~id,
+                    has name ~name,
+                    has description "",
+                    has imagePath "default.png",
+                    has location "",
+                    has isArchived true;
+            """
+        else:
+            query = """
+                insert
+                    $business isa business,
+                    has id ~id,
+                    has name ~name,
+                    has description "",
+                    has imagePath "default.png",
+                    has location "";
+            """
         Db.write_transact(query, {"id": id, "name": name})
         return Business(
-            id=id, name=name, description="", image_path="default.png", location=""
+            id=id, name=name, description="", image_path="default.png", location="", is_archived=as_draft
         )
 
     def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None, sector: str = None, company_size: str = None, website: str = None) -> Business:
@@ -246,3 +302,53 @@ class BusinessRepository(BaseRepository[Business]):
         """
 
         Db.write_transact(query, update_params)
+    
+    def archive_business(self, business_id: str) -> None:
+        """Archive a business (set isArchived to true)."""
+        # First try to delete existing isArchived attribute (if any)
+        try:
+            delete_query = """
+                match
+                    $business isa business, has id ~business_id;
+                    $business has isArchived $archived;
+                delete
+                    $business has $archived;
+            """
+            Db.write_transact(delete_query, {"business_id": business_id})
+        except Exception:
+            pass  # Attribute might not exist yet
+        
+        # Then insert the new value
+        insert_query = """
+            match
+                $business isa business, has id ~business_id;
+            insert
+                $business has isArchived true;
+        """
+        Db.write_transact(insert_query, {"business_id": business_id})
+    
+    def restore_business(self, business_id: str) -> None:
+        """Restore an archived business (set isArchived to false)."""
+        # First delete existing isArchived attribute
+        try:
+            delete_query = """
+                match
+                    $business isa business, has id ~business_id;
+                    $business has isArchived $archived;
+                delete
+                    $business has $archived;
+            """
+            Db.write_transact(delete_query, {"business_id": business_id})
+        except Exception:
+            pass  # Attribute might not exist
+        
+        # Insert isArchived = false (or just leave it without the attribute)
+        # Since no isArchived means not archived, we can skip inserting false
+        # But for explicitness, let's insert false
+        insert_query = """
+            match
+                $business isa business, has id ~business_id;
+            insert
+                $business has isArchived false;
+        """
+        Db.write_transact(insert_query, {"business_id": business_id})

@@ -406,13 +406,16 @@ export function getTaskSkills(taskId) {
 
 
 /**
- *
  * @param {string} newBusinessName
+ * @param {boolean} asDraft - If true, create as archived (hidden from students)
  */
-export function createNewBusiness(newBusinessName) {
+export function createNewBusiness(newBusinessName, asDraft = false) {
     return fetchWithError(`${API_BASE_URL}businesses/`, {
         method: "POST",
-        body: JSON.stringify(newBusinessName),
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: newBusinessName, as_draft: asDraft }),
     });
 }
 
@@ -469,6 +472,36 @@ export function getAllTeachers() {
  */
 export function getBusinessById(businessId) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessId}`);
+}
+
+/**
+ * Get all archived businesses (teacher only)
+ * @returns {Promise<Array>}
+ */
+export function getArchivedBusinesses() {
+    return fetchWithError(`${API_BASE_URL}businesses/archived`);
+}
+
+/**
+ * Archive a business (teacher only)
+ * @param {string} businessId
+ * @returns {Promise<{message: string}>}
+ */
+export function archiveBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/archive`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Restore an archived business (teacher only)
+ * @param {string} businessId
+ * @returns {Promise<{message: string}>}
+ */
+export function restoreBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/restore`, {
+        method: "PATCH",
+    });
 }
 
 /**

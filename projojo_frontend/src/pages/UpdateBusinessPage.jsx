@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useParams } from "react-router-dom";
 import Alert from '../components/Alert';
 import { useAuth } from '../auth/AuthProvider';
 import DragDrop from '../components/DragDrop';
@@ -13,6 +13,7 @@ import useFetch from '../useFetch';
  */
 export default function UpdateBusinessPage() {
     const { authData } = useAuth();
+    const { businessId: urlBusinessId } = useParams();
     const [error, setError] = useState();
     const [nameError, setNameError] = useState();
     const [description, setDescription] = useState();
@@ -21,13 +22,23 @@ export default function UpdateBusinessPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const navigation = useNavigate();
 
-    useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'supervisor') {
-            navigation("/not-found");
-        }
-    }, [authData.isLoading])
+    // Use URL businessId if provided (for teachers), otherwise use authData.businessId (for supervisors)
+    const targetBusinessId = urlBusinessId || authData.businessId;
 
-    const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessById(authData.businessId), [authData.businessId]);
+    useEffect(() => {
+        if (!authData.isLoading) {
+            // Allow supervisors editing their own business, or teachers editing any business
+            const isAllowed = 
+                (authData.type === 'supervisor' && authData.businessId === targetBusinessId) ||
+                authData.type === 'teacher';
+            
+            if (!isAllowed) {
+                navigation("/not-found");
+            }
+        }
+    }, [authData.isLoading, authData.type, authData.businessId, targetBusinessId])
+
+    const { data: business } = useFetch(async () => !authData.isLoading && targetBusinessId && await getBusinessById(targetBusinessId), [targetBusinessId]);
     
     if (business?.description !== undefined && description === undefined) {
         setDescription(business?.description);
@@ -51,9 +62,9 @@ export default function UpdateBusinessPage() {
 
         formData.append("description", description);
 
-        updateBusiness(authData.businessId, formData)
+        updateBusiness(targetBusinessId, formData)
             .then(() => {
-                navigation(`/business/${authData.businessId}`);
+                navigation(`/business/${targetBusinessId}`);
             }).catch(error => {
                 setError(createErrorMessage(
                     error,
@@ -82,7 +93,7 @@ export default function UpdateBusinessPage() {
             {/* Header */}
             <div className="mb-8">
                 <Link 
-                    to={`/business/${authData.businessId}`}
+                    to={`/business/${targetBusinessId}`}
                     className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-4"
                 >
                     <span className="material-symbols-outlined text-xl">arrow_back</span>

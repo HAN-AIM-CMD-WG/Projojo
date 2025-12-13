@@ -49,6 +49,18 @@ async def get_all_businesses_with_full_nesting():
     """
     return business_repo.get_all_with_full_nesting()
 
+
+@router.get("/archived", response_model=list[Business])
+async def get_archived_businesses(payload: dict = Depends(get_token_payload)):
+    """
+    Get all archived businesses. Only accessible by teachers.
+    """
+    if payload.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen gearchiveerde bedrijven bekijken")
+    
+    return business_repo.get_archived()
+
+
 @router.get("/{id}")
 async def get_business(id: str = Path(..., description="Business ID")):
     """
@@ -67,12 +79,13 @@ async def get_business_projects(id: str = Path(..., description="Business ID")):
 
 
 @router.post("/", response_model=Business)
-async def create_business(name: str = Body(...)):
+async def create_business(name: str = Body(...), as_draft: bool = Body(False)):
     """
     Create a new business with the given name.
+    Set as_draft=True to create as archived (hidden from students).
     """
     try:
-        created_business = business_repo.create(name)
+        created_business = business_repo.create(name, as_draft=as_draft)
         return created_business
     except Exception as e:
         if "has a key constraint violation" in str(e):
@@ -128,4 +141,57 @@ async def update_business(
         raise HTTPException(
             status_code=500,
             detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." + str(e)
+        )
+
+
+@router.patch("/{business_id}/archive")
+async def archive_business(
+    business_id: str = Path(..., description="Business ID to archive"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Archive a business. Only accessible by teachers.
+    Archived businesses are hidden from students and supervisors.
+    """
+    if payload.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven archiveren")
+    
+    # Verify business exists
+    existing_business = business_repo.get_by_id(business_id)
+    if not existing_business:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    try:
+        business_repo.archive_business(business_id)
+        return {"message": "Bedrijf succesvol gearchiveerd"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het archiveren van het bedrijf: " + str(e)
+        )
+
+
+@router.patch("/{business_id}/restore")
+async def restore_business(
+    business_id: str = Path(..., description="Business ID to restore"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Restore an archived business. Only accessible by teachers.
+    """
+    if payload.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven herstellen")
+    
+    # Verify business exists
+    existing_business = business_repo.get_by_id(business_id)
+    if not existing_business:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    try:
+        business_repo.restore_business(business_id)
+        return {"message": "Bedrijf succesvol hersteld"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het herstellen van het bedrijf: " + str(e)
         )

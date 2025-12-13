@@ -69,6 +69,7 @@ export default function App() {
             </Route>
             <Route path="/business">
               <Route path=":businessId" element={<BusinessPage />} />
+              <Route path=":businessId/update" element={<UpdateBusinessPage />} />
               <Route path="update" element={<UpdateBusinessPage />} />
             </Route>
             <Route path="/student">

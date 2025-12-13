@@ -235,14 +235,14 @@ export default function BusinessCard({
                     </div>
                 )}
 
-                {/* Management buttons (only for supervisors/teachers) */}
+                {/* Management buttons for supervisors of this business */}
                 {showUpdateButton && authData.businessId === businessId && (
                     <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200/50">
                         <Link to={`/projects/add`} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-lg">add</span>
                             Project toevoegen
                         </Link>
-                        <Link to={`/business/update`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                        <Link to={`/business/${businessId}/update`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-lg">edit</span>
                             Aanpassen
                         </Link>
@@ -253,13 +253,17 @@ export default function BusinessCard({
                     </div>
                 )}
 
-                {/* Teacher-only invite button */}
+                {/* Management buttons for teachers (can edit any business) */}
                 {showUpdateButton && authData.type === "teacher" && authData.businessId !== businessId && (
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200/50">
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200/50">
+                        <Link to={`/business/${businessId}/update`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                            Aanpassen
+                        </Link>
                         <button onClick={openGenerateLinkModel} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-lg">person_add</span>
                             Collega toevoegen
-                    </button>
+                        </button>
                     </div>
                 )}
             </div>

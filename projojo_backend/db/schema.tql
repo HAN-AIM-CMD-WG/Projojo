@@ -32,6 +32,7 @@ entity business,
     owns sector @card(0..1),
     owns companySize @card(0..1),
     owns website @card(0..1),
+    owns isArchived @card(0..1),
     plays manages:business @card(0..),
     plays hasProjects:business @card(0..),
     plays businessInvite:business @card(0..);
@@ -145,3 +146,4 @@ attribute isUsed value boolean;
 attribute sector value string;
 attribute companySize value string;
 attribute website value string;
+attribute isArchived value boolean;
