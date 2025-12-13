@@ -2,10 +2,12 @@ import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
 import { useAuth } from '../auth/AuthProvider';
+import { useStudentSkills } from '../context/StudentSkillsContext';
 import FormInput from './FormInput';
 import Loading from "./Loading";
 import Modal from "./Modal";
 import RichTextViewer from './RichTextViewer';
+import SkillBadge from './SkillBadge';
 import Tooltip from './Tooltip';
 
 export default function BusinessCard({ 
@@ -22,6 +24,7 @@ export default function BusinessCard({
     showUpdateButton = false 
 }) {
     const { authData } = useAuth();
+    const { studentSkills } = useStudentSkills();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
     const [expiry, setExpiry] = useState(null);
@@ -90,10 +93,16 @@ export default function BusinessCard({
         return sizeMap[size] || size;
     };
 
-    // Show more skills (max 6, then +X)
+    // Calculate skill match with student
+    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const matchingSkills = topSkills?.filter(s => studentSkillIds.has(s.skillId)) || [];
+    const otherSkills = topSkills?.filter(s => !studentSkillIds.has(s.skillId)) || [];
+    
+    // Show more skills (max 6, then +X) - show matching first
     const maxSkillsShown = 6;
-    const visibleSkills = topSkills?.slice(0, maxSkillsShown) || [];
-    const remainingSkills = (topSkills?.length || 0) - maxSkillsShown;
+    const sortedSkills = [...matchingSkills, ...otherSkills];
+    const visibleSkills = sortedSkills.slice(0, maxSkillsShown);
+    const remainingSkills = sortedSkills.length - maxSkillsShown;
 
     // Check if we have any metadata to show
     const hasMetadata = sectorText || companySizeText || websiteUrl;
@@ -139,10 +148,10 @@ export default function BusinessCard({
                             {!showUpdateButton && (
                                 <Link 
                                     to={`/business/${businessId}`} 
-                                    className="neu-btn !py-2.5 !px-4 text-sm font-bold shrink-0 flex items-center gap-2"
+                                    className="neu-btn-primary !py-3 !px-5 font-bold shrink-0 flex items-center gap-2"
                                 >
                                     Bekijk bedrijf
-                                    <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                                    <span className="material-symbols-outlined text-xl">arrow_forward</span>
                                 </Link>
                             )}
                         </div>
@@ -189,26 +198,41 @@ export default function BusinessCard({
                 {/* Skills section */}
                 {visibleSkills.length > 0 && (
                     <div className="mt-5 pt-4 border-t border-gray-200/60">
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">psychology</span>
-                            Gevraagde skills
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2">
-                            {visibleSkills.map((skill) => (
-                                <span
-                                    key={skill.skillId ?? skill.id}
-                                    className="px-3 py-1.5 text-xs font-bold text-white bg-primary rounded-full shadow-sm"
-                                >
-                                    {skill.name}
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                <span className="material-symbols-outlined text-sm">psychology</span>
+                                Gevraagde skills
+                            </p>
+                            {matchingSkills.length > 0 && studentSkills.length > 0 && (
+                                <span className="text-xs font-bold text-primary flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">local_fire_department</span>
+                                    {matchingSkills.length} match{matchingSkills.length !== 1 && 'es'}
                                 </span>
-                            ))}
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {visibleSkills.map((skill) => {
+                                const isMatch = studentSkillIds.has(skill.skillId);
+                                return (
+                                    <SkillBadge
+                                        key={skill.skillId ?? skill.id}
+                                        skillName={skill.name}
+                                        isPending={skill.isPending ?? skill.is_pending}
+                                        isOwn={isMatch}
+                                    >
+                                        {isMatch && (
+                                            <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                        )}
+                                    </SkillBadge>
+                                );
+                            })}
                             {remainingSkills > 0 && (
                                 <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-gray-200 text-gray-500">
                                     +{remainingSkills}
                                 </span>
                             )}
                         </div>
-            </div>
+                    </div>
                 )}
 
                 {/* Management buttons (only for supervisors/teachers) */}

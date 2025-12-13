@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { createTask, IMAGE_BASE_URL } from "../services";
 import { useAuth } from "../auth/AuthProvider";
+import { useStudentSkills } from "../context/StudentSkillsContext";
 import FormInput from "./FormInput";
 import LocationMap from "./LocationMap";
 import Modal from "./Modal";
@@ -15,6 +16,8 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const [error, setError] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { authData } = useAuth();
+    const { studentSkills } = useStudentSkills();
+    const studentSkillIds = new Set(studentSkills.map(s => s.id));
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [formKey, setFormKey] = useState(0);
@@ -122,11 +125,22 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     <div>
                         <p className="neu-label mb-3">Gevraagde skills</p>
                         <ul className="flex flex-wrap gap-2">
-                    {project.topSkills?.map((skill) => (
-                        <li key={skill.skillId}>
-                            <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
-                        </li>
-                    ))}
+                    {project.topSkills?.map((skill) => {
+                        const isMatch = studentSkillIds.has(skill.skillId);
+                        return (
+                            <li key={skill.skillId}>
+                                <SkillBadge 
+                                    skillName={skill.name} 
+                                    isPending={skill.isPending ?? skill.is_pending}
+                                    isOwn={isMatch}
+                                >
+                                    {isMatch && (
+                                        <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                    )}
+                                </SkillBadge>
+                            </li>
+                        );
+                    })}
                             {(!project.topSkills || project.topSkills.length === 0) && (
                                 <li className="text-gray-400 text-sm">Geen skills gespecificeerd</li>
                             )}

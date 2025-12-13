@@ -274,6 +274,9 @@ export default function StudentDashboard() {
  * Task Card component for the dashboard
  */
 function TaskCard({ task, status }) {
+    const { studentSkills } = useStudentSkills();
+    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    
     const statusConfig = {
         active: {
             badge: 'neu-badge-success-solid',
@@ -335,13 +338,22 @@ function TaskCard({ task, status }) {
                 <div className="mb-3">
                     <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Vereiste skills</p>
                     <div className="flex flex-wrap gap-1.5">
-                        {task.skills.slice(0, 5).map((skill) => (
-                            <SkillBadge 
-                                key={skill.skillId || skill.id} 
-                                skillName={skill.name} 
-                                isPending={skill.isPending ?? skill.is_pending}
-                            />
-                        ))}
+                        {task.skills.slice(0, 5).map((skill) => {
+                            const skillId = skill.skillId || skill.id;
+                            const isMatch = studentSkillIds.has(skillId);
+                            return (
+                                <SkillBadge 
+                                    key={skillId} 
+                                    skillName={skill.name} 
+                                    isPending={skill.isPending ?? skill.is_pending}
+                                    isOwn={isMatch}
+                                >
+                                    {isMatch && (
+                                        <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                    )}
+                                </SkillBadge>
+                            );
+                        })}
                         {task.skills.length > 5 && (
                             <span className="text-xs text-gray-400">+{task.skills.length - 5} meer</span>
                         )}

@@ -316,6 +316,24 @@
         box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
     }
 
+    /* --- Text Button - Tertiary actions, minimal styling --- */
+    .neu-btn-text {
+        @apply font-semibold transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-1;
+        background: transparent;
+        color: #718096;
+        border-radius: 0.75rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .neu-btn-text:hover {
+        color: #FF7F50;
+        background: rgba(255, 127, 80, 0.08);
+    }
+
+    .neu-btn-text:active {
+        background: rgba(255, 127, 80, 0.12);
+    }
+
     /* --- Icon Button - Circulair zoals Gemini --- */
     .neu-icon-btn {
         @apply bg-neu-bg transition-all duration-200 cursor-pointer flex items-center justify-center;
@@ -416,44 +434,45 @@
         border-radius: 9999px;
     }
 
-    /* --- Skill Badge/Pill - Verfijnd --- */
+    /* --- Skill Badges - Clean solid pill styling --- */
+    /* Default/requested skill: subtle outline style */
+    .skill-badge {
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-white/50 text-gray-600 border border-gray-300;
+    }
+
+    /* Own/matching skill: prominent solid coral - this skill matches! */
+    .skill-badge-own {
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-primary text-white;
+        box-shadow: 0 2px 4px rgba(255, 127, 80, 0.3);
+    }
+
+    /* Pending skill: dashed border */
+    .skill-badge-pending {
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-primary/5 text-primary border-2 border-dashed border-primary/50;
+    }
+
+    /* Legacy aliases - now uses subtle style as default */
     .neu-pill {
-        @apply cursor-default;
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        border-radius: 0.75rem;
-        background: linear-gradient(135deg, #FF7F50 0%, #FFA07A 100%);
-        color: white;
-        box-shadow: 3px 3px 8px rgba(255, 127, 80, 0.3), -2px -2px 6px rgba(255, 255, 255, 0.8);
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-white/50 text-gray-600 border border-gray-300;
     }
-
-    /* Variant: Subtiele pill */
+    
+    /* Prominent pill for matched/highlighted items */
+    .neu-pill-primary {
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-primary text-white;
+        box-shadow: 0 2px 4px rgba(255, 127, 80, 0.3);
+    }
     .neu-pill-subtle {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #FF7F50;
-        border-radius: 0.75rem;
-        background: rgba(255, 127, 80, 0.1);
-        border: 1px solid rgba(255, 127, 80, 0.2);
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-primary/10 text-primary border border-primary;
     }
-
-    /* Variant: Outline pill */
     .neu-pill-outline {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #FF7F50;
-        border-radius: 0.75rem;
-        border: 2px solid rgba(255, 127, 80, 0.4);
-        background: transparent;
+        @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
+        @apply bg-primary/5 text-primary border-2 border-dashed border-primary/50;
     }
 
     /* --- Status Badges (Glassmorphism - Gemini Style) --- */

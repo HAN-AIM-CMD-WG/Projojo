@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
+import { useStudentSkills } from "../context/StudentSkillsContext";
 import FormInput from "./FormInput";
 import InfoBox from "./InfoBox";
 import Modal from "./Modal";
@@ -14,6 +15,8 @@ import CreateBusinessEmail from "./CreateBusinessEmail";
 
 export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
     const { authData } = useAuth();
+    const { studentSkills } = useStudentSkills();
+    const studentSkillIds = new Set(studentSkills.map(s => s.id));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
     const [registrationErrors, setRegistrationErrors] = useState([]);
@@ -159,13 +162,22 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     {task.skills && task.skills.length === 0 && (
                                         <span className="text-gray-400 text-sm">Geen specifieke skills vereist</span>
                                     )}
-                            {task.skills && task.skills.map((skill) => (
-                                <SkillBadge
-                                    key={skill.skillId ?? skill.id}
-                                    skillName={skill.name}
-                                    isPending={skill.isPending ?? skill.is_pending}
-                                />
-                            ))}
+                            {task.skills && task.skills.map((skill) => {
+                                const skillId = skill.skillId ?? skill.id;
+                                const isMatch = studentSkillIds.has(skillId);
+                                return (
+                                    <SkillBadge
+                                        key={skillId}
+                                        skillName={skill.name}
+                                        isPending={skill.isPending ?? skill.is_pending}
+                                        isOwn={isMatch}
+                                    >
+                                        {isMatch && (
+                                            <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                        )}
+                                    </SkillBadge>
+                                );
+                            })}
                         </div>
                     </SkillsEditor>
                 </div>
@@ -284,13 +296,24 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 <div className="mb-4">
                                     <span className="neu-label mb-2 block">Skills</span>
                                     <div className="flex flex-wrap gap-2">
-                                    {registration.student.skills.map((skill) => (
-                                        <SkillBadge
-                                            key={skill.skillId ?? skill.id}
-                                            skillName={skill.name}
-                                            isPending={skill.isPending ?? skill.is_pending}
-                                        />
-                                    ))}
+                                    {registration.student.skills.map((skill) => {
+                                        const skillId = skill.skillId ?? skill.id;
+                                        // Highlight skills that match task requirements
+                                        const taskSkillIds = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
+                                        const matchesTask = taskSkillIds.has(skillId);
+                                        return (
+                                            <SkillBadge
+                                                key={skillId}
+                                                skillName={skill.name}
+                                                isPending={skill.isPending ?? skill.is_pending}
+                                                isOwn={matchesTask}
+                                            >
+                                                {matchesTask && (
+                                                    <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                                )}
+                                            </SkillBadge>
+                                        );
+                                    })}
                                     </div>
                                 </div>
                                 <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />

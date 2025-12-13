@@ -14,33 +14,29 @@ import Tooltip from "./Tooltip";
 export default function SkillBadge({ children, skillName, isPending, isOwn = false, onClick = null, ariaLabel = null, variant = 'default' }) {
     const toolTipRef = useRef(null);
 
-    // Base styling - using neumorphic pill styles
+    // Clean skill badge styling - no gradients, consistent across app
     let classNames;
     
     if (isOwn || variant === 'own') {
-        // Own skill: coral/primary filled
-        classNames = 'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-white bg-primary/90 border border-primary';
+        // Own skill: coral outline with light fill
+        classNames = 'skill-badge-own';
     } else if (isPending || variant === 'pending') {
-        // Pending: coral/primary dashed outline (same color family as own, but outline only)
-        classNames = 'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold text-primary bg-primary/5 border-2 border-dashed border-primary/50';
-    } else if (variant === 'subtle') {
-        classNames = 'neu-pill-subtle';
-    } else if (variant === 'outline') {
-        // Other skills: gray outline
-        classNames = 'inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-gray-500 border border-gray-300 bg-white/50';
+        // Pending: dashed coral border
+        classNames = 'skill-badge-pending';
     } else {
-        classNames = 'neu-pill';
+        // Default: solid coral background
+        classNames = 'skill-badge';
     }
 
     // Add cursor pointer if clickable
     if (onClick) {
-        classNames += ' cursor-pointer';
+        classNames += ' cursor-pointer hover:opacity-80 transition-opacity';
     }
 
     const content = (
         <>
-            {skillName}
             {children}
+            {skillName}
             {isPending && (
                 <Tooltip parentRef={toolTipRef}>
                     In afwachting van goedkeuring

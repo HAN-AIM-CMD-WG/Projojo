@@ -169,7 +169,7 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
                 {matchingSkills.slice(0, 3).map(skill => (
                   <span 
                     key={skill.id} 
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold text-primary border-2 border-primary/40 bg-primary/5"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-bold text-white bg-primary shadow-sm"
                     title={`Je hebt deze skill: ${skill.name}`}
                   >
                     <span className="material-symbols-outlined text-[12px]">check</span>
@@ -179,14 +179,14 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
                 {missingSkills.slice(0, 2).map(skill => (
                   <span 
                     key={skill.id} 
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold text-gray-400 border border-gray-200 bg-transparent"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-gray-500 border border-gray-300 bg-white/50"
                     title={`Gevraagde skill: ${skill.name}`}
                   >
                     {skill.name}
                   </span>
                 ))}
                 {(matchingSkills.length + missingSkills.length > 5) && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold text-gray-400 border border-gray-200">
+                  <span className="inline-flex items-center px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-gray-500 border border-gray-300 bg-white/50">
                     +{projectSkills.length - 5}
                   </span>
                 )}
