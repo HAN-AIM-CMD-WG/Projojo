@@ -2,6 +2,7 @@ from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends
 
 from domain.repositories import TaskRepository, UserRepository
 from auth.jwt_utils import get_token_payload
+from exceptions import ItemRetrievalException
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
 from datetime import datetime
@@ -99,8 +100,9 @@ async def create_registration(
 
     student_id = payload["sub"]  # Extract user ID from JWT
 
-    task = task_repo.get_by_id(task_id)
-    if not task:
+    try:
+        task = task_repo.get_by_id(task_id)
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
     if task.total_accepted >= task.total_needed:
@@ -133,8 +135,9 @@ async def update_registration(
     if payload["role"] not in ["supervisor", "teacher"]:
         raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen registraties bijwerken")
 
-    task = task_repo.get_by_id(task_id)
-    if not task:
+    try:
+        task = task_repo.get_by_id(task_id)
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
     if registration.accepted and task.total_accepted >= task.total_needed:
