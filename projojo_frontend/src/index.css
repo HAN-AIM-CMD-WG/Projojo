@@ -737,6 +737,16 @@
     .fade-in-up-3 { animation-delay: 0.2s; }
     .fade-in-up-4 { animation-delay: 0.3s; }
 
+    /* Simple fade-in */
+    .animate-fade-in {
+        animation: fadeIn 0.2s ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
     /* --- Image Overlay Gradient --- */
     .neu-image-overlay {
         position: absolute;

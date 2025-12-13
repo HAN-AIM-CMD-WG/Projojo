@@ -98,109 +98,172 @@ export default function TestUserSelector() {
 		return null;
 	}
 
-	return (<div className="mb-6 p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
-		<h3 className="font-bold text-orange-700 mb-2">
-			TEST GEBRUIKERS
-		</h3>
-		<div>
-			<label className="block text-sm font-medium text-orange-700 mb-1">
-				Selecteer een testgebruiker om direct in te loggen:
-			</label>
-			<div className="relative mt-2" ref={dropdownRef}>
-				<button
-					type="button"
-					className="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-orange-300 focus:outline-2 focus:-outline-offset-2 focus:outline-orange-600 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-					aria-haspopup="listbox"
-					aria-expanded={isOpen}
-					onClick={() => !isTestUsersLoading && !isLoggingIn && setIsOpen(!isOpen)}
-					disabled={isTestUsersLoading || isLoggingIn}
-					title={selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : ""}
-				>
-					<span className="col-start-1 row-start-1 flex items-center gap-3 pr-6">
-						{selectedUser && selectedUser.image_path && (
-							<img
-								src={`${API_BASE_URL}image/${selectedUser.image_path}`}
-								alt={selectedUser.full_name}
-								className="h-6 w-6 rounded-full object-cover flex-shrink-0"
-							/>
-						)}
-						<span className="block truncate">
-							{isLoggingIn ? "Inloggen..." : selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : "-- Selecteer een gebruiker --"}
-						</span>
+	// Get icon for user type
+	const getUserTypeIcon = (type) => {
+		switch (type) {
+			case 'student': return 'school';
+			case 'supervisor': return 'business';
+			case 'teacher': return 'menu_book';
+			default: return 'person';
+		}
+	};
+
+	// Get label for user type
+	const getUserTypeLabel = (type) => {
+		switch (type) {
+			case 'student': return 'Studenten';
+			case 'supervisor': return 'Begeleiders';
+			case 'teacher': return 'Docenten';
+			default: return type.charAt(0).toUpperCase() + type.slice(1) + 's';
+		}
+	};
+
+	return (
+		<div className="mb-8">
+			{/* Neumorphic container */}
+			<div className="neu-pressed rounded-2xl p-4">
+				{/* Header */}
+				<div className="flex items-center gap-2 mb-3">
+					<div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+						<span className="material-symbols-outlined text-primary text-sm">bug_report</span>
+					</div>
+					<span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+						Development Mode
 					</span>
-					<svg className="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-						<path fillRule="evenodd" d="M5.22 10.22a.75.75 0 0 1 1.06 0L8 11.94l1.72-1.72a.75.75 0 1 1 1.06 1.06l-2.25 2.25a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 0 1 0-1.06ZM10.78 5.78a.75.75 0 0 1-1.06 0L8 4.06 6.28 5.78a.75.75 0 0 1-1.06-1.06l2.25-2.25a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06Z" clipRule="evenodd" />
-					</svg>
-				</button>
+				</div>
 
-				{isOpen && (
-					<ul className="absolute z-10 mt-1 max-h-96 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-hidden sm:text-sm" tabIndex="-1" role="listbox">
-						{/* Default option */}
-						<li
-							className="relative cursor-pointer py-2 pr-9 pl-3 text-gray-900 select-none hover:bg-orange-100"
-							onClick={() => handleTestUserSelect(null)}
-						>
-							<div className="flex items-center gap-3">
-								<span className="block truncate font-normal">-- Selecteer een gebruiker --</span>
-							</div>
-							{!selectedUser && (
-								<span className="absolute inset-y-0 right-0 flex items-center pr-4 text-orange-600">
-									<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-										<path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-									</svg>
-								</span>
+				{/* Label */}
+				<p className="text-sm font-semibold text-text-secondary mb-3">
+					Selecteer een testgebruiker:
+				</p>
+
+				{/* Dropdown */}
+				<div className="relative" ref={dropdownRef}>
+					<button
+						type="button"
+						className={`w-full neu-btn-primary !rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition-all duration-200 ${
+							isOpen ? 'ring-2 ring-white/30' : ''
+						} ${isTestUsersLoading || isLoggingIn ? 'opacity-60 cursor-not-allowed' : ''}`}
+						aria-haspopup="listbox"
+						aria-expanded={isOpen}
+						onClick={() => !isTestUsersLoading && !isLoggingIn && setIsOpen(!isOpen)}
+						disabled={isTestUsersLoading || isLoggingIn}
+					>
+						<div className="flex items-center gap-3 min-w-0">
+							{selectedUser ? (
+								<>
+									{selectedUser.image_path ? (
+										<img
+											src={`${API_BASE_URL}image/${selectedUser.image_path}`}
+											alt={selectedUser.full_name}
+											className="w-8 h-8 rounded-full object-cover shrink-0 ring-2 ring-white/50 shadow-sm"
+										/>
+									) : (
+										<div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+											<span className="material-symbols-outlined text-white text-sm">
+												{getUserTypeIcon(selectedUser.type)}
+											</span>
+										</div>
+									)}
+									<div className="min-w-0">
+										<p className="text-sm font-bold text-white truncate">{selectedUser.full_name}</p>
+										<p className="text-xs text-white/70 truncate">{selectedUser.email}</p>
+									</div>
+								</>
+							) : (
+								<>
+									<div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+										<span className="material-symbols-outlined text-white/80 text-sm">person_search</span>
+									</div>
+									<span className="text-sm font-semibold text-white/90">
+										{isLoggingIn ? "Inloggen..." : isTestUsersLoading ? "Laden..." : "Kies een gebruiker"}
+									</span>
+								</>
 							)}
-						</li>
+						</div>
+						<span className={`material-symbols-outlined text-white/80 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+							expand_more
+						</span>
+					</button>
 
-						{/* Dynamically create groups based on available user types */}
-						{[...new Set(testUsers.map(user => user.type))]
-							.sort()
-							.map(userType => (
-								<div key={userType}>
-									{/* Group header */}
-									<li className="py-1 px-3 text-xs font-semibold text-orange-700 bg-orange-50 border-b border-orange-200">
-										{userType.charAt(0).toUpperCase() + userType.slice(1) + "s"}
-									</li>
-									{/* Group items */}
-									{testUsers
-										.filter(user => user.type === userType)
-										.map(user => (
-											<li
-												key={user.id}
-												className="relative cursor-pointer py-2 px-3 text-gray-900 select-none hover:bg-orange-100"
-												onClick={() => handleTestUserSelect(user)}
-												title={`${user.full_name} - ${user.email}`}
-											>
-												<div className="flex items-center gap-3">
-													{user.image_path && (
-														<img
-															src={`${API_BASE_URL}image/${user.image_path}`}
-															alt={user.full_name}
-															className="h-6 w-6 rounded-full object-cover flex-shrink-0"
-														/>
-													)}
-													<span className="block truncate font-normal">
-														{user.full_name} - {user.email}
-													</span>
-												</div>
-												{selectedUser?.id === user.id && (
-													<span className="absolute inset-y-0 right-0 flex items-center pr-4 text-orange-600">
-														<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-															<path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-														</svg>
-													</span>
-												)}
+					{/* Dropdown menu */}
+					{isOpen && (
+						<div className="absolute z-50 mt-2 w-full neu-flat rounded-xl overflow-hidden shadow-lg animate-fade-in">
+							<ul className="max-h-72 overflow-auto py-2" role="listbox">
+								{/* Reset option */}
+								<li
+									className="px-4 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-3"
+									onClick={() => handleTestUserSelect(null)}
+								>
+									<div className="w-7 h-7 rounded-full neu-pressed flex items-center justify-center shrink-0">
+										<span className="material-symbols-outlined text-gray-400 text-xs">close</span>
+									</div>
+									<span className="text-sm font-medium text-text-muted">Geen selectie</span>
+								</li>
+
+								{/* User groups */}
+								{[...new Set(testUsers.map(user => user.type))]
+									.sort()
+									.map(userType => (
+										<div key={userType}>
+											{/* Group header */}
+											<li className="px-4 py-2 flex items-center gap-2 bg-gray-50/80 border-t border-b border-gray-100">
+												<span className="material-symbols-outlined text-primary text-sm">
+													{getUserTypeIcon(userType)}
+												</span>
+												<span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+													{getUserTypeLabel(userType)}
+												</span>
 											</li>
-										))}
-								</div>
-							))
-						}
-					</ul>
+											{/* Users */}
+											{testUsers
+												.filter(user => user.type === userType)
+												.map(user => (
+													<li
+														key={user.id}
+														className={`px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 ${
+															selectedUser?.id === user.id 
+																? 'bg-primary/5 border-l-2 border-primary' 
+																: 'hover:bg-gray-50 border-l-2 border-transparent'
+														}`}
+														onClick={() => handleTestUserSelect(user)}
+													>
+														{user.image_path ? (
+															<img
+																src={`${API_BASE_URL}image/${user.image_path}`}
+																alt={user.full_name}
+																className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-white shadow-sm"
+															/>
+														) : (
+															<div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+																<span className="material-symbols-outlined text-gray-400 text-xs">person</span>
+															</div>
+														)}
+														<div className="min-w-0 flex-1">
+															<p className="text-sm font-semibold text-text-primary truncate">{user.full_name}</p>
+															<p className="text-xs text-text-muted truncate">{user.email}</p>
+														</div>
+														{selectedUser?.id === user.id && (
+															<span className="material-symbols-outlined text-primary text-sm shrink-0">check_circle</span>
+														)}
+													</li>
+												))}
+										</div>
+									))
+								}
+							</ul>
+						</div>
+					)}
+				</div>
+
+				{/* Loading indicator */}
+				{isLoggingIn && (
+					<div className="flex items-center gap-2 mt-3">
+						<div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+						<span className="text-xs font-semibold text-primary">Inloggen...</span>
+					</div>
 				)}
 			</div>
 		</div>
-		{isTestUsersLoading && <p className="text-xs text-orange-600 mt-1">Gebruikers laden...</p>}
-		{isLoggingIn && <p className="text-xs text-orange-600 mt-1">Inloggen met geselecteerde gebruiker...</p>}
-	</div>
 	);
 }

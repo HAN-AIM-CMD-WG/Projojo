@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { IMAGE_BASE_URL, getUser } from "../services";
+import { IMAGE_BASE_URL, getUser, getBusinessById } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 
 export default function Navbar() {
     const { authData, logout } = useAuth();
     const [profilePicture, setProfilePicture] = useState("/default_profile_picture.png");
+    const [businessData, setBusinessData] = useState(null);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navigate = useNavigate();
 
@@ -50,15 +51,25 @@ export default function Navbar() {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
+                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`);
                 })
         }
         if (authData.type === "supervisor") {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
+                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`);
                 })
+            
+            // Fetch business data for supervisor
+            if (authData.businessId) {
+                getBusinessById(authData.businessId)
+                    .then(data => {
+                        if (ignore) return;
+                        setBusinessData(data);
+                    })
+                    .catch(() => setBusinessData(null));
+            }
         }
 
         return () => {
@@ -143,11 +154,46 @@ export default function Navbar() {
                                 </button>
                             </li>
                             
-                            {/* Profile picture */}
+                            {/* Profile section with clickable avatar */}
                             {(authData.type === "student" || authData.type === "supervisor") && (
-                                <li className="flex items-center ml-2">
-                                    <div className="relative">
-                                        <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary">
+                                <li className="flex items-center gap-2 ml-3">
+                                    {/* Business indicator for supervisors - neumorphic logo with expanding text */}
+                                    {authData.type === "supervisor" && businessData && (
+                                        <Link 
+                                            to={`/business/${authData.businessId}`}
+                                            className="hidden md:flex items-center group"
+                                        >
+                                            {/* Neumorphic container */}
+                                            <div className="relative flex items-center neu-pressed rounded-xl p-1 group-hover:shadow-[inset_2px_2px_4px_rgba(209,217,230,0.8),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] transition-all duration-300">
+                                                {/* Logo */}
+                                                {businessData.image_path ? (
+                                                    <img 
+                                                        src={`${IMAGE_BASE_URL}${businessData.image_path}`}
+                                                        alt={businessData.name}
+                                                        className="w-8 h-8 rounded-lg object-cover shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shrink-0">
+                                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-base transition-colors">business</span>
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Expanding text container */}
+                                                <div className="overflow-hidden max-w-0 group-hover:max-w-[120px] transition-all duration-300 ease-out">
+                                                    <span className="pl-2 pr-2 text-xs font-bold text-gray-500 group-hover:text-primary whitespace-nowrap transition-colors duration-200">
+                                                        {businessData.name}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )}
+                                    
+                                    {/* Clickable Avatar */}
+                                    <Link 
+                                        to={authData.type === "student" ? `/student/${authData.userId}` : `/business/${authData.businessId}`}
+                                        className="group relative"
+                                    >
+                                        <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary group-hover:scale-105 transition-transform">
                                             <img 
                                                 src={profilePicture} 
                                                 className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
@@ -155,7 +201,7 @@ export default function Navbar() {
                                             />
                                         </div>
                                         <div className="neu-status-online absolute bottom-0 right-0"></div>
-                                    </div>
+                                    </Link>
                                 </li>
                             )}
                         </ul>
