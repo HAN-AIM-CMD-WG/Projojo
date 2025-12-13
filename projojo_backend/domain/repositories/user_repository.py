@@ -421,7 +421,7 @@ class UserRepository(BaseRepository[User]):
 
     def get_student_registrations(self, studentId) -> list[dict]:
         """
-        Get all registrations for a student with task details and registration status
+        Get all registrations for a student with task details, registration status, and business info
         """
         query = """
             match
@@ -432,13 +432,19 @@ class UserRepository(BaseRepository[User]):
                     has description $task_description,
                     has totalNeeded $total_needed;
                 $projectTask isa containsTask (project: $project, task: $task);
-                $project has id $project_id;
+                $project has id $project_id, has name $project_name;
+                $hasProjects isa hasProjects (business: $business, project: $project);
+                $business has id $business_id, has name $business_name, has imagePath $business_image;
             fetch {
                 'id': $task_id,
                 'name': $task_name,
                 'description': $task_description,
                 'total_needed': $total_needed,
                 'project_id': $project_id,
+                'project_name': $project_name,
+                'business_id': $business_id,
+                'business_name': $business_name,
+                'business_image': $business_image,
                 'is_accepted': $registration.isAccepted,
             };
         """

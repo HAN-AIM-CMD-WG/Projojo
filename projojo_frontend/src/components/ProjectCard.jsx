@@ -46,7 +46,7 @@ const statusConfig = {
  * - Entire card clickable: Primary action = navigate to detail
  * - Subtle hover feedback: Elevation change, no content replacement
  */
-export default function ProjectCard({ project, index = 0, isExpanded = false }) {
+export default function ProjectCard({ project, index = 0 }) {
   const { studentSkills } = useStudentSkills();
   
   // Get status config (Student-friendly Dutch labels)
@@ -100,13 +100,8 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
   // Animation delay based on index for staggered entrance
   const animationClass = `fade-in-up-${(index % 4) + 1}`;
 
-  // Responsive visibility classes
-  const visibilityClass = !isExpanded 
-    ? (index === 2 ? 'hidden [@media(min-width:1195px)]:block' : index === 1 ? 'hidden [@media(min-width:813px)]:block' : '')
-    : '';
-
   return (
-    <article className={`fade-in-up ${animationClass} ${visibilityClass}`}>
+    <article className={`fade-in-up ${animationClass} h-full`}>
       <Link
         to={`/projects/${project.id}`}
         className="block neu-flat-interactive h-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/30 group"

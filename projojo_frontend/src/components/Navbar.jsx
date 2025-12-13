@@ -98,7 +98,7 @@ export default function Navbar() {
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-2xl text-primary">school</span>
                         </div>
-                        <div className="hidden sm:block">
+                        <div>
                             <h1 className="font-extrabold text-lg text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
                                 Projojo
                             </h1>
@@ -134,6 +134,7 @@ export default function Navbar() {
                                         to={route.ref} 
                                         className={({ isActive }) => isActive ? activeNavLink : inactiveNavLink} 
                                         aria-current="page"
+                                        onClick={() => setIsCollapsed(true)}
                                     >
                                         {route.name}
                                     </NavLink>
@@ -146,7 +147,7 @@ export default function Navbar() {
                             {/* Sign out */}
                             <li>
                                 <button 
-                                    onClick={signOut} 
+                                    onClick={() => { setIsCollapsed(true); signOut(); }} 
                                     className="flex items-center gap-2 py-2.5 px-5 md:px-4 md:py-2 text-text-secondary font-semibold rounded-2xl hover:text-red-500 hover:bg-red-50/50 transition-all duration-200 w-full md:w-auto"
                                 >
                                     <span className="material-symbols-outlined text-lg">logout</span>
@@ -161,7 +162,8 @@ export default function Navbar() {
                                     {authData.type === "supervisor" && businessData && (
                                         <Link 
                                             to={`/business/${authData.businessId}`}
-                                            className="hidden md:flex items-center group"
+                                            className="flex items-center group"
+                                            onClick={() => setIsCollapsed(true)}
                                         >
                                             {/* Neumorphic container */}
                                             <div className="relative flex items-center neu-pressed rounded-xl p-1 group-hover:shadow-[inset_2px_2px_4px_rgba(209,217,230,0.8),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] transition-all duration-300">
@@ -178,8 +180,8 @@ export default function Navbar() {
                                                     </div>
                                                 )}
                                                 
-                                                {/* Expanding text container */}
-                                                <div className="overflow-hidden max-w-0 group-hover:max-w-[120px] transition-all duration-300 ease-out">
+                                                {/* Expanding text container - hidden on mobile */}
+                                                <div className="hidden md:block overflow-hidden max-w-0 group-hover:max-w-[120px] transition-all duration-300 ease-out">
                                                     <span className="pl-2 pr-2 text-xs font-bold text-gray-500 group-hover:text-primary whitespace-nowrap transition-colors duration-200">
                                                         {businessData.name}
                                                     </span>
@@ -192,6 +194,7 @@ export default function Navbar() {
                                     <Link 
                                         to={authData.type === "student" ? `/student/${authData.userId}` : `/business/${authData.businessId}`}
                                         className="group relative"
+                                        onClick={() => setIsCollapsed(true)}
                                     >
                                         <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary group-hover:scale-105 transition-transform">
                                             <img 

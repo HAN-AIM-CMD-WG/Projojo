@@ -200,9 +200,9 @@ export default function BusinessCard({
                     <div className="mt-5 pt-4 border-t border-gray-200/60">
                         <div className="flex items-center justify-between mb-3">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                <span className="material-symbols-outlined text-sm">psychology</span>
-                                Gevraagde skills
-                            </p>
+                            <span className="material-symbols-outlined text-sm">psychology</span>
+                            Gevraagde skills
+                        </p>
                             {matchingSkills.length > 0 && studentSkills.length > 0 && (
                                 <span className="text-xs font-bold text-primary flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">local_fire_department</span>
@@ -214,10 +214,10 @@ export default function BusinessCard({
                             {visibleSkills.map((skill) => {
                                 const isMatch = studentSkillIds.has(skill.skillId);
                                 return (
-                                    <SkillBadge
-                                        key={skill.skillId ?? skill.id}
-                                        skillName={skill.name}
-                                        isPending={skill.isPending ?? skill.is_pending}
+                                <SkillBadge
+                                    key={skill.skillId ?? skill.id}
+                                    skillName={skill.name}
+                                    isPending={skill.isPending ?? skill.is_pending}
                                         isOwn={isMatch}
                                     >
                                         {isMatch && (

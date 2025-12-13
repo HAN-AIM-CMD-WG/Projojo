@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
-import { getStudentRegistrations, getTaskSkills, cancelRegistration } from '../services';
+import { getStudentRegistrations, getTaskSkills, cancelRegistration, IMAGE_BASE_URL } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
@@ -360,6 +360,29 @@ function TaskCard({ task, status, onCancel }) {
             to={linkTo}
             className={`block neu-btn !p-4 !text-left border-l-4 ${config.borderColor}`}
         >
+            {/* Business info */}
+            {task.business_name && (
+                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+                    {task.business_image ? (
+                        <img 
+                            src={`${IMAGE_BASE_URL}${task.business_image}`}
+                            alt={task.business_name}
+                            className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-gray-200"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-gray-400 text-sm">business</span>
+                        </div>
+                    )}
+                    <div className="min-w-0">
+                        <p className="text-xs font-bold text-gray-600 truncate">{task.business_name}</p>
+                        {task.project_name && (
+                            <p className="text-[10px] text-gray-400 truncate">{task.project_name}</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Status badge */}
             <div className="mb-2">
                 <span className={config.badge}>{config.badgeText}</span>

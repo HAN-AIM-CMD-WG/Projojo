@@ -128,7 +128,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     {project.topSkills?.map((skill) => {
                         const isMatch = studentSkillIds.has(skill.skillId);
                         return (
-                            <li key={skill.skillId}>
+                        <li key={skill.skillId}>
                                 <SkillBadge 
                                     skillName={skill.name} 
                                     isPending={skill.isPending ?? skill.is_pending}
@@ -138,7 +138,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                         <span className="material-symbols-outlined text-xs mr-1">check</span>
                                     )}
                                 </SkillBadge>
-                            </li>
+                        </li>
                         );
                     })}
                             {(!project.topSkills || project.topSkills.length === 0) && (
