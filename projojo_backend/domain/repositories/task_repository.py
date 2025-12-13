@@ -325,3 +325,73 @@ class TaskRepository(BaseRepository[Task]):
         })
         
         return True
+
+    def get_pending_registrations_by_business(self, business_id: str) -> list[dict]:
+        """
+        Get all pending registrations for tasks in projects of a business.
+        Returns student info, task info, and registration details.
+        """
+        query = """
+            match
+                $business isa business, has id ~business_id;
+                $hasProjects isa hasProjects (business: $business, project: $project);
+                $project has id $project_id, has name $project_name;
+                $containsTask isa containsTask (project: $project, task: $task);
+                $task has id $task_id, has name $task_name;
+                $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has isAccepted $any; };
+                $student has id $student_id, 
+                    has fullName $student_name,
+                    has imagePath $student_image;
+            fetch {
+                'task_id': $task_id,
+                'task_name': $task_name,
+                'project_id': $project_id,
+                'project_name': $project_name,
+                'student_id': $student_id,
+                'student_name': $student_name,
+                'student_image': $student_image,
+                'motivation': $registration.description,
+                'created_at': $registration.createdAt,
+                'student_skills': [
+                    match
+                        $hasSkill isa hasSkill (student: $student, skill: $skill);
+                        $skill has isPending false;
+                    fetch {
+                        'id': $skill.id,
+                        'name': $skill.name
+                    };
+                ]
+            };
+        """
+        results = Db.read_transact(query, {"business_id": business_id})
+        return results if results else []
+
+    def get_active_students_by_business(self, business_id: str) -> list[dict]:
+        """
+        Get all students with accepted registrations for tasks in projects of a business.
+        """
+        query = """
+            match
+                $business isa business, has id ~business_id;
+                $hasProjects isa hasProjects (business: $business, project: $project);
+                $project has id $project_id, has name $project_name;
+                $containsTask isa containsTask (project: $project, task: $task);
+                $task has id $task_id, has name $task_name;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has isAccepted true;
+                $student has id $student_id, 
+                    has fullName $student_name,
+                    has imagePath $student_image;
+            fetch {
+                'task_id': $task_id,
+                'task_name': $task_name,
+                'project_id': $project_id,
+                'project_name': $project_name,
+                'student_id': $student_id,
+                'student_name': $student_name,
+                'student_image': $student_image
+            };
+        """
+        results = Db.read_transact(query, {"business_id": business_id})
+        return results if results else []

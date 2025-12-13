@@ -79,7 +79,16 @@ class ProjectRepository(BaseRepository[Project]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'createdAt': $createdAt,
-                'business': $business_id
+                'business': $business_id,
+                'tasks': [
+                    match
+                        $containsTask isa containsTask (project: $project, task: $task);
+                        $task has id $task_id, has name $task_name;
+                    fetch {
+                        'id': $task_id,
+                        'name': $task_name
+                    };
+                ]
             };
         """
         results = Db.read_transact(query, {"business_id": business_id})
@@ -119,11 +128,28 @@ class ProjectRepository(BaseRepository[Project]):
         image_path = result.get("imagePath", "")
         created_at_str = result.get("createdAt", "")
         business = result.get("business", "")
+        tasks_data = result.get("tasks", [])
 
         # Convert createdAt string to datetime
         created_at = (
             datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
         )
+
+        # Map tasks if present (simplified Task objects with just id and name)
+        tasks = None
+        if tasks_data:
+            from domain.models import Task
+            tasks = [
+                Task(
+                    id=t.get("id", ""),
+                    name=t.get("name", ""),
+                    description="",
+                    total_needed=0,
+                    project_id=id,
+                    created_at=created_at  # Use project's created_at as fallback
+                )
+                for t in tasks_data
+            ]
 
         return Project(
             id=id,
@@ -132,6 +158,7 @@ class ProjectRepository(BaseRepository[Project]):
             image_path=image_path,
             created_at=created_at,
             business_id=business,
+            tasks=tasks,
         )
 
     def check_project_exists(self, project_name: str, business_id: str) -> bool:

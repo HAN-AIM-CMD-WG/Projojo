@@ -96,6 +96,25 @@ class UserRepository(BaseRepository[User]):
 
         return self._map_supervisor(next(iter(grouped.values())))
 
+    def get_supervisor_business_id(self, supervisor_id: str) -> str | None:
+        """
+        Get the business ID for a supervisor via the manages relation.
+        Returns None if supervisor not found or has no business.
+        """
+        query = """
+            match
+                $supervisor isa supervisor, has id ~supervisor_id;
+                $business isa business, has id $business_id;
+                $manages isa manages($supervisor, $business);
+            fetch {
+                'business_id': $business_id
+            };
+        """
+        results = Db.read_transact(query, {"supervisor_id": supervisor_id})
+        if not results:
+            return None
+        return results[0]['business_id']
+
     def get_student_by_id(self, id: str) -> dict | None:
         query = """
             match

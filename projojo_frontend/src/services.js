@@ -349,6 +349,14 @@ export function cancelRegistration(taskId) {
     });
 }
 
+/**
+ * Get dashboard data for the authenticated supervisor
+ * @returns {Promise<{business_id: string, projects: Array, pending_registrations: Array, active_students: Array, stats: Object}>}
+ */
+export function getSupervisorDashboard() {
+    return fetchWithError(`${API_BASE_URL}supervisors/dashboard`);
+}
+
 //Not implemented in the backend yet
 export function updateTaskSkills(taskId, taskSkills) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {

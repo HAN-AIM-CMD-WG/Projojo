@@ -18,6 +18,21 @@ import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
 import StudentDashboard from "./pages/StudentDashboard";
+import SupervisorDashboard from "./pages/SupervisorDashboard";
+
+/**
+ * HomePage - Conditionally renders StudentDashboard or SupervisorDashboard based on user role
+ */
+function HomePage() {
+  const { authData } = useAuth();
+  
+  if (authData.type === 'supervisor') {
+    return <SupervisorDashboard />;
+  }
+  
+  // Default to StudentDashboard (which also handles non-student fallback)
+  return <StudentDashboard />;
+}
 
 export default function App() {
   const { setAuthData } = useAuth();
@@ -46,7 +61,7 @@ export default function App() {
             <Route path="/email-not-found" element={<EmailNotFound />} />
             <Route path="/" element={<LoginPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/home" element={<StudentDashboard />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="/ontdek" element={<OverviewPage />} />
             <Route path="/projects">
               <Route path="add" element={<ProjectsAddPage />} />
