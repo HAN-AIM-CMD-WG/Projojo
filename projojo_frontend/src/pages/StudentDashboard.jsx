@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
-import { getStudentRegistrations, getTaskSkills } from '../services';
+import { getStudentRegistrations, getTaskSkills, cancelRegistration } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
@@ -90,6 +90,11 @@ export default function StudentDashboard() {
     const activeTasks = registrations.filter(t => t.is_accepted === true);
     const pendingRegistrations = registrations.filter(t => t.is_accepted === null || t.is_accepted === undefined);
     const rejectedRegistrations = registrations.filter(t => t.is_accepted === false);
+
+    // Handle cancellation - remove from local state
+    const handleCancelRegistration = (taskId) => {
+        setRegistrations(prev => prev.filter(t => t.id !== taskId));
+    };
 
     // Show different dashboard for non-students
     if (authData.type !== 'student') {
@@ -195,7 +200,12 @@ export default function StudentDashboard() {
                                 ) : (
                                     <div className="space-y-3">
                                         {pendingRegistrations.map((task) => (
-                                            <TaskCard key={task.id} task={task} status="pending" />
+                                            <TaskCard 
+                                                key={task.id} 
+                                                task={task} 
+                                                status="pending" 
+                                                onCancel={handleCancelRegistration}
+                                            />
                                         ))}
                                     </div>
                                 )}
@@ -273,9 +283,43 @@ export default function StudentDashboard() {
 /**
  * Task Card component for the dashboard
  */
-function TaskCard({ task, status }) {
+function TaskCard({ task, status, onCancel }) {
     const { studentSkills } = useStudentSkills();
     const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [cancelError, setCancelError] = useState(null);
+
+    const handleCancelClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowConfirm(true);
+    };
+
+    const handleConfirmCancel = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isCancelling) return;
+        
+        setIsCancelling(true);
+        setCancelError(null);
+        
+        try {
+            await cancelRegistration(task.id);
+            if (onCancel) onCancel(task.id);
+        } catch (err) {
+            setCancelError(err.message || 'Er is iets misgegaan');
+            setIsCancelling(false);
+            setShowConfirm(false);
+        }
+    };
+
+    const handleCancelConfirm = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowConfirm(false);
+    };
     
     const statusConfig = {
         active: {
@@ -361,6 +405,60 @@ function TaskCard({ task, status }) {
                 </div>
             )}
 
+            {/* Error message */}
+            {cancelError && (
+                <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {cancelError}
+                </p>
+            )}
+
+            {/* Confirmation dialog for pending registrations */}
+            {status === 'pending' && showConfirm && (
+                <div className="mb-3 p-4 neu-pressed">
+                    <p className="text-sm text-gray-700 font-semibold mb-3 text-center">
+                        Weet je zeker dat je deze aanmelding wilt annuleren?
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleConfirmCancel}
+                            disabled={isCancelling}
+                            className="neu-btn flex-1 !bg-red-500 !text-white hover:!bg-red-600"
+                        >
+                            {isCancelling ? (
+                                <>
+                                    <span className="material-symbols-outlined text-sm animate-spin mr-1">hourglass_empty</span>
+                                    Bezig...
+                                </>
+                            ) : (
+                                <>
+                                    <span className="material-symbols-outlined text-sm mr-1">check</span>
+                                    Ja, annuleren
+                                </>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleCancelConfirm}
+                            disabled={isCancelling}
+                            className="neu-btn flex-1"
+                        >
+                            Nee, terug
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel button for pending registrations - separate row */}
+            {status === 'pending' && !showConfirm && (
+                <button
+                    onClick={handleCancelClick}
+                    className="neu-btn w-full mb-3 !text-primary"
+                >
+                    <span className="material-symbols-outlined text-sm mr-1.5">cancel</span>
+                    Aanmelding annuleren
+                </button>
+            )}
+
             {/* Footer with metadata */}
             <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-100">
                 {task.total_needed ? (
@@ -369,8 +467,9 @@ function TaskCard({ task, status }) {
                         {task.total_needed} {task.total_needed === 1 ? 'plek' : 'plekken'}
                     </span>
                 ) : <span />}
+                
                 <span className="flex items-center gap-1 text-primary font-medium">
-                    Bekijk
+                    Bekijk taak
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </span>
             </div>

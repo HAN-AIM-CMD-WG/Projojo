@@ -124,7 +124,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
     return (
         <div id={`task-${task.id}`} className="group">
-            <div className="target neu-flat p-6 transition-all duration-300 hover:shadow-lg">
+            <div className="target neu-flat-interactive p-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main content */}
                     <div className="flex-grow space-y-4">

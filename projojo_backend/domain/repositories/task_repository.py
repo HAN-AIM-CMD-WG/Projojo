@@ -282,3 +282,46 @@ class TaskRepository(BaseRepository[Task]):
             "accepted": accepted,
             "response": response
         })
+
+    def delete_registration(self, task_id: str, student_id: str) -> bool:
+        """
+        Delete a pending registration (only if not yet accepted/rejected).
+        Returns True if deleted, False if not found or already processed.
+        """
+        # First check if a pending registration exists
+        check_query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has isAccepted $any; };
+            fetch {
+                'task_id': $task.id
+            };
+        """
+        
+        results = Db.read_transact(check_query, {
+            "task_id": task_id,
+            "student_id": student_id
+        })
+        
+        if not results:
+            return False
+        
+        # Delete the registration
+        delete_query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has isAccepted $any; };
+            delete
+                $registration;
+        """
+        
+        Db.write_transact(delete_query, {
+            "task_id": task_id,
+            "student_id": student_id
+        })
+        
+        return True

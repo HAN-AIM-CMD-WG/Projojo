@@ -338,6 +338,17 @@ export function updateRegistration(registration) {
     });
 }
 
+/**
+ * Cancel a pending registration for a task
+ * @param {string} taskId - The ID of the task
+ * @returns {Promise<void>}
+ */
+export function cancelRegistration(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`, {
+        method: "DELETE",
+    });
+}
+
 //Not implemented in the backend yet
 export function updateTaskSkills(taskId, taskSkills) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {

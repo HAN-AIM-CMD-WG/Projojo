@@ -149,6 +149,33 @@ async def update_registration(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie." + str(e))
 
+@router.delete("/{task_id}/registrations")
+async def cancel_registration(
+    task_id: str = Path(..., description="Task ID"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Cancel a pending registration for a task (only if not yet accepted/rejected)
+    """
+    # Check if user is a student
+    if payload["role"] != "student":
+        raise HTTPException(status_code=403, detail="Alleen studenten kunnen hun aanmelding annuleren")
+
+    student_id = payload["sub"]  # Extract user ID from JWT
+
+    try:
+        deleted = task_repo.delete_registration(task_id, student_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=404, 
+                detail="Aanmelding niet gevonden of al verwerkt (geaccepteerd/afgewezen)"
+            )
+        return {"message": "Aanmelding succesvol geannuleerd"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het annuleren van de aanmelding")
+
 @router.post("/", response_model=Task, status_code=201)
 async def create_task(
     task_create: TaskCreate = Body(...),
