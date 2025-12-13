@@ -167,7 +167,7 @@ class BusinessRepository(BaseRepository[Business]):
 
         return associations
 
-    def get_all_with_full_nesting(self):
+    def get_all_with_full_nesting(self, include_archived: bool = False):
         query = """
         match
             $business isa business,
@@ -181,6 +181,7 @@ class BusinessRepository(BaseRepository[Business]):
             "sector": [$business.sector],
             "company_size": [$business.companySize],
             "website": [$business.website],
+            "is_archived": [$business.isArchived],
             "projects": [
                 match
                     ($business, $project) isa hasProjects;
@@ -231,7 +232,16 @@ class BusinessRepository(BaseRepository[Business]):
             ]
         };
         """
-        return Db.read_transact(query)
+        results = Db.read_transact(query)
+        
+        # Filter out archived businesses unless explicitly requested
+        if not include_archived:
+            results = [
+                b for b in results 
+                if not (b.get("is_archived") and len(b.get("is_archived")) > 0 and b.get("is_archived")[0] == True)
+            ]
+        
+        return results
 
     def create(self, name: str, as_draft: bool = False) -> Business:
         id = generate_uuid()

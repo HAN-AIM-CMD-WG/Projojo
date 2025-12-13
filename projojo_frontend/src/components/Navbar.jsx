@@ -47,29 +47,26 @@ export default function Navbar() {
     useEffect(() => {
         let ignore = false;
 
-        if (authData.type === "student") {
+        // Fetch profile picture for all user types
+        if (authData.type === "student" || authData.type === "supervisor" || authData.type === "teacher") {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
                     setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`);
                 })
+                .catch(() => {
+                    // Keep default profile picture
+                });
         }
-        if (authData.type === "supervisor") {
-            getUser(authData.userId)
+        
+        // Fetch business data for supervisor
+        if (authData.type === "supervisor" && authData.businessId) {
+            getBusinessById(authData.businessId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`);
+                    setBusinessData(data);
                 })
-            
-            // Fetch business data for supervisor
-            if (authData.businessId) {
-                getBusinessById(authData.businessId)
-                    .then(data => {
-                        if (ignore) return;
-                        setBusinessData(data);
-                    })
-                    .catch(() => setBusinessData(null));
-            }
+                .catch(() => setBusinessData(null));
         }
 
         return () => {
@@ -156,7 +153,7 @@ export default function Navbar() {
                             </li>
                             
                             {/* Profile section with clickable avatar */}
-                            {(authData.type === "student" || authData.type === "supervisor") && (
+                            {(authData.type === "student" || authData.type === "supervisor" || authData.type === "teacher") && (
                                 <li className="flex items-center gap-2 ml-3">
                                     {/* Business indicator for supervisors - neumorphic logo with expanding text */}
                                     {authData.type === "supervisor" && businessData && (
@@ -190,21 +187,59 @@ export default function Navbar() {
                                         </Link>
                                     )}
                                     
-                                    {/* Clickable Avatar */}
-                                    <Link 
-                                        to={authData.type === "student" ? `/student/${authData.userId}` : `/business/${authData.businessId}`}
-                                        className="group relative"
-                                        onClick={() => setIsCollapsed(true)}
-                                    >
-                                        <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary group-hover:scale-105 transition-transform">
-                                            <img 
-                                                src={profilePicture} 
-                                                className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
-                                                alt="Profielfoto" 
-                                            />
+                                    {/* Teacher indicator - neumorphic badge with school icon */}
+                                    {authData.type === "teacher" && (
+                                        <Link 
+                                            to="/teacher"
+                                            className="flex items-center group"
+                                            onClick={() => setIsCollapsed(true)}
+                                        >
+                                            {/* Neumorphic container */}
+                                            <div className="relative flex items-center neu-pressed rounded-xl p-1 group-hover:shadow-[inset_2px_2px_4px_rgba(209,217,230,0.8),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] transition-all duration-300">
+                                                {/* School icon */}
+                                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                                    <span className="material-symbols-outlined text-primary text-lg">school</span>
+                                                </div>
+                                                
+                                                {/* Expanding text container - hidden on mobile */}
+                                                <div className="hidden md:block overflow-hidden max-w-0 group-hover:max-w-[80px] transition-all duration-300 ease-out">
+                                                    <span className="pl-2 pr-2 text-xs font-bold text-gray-500 group-hover:text-primary whitespace-nowrap transition-colors duration-200">
+                                                        Docent
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    )}
+                                    
+                                    {/* Clickable Avatar - links to profile for students, business for supervisors */}
+                                    {(authData.type === "student" || authData.type === "supervisor") ? (
+                                        <Link 
+                                            to={authData.type === "student" ? `/student/${authData.userId}` : `/business/${authData.businessId}`}
+                                            className="group relative"
+                                            onClick={() => setIsCollapsed(true)}
+                                        >
+                                            <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary group-hover:scale-105 transition-transform">
+                                                <img 
+                                                    src={profilePicture} 
+                                                    className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
+                                                    alt="Profielfoto" 
+                                                />
+                                            </div>
+                                            <div className="neu-status-online absolute bottom-0 right-0"></div>
+                                        </Link>
+                                    ) : (
+                                        /* Non-clickable avatar for teachers */
+                                        <div className="group relative">
+                                            <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-br from-primary to-light-primary">
+                                                <img 
+                                                    src={profilePicture} 
+                                                    className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
+                                                    alt="Profielfoto" 
+                                                />
+                                            </div>
+                                            <div className="neu-status-online absolute bottom-0 right-0"></div>
                                         </div>
-                                        <div className="neu-status-online absolute bottom-0 right-0"></div>
-                                    </Link>
+                                    )}
                                 </li>
                             )}
                         </ul>
