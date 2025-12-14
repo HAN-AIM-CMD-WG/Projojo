@@ -81,8 +81,7 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
 
                     switch (errorStatus) {
                         case 401:
-                            message = message ?? "U bent niet geauthenticeerd. Log alstublieft opnieuw in.";
-                            // TODO: auto-logout user and redirect to login page
+                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
                             break;
                         case 403:
                             message = message ?? "U bent niet geautoriseerd om dit te doen.";

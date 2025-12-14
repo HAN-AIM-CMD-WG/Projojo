@@ -4,19 +4,21 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from auth.jwt_utils import get_token_payload
 
 # List of endpoints that should be excluded from JWT validation
+# These can be exact paths or prefixes ending with '*'
+# Paths are relative to the root of the API and should start with a '/'. For example, "/auth/login/*"
 EXCLUDED_ENDPOINTS = [
+    "/",  # Root endpoint
     "/docs",  # Swagger UI
     "/redoc",  # ReDoc
     "/openapi.json",  # OpenAPI schema
-    "/",  # Root endpoint
-    "/typedb/status",  # TypeDB status check
     "/auth/login/*",  # Login endpoint
     "/auth/oauth/callback/*",  # OAuth callback
     "/pdf/*",  # Public PDF access
     "/image/*",  # Public image access
 
+    "/typedb/status",  # TypeDB status check
     "/auth/test/login/*",  # Localhost testing - test login
-    "/users/", # Localhost testing - all users
+    "/users/",  # Localhost testing - all users
 ]
 
 
@@ -34,14 +36,14 @@ class JWTMiddleware(BaseHTTPMiddleware):
         if self._should_skip_jwt_validation(request.url.path):
             return await call_next(request)
 
+        # Validate JWT token and save payload in request state
         try:
             payload = get_token_payload(request)
 
             request.state.user = payload
             request.state.user_id = payload.get("sub")
             request.state.user_role = payload.get("role")
-            if "businessId" in payload:
-                request.state.business_id = payload.get("businessId")
+            request.state.business_id = payload.get("businessId") if "businessId" in payload else None
         except HTTPException as e:
             return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
         except Exception as e:
