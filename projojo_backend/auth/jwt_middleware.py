@@ -27,10 +27,17 @@ class JWTMiddleware(BaseHTTPMiddleware):
         """
         Middleware to validate JWT tokens on each request.
         Excludes specified endpoints from JWT validation.
+        Also sets request state with default or extracted values.
         """
         # Allow OPTIONS requests (CORS preflight) without JWT validation
         if request.method == "OPTIONS":
             return await call_next(request)
+
+        # Initialize request state with default values (for unauthenticated requests)
+        request.state.user = None
+        request.state.user_id = None
+        request.state.user_role = None
+        request.state.business_id = None
 
         # Check if the request path should be excluded from JWT validation
         if self._should_skip_jwt_validation(request.url.path):
