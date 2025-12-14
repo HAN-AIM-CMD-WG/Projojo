@@ -123,9 +123,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const spotsAvailable = task.total_needed - task.total_accepted;
 
     return (
-        <div id={`task-${task.id}`} className="group">
-            <div className="target neu-flat-interactive p-6">
-                <div className="flex flex-col lg:flex-row gap-6">
+        <div id={`task-${task.id}`} className="group h-full">
+            <div className="target neu-flat p-6 h-full flex flex-col">
+                <div className="flex flex-col lg:flex-row gap-6 flex-grow">
                     {/* Main content */}
                     <div className="flex-grow space-y-4">
                         <div className="flex items-start gap-3">
@@ -184,7 +184,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     </div>
 
                     {/* Sidebar with stats and actions */}
-                    <div className="lg:w-64 shrink-0 flex flex-col gap-3">
+                    <div className="lg:w-64 shrink-0 flex flex-col gap-3 lg:justify-between">
                         {/* Stats */}
                         <div className="neu-pressed p-4 rounded-xl space-y-3">
                             <div className="flex items-center gap-2">

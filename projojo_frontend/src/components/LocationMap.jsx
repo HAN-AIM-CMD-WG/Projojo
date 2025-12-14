@@ -28,7 +28,8 @@ export default function LocationMap({ address, name, coordinates, height = "200p
 
     // Default center (Netherlands) if no address/coordinates
     const defaultCenter = [52.1326, 5.2913];
-    const defaultZoom = 13;
+    // Zoom level 8 shows a good portion of the Netherlands region
+    const defaultZoom = 8;
 
     useEffect(() => {
         // If coordinates are provided, use them directly

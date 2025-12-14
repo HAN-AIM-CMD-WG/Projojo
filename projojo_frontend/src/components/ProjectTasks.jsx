@@ -86,23 +86,24 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
 
             <Alert text={error} />
             
-            <div className="flex flex-col gap-4">
-                {isEmpty ? (
-                    <div className="neu-pressed p-8 rounded-2xl text-center">
-                        <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">inbox</span>
-                        <p className="text-gray-500">Er zijn nog geen taken voor dit project</p>
-                    </div>
-                ) : (
-                    tasks.map((task, index) => {
-                    const isLast = index === tasks.length - 1;
-                    return (
-                        <div
-                            ref={(el) => {
-                                taskRefs.current[task.id] = el;
-                                if (isLast && lastTaskRef) lastTaskRef.current = el;
-                            }}
-                            key={task.id}
+            {isEmpty ? (
+                <div className="neu-pressed p-8 rounded-2xl text-center">
+                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">inbox</span>
+                    <p className="text-gray-500">Er zijn nog geen taken voor dit project</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    {tasks.map((task, index) => {
+                        const isLast = index === tasks.length - 1;
+                        return (
+                            <div
+                                ref={(el) => {
+                                    taskRefs.current[task.id] = el;
+                                    if (isLast && lastTaskRef) lastTaskRef.current = el;
+                                }}
+                                key={task.id}
                                 id={`task-${task.id}`}
+                                className="h-full"
                             >
                                 <Task 
                                     task={task} 
@@ -113,9 +114,9 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                                 />
                             </div>
                         );
-                    })
-                )}
-            </div>
+                    })}
+                </div>
+            )}
         </div>
     )
 }
