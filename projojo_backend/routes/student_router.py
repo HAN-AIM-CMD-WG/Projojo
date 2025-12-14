@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Depends, UploadFile, File, Form
-from auth.jwt_utils import get_token_payload
+from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form
+from auth.permissions import auth
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
 
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_students():
     """
     Get all students for debugging purposes
@@ -20,28 +21,30 @@ async def get_all_students():
     return students
 
 
-@router.get("/{id}/skills")
-async def get_student_skills(id: str = Path(..., description="Student ID")):
+@router.get("/{student_id}/skills")
+@auth(role="authenticated")
+async def get_student_skills(student_id: str = Path(..., description="Student ID")):
     """
     Get all skills for a student
     """
-    student = user_repo.get_student_by_id(id)
+    student = user_repo.get_student_by_id(student_id)
 
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
 
-@router.put("/{id}/skills")
+@router.put("/{student_id}/skills")
+@auth(role="student", owner_id_key="student_id")
 async def update_student_skills(
-    id: str = Path(..., description="Student ID"),
+    student_id: str = Path(..., description="Student ID"),
     skills: list[str] = Body(..., description="List of skill IDs"),
 ):
     """
     Update skills for a student
     """
     try:
-        skill_repo.update_student_skills(id, skills)
+        skill_repo.update_student_skills(student_id, skills)
         return {"message": "Skills succesvol bijgewerkt"}
     except Exception:
         raise HTTPException(
@@ -51,18 +54,15 @@ async def update_student_skills(
 
 
 @router.patch("/{student_id}/skills/{skill_id}")
+@auth(role="student", owner_id_key="student_id")
 async def update_student_skill_description(
     student_id: str = Path(..., description="Student ID"),
     skill_id: str = Path(..., description="Skill ID"),
-    skill: StudentSkill = Body(..., description="Skill object with updated description"),
-    payload: dict = Depends(get_token_payload)
+    skill: StudentSkill = Body(..., description="Skill object with updated description")
 ):
     """
     Update a specific skill's description for a student
     """
-    if payload["role"] != "student" or payload["sub"] != student_id:
-        raise HTTPException(status_code=403, detail="Studenten kunnen alleen hun eigen skills bijwerken")
-
     user = user_repo.get_student_by_id(student_id)
     if not user:
         raise HTTPException(status_code=404, detail="Student bestaat niet")
@@ -81,36 +81,30 @@ async def update_student_skill_description(
         )
 
 @router.get("/registrations")
-async def get_student_registrations(payload: dict = Depends(get_token_payload)) -> list[str]:
+@auth(role="student")
+async def get_student_registrations(request: Request) -> list[str]:
     """
     Get all student registrations for debugging purposes
     """
-    if payload["role"] != "student":
-        raise HTTPException(status_code=403, detail="Alleen studenten kunnen hun registraties bekijken")
-
-    student_id = payload["sub"]
+    student_id = request.state.user_id
     registrations = user_repo.get_student_registrations(student_id)
     return registrations
 
 
-@router.put("/{id}")
+@router.put("/{student_id}")
+@auth(role="student", owner_id_key="student_id")
 async def update_student(
-    id: str = Path(..., description="Student ID"),
+    student_id: str = Path(..., description="Student ID"),
     description: str = Form(None),
     profilePicture: UploadFile = File(None),
     cv: UploadFile = File(None),
-    cv_deleted: str = Form(None),
-    payload: dict = Depends(get_token_payload)
+    cv_deleted: str = Form(None)
 ):
     """
     Update student profile information (description, profile picture, CV)
     """
-    # Verify the student is updating their own profile
-    if payload.get("role") != "student" or payload.get("sub") != id:
-        raise HTTPException(status_code=403, detail="Je kunt alleen je eigen profiel aanpassen")
-
     # Verify student exists
-    student = user_repo.get_student_by_id(id)
+    student = user_repo.get_student_by_id(student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student niet gevonden")
 
@@ -135,7 +129,7 @@ async def update_student(
 
         # Update student in database
         user_repo.update_student(
-            id=id,
+            id=student_id,
             description=description,
             image_path=image_filename,
             cv_path=cv_filename

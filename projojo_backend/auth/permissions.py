@@ -185,7 +185,7 @@ async def _validate_ownership(
     """
     if user_role == "student":
         # Students can only access their own profile
-        if owner_key == "user_id":
+        if owner_key in ["user_id", "student_id"]:
             return user_id == resource_id
         else:
             # Students shouldn't be accessing other resource types by ID
@@ -239,7 +239,7 @@ async def _check_supervisor_ownership(
             # Direct comparison: supervisor's company ID must match resource ID
             return supervisor_company_id == resource_id
 
-        elif resource_key == "user_id":
+        elif resource_key in ["user_id", "supervisor_id"]:
             # Check if the user belongs to the supervisor's company
             user_repo = UserRepository()
             user = user_repo.get_by_id(resource_id)

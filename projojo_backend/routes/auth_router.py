@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from domain.repositories.user_repository import UserRepository
 from auth.oauth_config import oauth_client
 from auth.jwt_utils import create_jwt_token
+from auth.permissions import auth
 from service.auth_service import AuthService
 import os
 from urllib.parse import urlparse
@@ -36,6 +37,7 @@ def get_frontend_url_from_login(request: Request) -> str:
 
 
 @router.get("/login/{provider}")
+@auth(role="unauthenticated")
 async def auth_login(
     request: Request,
     provider: str
@@ -59,6 +61,7 @@ async def auth_login(
 
 
 @router.get("/callback/{provider}")
+@auth(role="unauthenticated")
 async def auth_callback(
     request: Request,
     provider: str,
@@ -85,6 +88,7 @@ async def auth_callback(
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
 
 @router.post("/test/login/{user_id}")
+@auth(role="unauthenticated")
 async def test_login(user_id: str, request: Request):
     """
     LOCALHOST ONLY: Generate a JWT token for any user ID for testing purposes.
