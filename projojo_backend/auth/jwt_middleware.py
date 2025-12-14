@@ -2,6 +2,7 @@ from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from auth.jwt_utils import get_token_payload
+from auth.permissions import set_request_context
 
 # List of endpoints that should be excluded from JWT validation
 # These can be exact paths or prefixes ending with '*'
@@ -27,8 +28,11 @@ class JWTMiddleware(BaseHTTPMiddleware):
         """
         Middleware to validate JWT tokens on each request.
         Excludes specified endpoints from JWT validation.
-        Also sets request state with default or extracted values.
+        Stores request in context variable for auth decorators.
         """
+        # Store request in context variable for use by decorators
+        set_request_context(request)
+
         # Allow OPTIONS requests (CORS preflight) without JWT validation
         if request.method == "OPTIONS":
             return await call_next(request)

@@ -1,5 +1,17 @@
 from functools import wraps
 from fastapi import HTTPException, Request
+from contextvars import ContextVar
+
+# Store the current request in a context variable (thread-safe, request-scoped)
+_request_context: ContextVar[Request | None] = ContextVar('request', default=None)
+
+def set_request_context(request: Request) -> None:
+    """Set the current request in the context variable. Called by middleware."""
+    _request_context.set(request)
+
+def get_request_context() -> Request | None:
+    """Get the current request from the context variable. Used by decorators."""
+    return _request_context.get()
 
 
 def auth(role: str, owner_id_key: str | None = None):
@@ -7,20 +19,22 @@ def auth(role: str, owner_id_key: str | None = None):
     Authorization decorator for FastAPI endpoints.
 
     Usage:
-        @router.get("/tasks")
-        @auth(role="authenticated")
-        async def get_tasks(request: Request):
-            pass
+    ```python
+    @router.get("/tasks")
+    @auth(role="authenticated")
+    async def get_tasks():
+        ...
 
-        @router.put("/{user_id}")
-        @auth(role="student", owner_id_key="user_id")
-        async def update_student(request: Request, user_id: str):
-            pass
+    @router.put("/{user_id}")
+    @auth(role="student", owner_id_key="user_id")
+    async def update_student(user_id: str):
+        ...
 
-        @router.get("/login")
-        @auth(role="unauthenticated")
-        async def login(request: Request):
-            pass
+    @router.get("/login")
+    @auth(role="unauthenticated")
+    async def login():
+        ...
+    ```
 
     Args:
         role: Required role for access. Options:
@@ -30,16 +44,21 @@ def auth(role: str, owner_id_key: str | None = None):
             - "supervisor": Supervisors and teachers
             - "teacher": Only teachers
 
-        owner_id_key: Optional path parameter name to check resource ownership.
-                    If provided, validates that the current user owns the resource.
-                    - For students: checks if user_id matches the resource owner
-                    - For supervisors: checks if the resource belongs to their company
-                    - For teachers: ownership check is bypassed
-                    Example: owner_id_key="task_id" will extract the task_id from path params
+        owner_id_key: Optional path parameter name to check resource ownership. If provided, validates that the current user owns the resource.
+            - For students: checks if user_id matches the resource owner
+            - For supervisors: checks if the resource belongs to their company
+            - For teachers: ownership check is bypassed
+
+            Example: `owner_id_key="task_id"` will extract the same-named parameter from path params e.g. `"/tasks/{task_id}"` and validate ownership.
     """
     def decorator(func):
         @wraps(func)
-        async def wrapper(request: Request, *args, **kwargs):
+        async def wrapper(*args, **kwargs):
+            # Extract Request from context variable (set by middleware)
+            request = get_request_context()
+            if not request:
+                raise HTTPException(status_code=500, detail="Request context not found")
+
             # Extract auth info from request state (set by JWT middleware)
             user_id = request.state.user_id
             user_role = request.state.user_role
@@ -75,7 +94,7 @@ def auth(role: str, owner_id_key: str | None = None):
                     )
 
             # All checks passed, call the endpoint function
-            return await func(request, *args, **kwargs)
+            return await func(*args, **kwargs)
 
         return wrapper
     return decorator
