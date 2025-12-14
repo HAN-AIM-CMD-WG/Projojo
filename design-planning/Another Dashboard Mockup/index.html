@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Werkspot Campus</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="8" fill="#2563EB"/>
+                    <path d="M12 10L16 14L20 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 18L16 22L20 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="logo-text">Werkspot Campus</span>
+            </div>
+        </div>
+
+        <div class="user-mini">
+            <div class="user-avatar">SP</div>
+            <div class="user-info">
+                <div class="user-name">Hi, Sophie</div>
+                <div class="user-status">Student</div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                </svg>
+                <span>Zoeken & Opdrachten</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                </svg>
+                <span>Bedrijven</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                <span>Sollicitaties</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span>Berichten</span>
+                <span class="badge">3</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <span>Agenda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Profiel & CV</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6m5.66-13.66l-4.24 4.24m-2.83 2.83l-4.24 4.24M23 12h-6m-6 0H1m18.66 5.66l-4.24-4.24m-2.83-2.83l-4.24-4.24"/>
+                </svg>
+                <span>Instellingen</span>
+            </a>
+            <a href="#" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>Help & Support</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- Topbar -->
+        <header class="topbar">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <div class="topbar-left">
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Welkom terug, Sophie 👋</p>
+            </div>
+            <div class="topbar-center">
+                <div class="search-bar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" placeholder="Zoek naar opdrachten, bedrijven of sleutelwoorden…">
+                </div>
+            </div>
+            <div class="topbar-right">
+                <button class="notification-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-dropdown">
+                    <button class="user-dropdown-btn">
+                        <div class="user-avatar small">SP</div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <main class="dashboard-content">
+            <!-- Hero / Status Overview -->
+            <section class="hero-card">
+                <div class="hero-content">
+                    <h2>Goedemorgen, Sophie 👋</h2>
+                    <p>Dit is het overzicht van je kansen, sollicitaties en afspraken.</p>
+                    
+                    <div class="kpi-row">
+                        <div class="kpi-item">
+                            <div class="kpi-number">3</div>
+                            <div class="kpi-label">Actieve sollicitaties</div>
+                            <div class="kpi-sublabel">wachtend op reactie</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-number">5</div>
+                            <div class="kpi-label">Nieuwe matches</div>
+                            <div class="kpi-sublabel">op basis van jouw profiel</div>
+                        </div>
+                        <div class="kpi-item">
+                            <div class="kpi-number">2</div>
+                            <div class="kpi-label">Aankomende afspraken</div>
+                            <div class="kpi-sublabel">deze week</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-actions">
+                    <button class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        Nieuwe opdracht zoeken
+                    </button>
+                    <button class="btn btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Profiel optimaliseren
+                    </button>
+                </div>
+            </section>
+
+            <!-- Profile Status -->
+            <aside class="profile-status-card">
+                <h3>Profielstatus</h3>
+                <p class="card-subtitle">Hoe completer je profiel, hoe beter de matches.</p>
+                
+                <div class="progress-wrapper">
+                    <div class="progress-header">
+                        <span>Je profiel is 70% compleet</span>
+                        <span class="progress-percentage">70%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 70%"></div>
+                    </div>
+                </div>
+
+                <ul class="todo-list">
+                    <li class="todo-item completed">
+                        <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                        <span>Basisgegevens ingevuld</span>
+                    </li>
+                    <li class="todo-item">
+                        <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                        <span>Upload je CV (PDF)</span>
+                    </li>
+                    <li class="todo-item">
+                        <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                        <span>Vul je vaardigheden in</span>
+                    </li>
+                    <li class="todo-item">
+                        <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                        <span>Koppel je LinkedIn-profiel</span>
+                    </li>
+                </ul>
+
+                <button class="btn btn-primary btn-block">Profiel bijwerken</button>
+            </aside>
+
+            <!-- Recommended Companies -->
+            <section class="recommended-companies-card">
+                <div class="card-header">
+                    <div>
+                        <h3>Aanbevolen bedrijven voor jou</h3>
+                        <p class="card-subtitle">Gebaseerd op jouw studie en voorkeuren.</p>
+                    </div>
+                    <div class="filter-dropdown">
+                        <button class="dropdown-btn">
+                            <span>Regio: Randstad</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-pills">
+                    <button class="pill active">Alle</button>
+                    <button class="pill">Stage</button>
+                    <button class="pill">Bijbaan</button>
+                    <button class="pill">Afstudeeropdracht</button>
+                    <button class="pill">Flex-opdrachten</button>
+                </div>
+
+                <div class="company-grid">
+                    <div class="company-card">
+                        <div class="company-header">
+                            <div class="company-logo">TL</div>
+                            <button class="favorite-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <h4>TechLabs B.V.</h4>
+                        <div class="company-meta">Tech · Scale-up · Amsterdam</div>
+                        <div class="company-badges">
+                            <span class="badge-tag stage">Stage</span>
+                            <span class="badge-tag">24-32u</span>
+                            <span class="badge-tag">€€</span>
+                        </div>
+                        <div class="match-score">
+                            <div class="match-dots">
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot"></span>
+                            </div>
+                            <span class="match-label">Match-score: 4/5</span>
+                        </div>
+                        <p class="match-reason">Gebaseerd op jouw studie Informatica</p>
+                        <button class="btn btn-primary btn-small">Bekijk opdrachten</button>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-header">
+                            <div class="company-logo green">DS</div>
+                            <button class="favorite-btn active">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <h4>Design Studio</h4>
+                        <div class="company-meta">Design · Startup · Utrecht</div>
+                        <div class="company-badges">
+                            <span class="badge-tag bijbaan">Bijbaan</span>
+                            <span class="badge-tag">12-16u</span>
+                            <span class="badge-tag">€€€</span>
+                        </div>
+                        <div class="match-score">
+                            <div class="match-dots">
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                            </div>
+                            <span class="match-label">Match-score: 5/5</span>
+                        </div>
+                        <p class="match-reason">Gebaseerd op jouw studie Informatica</p>
+                        <button class="btn btn-primary btn-small">Bekijk opdrachten</button>
+                    </div>
+
+                    <div class="company-card">
+                        <div class="company-header">
+                            <div class="company-logo orange">MC</div>
+                            <button class="favorite-btn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <h4>MediaCorp</h4>
+                        <div class="company-meta">Media · Enterprise · Rotterdam</div>
+                        <div class="company-badges">
+                            <span class="badge-tag afstuderen">Afstuderen</span>
+                            <span class="badge-tag">32-40u</span>
+                            <span class="badge-tag">€€</span>
+                        </div>
+                        <div class="match-score">
+                            <div class="match-dots">
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot filled"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                            <span class="match-label">Match-score: 3/5</span>
+                        </div>
+                        <p class="match-reason">Gebaseerd op jouw studie Informatica</p>
+                        <button class="btn btn-primary btn-small">Bekijk opdrachten</button>
+                    </div>
+                </div>
+
+                <a href="#" class="card-footer-link">
+                    Bekijk alle bedrijven
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </a>
+            </section>
+
+            <!-- Applications List -->
+            <section class="applications-card">
+                <div class="card-header">
+                    <h3>Lopende sollicitaties</h3>
+                    <div class="filter-dropdown">
+                        <button class="dropdown-btn">
+                            <span>Sorteren op: Laatst bijgewerkt</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="applications-list">
+                    <div class="application-item">
+                        <div class="application-logo">TL</div>
+                        <div class="application-content">
+                            <div class="application-header">
+                                <div>
+                                    <h4>TechLabs B.V.</h4>
+                                    <p class="application-position">Junior Frontend Stage</p>
+                                </div>
+                                <span class="status-badge ingediend">Ingediend</span>
+                            </div>
+                            <div class="application-meta">
+                                <span class="meta-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    Ingediend op: 12 nov 2025
+                                </span>
+                            </div>
+                        </div>
+                        <div class="application-actions">
+                            <button class="btn btn-secondary btn-small">Details</button>
+                            <button class="icon-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="application-item">
+                        <div class="application-logo green">DS</div>
+                        <div class="application-content">
+                            <div class="application-header">
+                                <div>
+                                    <h4>Design Studio</h4>
+                                    <p class="application-position">UX Design Bijbaan</p>
+                                </div>
+                                <span class="status-badge uitnodiging">Uitnodiging gesprek</span>
+                            </div>
+                            <div class="application-meta">
+                                <span class="meta-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    Ingediend op: 8 nov 2025
+                                </span>
+                                <span class="meta-item highlight">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    Laatst bijgewerkt: 15 nov 2025
+                                </span>
+                            </div>
+                        </div>
+                        <div class="application-actions">
+                            <button class="btn btn-secondary btn-small">Details</button>
+                            <button class="icon-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="application-item">
+                        <div class="application-logo orange">MC</div>
+                        <div class="application-content">
+                            <div class="application-header">
+                                <div>
+                                    <h4>MediaCorp</h4>
+                                    <p class="application-position">Data Science Afstudeeropdracht</p>
+                                </div>
+                                <span class="status-badge behandeling">In behandeling</span>
+                            </div>
+                            <div class="application-meta">
+                                <span class="meta-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    Ingediend op: 5 nov 2025
+                                </span>
+                            </div>
+                        </div>
+                        <div class="application-actions">
+                            <button class="btn btn-secondary btn-small">Details</button>
+                            <button class="icon-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="#" class="card-footer-link">
+                    Bekijk alle sollicitaties
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </a>
+            </section>
+
+            <!-- Messages Widget -->
+            <section class="messages-card">
+                <div class="card-header">
+                    <h3>Berichten</h3>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active">Inbox</button>
+                    <button class="tab">
+                        Uitnodigingen
+                        <span class="tab-badge">2</span>
+                    </button>
+                    <button class="tab">Systeem</button>
+                </div>
+
+                <div class="tab-content">
+                    <div class="message-list">
+                        <div class="message-item unread">
+                            <div class="message-avatar">JS</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <div>
+                                        <h4>Design Studio</h4>
+                                        <p class="message-sender">Julia Schmidt</p>
+                                    </div>
+                                    <span class="message-time">2 uur geleden</span>
+                                </div>
+                                <p class="message-subject">Uitnodiging voor kennismakingsgesprek</p>
+                                <span class="new-badge">Nieuw</span>
+                            </div>
+                        </div>
+
+                        <div class="message-item unread">
+                            <div class="message-avatar orange">MV</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <div>
+                                        <h4>MediaCorp</h4>
+                                        <p class="message-sender">Mark van der Berg</p>
+                                    </div>
+                                    <span class="message-time">5 uur geleden</span>
+                                </div>
+                                <p class="message-subject">Update over je sollicitatie</p>
+                                <span class="new-badge">Nieuw</span>
+                            </div>
+                        </div>
+
+                        <div class="message-item">
+                            <div class="message-avatar">TL</div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <div>
+                                        <h4>TechLabs B.V.</h4>
+                                        <p class="message-sender">Laura Peters</p>
+                                    </div>
+                                    <span class="message-time">1 dag geleden</span>
+                                </div>
+                                <p class="message-subject">Bevestiging ontvangst sollicitatie</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-block">Naar berichten</button>
+            </section>
+
+            <!-- Agenda Widget -->
+            <section class="agenda-card">
+                <div class="card-header">
+                    <h3>Deze week</h3>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active">Week</button>
+                        <button class="toggle-btn">Maand</button>
+                    </div>
+                </div>
+
+                <div class="agenda-list">
+                    <div class="agenda-item">
+                        <div class="agenda-date">
+                            <div class="date-pill">Di 18 nov</div>
+                        </div>
+                        <div class="agenda-content">
+                            <div class="agenda-time">15:30</div>
+                            <h4>Online kennismakingsgesprek – Design Studio</h4>
+                            <span class="agenda-label gesprek">Sollicitatiegesprek</span>
+                        </div>
+                        <button class="icon-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="agenda-item">
+                        <div class="agenda-date">
+                            <div class="date-pill">Wo 19 nov</div>
+                        </div>
+                        <div class="agenda-content">
+                            <div class="agenda-time">23:59</div>
+                            <h4>Deadline sollicitatie – TechLabs Afstudeeropdracht</h4>
+                            <span class="agenda-label deadline">Deadline</span>
+                        </div>
+                        <button class="icon-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="agenda-item">
+                        <div class="agenda-date">
+                            <div class="date-pill">Do 20 nov</div>
+                        </div>
+                        <div class="agenda-content">
+                            <div class="agenda-time">14:00</div>
+                            <h4>Carrièrebeurs – Rotterdam Ahoy</h4>
+                            <span class="agenda-label event">Event</span>
+                        </div>
+                        <button class="icon-btn">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <button class="btn btn-secondary btn-block">Volledige agenda bekijken</button>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="quick-actions-card">
+                <h3>Snel aan de slag</h3>
+                
+                <div class="quick-actions-grid">
+                    <button class="quick-action-tile">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <span>CV uploaden</span>
+                    </button>
+                    <button class="quick-action-tile">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        <span>Nieuwe stage zoeken</span>
+                    </button>
+                    <button class="quick-action-tile">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="21" x2="4" y2="14"/>
+                            <line x1="4" y1="10" x2="4" y2="3"/>
+                            <line x1="12" y1="21" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12" y2="3"/>
+                            <line x1="20" y1="21" x2="20" y2="16"/>
+                            <line x1="20" y1="12" x2="20" y2="3"/>
+                            <line x1="1" y1="14" x2="7" y2="14"/>
+                            <line x1="9" y1="8" x2="15" y2="8"/>
+                            <line x1="17" y1="16" x2="23" y2="16"/>
+                        </svg>
+                        <span>Je skills bijwerken</span>
+                    </button>
+                    <button class="quick-action-tile">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                        </svg>
+                        <span>Interesseprofiel aanpassen</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Followed Companies -->
+            <section class="followed-companies-card">
+                <div class="card-header">
+                    <h3>Bedrijven die je volgt</h3>
+                    <a href="#" class="text-link">Alle bedrijven</a>
+                </div>
+
+                <div class="followed-companies-list">
+                    <div class="followed-company-item">
+                        <div class="company-logo">TL</div>
+                        <div class="followed-company-content">
+                            <h4>TechLabs B.V.</h4>
+                            <div class="company-status">
+                                <span class="status-dot active"></span>
+                                <span>Open voor stages</span>
+                            </div>
+                            <div class="company-info">
+                                <span class="info-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    3 openstaande opdrachten
+                                </span>
+                                <span class="info-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    Amsterdam
+                                </span>
+                            </div>
+                        </div>
+                        <div class="followed-company-actions">
+                            <button class="btn btn-secondary btn-small">Bekijk bedrijfspagina</button>
+                            <button class="icon-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="followed-company-item">
+                        <div class="company-logo green">DS</div>
+                        <div class="followed-company-content">
+                            <h4>Design Studio</h4>
+                            <div class="company-status">
+                                <span class="status-dot active"></span>
+                                <span>Open voor bijbanen</span>
+                            </div>
+                            <div class="company-info">
+                                <span class="info-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    2 openstaande opdrachten
+                                </span>
+                                <span class="info-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    Utrecht
+                                </span>
+                            </div>
+                        </div>
+                        <div class="followed-company-actions">
+                            <button class="btn btn-secondary btn-small">Bekijk bedrijfspagina</button>
+                            <button class="icon-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="followed-company-item">
+                        <div class="company-logo orange">MC</div>
+                        <div class="followed-company-content">
+                            <h4>MediaCorp</h4>
+                            <div class="company-status">
+                                <span class="status-dot inactive"></span>
+                                <span>Geen openstaande opdrachten</span>
+                            </div>
+                            <div class="company-info">
+                                <span class="info-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    0 openstaande opdrachten
+                                </span>
+                                <span class="info-item">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                        <circle cx="12" cy="10" r="3"/>
+                                    </svg>
+                                    Rotterdam
+                                </span>
+                            </div>
+                        </div>
+                        <div class="followed-company-actions">
+                            <button class="btn btn-secondary btn-small">Bekijk bedrijfspagina</button>
+                            <button class="icon-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+

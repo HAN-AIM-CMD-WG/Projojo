@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empty States & Loading Demo - Werkspot Campus</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional styles for empty states and loading demo */
+        .demo-container {
+            padding: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .demo-section {
+            margin-bottom: 48px;
+        }
+        
+        .demo-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 24px;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+        }
+        
+        /* Empty State Styles */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            background: var(--color-surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+        }
+        
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--color-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-secondary);
+        }
+        
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        
+        /* Loading State Styles */
+        .loading-card {
+            background: var(--color-surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+            padding: 24px;
+        }
+        
+        .skeleton-text {
+            height: 16px;
+            background: linear-gradient(90deg, var(--color-border-light) 25%, var(--color-border) 50%, var(--color-border-light) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .skeleton-text.title {
+            height: 24px;
+            width: 60%;
+            margin-bottom: 16px;
+        }
+        
+        .skeleton-text.short {
+            width: 40%;
+        }
+        
+        .skeleton-text.medium {
+            width: 70%;
+        }
+        
+        .skeleton-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, var(--color-border-light) 25%, var(--color-border) 50%, var(--color-border-light) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        .skeleton-company-card {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .skeleton-company-content {
+            flex: 1;
+        }
+        
+        .skeleton-button {
+            height: 40px;
+            width: 120px;
+            background: linear-gradient(90deg, var(--color-border-light) 25%, var(--color-border) 50%, var(--color-border-light) 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 8px;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Spinner */
+        .spinner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            background: var(--color-surface);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--color-border);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--color-border);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .spinner-text {
+            font-size: 14px;
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body style="background: var(--color-bg);">
+    <div class="demo-container">
+        <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 48px; color: var(--color-text-primary);">
+            Empty States & Loading States Demo
+        </h1>
+        
+        <!-- Empty States Section -->
+        <div class="demo-section">
+            <h2 class="demo-title">Empty States</h2>
+            <div class="demo-grid">
+                <!-- No Applications -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                    </div>
+                    <h3>Nog geen sollicitaties</h3>
+                    <p>Je hebt nog geen sollicitaties lopen. Begin met zoeken naar je ideale stage of bijbaan.</p>
+                    <button class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                        Zoek een opdracht
+                    </button>
+                </div>
+                
+                <!-- No Messages -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                    </div>
+                    <h3>Geen berichten</h3>
+                    <p>Je inbox is leeg. Zodra bedrijven je benaderen, verschijnen je berichten hier.</p>
+                    <button class="btn btn-secondary">Ontdek bedrijven</button>
+                </div>
+                
+                <!-- No Recommendations -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3>Geen aanbevelingen gevonden</h3>
+                    <p>We hebben nog geen matches gevonden. Werk je profiel bij om betere suggesties te krijgen.</p>
+                    <button class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Profiel bijwerken
+                    </button>
+                </div>
+                
+                <!-- No Calendar Events -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <h3>Geen afspraken gepland</h3>
+                    <p>Je hebt deze week geen afspraken of deadlines. Zo te zien heb je het rustig!</p>
+                    <button class="btn btn-secondary">Volledige agenda</button>
+                </div>
+                
+                <!-- No Followed Companies -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </div>
+                    <h3>Geen gevolgde bedrijven</h3>
+                    <p>Begin met het volgen van bedrijven om updates te ontvangen over nieuwe opdrachten en kansen.</p>
+                    <button class="btn btn-primary">Ontdek bedrijven</button>
+                </div>
+                
+                <!-- No Search Results -->
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                            <line x1="11" y1="8" x2="11" y2="14"/>
+                            <line x1="8" y1="11" x2="14" y2="11"/>
+                        </svg>
+                    </div>
+                    <h3>Geen resultaten</h3>
+                    <p>We konden geen opdrachten vinden die aan je zoekcriteria voldoen. Probeer andere filters of zoektermen.</p>
+                    <button class="btn btn-secondary">Filters wissen</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading States Section -->
+        <div class="demo-section">
+            <h2 class="demo-title">Loading States</h2>
+            <div class="demo-grid">
+                <!-- Spinner Loading -->
+                <div class="spinner-container">
+                    <div class="spinner"></div>
+                    <p class="spinner-text">Gegevens laden...</p>
+                </div>
+                
+                <!-- Skeleton Company Card -->
+                <div class="loading-card">
+                    <h3 style="margin-bottom: 16px;">Bedrijven laden</h3>
+                    <div class="skeleton-company-card">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-company-content">
+                            <div class="skeleton-text title"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-company-card">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-company-content">
+                            <div class="skeleton-text title"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-company-card">
+                        <div class="skeleton-avatar"></div>
+                        <div class="skeleton-company-content">
+                            <div class="skeleton-text title"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skeleton Application List -->
+                <div class="loading-card">
+                    <h3 style="margin-bottom: 16px;">Sollicitaties laden</h3>
+                    <div style="margin-bottom: 16px;">
+                        <div class="skeleton-text title"></div>
+                        <div class="skeleton-text medium"></div>
+                        <div class="skeleton-text short"></div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <div class="skeleton-text title"></div>
+                        <div class="skeleton-text medium"></div>
+                        <div class="skeleton-text short"></div>
+                    </div>
+                    <div>
+                        <div class="skeleton-text title"></div>
+                        <div class="skeleton-text medium"></div>
+                        <div class="skeleton-text short"></div>
+                    </div>
+                </div>
+                
+                <!-- Skeleton Messages -->
+                <div class="loading-card">
+                    <h3 style="margin-bottom: 16px;">Berichten laden</h3>
+                    <div class="skeleton-company-card">
+                        <div class="skeleton-avatar" style="border-radius: 50%;"></div>
+                        <div class="skeleton-company-content">
+                            <div class="skeleton-text medium"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-company-card">
+                        <div class="skeleton-avatar" style="border-radius: 50%;"></div>
+                        <div class="skeleton-company-content">
+                            <div class="skeleton-text medium"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                    <div class="skeleton-company-card">
+                        <div class="skeleton-avatar" style="border-radius: 50%;"></div>
+                        <div class="skeleton-company-content">
+                            <div class="skeleton-text medium"></div>
+                            <div class="skeleton-text short"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skeleton Profile Card -->
+                <div class="loading-card">
+                    <h3 style="margin-bottom: 16px;">Profiel laden</h3>
+                    <div class="skeleton-text title"></div>
+                    <div style="height: 8px; background: var(--color-border); border-radius: 4px; margin: 16px 0;"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text short"></div>
+                    <div class="skeleton-button" style="width: 100%; margin-top: 16px;"></div>
+                </div>
+                
+                <!-- Inline Loading -->
+                <div class="spinner-container">
+                    <div class="spinner" style="width: 32px; height: 32px; border-width: 2px;"></div>
+                    <p class="spinner-text">Data synchroniseren...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Interactive Demo Section -->
+        <div class="demo-section">
+            <h2 class="demo-title">Interactieve Demo</h2>
+            <div style="background: var(--color-surface); border-radius: var(--border-radius); border: 1px solid var(--color-border); padding: 32px; text-align: center;">
+                <p style="color: var(--color-text-secondary); margin-bottom: 24px;">
+                    Simuleer verschillende states in het dashboard
+                </p>
+                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="simulateLoading()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                        </svg>
+                        Simuleer Laden
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.location.href='index.html'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        Terug naar Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function simulateLoading() {
+            alert('In het echte dashboard zou hier een loading state verschijnen terwijl data wordt geladen van de API.');
+        }
+        
+        // Add smooth animations on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const elements = document.querySelectorAll('.empty-state, .loading-card, .spinner-container');
+            elements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    el.style.transition = 'all 0.4s ease';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>
+
+

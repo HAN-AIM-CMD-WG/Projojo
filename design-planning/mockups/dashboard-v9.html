@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projojo Dashboard V9 - Student Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e50056',
+                        darkPrimary: '#CF004E',
+                        neuro: {
+                            bg: '#f0f0f3',
+                            light: '#ffffff',
+                            dark: '#d0d0d3',
+                            darker: '#a0a0a3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: #f0f0f3; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        /* Neumorphic Components - Enhanced depth without borders */
+        .neuro-card {
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                12px 12px 24px #bebec1,
+                -12px -12px 24px #ffffff,
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Only animate cards that should lift on hover */
+        .neuro-card-interactive:hover {
+            box-shadow: 
+                16px 16px 32px #bebec1,
+                -16px -16px 32px #ffffff,
+                inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+                        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+        }
+        .neuro-button {
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+            transition: all 0.2s ease;
+        }
+        .neuro-button:hover {
+            box-shadow: 
+                8px 8px 16px #bebec1,
+                -8px -8px 16px #ffffff;
+        }
+        .neuro-button:active {
+            box-shadow: 
+                inset 4px 4px 8px #bebec1,
+                inset -4px -4px 8px #ffffff;
+        }
+        .neuro-input {
+            background: #f0f0f3;
+            box-shadow: 
+                inset 6px 6px 12px #bebec1,
+                inset -6px -6px 12px #ffffff;
+            border: none;
+        }
+        .neuro-input:focus {
+            outline: none;
+            box-shadow: 
+                inset 6px 6px 12px #bebec1,
+                inset -6px -6px 12px #ffffff,
+                0 0 0 3px rgba(229, 0, 86, 0.3);
+        }
+        
+        /* Primary Action Button */
+        .neuro-button-primary {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .neuro-button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 10px 10px 20px #d0d0d3, -10px -10px 20px #ffffff;
+        }
+        .neuro-button-primary:active {
+            transform: translateY(0);
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 4px 4px 8px #d0d0d3, -4px -4px 8px #ffffff;
+        }
+        
+        .status-active {
+            background: linear-gradient(135deg, #22bb33, #1ea827);
+            color: white;
+        }
+        
+        .status-pending {
+            background: linear-gradient(135deg, #ffa502, #ff8c00);
+            color: white;
+        }
+        
+        .status-review {
+            background: linear-gradient(135deg, #4c79ff, #3d5cff);
+            color: white;
+        }
+        
+        /* Match Score */
+        .match-score {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            font-weight: bold;
+            box-shadow: inset 4px 4px 8px #d0d0d3, inset -4px -4px 8px #ffffff;
+        }
+        
+        .match-high {
+            color: #22bb33;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+        
+        .match-medium {
+            color: #ffa502;
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        }
+        
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #e50056;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Company Logo Container */
+        .company-logo {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                4px 4px 8px #bebec1,
+                -4px -4px 8px #ffffff;
+            flex-shrink: 0;
+        }
+        
+        /* Profile Avatar */
+        .profile-avatar {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Ensure sections don't clip shadows */
+        section {
+            overflow: visible;
+            padding-bottom: 2rem;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #718096;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition: all 0.2s ease;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="neuro-card rounded-none mb-8 p-6 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Logo & Branding -->
+            <div class="flex items-center space-x-4">
+                <div class="neuro-button rounded-full p-2">
+                    <img src="assets/han_logo.png" alt="HAN Logo" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Projojo</h1>
+                    <p class="text-sm text-gray-600">Student Dashboard</p>
+                </div>
+            </div>
+            
+            <!-- Search Bar (Desktop) -->
+            <div class="hidden md:block flex-1 max-w-xl mx-8">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        placeholder="Zoek projecten, bedrijven..." 
+                        class="neuro-input w-full px-6 py-3 rounded-2xl text-sm"
+                        onclick="window.location.href='ZoekpaginaV1.html'"
+                        readonly
+                    >
+                    <button class="absolute right-3 top-1/2 transform -translate-y-1/2 neuro-button rounded-full p-2">
+                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- User Actions -->
+            <div class="flex items-center space-x-4">
+                <!-- Notifications -->
+                <button class="neuro-button rounded-full p-3 relative">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <!-- Profile Menu -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="toggleProfileMenu()">
+                    <img src="assets/student_female.png" alt="Emma" class="profile-avatar">
+                    <div class="hidden md:block text-left">
+                        <div class="font-semibold text-gray-800">Emma de Vries</div>
+                        <div class="text-xs text-gray-600">Informatica</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Search -->
+        <div class="md:hidden mt-4">
+            <input 
+                type="text" 
+                placeholder="Zoek projecten..." 
+                class="neuro-input w-full px-4 py-2 rounded-xl text-sm"
+                onclick="window.location.href='ZoekpaginaV1.html'"
+                readonly
+            >
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 pb-12">
+        <!-- Welcome Section with Quick Action -->
+        <div class="mb-8">
+            <div class="neuro-card rounded-3xl p-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-2">Welkom terug, Emma! 👋</h2>
+                        <p class="text-gray-600">Je hebt 2 actieve projecten en 3 nieuwe matches</p>
+                    </div>
+                    <button onclick="window.location.href='ZoekpaginaV1.html'" class="neuro-button-primary text-white px-6 py-3 rounded-xl font-semibold whitespace-nowrap">
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Zoek Projecten
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Lopende Projecten + Sollicitaties -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Lopende Projecten (per bedrijf gegroepeerd) -->
+                <section>
+                    <div class="section-header">
+                        <h3 class="text-2xl font-bold text-gray-800">Mijn Projecten</h3>
+                        <span class="text-sm text-gray-600">2 actief</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" style="overflow: visible;">
+                        <!-- Project 1: SmartFarm Technologies -->
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-start space-x-4">
+                                    <div class="company-logo">
+                                        <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-10 h-10 object-contain">
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800 text-lg">IoT Sensoren Dashboard</h4>
+                                        <p class="text-sm text-gray-600">SmartFarm Technologies</p>
+                                        <div class="flex items-center space-x-2 mt-2">
+                                            <span class="status-badge status-active">Actief</span>
+                                            <span class="text-xs text-gray-500">•</span>
+                                            <span class="text-xs text-gray-600">Deadline: 15 dec 2024</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-600">Voortgang</span>
+                                    <span class="text-sm font-semibold text-gray-800">75%</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-300 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-primary to-pink-500 rounded-full" style="width: 75%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Skills -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full font-medium">React</span>
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full font-medium">Python</span>
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full font-medium">IoT</span>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex space-x-3">
+                                <button onclick="window.location.href='ActieveKlusv1.html'" class="flex-1 neuro-button rounded-xl py-2 text-sm font-medium text-gray-700 hover:text-primary">
+                                    Bekijk Details
+                                </button>
+                                <button class="flex-1 neuro-button-primary text-white rounded-xl py-2 text-sm font-medium">
+                                    Ga verder
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Project 2: Groene Kassen -->
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-start space-x-4">
+                                    <div class="company-logo">
+                                        <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-10 h-10 object-contain">
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-800 text-lg">Sustainability Dashboard</h4>
+                                        <p class="text-sm text-gray-600">Groene Kassen BV</p>
+                                        <div class="flex items-center space-x-2 mt-2">
+                                            <span class="status-badge status-review">In Review</span>
+                                            <span class="text-xs text-gray-500">•</span>
+                                            <span class="text-xs text-gray-600">Deadline: 20 dec 2024</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-600">Voortgang</span>
+                                    <span class="text-sm font-semibold text-gray-800">90%</span>
+                                </div>
+                                <div class="w-full h-2 bg-gray-300 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full" style="width: 90%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Skills -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full font-medium">Vue.js</span>
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full font-medium">D3.js</span>
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-full font-medium">Sustainability</span>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex space-x-3">
+                                <button class="flex-1 neuro-button rounded-xl py-2 text-sm font-medium text-gray-700 hover:text-primary">
+                                    Bekijk Details
+                                </button>
+                                <button class="flex-1 neuro-button-primary text-white rounded-xl py-2 text-sm font-medium">
+                                    Bekijk Feedback
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Uitstaande Sollicitaties -->
+                <section>
+                    <div class="section-header">
+                        <h3 class="text-2xl font-bold text-gray-800">Sollicitaties</h3>
+                        <span class="text-sm text-gray-600">2 uitstaand</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" style="overflow: visible;">
+                        <!-- Sollicitatie 1 -->
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-4 flex-1">
+                                    <div class="company-logo">
+                                        <img src="assets/logo_mechanisatie.png" alt="Mechanisatie Plus" class="w-10 h-10 object-contain">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800">AI Predictive Maintenance</h4>
+                                        <p class="text-sm text-gray-600 mb-2">Mechanisatie Plus</p>
+                                        <div class="flex items-center space-x-2 mb-3">
+                                            <span class="status-badge status-pending">In behandeling</span>
+                                            <span class="text-xs text-gray-500">•</span>
+                                            <span class="text-xs text-gray-600">Gesolliciteerd op 5 nov</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">Python</span>
+                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">ML</span>
+                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">TensorFlow</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="match-score match-high ml-4">
+                                    95%
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sollicitatie 2 -->
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-4 flex-1">
+                                    <div class="company-logo">
+                                        <img src="assets/logo_agrilogistiek.png" alt="AgriLogistiek" class="w-10 h-10 object-contain">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-800">Data Analytics Platform</h4>
+                                        <p class="text-sm text-gray-600 mb-2">AgriLogistiek</p>
+                                        <div class="flex items-center space-x-2 mb-3">
+                                            <span class="status-badge status-pending">In behandeling</span>
+                                            <span class="text-xs text-gray-500">•</span>
+                                            <span class="text-xs text-gray-600">Gesolliciteerd op 8 nov</span>
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">Python</span>
+                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">PostgreSQL</span>
+                                            <span class="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-full">Analytics</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="match-score match-medium ml-4">
+                                    82%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: Matches & Profiel -->
+            <div class="space-y-8">
+                <!-- Profiel Samenvatting -->
+                <section>
+                    <div class="neuro-card rounded-2xl p-6">
+                        <div class="text-center mb-4">
+                            <img src="assets/student_female.png" alt="Emma" class="w-24 h-24 rounded-full mx-auto mb-4 shadow-lg">
+                            <h3 class="font-bold text-gray-800 text-xl">Emma de Vries</h3>
+                            <p class="text-sm text-gray-600 mb-2">Toegepaste Informatica</p>
+                            <p class="text-xs text-gray-500">Semester 1 • HAN</p>
+                        </div>
+                        
+                        <!-- Stats -->
+                        <div class="grid grid-cols-3 gap-4 mb-4 text-center">
+                            <div>
+                                <div class="text-2xl font-bold text-primary">12</div>
+                                <div class="text-xs text-gray-600">Skills</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-green-600">8</div>
+                                <div class="text-xs text-gray-600">Voltooid</div>
+                            </div>
+                            <div>
+                                <div class="text-2xl font-bold text-blue-600">2</div>
+                                <div class="text-xs text-gray-600">Actief</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Top Skills -->
+                        <div class="mb-4">
+                            <div class="text-xs font-semibold text-gray-700 mb-2">Top Skills</div>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 bg-gradient-to-r from-primary to-pink-500 text-white text-xs rounded-full font-medium">React</span>
+                                <span class="px-3 py-1 bg-gradient-to-r from-primary to-pink-500 text-white text-xs rounded-full font-medium">Python</span>
+                                <span class="px-3 py-1 bg-gradient-to-r from-primary to-pink-500 text-white text-xs rounded-full font-medium">JavaScript</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Button -->
+                        <button class="w-full neuro-button rounded-xl py-3 text-sm font-medium text-gray-700 hover:text-primary">
+                            <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Profiel Bewerken
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Matches voor jou -->
+                <section>
+                    <div class="section-header">
+                        <h3 class="text-xl font-bold text-gray-800">Perfect voor jou</h3>
+                        <span class="px-2 py-1 bg-primary text-white text-xs rounded-full font-semibold">3 nieuw</span>
+                    </div>
+                    
+                    <div class="space-y-5" style="overflow: visible;">
+                        <!-- Match 1 -->
+                        <div class="neuro-card neuro-card-interactive rounded-xl p-4 cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-3 flex-1">
+                                    <img src="assets/logo_biodynamisch.png" alt="Biodynamisch" class="w-10 h-10 rounded-lg object-contain">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-800 text-sm">Mobile Farm App</h4>
+                                        <p class="text-xs text-gray-600">Biodynamisch BV</p>
+                                    </div>
+                                </div>
+                                <div class="match-score match-high text-sm">
+                                    88%
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">React ✓</span>
+                                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">React Native</span>
+                            </div>
+                            <button class="w-full neuro-button rounded-lg py-2 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors">
+                                Bekijk Project
+                            </button>
+                        </div>
+                        
+                        <!-- Match 2 -->
+                        <div class="neuro-card neuro-card-interactive rounded-xl p-4 cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-3 flex-1">
+                                    <img src="assets/logo_fruitboom.png" alt="Fruitboom" class="w-10 h-10 rounded-lg object-contain">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-800 text-sm">E-commerce Platform</h4>
+                                        <p class="text-xs text-gray-600">Fruitboom Techniek</p>
+                                    </div>
+                                </div>
+                                <div class="match-score match-high text-sm">
+                                    92%
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">React ✓</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">Node.js ✓</span>
+                            </div>
+                            <button class="w-full neuro-button rounded-lg py-2 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors">
+                                Bekijk Project
+                            </button>
+                        </div>
+                        
+                        <!-- Match 3 -->
+                        <div class="neuro-card neuro-card-interactive rounded-xl p-4 cursor-pointer">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex items-start space-x-3 flex-1">
+                                    <img src="assets/logo_veeteelt_groep.png" alt="Veeteelt" class="w-10 h-10 rounded-lg object-contain">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-800 text-sm">API Integration</h4>
+                                        <p class="text-xs text-gray-600">Veeteelt Groep</p>
+                                    </div>
+                                </div>
+                                <div class="match-score match-medium text-sm">
+                                    78%
+                                </div>
+                            </div>
+                            <div class="flex flex-wrap gap-1 mb-2">
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">Python ✓</span>
+                                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">FastAPI</span>
+                            </div>
+                            <button class="w-full neuro-button rounded-lg py-2 text-xs font-medium text-primary hover:bg-primary hover:text-white transition-colors">
+                                Bekijk Project
+                            </button>
+                        </div>
+                        
+                        <!-- Meer Matches Button -->
+                        <button onclick="window.location.href='ZoekpaginaV1.html'" class="w-full neuro-button rounded-xl py-3 text-sm font-medium text-gray-700 hover:text-primary">
+                            Bekijk alle matches
+                            <svg class="w-4 h-4 inline ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 p-6 text-center text-gray-600 text-sm">
+        <p>Projojo Dashboard V9 - Realistische Student Features • Focus op Essentials</p>
+    </footer>
+
+    <script>
+        function toggleProfileMenu() {
+            alert('Profiel menu - functionaliteit komt later');
+        }
+        
+        // Keyboard accessibility
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                // Close any open modals/menus
+            }
+        });
+    </script>
+</body>
+</html>
+

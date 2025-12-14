@@ -1,0 +1,340 @@
+# Projojo Development Guidelines & Standards
+
+## 🎯 Project Context
+Projojo is an educational project management platform connecting businesses, students, supervisors, and teachers. Focus on creating a professional, accessible, and modern neumorphic design system.
+
+**Timeline**: September - December 2024 (Demo deadline)
+**Current Version**: Dashboard V5 (Active Task Indicators)
+**Active Branch**: next-ui
+
+## 📋 Central Documentation
+**CRITICAL**: Always maintain `/design-planning/FEATURE_ROADMAP.md` as the single source of truth for:
+- Feature tracking and versioning
+- User stories with acceptance criteria  
+- Technical implementation roadmap
+- Design system specifications
+- Development progress status
+
+## 🎨 Design System Standards
+
+### Neumorphic Design Principles
+- **Accessibility First**: High contrast text, keyboard navigation, screen reader support
+- **Functional Beauty**: Aesthetics support functionality, not override it
+- **Consistent Interactions**: Predictable hover/focus/active states
+- **Professional Appearance**: Suitable for educational/business environment
+
+### Color Palette (STRICT)
+```css
+:root {
+  /* HAN Brand Colors (NEVER CHANGE) */
+  --primary: #e50056;           /* HAN Primary */
+  --primary-dark: #cf004e;      /* Darker variant */
+  --primary-light: #ff1a70;     /* Lighter accent */
+  
+  /* Neumorphic Background System */
+  --neuro-bg: #f0f0f3;         /* Main background */
+  --neuro-light: #ffffff;      /* Light shadow/highlight */
+  --neuro-dark: #d0d0d3;       /* Dark shadow */
+  --neuro-darker: #a0a0a3;     /* Progress bars, disabled */
+  
+  /* Semantic Colors */
+  --success: #22bb33;          /* Success states */
+  --warning: #ffa502;          /* Warning states */
+  --error: #ff4757;            /* Error states */
+  --info: #4c79ff;             /* Info states */
+  
+  /* Text Colors (High Contrast) */
+  --text-primary: #2d3748;     /* Primary text */
+  --text-secondary: #4a5568;   /* Secondary text */
+  --text-muted: #718096;       /* Muted text */
+}
+```
+
+### Component Standards
+
+#### Neumorphic Cards
+```css
+.neuro-card {
+  background: #f0f0f3;
+  box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+```
+
+#### Buttons
+- Use `.neuro-button` class consistently
+- Inset shadow for active states
+- Focus rings for accessibility (3px primary with 30% opacity)
+- Smooth transitions (0.2s ease)
+
+#### Activity Indicators (V5 Standard)
+- Subtle pulse animations (2s cycle)
+- Green activity dots with soft glow
+- Border-left accents for active states
+- "Working" badges with consistent styling
+- Priority color coding: High(red), Medium(orange), Low(green)
+
+## 🏗️ File Structure Standards
+
+### Design Planning Structure
+```
+design-planning/
+├── FEATURE_ROADMAP.md           # 🎯 CENTRAL HUB - ALWAYS UPDATE
+├── technical-specs/
+│   └── neumorphic-design-system.md  # CSS/Component specs
+└── mockups/
+    ├── dashboard-v2.html        # Historical reference
+    ├── dashboard-v3.html        # Historical reference  
+    ├── dashboard-v4.html        # Advanced personalization
+    ├── dashboard-v5.html        # 🎯 CURRENT - Active indicators
+    └── assets/                  # Design assets (26 files)
+```
+
+### Code Organization
+- Frontend: React components in `src/components/`
+- Backend: Domain-driven design in `projojo_backend/`
+- New components: Create in separate directories (e.g., `/components/v2/`)
+- Use feature flags for gradual rollout
+
+## 🚀 Development Workflow
+
+### Before Starting ANY Feature
+1. **READ** `/design-planning/FEATURE_ROADMAP.md` completely
+2. **UPDATE** roadmap with new feature status
+3. **CHECK** if feature conflicts with active development
+4. **COORDINATE** with existing dev team if needed
+
+### Design Changes
+1. **Version Control**: Always create new version (V6, V7, etc.)
+2. **Maintain Quality**: Match or exceed V5 professional standards
+3. **Document Changes**: Update FEATURE_ROADMAP.md immediately
+4. **Asset Management**: Keep all assets in `/mockups/assets/`
+
+### Code Standards
+- **TypeScript**: Use strict typing
+- **React**: Functional components with hooks
+- **CSS**: Use neumorphic design system variables
+- **Naming**: Clear, descriptive component and file names
+- **Comments**: Document complex animations and interactions
+
+## 👥 User Roles & Priorities
+
+### Current Focus (Priority Order)
+1. **Student Dashboard** ✅ (V5 Complete)
+2. **Business Dashboard** 🔄 (Next Priority)
+3. **Supervisor Dashboard** 📅 (Planned)
+4. **Teacher Dashboard** 📅 (Planned)
+
+### User Story Format (REQUIRED)
+```
+Als [rol] wil ik [functionaliteit]
+Zodat [business value/reden]
+
+Acceptance Criteria:
+- [ ] Specific measurable requirement
+- [ ] User interaction requirement  
+- [ ] Technical requirement
+- [ ] Accessibility requirement
+```
+
+## 🎯 Dashboard Evolution Standards
+
+### Version Progression
+- **V1**: Baseline (current demo)
+- **V2**: Neumorphic foundation ✅
+- **V3**: Enhanced UX ✅
+- **V4**: Advanced personalization ✅
+- **V5**: Active task indicators ✅
+- **V6**: Comprehensive student features ✅
+- **V7+**: Future enhancements
+
+### V6 Quality Benchmarks (MAINTAIN OR EXCEED)
+- **Comprehensive feature set** with 7 core student functionalities
+- **Extensive info button system** - every feature must be explained
+- **Crystal clear UX** - accessible for first-time users
+- **Smart tooltips** with detailed explanations
+- **Professional appearance** suitable for education/business
+- **Consistent neumorphic styling** throughout
+- **Accessible animations** (respect reduced motion)
+- **Smooth performance** (60fps animations)
+- **Mobile-friendly tooltips** (click-based, not hover-only)
+
+## 🔧 Technical Requirements
+
+### Responsive Design
+- Mobile-first approach
+- Breakpoints: 640px, 768px, 1024px, 1280px, 1536px
+- Touch-friendly interactions on mobile
+- Consistent experience across devices
+
+### Accessibility (NON-NEGOTIABLE)
+- WCAG 2.1 AA compliance minimum
+- Keyboard navigation for all interactive elements
+- Screen reader compatibility
+- High contrast mode support
+- Reduced motion preferences respected
+- Focus indicators clearly visible (3px primary color rings)
+
+### Performance
+- CSS bundle optimization
+- Efficient shadow rendering
+- No layout shifts during interactions
+- Smooth 60fps animations
+- Minimal JavaScript for UI interactions
+
+## 🎪 Animation Guidelines
+
+### Approved Animation Types
+- **Subtle hover elevations** (2px translateY)
+- **Soft pulse effects** (scale 1.0 to 1.1)
+- **Gentle fade transitions** (opacity changes)
+- **Progress flow animations** (shimmer effects)
+- **Activity indicators** (2-4s cycles maximum)
+
+### Animation Constraints
+- **Duration**: 0.2s for interactions, 2-4s for ambient
+- **Easing**: `cubic-bezier(0.4, 0, 0.2, 1)` preferred
+- **Performance**: Use `transform` and `opacity` only
+- **Accessibility**: Respect `prefers-reduced-motion`
+
+## 🚧 Development Constraints
+
+### Active Development Coordination
+- **Backend Team**: Actively developing - coordinate changes
+- **Database**: TypeDB 3.4.0 - complex relationships supported
+- **API**: FastAPI with domain-driven design
+- **Deployment**: Docker Compose setup
+
+### Technical Debt Avoidance
+- Don't create duplicate components
+- Maintain consistent naming conventions
+- Document all custom CSS classes
+- Keep component library organized
+
+## 📈 Success Metrics
+
+### User Experience
+- Dashboard customization usage rate
+- Search query success rate  
+- Task completion efficiency
+- User engagement time
+
+### Technical Performance
+- Page load times < 2s
+- Animation frame rate 60fps
+- Accessibility audit scores > 95%
+- Cross-browser compatibility maintained
+
+## 🎨 Component Library (Current V5)
+
+### Completed Components
+- [x] NeuroCard (elevated surfaces)
+- [x] NeuroButton (interactive elements)
+- [x] NeuroInput (form elements)
+- [x] SkillBadge (competency indicators)
+- [x] AchievementBadge (gamification with earned/locked states)
+- [x] ProgressBar (with active animations)
+- [x] ActivityIndicator (pulse dots)
+- [x] TaskCard (with priority coding & status indicators)
+- [x] SearchPopup (stable positioning)
+- [x] NotificationBanner (professional styling)
+- [x] InfoButton (comprehensive tooltip system)
+- [x] TaskRegistrationHub (status tracking & management)
+- [x] SmartMatching (AI-powered skill compatibility)
+- [x] ProgressAnalytics (performance metrics & trends)
+- [x] NotificationCenter (prioritized alerts & actions)
+- [x] PortfolioBuilder (automated CV generation)
+- [x] CollaborationPanel (networking & team features)
+
+### Planned Components
+- [ ] BusinessCard (project submission focus)
+- [ ] WorkflowStepper (approval processes)
+- [ ] TimelineView (project progression)
+- [ ] AnalyticsDashboard (metrics visualization)
+- [ ] CollaborationPanel (team features)
+
+## 📝 Documentation Requirements
+
+### Code Documentation
+- All components must have JSDoc comments
+- CSS classes documented with purpose
+- Animation keyframes explained
+- Accessibility features noted
+
+### Design Documentation
+- Update FEATURE_ROADMAP.md for ANY design change
+- Version notes in dashboard HTML comments
+- Asset management tracked
+- User story completion status maintained
+
+## 🔄 Version Control Best Practices
+
+### File Naming
+- Dashboard versions: `dashboard-v[number].html`
+- Components: `ComponentName.jsx` (PascalCase)
+- Utilities: `utilityName.js` (camelCase)
+- Styles: `component-name.css` (kebab-case)
+
+### Git Workflow
+- Branch: `next-ui` for design work
+- Commit messages: Clear, descriptive
+- Feature branches for major changes
+- Coordinate with main development team
+
+## 🎯 Current Priority Tasks
+
+### Immediate (This Sprint)
+1. Business Dashboard creation (V5 quality standards)
+2. Role-switching functionality design
+3. User stories documentation completion
+
+### Short Term (2-3 Weeks)
+1. Widget drag & drop implementation
+2. Advanced search filters
+3. Project submission workflow design
+
+### Medium Term (1-2 Months)
+1. LLM integration for smart matching
+2. Real-time collaboration features
+3. Mobile PWA development
+
+## ⚠️ Critical Rules
+
+### NEVER DO
+- Change HAN brand colors (#e50056)
+- Break neumorphic design consistency
+- Create flashy or unprofessional animations
+- Ignore accessibility requirements
+- Skip FEATURE_ROADMAP.md updates
+- Create duplicate documentation
+
+### ALWAYS DO
+- Maintain V5+ quality standards
+- Update central documentation
+- Test responsive behavior
+- Validate accessibility
+- Coordinate with active dev team
+- Use established component patterns
+
+## 🤝 Stakeholder Communication
+
+### Design Reviews
+- Present mockups before implementation
+- Validate accessibility compliance
+- Test cross-browser compatibility
+- Confirm mobile responsiveness
+
+### Development Handoff
+- Provide complete technical specifications
+- Document all custom CSS classes
+- Include interaction behavior descriptions
+- Supply assets in correct formats
+
+---
+
+**Last Updated**: $(date)
+**Current Version**: V5 (Active Task Indicators)
+**Next Priority**: Business Dashboard V5
+
+*This file should be updated whenever design standards evolve or new patterns are established.*

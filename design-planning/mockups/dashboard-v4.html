@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projojo Dashboard V4 - Advanced Personalization</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e50056',
+                        darkPrimary: '#CF004E',
+                        neuro: {
+                            bg: '#f0f0f3',
+                            light: '#ffffff',
+                            dark: '#d0d0d3',
+                            darker: '#a0a0a3'
+                        }
+                    },
+                    boxShadow: {
+                        'neuro': '20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff',
+                        'neuro-inset': 'inset 20px 20px 60px #d0d0d3, inset -20px -20px 60px #ffffff',
+                        'neuro-sm': '8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff',
+                        'neuro-hover': '25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: #f0f0f3; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .neuro-card {
+            background: #f0f0f3;
+            box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
+            transition: all 0.3s ease;
+        }
+        .neuro-card:hover {
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+            transform: translateY(-2px);
+        }
+        .neuro-button {
+            background: #f0f0f3;
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            transition: all 0.2s ease;
+        }
+        .neuro-button:hover {
+            box-shadow: 12px 12px 24px #d0d0d3, -12px -12px 24px #ffffff;
+        }
+        .neuro-button:active {
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+        }
+        .neuro-input {
+            background: #f0f0f3;
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+            border: none;
+        }
+        .neuro-input:focus {
+            outline: none;
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff, 0 0 0 3px rgba(229, 0, 86, 0.3);
+        }
+        .skill-badge {
+            background: linear-gradient(145deg, #e50056, #cf004e);
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        /* FIXED: Stable search overlay positioning */
+        .search-overlay {
+            backdrop-filter: blur(10px);
+            background: rgba(240, 240, 243, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .floating-search {
+            position: relative; /* Changed from fixed */
+            width: 100%;
+            max-width: 600px;
+            z-index: 50;
+        }
+        
+        /* Smooth entrance animation without transform conflicts */
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                scale: 0.95;
+            }
+            to {
+                opacity: 1;
+                scale: 1;
+            }
+        }
+        .modal-enter {
+            animation: modalFadeIn 0.3s ease-out;
+        }
+        
+        .stat-card-interactive {
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card-interactive::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(229, 0, 86, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        .stat-card-interactive:hover::before {
+            left: 100%;
+        }
+        
+        /* Widget customization styles */
+        .widget-container {
+            position: relative;
+        }
+        .widget-controls {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .widget-container:hover .widget-controls {
+            opacity: 1;
+        }
+        
+        /* Role indicator */
+        .role-indicator {
+            background: linear-gradient(135deg, #e50056 0%, #cf004e 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+        
+        /* Achievement badges */
+        .achievement-badge {
+            background: linear-gradient(135deg, #22bb33 0%, #1ea827 100%);
+            color: white;
+            border-radius: 50%;
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            position: relative;
+        }
+        .achievement-badge.new::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: #e50056;
+            border-radius: 50%;
+            box-shadow: 0 0 0 2px #f0f0f3;
+        }
+        
+        /* Learning path visualization */
+        .learning-path {
+            position: relative;
+        }
+        .learning-path::before {
+            content: '';
+            position: absolute;
+            left: 1.5rem;
+            top: 3rem;
+            bottom: 1rem;
+            width: 2px;
+            background: linear-gradient(to bottom, #e50056, #cf004e);
+            border-radius: 1px;
+        }
+        .learning-step {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Customizable grid system */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        /* Business role specific styles */
+        .business-card {
+            border-left: 4px solid #e50056;
+        }
+        .business-metric {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-neuro-bg">
+    <!-- FIXED: Search Overlay with stable positioning -->
+    <div id="searchOverlay" class="fixed inset-0 search-overlay hidden z-40" onclick="closeSearch()">
+        <div class="floating-search neuro-card rounded-3xl p-8 modal-enter" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Zoek Projecten & Klussen</h2>
+                <button onclick="closeSearch()" class="neuro-button rounded-full p-2 hover:shadow-neuro-hover">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Search Input -->
+            <div class="relative mb-6">
+                <input type="text" 
+                       placeholder="Zoek op projectnaam, bedrijf, skills..." 
+                       class="neuro-input w-full px-6 py-4 text-lg rounded-2xl pr-12">
+                <button class="absolute right-4 top-1/2 transform -translate-y-1/2 neuro-button rounded-full p-2">
+                    <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Quick Filters -->
+            <div class="mb-6">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Populaire Skills</h3>
+                <div class="flex flex-wrap gap-2">
+                    <button class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium hover:scale-105 transition-transform">React</button>
+                    <button class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium hover:scale-105 transition-transform">Python</button>
+                    <button class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium hover:scale-105 transition-transform">AI/ML</button>
+                    <button class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium hover:scale-105 transition-transform">IoT</button>
+                </div>
+            </div>
+
+            <!-- Instant Results -->
+            <div class="space-y-3">
+                <h3 class="text-sm font-semibold text-gray-700">Resultaten</h3>
+                <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all cursor-pointer">
+                    <div class="flex items-center space-x-3">
+                        <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-8 h-8 rounded-lg">
+                        <div>
+                            <div class="font-semibold text-gray-800">IoT Sensoren Dashboard</div>
+                            <div class="text-sm text-gray-600">SmartFarm Technologies • 95% match</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all cursor-pointer">
+                    <div class="flex items-center space-x-3">
+                        <img src="assets/logo_mechanisatie.png" alt="Mechanisatie" class="w-8 h-8 rounded-lg">
+                        <div>
+                            <div class="font-semibold text-gray-800">AI Predictive Maintenance</div>
+                            <div class="text-sm text-gray-600">Mechanisatie Plus • 92% match</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all cursor-pointer">
+                    <div class="flex items-center space-x-3">
+                        <img src="assets/logo_agrilogistiek.png" alt="AgriLogistiek" class="w-8 h-8 rounded-lg">
+                        <div>
+                            <div class="font-semibold text-gray-800">Data Analytics Platform</div>
+                            <div class="text-sm text-gray-600">AgriLogistiek • 88% match</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header with Role-Based Personalization -->
+    <header class="neuro-card rounded-none mb-8 p-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="neuro-button rounded-full p-2">
+                    <img src="assets/han_logo.png" alt="HAN Logo" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h1 class="text-2xl font-bold text-gray-800">Welkom terug, Emma</h1>
+                        <span class="role-indicator">Student</span>
+                    </div>
+                    <p class="text-gray-600 mt-1">Toegepaste Informatica • Semester 1</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Quick Actions -->
+                <button onclick="openSearch()" class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+
+                <button class="neuro-button rounded-full p-3 relative hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                </button>
+
+                <!-- Dashboard Customization -->
+                <button onclick="toggleCustomization()" class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+                
+                <div class="neuro-button rounded-full p-1">
+                    <img src="assets/student_female.png" alt="Profile" class="w-10 h-10 rounded-full">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 space-y-8">
+        <!-- New Achievement Notification Banner -->
+        <div class="achievement-notification-banner neuro-card rounded-xl p-4 relative overflow-hidden">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center relative" style="background: #f0f0f3; box-shadow: inset 6px 6px 12px #d0d0d3, inset -6px -6px 12px #ffffff;">
+                        <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center" style="box-shadow: 4px 4px 8px #d0d0d3, -4px -4px 8px #ffffff;">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                        </div>
+                        <!-- Subtle new indicator -->
+                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full" style="box-shadow: 2px 2px 4px #d0d0d3;"></div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-1">Nieuwe prestatie behaald</h3>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium text-primary">"Snelle Leerling"</span> - 3 competenties voltooid
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                        Bekijk
+                    </button>
+                    <button onclick="closeAchievementBanner()" class="neuro-button rounded-full p-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customizable Dashboard Grid -->
+        <div id="dashboardGrid" class="dashboard-grid">
+            <!-- Widget 1: Personal Progress Overview -->
+            <div class="widget-container neuro-card rounded-3xl p-6" data-widget="progress">
+                <div class="widget-controls">
+                    <button class="neuro-button rounded-full p-1 mr-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <button class="neuro-button rounded-full p-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Mijn Voortgang</h2>
+                        <p class="text-sm text-gray-600">Semester 1 • 75% voltooid</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-20 h-20 relative">
+                            <svg class="w-20 h-20 progress-ring" viewBox="0 0 36 36">
+                                <path class="stroke-current text-gray-300" stroke-width="3" fill="none" d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"/>
+                                <path class="stroke-current text-primary" stroke-width="3" fill="none" stroke-dasharray="75, 100" d="m18,2.0845 a 15.9155,15.9155 0 0,1 0,31.831 a 15.9155,15.9155 0 0,1 0,-31.831"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-lg font-bold text-primary">75%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-primary">12</div>
+                        <div class="text-sm text-gray-600">Competenties</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-green-500">5</div>
+                        <div class="text-sm text-gray-600">Actieve Klussen</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 2: Learning Path Visualization -->
+            <div class="widget-container neuro-card rounded-3xl p-6" data-widget="learning-path">
+                <div class="widget-controls">
+                    <button class="neuro-button rounded-full p-1 mr-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <button class="neuro-button rounded-full p-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <h2 class="text-xl font-bold text-gray-800 mb-6">Mijn Leerpad</h2>
+                
+                <div class="learning-path space-y-4">
+                    <div class="learning-step flex items-center space-x-4">
+                        <div class="achievement-badge">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-800">Frontend Development</div>
+                            <div class="text-sm text-gray-600">React, HTML, CSS • Voltooid</div>
+                        </div>
+                    </div>
+                    
+                    <div class="learning-step flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center box-shadow-neuro">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-800">Backend Development</div>
+                            <div class="text-sm text-gray-600">Python, APIs • In uitvoering</div>
+                        </div>
+                    </div>
+                    
+                    <div class="learning-step flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-semibold text-gray-500">Data Science</div>
+                            <div class="text-sm text-gray-500">AI/ML, Analytics • Binnenkort</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 3: Active Tasks with Enhanced UI -->
+            <div class="widget-container neuro-card rounded-3xl p-6 lg:col-span-2" data-widget="active-tasks">
+                <div class="widget-controls">
+                    <button class="neuro-button rounded-full p-1 mr-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <button class="neuro-button rounded-full p-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Mijn Actieve Klussen</h2>
+                    <div class="flex space-x-2">
+                        <button class="neuro-button rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary">
+                            Filter
+                        </button>
+                        <button class="neuro-button rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary">
+                            Sorteer
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Enhanced Task Card -->
+                    <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-12 h-12 rounded-lg object-cover">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">IoT Sensoren Dashboard</h3>
+                                    <p class="text-sm text-gray-600">SmartFarm Technologies</p>
+                                    <div class="flex items-center space-x-2 mt-1">
+                                        <span class="text-xs text-gray-500">Deadline: 15 okt</span>
+                                        <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">Medium prioriteit</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-gray-600 mb-2">Voortgang</div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-20 h-2 bg-neuro-dark rounded-full">
+                                        <div class="w-3/4 h-full bg-primary rounded-full"></div>
+                                    </div>
+                                    <span class="text-sm font-semibold">75%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">React</span>
+                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">Python</span>
+                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">IoT</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                                    </svg>
+                                    <span>8 dagen resterend</span>
+                                </div>
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"/>
+                                    </svg>
+                                    <span>3 nieuwe berichten</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium hover:text-primary">
+                                    Bekijken
+                                </button>
+                                <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white">
+                                    Doorgaan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Another task card -->
+                    <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-12 h-12 rounded-lg object-cover">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">Duurzaamheid App</h3>
+                                    <p class="text-sm text-gray-600">Groene Kassen BV</p>
+                                    <div class="flex items-center space-x-2 mt-1">
+                                        <span class="text-xs text-gray-500">Deadline: 28 okt</span>
+                                        <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full">Lage prioriteit</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm text-gray-600 mb-2">Voortgang</div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-20 h-2 bg-neuro-dark rounded-full">
+                                        <div class="w-2/5 h-full bg-green-500 rounded-full"></div>
+                                    </div>
+                                    <span class="text-sm font-semibold">40%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">Vue.js</span>
+                            <span class="skill-badge px-3 py-1 rounded-full text-xs text-white font-medium">Sustainability</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <div class="flex items-center space-x-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                                    </svg>
+                                    <span>21 dagen resterend</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium hover:text-primary">
+                                    Bekijken
+                                </button>
+                                <button class="neuro-button px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white">
+                                    Doorgaan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 4: Smart Recommendations -->
+            <div class="widget-container neuro-card rounded-3xl p-6" data-widget="recommendations">
+                <div class="widget-controls">
+                    <button class="neuro-button rounded-full p-1 mr-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <button class="neuro-button rounded-full p-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Perfect voor jou</h2>
+                    <button onclick="openSearch()" class="neuro-button rounded-lg px-3 py-1 text-sm font-medium text-gray-700 hover:text-primary">
+                        Meer
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="neuro-card rounded-xl p-4 hover:shadow-neuro-hover transition-all cursor-pointer">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <img src="assets/logo_mechanisatie.png" alt="Mechanisatie" class="w-10 h-10 rounded-lg object-cover">
+                            <div>
+                                <h3 class="font-semibold text-gray-800">AI Predictive Maintenance</h3>
+                                <p class="text-sm text-gray-600">Mechanisatie Plus</p>
+                            </div>
+                        </div>
+                        
+                        <p class="text-sm text-gray-600 mb-3">Ontwikkel een AI-systeem voor voorspellend onderhoud van landbouwmachines.</p>
+                        
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex flex-wrap gap-1">
+                                <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Python</span>
+                                <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">ML</span>
+                            </div>
+                            <span class="text-sm text-green-600 font-medium">95% match</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-500">Geschat: 6 weken</span>
+                            <button class="neuro-button px-3 py-1 rounded-lg text-xs font-medium hover:text-primary">
+                                Bekijken
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 5: Recent Achievements -->
+            <div class="widget-container neuro-card rounded-3xl p-6" data-widget="achievements">
+                <div class="widget-controls">
+                    <button class="neuro-button rounded-full p-1 mr-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </button>
+                    <button class="neuro-button rounded-full p-1">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Recente Prestaties</h3>
+                
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-3 p-3 neuro-card rounded-lg">
+                        <div class="achievement-badge new">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-800">Snelle Leerling</div>
+                            <div class="text-xs text-gray-600">3 competenties in 1 week</div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-3 p-3 neuro-card rounded-lg">
+                        <div class="achievement-badge">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-sm font-medium text-gray-800">Perfecte Match</div>
+                            <div class="text-xs text-gray-600">95% skill compatibility</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Add Widget Panel -->
+        <div id="widgetPanel" class="hidden neuro-card rounded-2xl p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Voeg Widgets Toe</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <button class="neuro-button rounded-xl p-4 text-center hover:shadow-neuro-hover transition-all">
+                    <svg class="w-8 h-8 text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <div class="text-sm font-medium">Analytics</div>
+                </button>
+                <button class="neuro-button rounded-xl p-4 text-center hover:shadow-neuro-hover transition-all">
+                    <svg class="w-8 h-8 text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <div class="text-sm font-medium">Kalender</div>
+                </button>
+                <button class="neuro-button rounded-xl p-4 text-center hover:shadow-neuro-hover transition-all">
+                    <svg class="w-8 h-8 text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2v-6a2 2 0 012-2h8z"/>
+                    </svg>
+                    <div class="text-sm font-medium">Berichten</div>
+                </button>
+                <button class="neuro-button rounded-xl p-4 text-center hover:shadow-neuro-hover transition-all">
+                    <svg class="w-8 h-8 text-gray-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    <div class="text-sm font-medium">Custom</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 p-6 text-center text-gray-600 text-sm">
+        <p>Projojo Dashboard V4 - Advanced Personalization for Students & Business</p>
+    </footer>
+
+    <script>
+        function openSearch() {
+            const overlay = document.getElementById('searchOverlay');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus on search input for accessibility
+            setTimeout(() => {
+                const input = overlay.querySelector('input[type="text"]');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function closeSearch() {
+            const overlay = document.getElementById('searchOverlay');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function closeAchievementBanner() {
+            const banner = document.querySelector('.achievement-notification-banner');
+            if (banner) {
+                banner.style.transition = 'all 0.3s ease-out';
+                banner.style.transform = 'translateY(-100%)';
+                banner.style.opacity = '0';
+                setTimeout(() => {
+                    banner.remove();
+                }, 300);
+            }
+        }
+
+        function toggleCustomization() {
+            const panel = document.getElementById('widgetPanel');
+            const controls = document.querySelectorAll('.widget-controls');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                controls.forEach(control => control.style.opacity = '1');
+            } else {
+                panel.classList.add('hidden');
+                controls.forEach(control => control.style.opacity = '0');
+            }
+        }
+
+        // Close search on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeSearch();
+            }
+        });
+
+        // Widget drag and drop functionality (basic)
+        function initializeDragAndDrop() {
+            const widgets = document.querySelectorAll('.widget-container');
+            widgets.forEach(widget => {
+                widget.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', this.dataset.widget);
+                });
+            });
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragAndDrop();
+        });
+    </script>
+</body>
+</html>

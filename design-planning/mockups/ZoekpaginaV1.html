@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projojo - Zoek Bedrijven & Klussen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e50056',
+                        darkPrimary: '#CF004E',
+                        neuro: {
+                            bg: '#f0f0f3',
+                            light: '#ffffff',
+                            dark: '#d0d0d3',
+                            darker: '#a0a0a3'
+                        }
+                    },
+                    boxShadow: {
+                        'neuro': '20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff',
+                        'neuro-inset': 'inset 20px 20px 60px #d0d0d3, inset -20px -20px 60px #ffffff',
+                        'neuro-sm': '8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff',
+                        'neuro-hover': '25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: #f0f0f3; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        .neuro-card {
+            background: #f0f0f3;
+            box-shadow: 20px 20px 60px #d0d0d3, -20px -20px 60px #ffffff;
+            transition: all 0.3s ease;
+        }
+        .neuro-card:hover {
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+            transform: translateY(-2px);
+        }
+        .neuro-button {
+            background: #f0f0f3;
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            transition: all 0.2s ease;
+        }
+        .neuro-button:hover {
+            box-shadow: 12px 12px 24px #d0d0d3, -12px -12px 24px #ffffff;
+        }
+        .neuro-button:active {
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+        }
+        .neuro-input {
+            background: #f0f0f3;
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff;
+            border: none;
+        }
+        .neuro-input:focus {
+            outline: none;
+            box-shadow: inset 8px 8px 16px #d0d0d3, inset -8px -8px 16px #ffffff, 0 0 0 3px rgba(229, 0, 86, 0.3);
+        }
+
+        /* Primary Action Button */
+        .neuro-button-primary {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            box-shadow: 8px 8px 16px #d0d0d3, -8px -8px 16px #ffffff;
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .neuro-button-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 12px 12px 24px #d0d0d3, -12px -12px 24px #ffffff;
+        }
+
+        .skill-badge {
+            background: linear-gradient(145deg, #e50056, #cf004e);
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+
+        /* Search Header */
+        .search-header {
+            background: linear-gradient(135deg, #f0f0f3 0%, #f8f8fb 100%);
+        }
+
+        /* Company Card Styling */
+        .company-card {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .company-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+        }
+
+        /* Job Card Styling */
+        .job-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .job-card:hover {
+            border-left-color: #e50056;
+            box-shadow: 25px 25px 75px #d0d0d3, -25px -25px 75px #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Filter Tag Styling */
+        .filter-tag {
+            background: #f0f0f3;
+            border: 2px solid #d0d0d3;
+            transition: all 0.2s ease;
+        }
+
+        .filter-tag.active {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            border-color: #e50056;
+            color: white;
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+
+        .filter-tag:hover {
+            border-color: #e50056;
+            box-shadow: 4px 4px 8px #d0d0d3, -4px -4px 8px #ffffff;
+        }
+
+        /* Search Animation */
+        .search-pulse {
+            animation: searchPulse 2s infinite;
+        }
+
+        @keyframes searchPulse {
+            0% { box-shadow: 0 0 0 0 rgba(229, 0, 86, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(229, 0, 86, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(229, 0, 86, 0); }
+        }
+
+        /* Priority Indicators */
+        .priority-high {
+            background: linear-gradient(135deg, #ff6b7a 0%, #ff5722 100%);
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+        }
+
+        /* Location Badge */
+        .location-badge {
+            background: linear-gradient(135deg, #42a5f5 0%, #2196f3 100%);
+        }
+
+        /* Subtle Animation Effects */
+        .fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Results Counter */
+        .results-counter {
+            background: linear-gradient(135deg, #f0f0f3 0%, #f8f8fb 100%);
+        }
+
+        /* Role Indicator */
+        .role-indicator {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: 6px 6px 12px #d0d0d3, -6px -6px 12px #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-neuro-bg">
+    <!-- Header -->
+    <header class="neuro-card rounded-none mb-8 p-6">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="neuro-button rounded-full p-2">
+                    <img src="assets/han_logo.png" alt="HAN Logo" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <div class="flex items-center space-x-3">
+                        <h1 class="text-2xl font-bold text-gray-800">Zoek Bedrijven & Klussen</h1>
+                        <span class="role-indicator">Student</span>
+                    </div>
+                    <p class="text-gray-600 mt-1">Vind jouw perfecte project match</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- Navigation Actions -->
+                <button onclick="window.location.href='dashboard-v8.html'" class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all" title="Terug naar dashboard">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </button>
+
+                <button class="neuro-button rounded-full p-3 relative hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span class="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                </button>
+                    
+                <!-- Dashboard Customization -->
+                <button class="neuro-button rounded-full p-3 hover:shadow-neuro-hover transition-all">
+                    <svg class="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+                
+                <div class="neuro-button rounded-full p-1">
+                    <img src="assets/student_female.png" alt="Profile" class="w-10 h-10 rounded-full">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Hero Section -->
+    <section class="search-header py-12">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">Vind jouw perfecte klus</h1>
+                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Ontdek spannende projecten bij innovatieve bedrijven en ontwikkel je skills</p>
+            </div>
+
+            <!-- Main Search Bar -->
+            <div class="max-w-4xl mx-auto">
+                <div class="neuro-card rounded-2xl p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Search Input -->
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Zoek klussen of bedrijven</label>
+                            <div class="relative">
+                                <input type="text" 
+                                       placeholder="Bijv. React Developer, SmartFarm..." 
+                                       class="neuro-input w-full px-4 py-3 rounded-lg text-gray-700 placeholder-gray-500"
+                                       id="searchInput">
+                                <svg class="absolute right-3 top-3 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Location Filter -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Locatie</label>
+                            <select class="neuro-input w-full px-4 py-3 rounded-lg text-gray-700">
+                                <option>Alle locaties</option>
+                                <option>Arnhem</option>
+                                <option>Nijmegen</option>
+                                <option>Wageningen</option>
+                                <option>Remote</option>
+                            </select>
+                        </div>
+
+                        <!-- Search Button -->
+                        <div class="flex items-end">
+                            <button onclick="performSearch()" class="neuro-button-primary w-full px-6 py-3 rounded-lg font-semibold text-white search-pulse">
+                                Zoeken
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters & Results -->
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Filter Bar -->
+        <div class="neuro-card rounded-2xl p-6 mb-8">
+            <div class="flex flex-wrap items-center gap-4">
+                <h3 class="font-semibold text-gray-800">Filters:</h3>
+                
+                <!-- Category Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <button class="filter-tag active px-4 py-2 rounded-full text-sm font-medium" onclick="toggleFilter(this)">
+                        Alle
+                    </button>
+                    <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium" onclick="toggleFilter(this)">
+                        Frontend
+                    </button>
+                    <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium" onclick="toggleFilter(this)">
+                        Backend
+                    </button>
+                    <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium" onclick="toggleFilter(this)">
+                        IoT
+                    </button>
+                    <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium" onclick="toggleFilter(this)">
+                        AI/ML
+                    </button>
+                    <button class="filter-tag px-4 py-2 rounded-full text-sm font-medium" onclick="toggleFilter(this)">
+                        UX/UI
+                    </button>
+                </div>
+
+                <!-- Sort Options -->
+                <div class="ml-auto flex items-center space-x-4">
+                    <label class="text-sm font-medium text-gray-700">Sorteer op:</label>
+                    <select class="neuro-input px-3 py-2 rounded-lg text-sm">
+                        <option>Relevantie</option>
+                        <option>Datum toegevoegd</option>
+                        <option>Deadline</option>
+                        <option>Bedrijfsnaam</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Counter -->
+        <div class="results-counter neuro-card rounded-xl p-4 mb-6">
+            <div class="flex items-center justify-between">
+                <p class="text-gray-600">
+                    <span class="font-semibold text-primary">47 resultaten</span> gevonden voor "React Developer"
+                </p>
+                <div class="flex items-center space-x-2">
+                    <button class="neuro-button p-2 rounded-lg" title="Lijstweergave">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                    </button>
+                    <button class="neuro-button p-2 rounded-lg" title="Kaartweergave">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Company Card 1: SmartFarm Technologies -->
+            <div class="company-card neuro-card rounded-3xl p-6 fade-in-up">
+                <div class="flex items-start space-x-4 mb-6">
+                    <img src="assets/logo_smartfarm.png" alt="SmartFarm Technologies" class="w-16 h-16 rounded-xl object-cover">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">SmartFarm Technologies</h3>
+                        <p class="text-gray-600 mb-2">Innovatieve IoT-oplossingen voor de agrarische sector</p>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                                <span>Wageningen</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span>25-50 medewerkers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500 mb-1">Match score</div>
+                        <div class="text-2xl font-bold text-primary">94%</div>
+                    </div>
+                </div>
+
+                <!-- Available Jobs -->
+                <div class="space-y-3">
+                    <h4 class="font-semibold text-gray-800 mb-3">Beschikbare klussen (3)</h4>
+                    
+                    <!-- Job 1 -->
+                    <div class="job-card neuro-card rounded-xl p-4 cursor-pointer" onclick="openJobDetail()">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h5 class="font-semibold text-gray-800">IoT Sensoren Dashboard</h5>
+                                <p class="text-sm text-gray-600">Real-time monitoring dashboard voor kas sensoren</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="priority-high text-white text-xs px-2 py-1 rounded-full font-medium">Hoog</span>
+                                <span class="text-sm font-semibold text-primary">15 ECTS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">React</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Python</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">IoT</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Deadline: 15 oktober 2024</span>
+                            <span>12 weken</span>
+                        </div>
+                    </div>
+
+                    <!-- Job 2 -->
+                    <div class="job-card neuro-card rounded-xl p-4 cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h5 class="font-semibold text-gray-800">Data Analytics Platform</h5>
+                                <p class="text-sm text-gray-600">Visualisatie van sensor data met ML insights</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="priority-medium text-white text-xs px-2 py-1 rounded-full font-medium">Medium</span>
+                                <span class="text-sm font-semibold text-primary">20 ECTS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Python</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Machine Learning</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">PostgreSQL</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Deadline: 1 november 2024</span>
+                            <span>16 weken</span>
+                        </div>
+                    </div>
+
+                    <!-- View All Jobs Button -->
+                    <button class="w-full neuro-button rounded-lg py-3 text-sm font-medium text-primary hover:text-darkPrimary transition-colors">
+                        Bekijk alle klussen (3)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Company Card 2: Groene Kassen BV -->
+            <div class="company-card neuro-card rounded-3xl p-6 fade-in-up">
+                <div class="flex items-start space-x-4 mb-6">
+                    <img src="assets/logo_groene_kassen.png" alt="Groene Kassen BV" class="w-16 h-16 rounded-xl object-cover">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">Groene Kassen BV</h3>
+                        <p class="text-gray-600 mb-2">Duurzame kassenteelt en circulaire landbouw</p>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                                <span>Arnhem</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span>10-25 medewerkers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500 mb-1">Match score</div>
+                        <div class="text-2xl font-bold text-primary">87%</div>
+                    </div>
+                </div>
+
+                <!-- Available Jobs -->
+                <div class="space-y-3">
+                    <h4 class="font-semibold text-gray-800 mb-3">Beschikbare klussen (2)</h4>
+                    
+                    <!-- Job 1 -->
+                    <div class="job-card neuro-card rounded-xl p-4 cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h5 class="font-semibold text-gray-800">Sustainability Dashboard</h5>
+                                <p class="text-sm text-gray-600">CO2 tracking en duurzaamheidsrapportage</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="priority-medium text-white text-xs px-2 py-1 rounded-full font-medium">Medium</span>
+                                <span class="text-sm font-semibold text-primary">12 ECTS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Vue.js</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Sustainability</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">D3.js</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Deadline: 28 oktober 2024</span>
+                            <span>10 weken</span>
+                        </div>
+                    </div>
+
+                    <!-- Job 2 -->
+                    <div class="job-card neuro-card rounded-xl p-4 cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h5 class="font-semibold text-gray-800">Mobile Kas App</h5>
+                                <p class="text-sm text-gray-600">React Native app voor kas monitoring</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="priority-low text-white text-xs px-2 py-1 rounded-full font-medium">Laag</span>
+                                <span class="text-sm font-semibold text-primary">18 ECTS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">React Native</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Mobile</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">API</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Deadline: 15 december 2024</span>
+                            <span>14 weken</span>
+                        </div>
+                    </div>
+
+                    <!-- View All Jobs Button -->
+                    <button class="w-full neuro-button rounded-lg py-3 text-sm font-medium text-primary hover:text-darkPrimary transition-colors">
+                        Bekijk alle klussen (2)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Company Card 3: Mechanisatie Plus -->
+            <div class="company-card neuro-card rounded-3xl p-6 fade-in-up">
+                <div class="flex items-start space-x-4 mb-6">
+                    <img src="assets/logo_mechanisatie.png" alt="Mechanisatie Plus" class="w-16 h-16 rounded-xl object-cover">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">Mechanisatie Plus</h3>
+                        <p class="text-gray-600 mb-2">Slimme landbouwmachines en automatisering</p>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                                <span>Nijmegen</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span>50-100 medewerkers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500 mb-1">Match score</div>
+                        <div class="text-2xl font-bold text-primary">82%</div>
+                    </div>
+                </div>
+
+                <!-- Available Jobs -->
+                <div class="space-y-3">
+                    <h4 class="font-semibold text-gray-800 mb-3">Beschikbare klussen (1)</h4>
+                    
+                    <!-- Job 1 -->
+                    <div class="job-card neuro-card rounded-xl p-4 cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h5 class="font-semibold text-gray-800">AI Predictive Maintenance</h5>
+                                <p class="text-sm text-gray-600">Machine learning voor machineonderhoud</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="priority-high text-white text-xs px-2 py-1 rounded-full font-medium">Hoog</span>
+                                <span class="text-sm font-semibold text-primary">25 ECTS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Python</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">TensorFlow</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">AI</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Deadline: 20 november 2024</span>
+                            <span>18 weken</span>
+                        </div>
+                    </div>
+
+                    <!-- View All Jobs Button -->
+                    <button class="w-full neuro-button rounded-lg py-3 text-sm font-medium text-primary hover:text-darkPrimary transition-colors">
+                        Bekijk alle klussen (1)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Company Card 4: AgriLogistiek -->
+            <div class="company-card neuro-card rounded-3xl p-6 fade-in-up">
+                <div class="flex items-start space-x-4 mb-6">
+                    <img src="assets/logo_agrilogistiek.png" alt="AgriLogistiek" class="w-16 h-16 rounded-xl object-cover">
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-1">AgriLogistiek</h3>
+                        <p class="text-gray-600 mb-2">Digitale supply chain en logistieke oplossingen</p>
+                        <div class="flex items-center space-x-4 text-sm text-gray-500">
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                                <span>Remote</span>
+                            </div>
+                            <div class="flex items-center space-x-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 515.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 919.288 0M15 7a3 3 0 11-6 0 3 3 0 616 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span>75+ medewerkers</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500 mb-1">Match score</div>
+                        <div class="text-2xl font-bold text-primary">79%</div>
+                    </div>
+                </div>
+
+                <!-- Available Jobs -->
+                <div class="space-y-3">
+                    <h4 class="font-semibold text-gray-800 mb-3">Beschikbare klussen (2)</h4>
+                    
+                    <!-- Job 1 -->
+                    <div class="job-card neuro-card rounded-xl p-4 cursor-pointer">
+                        <div class="flex items-start justify-between mb-3">
+                            <div>
+                                <h5 class="font-semibold text-gray-800">Logistics Dashboard</h5>
+                                <p class="text-sm text-gray-600">Real-time tracking van goederenstromen</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="priority-medium text-white text-xs px-2 py-1 rounded-full font-medium">Medium</span>
+                                <span class="text-sm font-semibold text-primary">16 ECTS</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">React</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">Node.js</span>
+                            <span class="skill-badge px-2 py-1 rounded-full text-xs text-white font-medium">GraphQL</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Deadline: 5 november 2024</span>
+                            <span>14 weken</span>
+                        </div>
+                    </div>
+
+                    <!-- View All Jobs Button -->
+                    <button class="w-full neuro-button rounded-lg py-3 text-sm font-medium text-primary hover:text-darkPrimary transition-colors">
+                        Bekijk alle klussen (2)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Load More -->
+        <div class="text-center mt-12">
+            <button class="neuro-button-primary px-8 py-3 rounded-lg font-semibold text-white">
+                Meer resultaten laden
+            </button>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-16 p-6 text-center text-gray-600 text-sm">
+        <p>Projojo - Zoekpagina voor Bedrijven & Klussen</p>
+    </footer>
+
+    <script>
+        function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            console.log('Zoeken naar:', searchInput.value);
+            // In een echte implementatie zou hier de zoekfunctionaliteit komen
+        }
+
+        function toggleFilter(button) {
+            // Remove active class from all filter buttons
+            document.querySelectorAll('.filter-tag').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            console.log('Filter geselecteerd:', button.textContent.trim());
+            // In een echte implementatie zou hier de filter logica komen
+        }
+
+        function openJobDetail() {
+            // Navigate to ActieveKlusv1.html for job details
+            window.location.href = 'ActieveKlusv1.html';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Zoekpagina geladen');
+            
+            // Add stagger animation to company cards
+            const cards = document.querySelectorAll('.fade-in-up');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    </script>
+</body>
+</html>

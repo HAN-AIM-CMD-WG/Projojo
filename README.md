@@ -1,6 +1,11 @@
 # Projojo
 
 A full-stack application with a Python backend, React frontend, and TypeDB database.
+# Softwareguidebook
+
+In de docs directory.
+
+## dit is een toetsje
 
 ## Prerequisites
 
@@ -13,7 +18,7 @@ That's it! No direct Node.js or Python installation required as everything runs 
 
 ### Quick Start
 
-> **First time setup?** Make sure to configure your OAuth credentials first!  
+> **First time setup?** Make sure to configure your OAuth credentials first!
 > See the [OAuth Setup Guide](./projojo_backend/auth/README.md) for instructions on obtaining Google and GitHub OAuth credentials.
 
 For Windows (PowerShell):

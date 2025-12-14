@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profiel - Emma de Vries | Projojo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#e50056',
+                        darkPrimary: '#CF004E',
+                        neuro: {
+                            bg: '#f0f0f3',
+                            light: '#ffffff',
+                            dark: '#d0d0d3',
+                            darker: '#a0a0a3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background: #f0f0f3; 
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+        }
+        
+        /* Neumorphic Design System */
+        .neuro-card {
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                12px 12px 24px #bebec1,
+                -12px -12px 24px #ffffff,
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .neuro-button {
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+            transition: all 0.2s ease;
+        }
+        
+        .neuro-button:hover {
+            box-shadow: 
+                8px 8px 16px #bebec1,
+                -8px -8px 16px #ffffff;
+        }
+        
+        .neuro-button:active {
+            box-shadow: 
+                inset 4px 4px 8px #bebec1,
+                inset -4px -4px 8px #ffffff;
+        }
+        
+        .neuro-button-primary {
+            background: linear-gradient(135deg, #e50056, #cf004e);
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+            color: white;
+            transition: all 0.2s ease;
+        }
+        
+        .neuro-button-primary:hover {
+            box-shadow: 
+                8px 8px 16px #bebec1,
+                -8px -8px 16px #ffffff;
+        }
+        
+        .neuro-input {
+            background: #f0f0f3;
+            box-shadow: 
+                inset 6px 6px 12px #bebec1,
+                inset -6px -6px 12px #ffffff;
+            border: none;
+        }
+        
+        .neuro-input:focus {
+            outline: none;
+            box-shadow: 
+                inset 6px 6px 12px #bebec1,
+                inset -6px -6px 12px #ffffff,
+                0 0 0 3px rgba(229, 0, 86, 0.3);
+        }
+        
+        /* Profile Avatar Large */
+        .profile-avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            box-shadow: 
+                12px 12px 24px #bebec1,
+                -12px -12px 24px #ffffff;
+        }
+        
+        .profile-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-shadow: 
+                4px 4px 8px #bebec1,
+                -4px -4px 8px #ffffff;
+        }
+        
+        /* Skills */
+        .skill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                4px 4px 8px #bebec1,
+                -4px -4px 8px #ffffff;
+            transition: all 0.2s ease;
+        }
+        
+        .skill-badge:hover {
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+            transform: translateY(-1px);
+        }
+        
+        .skill-level {
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .level-expert {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+        }
+        
+        .level-advanced {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+        }
+        
+        .level-intermediate {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+        }
+        
+        /* Progress Circle */
+        .progress-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 6px 6px 12px #bebec1, inset -6px -6px 12px #ffffff;
+        }
+        
+        /* Project Card Mini */
+        .project-mini {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            background: linear-gradient(145deg, #ffffff, #f5f5f8);
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+            transition: all 0.2s ease;
+        }
+        
+        .project-mini:hover {
+            box-shadow: 
+                8px 8px 16px #bebec1,
+                -8px -8px 16px #ffffff;
+            transform: translateY(-1px);
+        }
+        
+        .company-logo-small {
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f3;
+            box-shadow: 
+                3px 3px 6px #bebec1,
+                -3px -3px 6px #ffffff;
+            flex-shrink: 0;
+        }
+        
+        /* Edit Mode */
+        .edit-mode {
+            display: none;
+        }
+        
+        .editing .view-mode {
+            display: none;
+        }
+        
+        .editing .edit-mode {
+            display: block;
+        }
+        
+        /* Tabs */
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background: linear-gradient(145deg, #f5f5f8, #ececef);
+            box-shadow: 
+                6px 6px 12px #bebec1,
+                -6px -6px 12px #ffffff;
+            color: #e50056;
+            font-weight: 600;
+        }
+        
+        .tab:not(.active):hover {
+            background: rgba(229, 0, 86, 0.05);
+            color: #e50056;
+        }
+        
+        /* Typography */
+        h1 { font-size: 1.875rem; font-weight: 700; color: #1f2937; }
+        h2 { font-size: 1.25rem; font-weight: 700; color: #374151; }
+        h3 { font-size: 1rem; font-weight: 600; color: #4b5563; }
+        
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #e50056;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.625rem;
+            font-weight: 700;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Section spacing */
+        section {
+            overflow: visible;
+            margin-bottom: 2rem;
+        }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="neuro-card rounded-none mb-8 py-3 px-8 sticky top-0 z-20">
+        <div class="max-w-[1500px] mx-auto flex items-center justify-between gap-8">
+            <!-- Left: Logo + Back -->
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='dashboard-v10.html'" class="neuro-button rounded-lg p-2">
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <img src="assets/han_logo.png" alt="Projojo" class="w-9 h-9 object-contain">
+                <h1 class="hidden sm:block text-xl">Profiel</h1>
+            </div>
+            
+            <!-- Right: Actions + Avatar -->
+            <div class="flex items-center gap-2">
+                <button class="neuro-button rounded-lg p-2.5 relative">
+                    <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="w-px h-8 bg-gray-300 hidden md:block"></div>
+                
+                <button class="flex items-center gap-2.5">
+                    <img src="assets/student_female.png" alt="Emma" class="profile-avatar-small">
+                    <div class="hidden lg:block text-left">
+                        <div class="text-sm font-semibold text-gray-800 leading-tight">Emma de Vries</div>
+                        <div class="text-xs text-gray-600">Informatica</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-[1500px] mx-auto px-8 pb-12">
+        <!-- Profile Header -->
+        <div class="neuro-card rounded-3xl p-8 mb-8">
+            <div class="flex flex-col md:flex-row gap-8 items-start">
+                <!-- Avatar & Basic Info -->
+                <div class="flex flex-col items-center gap-4">
+                    <img src="assets/student_female.png" alt="Emma de Vries" class="profile-avatar-large">
+                    <button onclick="toggleEditMode()" class="neuro-button px-6 py-2.5 rounded-lg text-sm font-medium text-gray-700">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Bewerk profiel
+                    </button>
+                </div>
+                
+                <!-- Info & Stats -->
+                <div class="flex-1">
+                    <div class="mb-6">
+                        <h1 class="mb-2">Emma de Vries</h1>
+                        <p class="text-gray-600 mb-1">Toegepaste Informatica • Semester 5</p>
+                        <p class="text-gray-600 text-sm">HAN University of Applied Sciences • Arnhem</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-primary mb-1">12</div>
+                            <div class="text-sm text-gray-600">Skills</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-green-600 mb-1">8</div>
+                            <div class="text-sm text-gray-600">Projecten voltooid</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-blue-600 mb-1">2</div>
+                            <div class="text-sm text-gray-600">Actieve projecten</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-orange-600 mb-1">95%</div>
+                            <div class="text-sm text-gray-600">Avg. match score</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact -->
+                    <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            emma.devries@student.han.nl
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                            </svg>
+                            linkedin.com/in/emmadevries
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                            </svg>
+                            github.com/emmadevries
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-8 overflow-x-auto">
+            <div class="tab active" onclick="showTab('skills')">Skills & Competenties</div>
+            <div class="tab" onclick="showTab('projects')">Portfolio</div>
+            <div class="tab" onclick="showTab('experience')">Ervaring</div>
+            <div class="tab" onclick="showTab('education')">Opleiding</div>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="skills-tab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Technical Skills -->
+                <div class="lg:col-span-2">
+                    <section>
+                        <h2 class="mb-4">Technische Skills</h2>
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="space-y-4">
+                                <!-- Skill Category: Frontend -->
+                                <div>
+                                    <h3 class="text-gray-700 mb-3">Frontend Development</h3>
+                                    <div class="flex flex-wrap gap-3">
+                                        <div class="skill-badge">
+                                            <span>React</span>
+                                            <span class="skill-level level-expert">Expert</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>JavaScript</span>
+                                            <span class="skill-level level-advanced">Advanced</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>TypeScript</span>
+                                            <span class="skill-level level-advanced">Advanced</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>HTML/CSS</span>
+                                            <span class="skill-level level-expert">Expert</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>Vue.js</span>
+                                            <span class="skill-level level-intermediate">Intermediate</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Skill Category: Backend -->
+                                <div>
+                                    <h3 class="text-gray-700 mb-3">Backend Development</h3>
+                                    <div class="flex flex-wrap gap-3">
+                                        <div class="skill-badge">
+                                            <span>Python</span>
+                                            <span class="skill-level level-advanced">Advanced</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>Node.js</span>
+                                            <span class="skill-level level-advanced">Advanced</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>FastAPI</span>
+                                            <span class="skill-level level-intermediate">Intermediate</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>REST APIs</span>
+                                            <span class="skill-level level-advanced">Advanced</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Skill Category: Tools & Other -->
+                                <div>
+                                    <h3 class="text-gray-700 mb-3">Tools & Technologies</h3>
+                                    <div class="flex flex-wrap gap-3">
+                                        <div class="skill-badge">
+                                            <span>Git</span>
+                                            <span class="skill-level level-expert">Expert</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>Docker</span>
+                                            <span class="skill-level level-intermediate">Intermediate</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>PostgreSQL</span>
+                                            <span class="skill-level level-intermediate">Intermediate</span>
+                                        </div>
+                                        <div class="skill-badge">
+                                            <span>IoT</span>
+                                            <span class="skill-level level-advanced">Advanced</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Soft Skills -->
+                    <section>
+                        <h2 class="mb-4">Soft Skills</h2>
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div class="text-center p-4">
+                                    <div class="text-2xl mb-2">🤝</div>
+                                    <div class="text-sm font-medium text-gray-800">Teamwork</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="text-2xl mb-2">💬</div>
+                                    <div class="text-sm font-medium text-gray-800">Communicatie</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="text-2xl mb-2">🎯</div>
+                                    <div class="text-sm font-medium text-gray-800">Probleemoplossend</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="text-2xl mb-2">⏱️</div>
+                                    <div class="text-sm font-medium text-gray-800">Time Management</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="text-2xl mb-2">🚀</div>
+                                    <div class="text-sm font-medium text-gray-800">Proactief</div>
+                                </div>
+                                <div class="text-center p-4">
+                                    <div class="text-2xl mb-2">📚</div>
+                                    <div class="text-sm font-medium text-gray-800">Leergierig</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Skill Progress -->
+                <div>
+                    <section>
+                        <h2 class="mb-4">Voortgang</h2>
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="text-center mb-6">
+                                <div class="progress-circle mx-auto mb-3">
+                                    <div class="text-3xl font-bold text-primary">75%</div>
+                                    <div class="text-xs text-gray-600">Semester</div>
+                                </div>
+                                <p class="text-sm text-gray-600">12 van 16 competenties behaald</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-700 font-medium">Frontend</span>
+                                        <span class="text-gray-600">95%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-300 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-primary to-pink-500" style="width: 95%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-700 font-medium">Backend</span>
+                                        <span class="text-gray-600">80%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-300 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-blue-500 to-blue-600" style="width: 80%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-700 font-medium">IoT & Hardware</span>
+                                        <span class="text-gray-600">70%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-300 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-green-500 to-green-600" style="width: 70%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span class="text-gray-700 font-medium">Data Science</span>
+                                        <span class="text-gray-600">50%</span>
+                                    </div>
+                                    <div class="h-2 bg-gray-300 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-orange-500 to-orange-600" style="width: 50%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Certificates -->
+                    <section>
+                        <h2 class="mb-4">Certificaten</h2>
+                        <div class="neuro-card rounded-2xl p-6">
+                            <div class="space-y-3">
+                                <div class="text-sm">
+                                    <div class="font-semibold text-gray-800 mb-1">React Developer Certification</div>
+                                    <div class="text-xs text-gray-600">Meta • 2024</div>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="font-semibold text-gray-800 mb-1">Python for Data Science</div>
+                                    <div class="text-xs text-gray-600">IBM • 2023</div>
+                                </div>
+                                <div class="text-sm">
+                                    <div class="font-semibold text-gray-800 mb-1">IoT Fundamentals</div>
+                                    <div class="text-xs text-gray-600">Cisco • 2023</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div id="projects-tab" class="tab-content hidden">
+            <section>
+                <h2 class="mb-4">Voltooide Projecten</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Project 1 -->
+                    <div class="neuro-card rounded-2xl p-6">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="company-logo-small">
+                                <img src="assets/logo_smartfarm.png" alt="SmartFarm" class="w-10 h-10 object-contain">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-gray-800 mb-1">IoT Sensoren Dashboard</h3>
+                                <p class="text-sm text-gray-600">SmartFarm Technologies</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-semibold text-green-600">Voltooid</div>
+                                <div class="text-xs text-gray-500">Nov 2024</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">
+                            Ontwikkeling van een real-time IoT dashboard voor monitoring van sensor data in kassen. 
+                            Gebruik gemaakt van React, Python en MQTT protocol.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">React</span>
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">Python</span>
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">IoT</span>
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">MQTT</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <strong>Cijfer:</strong> 8.5 • <strong>ECTS:</strong> 15
+                        </div>
+                    </div>
+
+                    <!-- Project 2 -->
+                    <div class="neuro-card rounded-2xl p-6">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="company-logo-small">
+                                <img src="assets/logo_groene_kassen.png" alt="Groene Kassen" class="w-10 h-10 object-contain">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-gray-800 mb-1">Sustainability Dashboard</h3>
+                                <p class="text-sm text-gray-600">Groene Kassen BV</p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-semibold text-green-600">Voltooid</div>
+                                <div class="text-xs text-gray-500">Okt 2024</div>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4">
+                            Data visualisatie platform voor duurzaamheidsmetrieken met interactieve D3.js grafieken 
+                            en real-time data processing.
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">Vue.js</span>
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">D3.js</span>
+                            <span class="text-xs px-2 py-1 bg-gray-200 text-gray-700 rounded">Node.js</span>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <strong>Cijfer:</strong> 9.0 • <strong>ECTS:</strong> 12
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="experience-tab" class="tab-content hidden">
+            <section>
+                <h2 class="mb-4">Werkervaring</h2>
+                <div class="space-y-6">
+                    <div class="neuro-card rounded-2xl p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="text-gray-800 mb-1">Junior Frontend Developer</h3>
+                                <p class="text-sm text-gray-600">WebDev Solutions • Stage</p>
+                            </div>
+                            <div class="text-sm text-gray-500">Feb 2024 - Jun 2024</div>
+                        </div>
+                        <p class="text-sm text-gray-600">
+                            Stage bij een lokaal webdevelopment bureau waar ik heb gewerkt aan diverse klantprojecten 
+                            met focus op React en moderne frontend frameworks.
+                        </p>
+                    </div>
+
+                    <div class="neuro-card rounded-2xl p-6">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="text-gray-800 mb-1">Teaching Assistant</h3>
+                                <p class="text-sm text-gray-600">HAN University • Parttime</p>
+                            </div>
+                            <div class="text-sm text-gray-500">Sep 2023 - Heden</div>
+                        </div>
+                        <p class="text-sm text-gray-600">
+                            Begeleiding van eerstejaars studenten bij programmeren in Python en JavaScript. 
+                            Organisatie van werkgroepen en hulp bij praktische opdrachten.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="education-tab" class="tab-content hidden">
+            <section>
+                <h2 class="mb-4">Opleiding</h2>
+                <div class="neuro-card rounded-2xl p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-gray-800 mb-1">Bachelor Toegepaste Informatica</h3>
+                            <p class="text-sm text-gray-600">HAN University of Applied Sciences</p>
+                        </div>
+                        <div class="text-sm text-gray-500">2022 - 2026</div>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-4">
+                        Specialisatie in software engineering met focus op web development, IoT en data science. 
+                        Minor in AI & Machine Learning.
+                    </p>
+                    <div class="space-y-2">
+                        <div class="text-sm">
+                            <span class="font-medium text-gray-700">GPA:</span> 
+                            <span class="text-gray-600">8.2/10</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="font-medium text-gray-700">Behaalde ECTS:</span> 
+                            <span class="text-gray-600">180/240</span>
+                        </div>
+                        <div class="text-sm">
+                            <span class="font-medium text-gray-700">Verwachte afstudeerdatum:</span> 
+                            <span class="text-gray-600">Juni 2026</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 p-6 text-center text-gray-600 text-xs">
+        <p>Projojo Student Profile • Modern & Professional Design</p>
+    </footer>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            
+            // Add active class to clicked tab button
+            event.target.classList.add('active');
+        }
+        
+        // Edit mode toggle
+        function toggleEditMode() {
+            alert('Edit functionaliteit komt in een volgende versie');
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Student Profile loaded');
+        });
+    </script>
+</body>
+</html>
+
+
