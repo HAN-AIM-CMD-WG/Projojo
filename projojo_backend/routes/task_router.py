@@ -145,9 +145,10 @@ async def update_registration(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie." + str(e))
 
-@router.post("/", response_model=Task, status_code=201)
-@auth(role="supervisor")
+@router.post("/{project_id}", response_model=Task, status_code=201)
+@auth(role="supervisor", owner_id_key="project_id")
 async def create_task(
+    project_id: str = Path(..., description="Project ID"),
     task_create: TaskCreate = Body(...)
 ):
     """
@@ -159,7 +160,7 @@ async def create_task(
             name=task_create.name,
             description=task_create.description,
             total_needed=task_create.total_needed,
-            project_id=task_create.project_id,
+            project_id=project_id,
             created_at=datetime.now()
         )
 

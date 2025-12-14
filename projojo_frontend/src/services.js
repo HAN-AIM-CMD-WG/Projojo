@@ -298,11 +298,10 @@ export function createTask(projectId, formDataObj) {
     const taskData = {
         name: formDataObj.title,
         description: formDataObj.description,
-        total_needed: formDataObj.totalNeeded,
-        project_id: projectId
+        total_needed: formDataObj.totalNeeded
     };
 
-    return fetchWithError(`${API_BASE_URL}tasks/`, {
+    return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {
         method: "POST",
         body: JSON.stringify(taskData),
     });
