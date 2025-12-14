@@ -315,18 +315,17 @@ class BusinessRepository(BaseRepository[Business]):
     
     def archive_business(self, business_id: str) -> None:
         """Archive a business (set isArchived to true)."""
-        # First try to delete existing isArchived attribute (if any)
+        # First check if isArchived already exists and delete it
+        delete_query = """
+            match
+                $business isa business, has id ~business_id, has isArchived $val;
+            delete
+                has $val of $business;
+        """
         try:
-            delete_query = """
-                match
-                    $business isa business, has id ~business_id;
-                    $business has isArchived $archived;
-                delete
-                    $business has $archived;
-            """
             Db.write_transact(delete_query, {"business_id": business_id})
         except Exception:
-            pass  # Attribute might not exist yet
+            pass  # Attribute might not exist yet, that's fine
         
         # Then insert the new value
         insert_query = """
@@ -339,26 +338,16 @@ class BusinessRepository(BaseRepository[Business]):
     
     def restore_business(self, business_id: str) -> None:
         """Restore an archived business (set isArchived to false)."""
-        # First delete existing isArchived attribute
-        try:
-            delete_query = """
-                match
-                    $business isa business, has id ~business_id;
-                    $business has isArchived $archived;
-                delete
-                    $business has $archived;
-            """
-            Db.write_transact(delete_query, {"business_id": business_id})
-        except Exception:
-            pass  # Attribute might not exist
-        
-        # Insert isArchived = false (or just leave it without the attribute)
-        # Since no isArchived means not archived, we can skip inserting false
-        # But for explicitness, let's insert false
-        insert_query = """
+        # Delete existing isArchived attribute
+        delete_query = """
             match
-                $business isa business, has id ~business_id;
-            insert
-                $business has isArchived false;
+                $business isa business, has id ~business_id, has isArchived $val;
+            delete
+                has $val of $business;
         """
-        Db.write_transact(insert_query, {"business_id": business_id})
+        try:
+            Db.write_transact(delete_query, {"business_id": business_id})
+        except Exception as e:
+            print(f"Delete failed for business {business_id}: {e}")
+        
+        # Don't insert false - absence of isArchived means not archived

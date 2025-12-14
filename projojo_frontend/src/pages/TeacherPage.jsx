@@ -151,9 +151,11 @@ export default function TeacherPage() {
     const handleRestoreBusiness = async (businessId) => {
         try {
             await restoreBusiness(businessId);
+            // Force refresh of both lists
             setNumberToReloadBusinesses(prev => prev + 1);
         } catch (err) {
-            setError(err.message);
+            console.error("Error restoring business:", err);
+            setError(err.message || "Er ging iets mis bij het herstellen");
         }
     };
 

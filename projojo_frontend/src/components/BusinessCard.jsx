@@ -190,7 +190,7 @@ export default function BusinessCard({
 
                 {/* Description (optional) */}
                 {showDescription && description && (
-                    <div className="mt-4 text-sm text-gray-500 line-clamp-2">
+                    <div className={`mt-4 text-sm text-gray-600 ${!showUpdateButton ? 'line-clamp-3' : ''}`}>
                         <RichTextViewer text={description} />
                     </div>
                 )}
