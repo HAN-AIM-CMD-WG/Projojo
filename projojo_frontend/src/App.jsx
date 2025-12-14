@@ -5,6 +5,7 @@ import { StudentSkillsProvider } from './context/StudentSkillsContext';
 import Footer from "./components/Footer";
 import Navbar from './components/Navbar';
 import BusinessPage from './pages/BusinessPage';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import NotFound from './pages/NotFound';
 import OverviewPage from './pages/OverviewPage';
@@ -52,14 +53,18 @@ export default function App() {
 
   }, [location, setAuthData]);
 
+  // Pages without navbar/footer (landing, login, auth callback)
+  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found";
+
   return (
     <StudentSkillsProvider>
       <div className="min-h-screen bg-neu-bg">
-        {location.pathname !== "/" && <Navbar />}
-        <main className="max-w-7xl min-h-dvh px-6 mx-auto relative py-6">
+        {!isPublicPage && <Navbar />}
+        <main className={isPublicPage ? "" : "max-w-7xl min-h-dvh px-6 mx-auto relative py-6"}>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/email-not-found" element={<EmailNotFound />} />
-            <Route path="/" element={<LoginPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/home" element={<HomePage />} />
             <Route path="/ontdek" element={<OverviewPage />} />
@@ -80,7 +85,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-        {location.pathname !== "/" && <Footer />}
+        {!isPublicPage && <Footer />}
       </div>
     </StudentSkillsProvider>
   )
