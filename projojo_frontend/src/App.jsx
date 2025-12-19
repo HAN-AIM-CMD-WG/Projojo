@@ -20,6 +20,7 @@ import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
 import StudentDashboard from "./pages/StudentDashboard";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
+import DesignDemoPage from "./pages/DesignDemoPage";
 
 /**
  * HomePage - Conditionally renders StudentDashboard or SupervisorDashboard based on user role
@@ -53,8 +54,8 @@ export default function App() {
 
   }, [location, setAuthData]);
 
-  // Pages without navbar/footer (landing, login, auth callback)
-  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found";
+  // Pages without navbar/footer (landing, login, auth callback, design demo)
+  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo";
 
   return (
     <StudentSkillsProvider>
@@ -82,6 +83,7 @@ export default function App() {
               <Route path="update" element={<UpdateStudentPage />} />
             </Route>
             <Route path="/teacher" element={<TeacherPage />} />
+            <Route path="/design-demo" element={<DesignDemoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
