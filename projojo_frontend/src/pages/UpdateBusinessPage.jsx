@@ -49,7 +49,8 @@ export default function UpdateBusinessPage() {
         updateBusiness(authData.businessId, formData)
             .then(() => {
                 navigation(`/business/${authData.businessId}`);
-            }).catch(error => setError(error.message));
+            })
+            .catch(error => setError(error.message));
     }
 
     return (
