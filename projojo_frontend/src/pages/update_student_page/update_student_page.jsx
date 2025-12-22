@@ -8,15 +8,10 @@ import Page from "../../components/paged_component/page";
 import PagedComponent from "../../components/paged_component/paged_component";
 import PdfPreview from "../../components/PdfPreview";
 import RichTextEditor from "../../components/RichTextEditor";
-import { createErrorMessage, getUser, updateStudent } from "../../services";
+import { getUser, updateStudent } from "../../services";
 import useFetch from "../../useFetch";
 import { IMAGE_BASE_URL, PDF_BASE_URL } from "../../services";
 import { notification } from "../../components/notifications/NotifySystem";
-
-const authErrorMessages = {
-    401: "Je bent niet ingelogd. Log opnieuw in.",
-    403: "Je bent niet ingelogd als student. Log opnieuw in.",
-}
 
 /**
  * Creates a UpdateStudentPage component
@@ -52,10 +47,7 @@ export default function UpdateStudentPage() {
 
     useEffect(() => {
         if (error !== undefined && serverError === undefined) {
-            setServerError(createErrorMessage(error, {
-                ...authErrorMessages,
-                404: "Je account is niet gevonden? Probeer opnieuw in te loggen",
-            }));
+            setServerError(error.message);
         }
     }, [error, serverError]);
 
@@ -83,10 +75,7 @@ export default function UpdateStudentPage() {
                 navigate(`/student/${authData.userId}`);
             })
             .catch(error => {
-                setServerError(createErrorMessage(error, {
-                    400: "Er is een fout ontstaan bij het versturen van de data.",
-                    ...authErrorMessages,
-                }));
+                setServerError(error.message);
             })
     }
 

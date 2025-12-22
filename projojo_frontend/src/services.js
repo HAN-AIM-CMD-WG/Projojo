@@ -80,17 +80,23 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                 } catch {
 
                     switch (errorStatus) {
+                        case 400:
+                            message = message ?? "Ongeldig verzoek. Controleer je invoer.";
+                            break;
                         case 401:
-                            message = message ?? "Je moet ingelogd zijn om dit te doen";
+                            message = message ?? "Je moet ingelogd zijn om dit te doen.";
                             break;
                         case 403:
-                            message = message ?? "Je hebt geen rechten voor deze actie";
+                            message = message ?? "Je hebt geen rechten voor deze actie.";
                             break;
                         case 404:
-                            message = message ?? "Dit konden we niet vinden";
+                            message = message ?? "Dit konden we niet vinden.";
                             break;
                         case 409:
-                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan.";
+                            message = message ?? "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            break;
+                        case 429:
+                            message = message ?? "Te veel verzoeken. Probeer het later opnieuw.";
                             break;
                         default:
                             message = message ?? "Er is een onverwachte fout opgetreden.";
@@ -103,18 +109,6 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
             }
             return json;
         })
-}
-
-/**
- * @param {Error} error
- * @param {Record<number, string>} mapper
- */
-export function createErrorMessage(error, mapper) {
-    let message = error?.message;
-    if (error instanceof HttpError) {
-        message = mapper[error.statusCode];
-    }
-    return message ?? "Er is een onverwachte fout opgetreden.";
 }
 
 /**
