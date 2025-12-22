@@ -112,16 +112,20 @@ async def update_business(
     image_filename = None
     if image and image.filename:
         try:
-        # Save the image with a random filename
+            # Save the image with a random filename
             image_filename = save_image(image)
+        except HTTPException:
+            raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
+            print(f"Error saving image for business {business_id}: {e}")
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
 
     try:
         business_repo.update(business_id, name, description, location, image_filename)
         return {"message": "Bedrijf succesvol bijgewerkt"}
     except Exception as e:
+        print(f"Error updating business {business_id}: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." + str(e)
+            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf."
         )

@@ -106,7 +106,7 @@ def save_image(file: UploadFile, directory: str = "static/images") -> str:
         str: The unique filename of the saved image
 
     Raises:
-        ValueError: If the file type doesn't match the expected type for the directory
+        HTTPException: If the file type doesn't match the expected type for the directory
     """
     # Validate file type
     content_type = file.content_type or ""

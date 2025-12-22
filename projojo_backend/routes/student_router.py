@@ -145,8 +145,11 @@ async def update_student(
 
         return {"message": "Profiel succesvol bijgewerkt"}
 
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Error updating student {student_id}: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Er is een fout opgetreden bij het bijwerken van het profiel: {str(e)}"
+            detail="Er is een fout opgetreden bij het bijwerken van het profiel"
         )
