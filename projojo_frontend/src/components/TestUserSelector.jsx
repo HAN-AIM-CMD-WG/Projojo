@@ -74,7 +74,7 @@ export default function TestUserSelector() {
 			});
 
 			if (!response.ok) {
-				throw new Error('Failed to generate test token');
+				throw new Error('Kan testtoken niet genereren');
 			}
 
 			const data = await response.json();

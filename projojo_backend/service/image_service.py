@@ -68,22 +68,23 @@ def is_safe_url(url: str) -> tuple[bool, str]:
 
         # Only allow https
         if parsed.scheme.lower() != "https":
-            return False, "Only https URLs are allowed"
+            return False, "Er ging iets mis bij het ophalen van de afbeelding"
 
         # Check if hostname exists
         if not parsed.hostname:
-            return False, "URL must have a valid hostname"
+            return False, "Er ging iets mis bij het ophalen van de afbeelding"
 
         hostname = parsed.hostname.lower()
 
         # Check if hostname is in the whitelist
         if hostname not in ALLOWED_IMAGE_DOMAINS:
-            return False, f"Domain {hostname} is not allowed"
+            return False, "Er ging iets mis bij het ophalen van de afbeelding"
 
         return True, ""
 
     except Exception as e:
-        return False, f"Invalid URL format: {str(e)}"
+        print(f"Error validating URL {url}: {e}")
+        return False, "Er ging iets mis bij het ophalen van de afbeelding"
 
 
 def save_image(file: UploadFile, directory: str = "static/images") -> str:

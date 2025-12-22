@@ -30,7 +30,7 @@ async def get_student_skills(student_id: str = Path(..., description="Student ID
     student = user_repo.get_student_by_id(student_id)
 
     if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+        raise HTTPException(status_code=404, detail="Student niet gevonden")
     return student
 
 

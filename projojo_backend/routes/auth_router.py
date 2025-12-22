@@ -98,7 +98,7 @@ async def test_login(user_id: str, request: Request):
     if not ENVIRONMENT == "development":
         raise HTTPException(
             status_code=403,
-            detail="This endpoint is only available from localhost in development environments"
+            detail="Dit kan alleen in de test-omgeving"
         )
 
     # Get user from database
@@ -106,7 +106,7 @@ async def test_login(user_id: str, request: Request):
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail="Gebruiker niet gevonden"
         )
 
     # Handle both dict and object responses from repository

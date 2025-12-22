@@ -30,7 +30,7 @@ class UserRepository(BaseRepository[User]):
             return teacher
 
         if not supervisor and not student and not teacher:
-            raise ItemRetrievalException(User, f"User with ID {id} not found.")
+            raise ItemRetrievalException(User, f"Gebruiker met ID {id} niet gevonden")
         return None
 
     def get_all(self) -> list[User]:
@@ -532,10 +532,10 @@ class UserRepository(BaseRepository[User]):
         # Currently always creates a student
 
         if not user.oauth_providers or len(user.oauth_providers) == 0:
-            raise ValueError("Cannot create user without OAuth provider information")
+            raise ValueError("OAuth-providerinformatie ontbreekt")
 
         if len(user.oauth_providers) > 1:
-            raise ValueError("Cannot create user with multiple OAuth providers. Users can only be created with a single OAuth provider.")
+            raise ValueError("Je kan maar met één provider een account aanmaken")
 
         # Get the OAuth provider
         oauth_provider = user.oauth_providers[0]
@@ -552,7 +552,7 @@ class UserRepository(BaseRepository[User]):
         })
 
         if not provider_results:
-            raise ValueError(f"OAuth provider '{oauth_provider.provider_name}' is not configured.")
+            raise ValueError(f"We ondersteunen '{oauth_provider.provider_name}' nog niet")
 
         id = generate_uuid()
 

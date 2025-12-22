@@ -81,16 +81,16 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
 
                     switch (errorStatus) {
                         case 401:
-                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
+                            message = message ?? "Je moet ingelogd zijn om dit te doen";
                             break;
                         case 403:
-                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
+                            message = message ?? "Je hebt geen rechten voor deze actie";
                             break;
                         case 404:
-                            message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
+                            message = message ?? "Dit konden we niet vinden";
                             break;
                         case 409:
-                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan in het systeem.";
+                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan.";
                             break;
                         default:
                             message = message ?? "Er is een onverwachte fout opgetreden.";

@@ -49,15 +49,17 @@ def get_token_payload(request: Request) -> dict:
     """
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+        raise HTTPException(status_code=401, detail="Er is iets fout gegaan met je sessie. Log opnieuw in.")
 
     token_str = auth_header[7:]
 
     try:
         return jwt.decode(token_str, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid or tampered token")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Je sessie is verlopen. Log opnieuw in.")
+    except jwt.InvalidTokenError as ite:
+        print(f"Invalid JWT token: {ite}")
+        raise HTTPException(status_code=401, detail="Er is iets fout gegaan met je sessie. Log opnieuw in.")
+    except Exception as e:
+        print(f"Unexpected error while decoding JWT token: {e}")
+        raise HTTPException(status_code=401, detail="Je moet ingelogd zijn")

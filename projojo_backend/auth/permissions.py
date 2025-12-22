@@ -57,7 +57,8 @@ def auth(role: str, owner_id_key: str | None = None):
             # Extract Request from context variable (set by middleware)
             request = get_request_context()
             if not request:
-                raise HTTPException(status_code=500, detail="Request context not found")
+                print("Request context not found in auth decorator")
+                raise HTTPException(status_code=500, detail="Er is iets misgegaan bij de autorisatie. Probeer het later opnieuw.")
 
             # Extract auth info from request state (set by JWT middleware)
             user_id = request.state.user_id
@@ -74,9 +75,10 @@ def auth(role: str, owner_id_key: str | None = None):
                 resource_id = kwargs.get(owner_id_key)
 
                 if not resource_id:
+                    print(f"Owner ID key '{owner_id_key}' not found in path parameters")
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Missing required parameter: {owner_id_key}"
+                        detail="Er ging iets mis met de autorisatie. Probeer het later opnieuw."
                     )
 
                 is_owner = await _validate_ownership(
@@ -90,7 +92,7 @@ def auth(role: str, owner_id_key: str | None = None):
                 if not is_owner:
                     raise HTTPException(
                         status_code=403,
-                        detail=f"You do not have permission to access this {owner_id_key.replace('_id', '')}"
+                        detail="Je hebt hier geen rechten voor."
                     )
 
             # All checks passed, call the endpoint function
@@ -143,20 +145,20 @@ def _get_role_error(user_role: str | None, required_role: str) -> tuple[int, str
     if user_role is None:
         # User is not authenticated
         if required_role == "unauthenticated":
-            return (403, "You must be logged out to access this endpoint")
+            return (403, "Je moet uitgelogd zijn om dit te doen")
         else:
-            return (401, "Authentication required. Please log in.")
+            return (401, "Je moet ingelogd zijn om dit te kunnen doen.")
 
     # User is authenticated but doesn't have required role
     role_descriptions = {
-        "student": "student access",
-        "supervisor": "supervisor or teacher access",
-        "teacher": "teacher access",
-        "authenticated": "authenticated access",
+        "student": "een student",
+        "supervisor": "een supervisor",
+        "teacher": "een leraar",
+        "authenticated": "ingelogd",
     }
 
-    required_description = role_descriptions.get(required_role, "access")
-    return (403, f"This action requires {required_description}")
+    required_description = role_descriptions.get(required_role, required_role)
+    return (403, f"Deze actie kan je alleen doen als je {required_description} bent.")
 
 
 async def _validate_ownership(
