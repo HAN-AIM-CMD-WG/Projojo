@@ -31,11 +31,6 @@ async def get_colleague_email_addresses(request: Request, task_id: str = Path(..
     if request.state.user_role != "supervisor":
         raise HTTPException(status_code=403, detail="Alleen supervisors kunnen collega's opvragen")
 
-    # Get the task to find the project
-    task = task_repo.get_by_id(task_id)
-    if not task:
-        raise HTTPException(status_code=404, detail="Taak niet gevonden")
-
     # Get colleagues in the business of the task
     return user_repo.get_colleagues(task_id, request.state.user_id)
 
@@ -100,10 +95,6 @@ async def create_registration(
     """
     Create a new registration for a student to a task
     """
-    # Check if user is a student
-    if request.state.user_role != "student":
-        raise HTTPException(status_code=403, detail="Alleen studenten kunnen zich registreren voor taken")
-
     student_id = request.state.user_id
 
     task = task_repo.get_by_id(task_id)

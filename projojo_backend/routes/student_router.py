@@ -73,7 +73,7 @@ async def update_student_skill_description(
 
     try:
         skill_repo.update_student_skill_description(student_id, skill_id, skill.description)
-        return {"message": "Skill description successfully updated"}
+        return {"message": "Skillbeschrijving succesvol bijgewerkt"}
     except Exception:
         raise HTTPException(
             status_code=500,

@@ -597,9 +597,10 @@ class UserRepository(BaseRepository[User]):
         # Return the created user
         return created_user
 
-    async def get_supervisor_accessible_resources(self, supervisor_company_id: str, resource_id: str) -> dict:
+    async def get_supervisor_accessible_resources_with_id(self, supervisor_company_id: str, resource_id: str) -> dict:
         """
-        Fetch all accessible resources (projects, tasks, users) for a supervisor's company.
+        Fetch all accessible resources (projects, tasks, users) for a supervisor's company by resource ID.
+        (should only have 1 result, but its technically possible to have multiple matches, though infinitely unlikely)
 
         Args:
             supervisor_company_id: The supervisor's business ID

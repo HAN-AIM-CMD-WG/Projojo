@@ -167,9 +167,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         </strong>
                         openstaande aanmeldingen
                     </InfoBox>
-                    {authData.type === "student" && (
-                        <button className={`btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "cursor-not-allowed opacity-50" : ""}`} disabled={(studentAlreadyRegistered || isFull)} onClick={() => setIsModalOpen(true)}>{studentAlreadyRegistered ? "Aanmelding ontvangen" : isFull ? "Taak is vol" : "Aanmelden"}</button>
-                    )}
+                    <button className={`btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "cursor-not-allowed opacity-50" : ""}`} disabled={(studentAlreadyRegistered || isFull)} onClick={() => setIsModalOpen(true)}>{studentAlreadyRegistered ? "Aanmelding ontvangen" : isFull ? "Taak is vol" : "Aanmelden"}</button>
                     {isOwner && (<>
                         <button className="btn-primary w-full" onClick={() => setIsRegistrationsModalOpen(true)}>Bekijk aanmeldingen</button>
                         <CreateBusinessEmail taskId={task.id} />

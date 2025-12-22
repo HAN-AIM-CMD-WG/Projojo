@@ -51,6 +51,13 @@ class JWTMiddleware(BaseHTTPMiddleware):
         try:
             payload = get_token_payload(request)
 
+            if (payload.get("role") == "supervisor"):
+                if ("businessId" not in payload):
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Je sessie is ongeldig. Log opnieuw in."
+                    )
+
             request.state.user = payload
             request.state.user_id = payload.get("sub")
             request.state.user_role = payload.get("role")
@@ -61,7 +68,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
             print(f"JWT validation error: {e}")
             return JSONResponse(
                 status_code=401,
-                content={"detail": "Authentication failed"}
+                content={"detail": "Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw."}
             )
 
         # Proceed to the next middleware/route handler

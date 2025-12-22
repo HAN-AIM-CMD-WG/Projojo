@@ -43,17 +43,13 @@ def validate_file_type(file_extension: str, content_type: str, directory: str) -
     is_pdf_dir = "pdf" in directory.lower()
 
     if is_images_dir:
-        isAllowedMimeType = content_type in ALLOWED_IMAGE_MIMETYPES
-        isAllowedFileExtension = file_extension.lower() in ALLOWED_IMAGE_MIMETYPES.values()
-        if not (isAllowedMimeType and isAllowedFileExtension):
+        if not (content_type in ALLOWED_IMAGE_MIMETYPES and file_extension.lower() in ALLOWED_IMAGE_MIMETYPES.values()):
             raise HTTPException(
                 status_code=400,
                 detail="Het geüploade bestand is geen geldige afbeelding. Alleen PNG, JPG, JPEG en WebP zijn toegestaan."
             )
     elif is_pdf_dir:
-        isAllowedMimeType = content_type in ALLOWED_PDF_MIMETYPES
-        isAllowedFileExtension = file_extension.lower() in ALLOWED_PDF_MIMETYPES.values()
-        if not (isAllowedMimeType and isAllowedFileExtension):
+        if not (content_type in ALLOWED_PDF_MIMETYPES and file_extension.lower() in ALLOWED_PDF_MIMETYPES.values()):
             raise HTTPException(
                 status_code=400,
                 detail="Het geüploade bestand is geen geldig PDF-bestand. Alleen PDF-bestanden zijn toegestaan."

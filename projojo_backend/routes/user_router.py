@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Path
+import os
+from fastapi import APIRouter, HTTPException, Path
 from auth.permissions import auth
 from domain.repositories import UserRepository
 
@@ -12,6 +13,12 @@ async def get_all_users():
     """
     Get all users for debugging purposes
     """
+    if not os.getenv("ENVIRONMENT", "none").lower() == "development":
+        raise HTTPException(
+            status_code=403,
+            detail="Dit kan alleen in de test-omgeving"
+        )
+
     users = user_repo.get_all()
     return users
 

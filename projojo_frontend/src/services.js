@@ -73,38 +73,40 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                 let message;
                 const jsonObj = JSON.parse(json);
                 try {
+                    // checks if detail field exists and is non-empty
                     if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
+                        // doesnt exist or is empty. Go to catch block
                         throw new Error();
                     }
                     message = jsonObj.detail;
                 } catch {
-
+                    // assign default message based on status code
                     switch (errorStatus) {
                         case 400:
-                            message = message ?? "Ongeldig verzoek. Controleer je invoer.";
+                            message = "Ongeldig verzoek. Controleer je invoer.";
                             break;
                         case 401:
-                            message = message ?? "Je moet ingelogd zijn om dit te doen.";
+                            message = "Je moet ingelogd zijn om dit te doen.";
                             break;
                         case 403:
-                            message = message ?? "Je hebt geen rechten voor deze actie.";
+                            message = "Je hebt geen rechten voor deze actie.";
                             break;
                         case 404:
-                            message = message ?? "Dit konden we niet vinden.";
+                            message = "Dit konden we niet vinden.";
                             break;
                         case 409:
-                            message = message ?? "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            message = "Er is een conflict met bestaande gegevens. Controleer je invoer.";
                             break;
                         case 429:
-                            message = message ?? "Te veel verzoeken. Probeer het later opnieuw.";
+                            message = "Te veel verzoeken. Probeer het later opnieuw.";
                             break;
                         default:
-                            message = message ?? "Er is een onverwachte fout opgetreden.";
+                            message = "Er is een onverwachte fout opgetreden.";
                             break;
                     }
                 }
 
-
+                // makes the error catchable in the calling code
                 throw new HttpError(message, errorStatus);
             }
             return json;

@@ -38,14 +38,7 @@ export default function Navbar() {
     useEffect(() => {
         let ignore = false;
 
-        if (authData.type === "student") {
-            getUser(authData.userId)
-                .then(data => {
-                    if (ignore) return;
-                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
-                })
-        }
-        if (authData.type === "supervisor") {
+        if (authData.type !== "none") {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
@@ -99,13 +92,10 @@ export default function Navbar() {
                                     Uitloggen
                                 </button>
                             </li>
-                            {
-                                // profile picture, only for students
-                                authData.type === "student" || authData.type === "supervisor" ?
-                                    <li key="profile-picture" className="flex items-center ml-2">
-                                        <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
-                                    </li>
-                                    : null
+                            {authData.type !== "none" &&
+                                <li key="profile-picture" className="flex items-center ml-2">
+                                    <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
+                                </li>
                             }
                         </ul>
                     </div>

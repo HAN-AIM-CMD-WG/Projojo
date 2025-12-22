@@ -145,9 +145,9 @@ def _get_role_error(user_role: str | None, required_role: str) -> tuple[int, str
     if user_role is None:
         # User is not authenticated
         if required_role == "unauthenticated":
-            return (403, "Je moet uitgelogd zijn om dit te doen")
+            return (403, "Je moet uitgelogd zijn om deze actie uit te kunnen voeren.")
         else:
-            return (401, "Je moet ingelogd zijn om dit te kunnen doen.")
+            return (401, "Je moet ingelogd zijn om deze actie uit te kunnen voeren.")
 
     # User is authenticated but doesn't have required role
     role_descriptions = {
@@ -158,7 +158,7 @@ def _get_role_error(user_role: str | None, required_role: str) -> tuple[int, str
     }
 
     required_description = role_descriptions.get(required_role, required_role)
-    return (403, f"Deze actie kan je alleen doen als je {required_description} bent.")
+    return (403, f"Deze actie kan je alleen uitvoeren als je {required_description} bent.")
 
 
 async def _validate_ownership(
@@ -237,7 +237,7 @@ async def _check_supervisor_ownership(
 
         # Fetch all accessible resources in a single query
         user_repo = UserRepository()
-        resources = await user_repo.get_supervisor_accessible_resources(
+        resources = await user_repo.get_supervisor_accessible_resources_with_id(
             supervisor_company_id=supervisor_company_id,
             resource_id=resource_id
         )
