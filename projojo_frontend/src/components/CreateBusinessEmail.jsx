@@ -47,7 +47,7 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
                 const joined = encodeURI(addresses.join(","));
                 if (!dontSetLocation) {
                     if (sendCCToColleagues) {
-                        getColleaguesEmailAddresses()
+                        getColleaguesEmailAddresses(taskId)
                             .then(colleagues => {
                                 const cc = encodeURI(colleagues.join(","));
                                 document.location = `mailto:?subject=${encodeURI(subject.toString())}&cc=${cc}&bcc=${joined}`;

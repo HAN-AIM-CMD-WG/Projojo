@@ -21,20 +21,23 @@ async def get_all_tasks():
     return tasks
 
 
-@router.get("/emails/colleagues")
-@auth(role="supervisor")
-async def get_colleague_email_addresses(request: Request):
+@router.get("/{task_id}/emails/colleagues")
+@auth(role="supervisor", owner_id_key="task_id")
+async def get_colleague_email_addresses(request: Request, task_id: str = Path(..., description="Task ID")):
     """
-    Get email addresses of colleague supervisors in the same business
+    Get email addresses of supervisors which are colleagues of the requesting supervisor (or teacher) for the business of the task
     """
-    # Check if user is a supervisor
+    # Backend supports both supervisors and teachers, but this may be unwanted behavior. For now, return 403 for teachers.
     if request.state.user_role != "supervisor":
         raise HTTPException(status_code=403, detail="Alleen supervisors kunnen collega's opvragen")
 
-    supervisor_id = request.state.user_id
-    # Get colleagues for this supervisor
-    colleagues = user_repo.get_colleagues(supervisor_id)
-    return [colleague.email for colleague in colleagues]
+    # Get the task to find the project
+    task = task_repo.get_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    # Get colleagues in the business of the task
+    return user_repo.get_colleagues(task_id, request.state.user_id)
 
 @router.get("/{task_id}/student-emails")
 @auth(role="supervisor", owner_id_key="task_id")

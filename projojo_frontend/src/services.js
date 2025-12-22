@@ -484,8 +484,8 @@ export function getStudentEmailAddresses(selection, taskId) {
  * Get colleague email addresses (teachers and supervisors)
  * @returns {Promise<string[]>} Array of email addresses
  */
-export function getColleaguesEmailAddresses() {
-    return fetchWithError(`${API_BASE_URL}tasks/emails/colleagues`);
+export function getColleaguesEmailAddresses(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/emails/colleagues`);
 }
 
 /**

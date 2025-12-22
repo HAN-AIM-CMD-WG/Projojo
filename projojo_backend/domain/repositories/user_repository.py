@@ -421,27 +421,35 @@ class UserRepository(BaseRepository[User]):
         task_ids = [result['id'] for result in results]
         return task_ids
 
-    def get_colleagues(self, supervisor_id: str) -> list[User]:
+    def get_colleagues(self, task_id: str, excluded_id: str) -> list[str]:
         """
-        Get supervisors who work in the same business as the authenticated supervisor
+        Get supervisors linked to the same business as the given task
+
+        Args:
+            task_id: The task ID
+            excluded_id: Supervisor ID to exclude from results (or teacher ID, but teachers wouldn't be included anyway)
+
+        Returns:
+            List of supervisor emails
         """
         query = """
             match
-                $auth_supervisor isa supervisor, has id ~supervisor_id;
-                $manages_auth isa manages (supervisor: $auth_supervisor, business: $business);
-                $manages_colleague isa manages (supervisor: $colleague, business: $business);
-                $colleague isa supervisor,
-                has email $email,
-                has fullName $fullName;
+                $task isa task, has id ~task_id;
+                $ct isa containsTask (project: $project, task: $task);
+                $hp isa hasProjects (business: $business, project: $project);
+                $m isa manages (supervisor: $supervisor, business: $business);
+                not { $supervisor has id ~excluded_id; };
             fetch {
-                'id': $colleague.id,
-                'email': $email,
-                'full_name': $fullName,
+                "email": $supervisor.email
             };
         """
-
-        results = Db.read_transact(query, {"supervisor_id": supervisor_id})
-        return [User(**result) for result in results]
+        results = Db.read_transact(query, {
+            "task_id": task_id,
+            "excluded_id": excluded_id
+        })
+        if not results:
+            return []
+        return [result['email'] for result in results]
 
     def update_student(self, id: str, description: str | None = None, image_path: str | None = None, cv_path: str | None = None) -> None:
         """
