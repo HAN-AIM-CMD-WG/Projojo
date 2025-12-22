@@ -589,3 +589,57 @@ class UserRepository(BaseRepository[User]):
         # Return the created user
         return created_user
 
+    async def get_supervisor_accessible_resources(self, supervisor_company_id: str, resource_id: str) -> dict:
+        """
+        Fetch all accessible resources (projects, tasks, users) for a supervisor's company.
+
+        Args:
+            supervisor_company_id: The supervisor's business ID
+            resource_id: The resource ID to check against all resource types
+
+        Returns:
+            dict with keys 'projects', 'tasks', 'users' containing lists of matching resource IDs
+        """
+        query = """
+            match
+                $business isa business, has id ~business_id;
+            fetch {
+                'projects': [
+                    match
+                        $p1 isa project, has id ~project_id;
+                        $hp1 isa hasProjects(business: $business, project: $p1);
+                    fetch { 'project_id': $p1.id };
+                ],
+                'tasks': [
+                    match
+                        $p2 isa project;
+                        $hp2 isa hasProjects(business: $business, project: $p2);
+                        $t2 isa task, has id ~task_id;
+                        $ct2 isa containsTask(project: $p2, task: $t2);
+                    fetch { 'task_id': $t2.id };
+                ],
+                'users': [
+                    match
+                        $u3 isa supervisor, has id ~supervisor_id;
+                        $m3 isa manages(supervisor: $u3, business: $business);
+                    fetch { 'user_id': $u3.id };
+                ]
+            };
+        """
+
+        results = Db.read_transact(query, {
+            "business_id": supervisor_company_id,
+            "project_id": resource_id,
+            "task_id": resource_id,
+            "supervisor_id": resource_id
+        })
+
+        if not results:
+            return {'projects': [], 'tasks': [], 'users': []}
+
+        result = results[0]
+        return {
+            'projects': [item['project_id'] for item in result.get('projects', [])],
+            'tasks': [item['task_id'] for item in result.get('tasks', [])],
+            'users': [item['user_id'] for item in result.get('users', [])]
+        }

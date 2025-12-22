@@ -212,74 +212,50 @@ async def _check_supervisor_ownership(
     """
     Check if a resource belongs to a supervisor's company.
 
-    This method uses the resource_key to determine how to validate ownership:
-    - "company_id": direct comparison
-    - "user_id": fetch user and check their company_id
-    - "project_id": fetch project and check its company_id
-    - "task_id": fetch task, then project, then check project's company_id
-    - "business_id": direct comparison (same as company_id)
+    Uses a single optimized query to check all resource types at once.
 
     Args:
         supervisor_company_id: The supervisor's company ID
-        resource_key: The type of resource (determines validation method)
+        resource_key: The type of resource ("project_id", "task_id", "user_id", "supervisor_id", "company_id", "business_id")
         resource_id: The ID of the resource to validate
 
     Returns:
         bool: True if resource belongs to supervisor's company, False otherwise
     """
-    # Import here to avoid circular imports
-    from domain.repositories import (
-        UserRepository,
-        ProjectRepository,
-        TaskRepository,
-    )
+    from domain.repositories import UserRepository
 
     try:
         if resource_key in ["company_id", "business_id"]:
             # Direct comparison: supervisor's company ID must match resource ID
             return supervisor_company_id == resource_id
 
-        elif resource_key in ["user_id", "supervisor_id"]:
-            # Check if the user belongs to the supervisor's company
-            user_repo = UserRepository()
-            user = user_repo.get_by_id(resource_id)
-            if not user:
-                return False
-            user_company_id = user.get("company_id") or user.get("businessId")
-            return user_company_id == supervisor_company_id
-
-        elif resource_key == "project_id":
-            # Check if the project belongs to the supervisor's company
-            project_repo = ProjectRepository()
-            project = project_repo.get_by_id(resource_id)
-            if not project:
-                return False
-            return project.business_id == supervisor_company_id
-
-        elif resource_key == "task_id":
-            # Check if the task's project belongs to the supervisor's company
-            task_repo = TaskRepository()
-            task = task_repo.get_by_id(resource_id)
-            if not task:
-                return False
-
-            project_repo = ProjectRepository()
-            project = project_repo.get_by_id(task.project_id)
-            if not project:
-                return False
-
-            return project.business_id == supervisor_company_id
-
-        elif resource_key == "skill_id":
-            # Skills are typically global (managed by teachers)
-            # Supervisors don't manage skills, so return False
-            # Unless your business model allows supervisors to manage skills
+        if resource_key == "skill_id":
+            # Skills are global, supervisors don't manage them
             return False
 
-        # Unknown resource type
-        return False
+        # Fetch all accessible resources in a single query
+        user_repo = UserRepository()
+        resources = await user_repo.get_supervisor_accessible_resources(
+            supervisor_company_id=supervisor_company_id,
+            resource_id=resource_id
+        )
+
+        # Map resource_key to the result category
+        category_map = {
+            "project_id": "projects",
+            "task_id": "tasks",
+            "user_id": "users",
+            "supervisor_id": "users"
+        }
+
+        category = category_map.get(resource_key)
+        if not category:
+            return False
+
+        # Check if resource_id is in the results for this category (handle None values)
+        return resource_id in (resources.get(category) or [])
 
     except Exception as e:
-        # If there's an error fetching the resource, deny access
+        # If there's an error, deny access
         print(f"Error validating supervisor ownership for {resource_key}={resource_id}: {e}")
         return False
