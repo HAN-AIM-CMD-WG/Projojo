@@ -1,7 +1,7 @@
 import os
 import shutil
 import uuid
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 import requests
 from urllib.parse import urlparse
 import mimetypes
@@ -13,26 +13,23 @@ ALLOWED_IMAGE_DOMAINS = [
     "lh3.googleusercontent.com",
 ]
 
-# Allowed MIME types for images
-ALLOWED_IMAGE_MIMETYPES = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "image/bmp",
-    "image/svg+xml",
-]
+# Allowed MIME types for images with their corresponding extensions
+ALLOWED_IMAGE_MIMETYPES = {
+    "image/jpeg": ".jpg",
+    "image/jpg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+}
 
-# Allowed MIME types for PDFs
-ALLOWED_PDF_MIMETYPES = [
-    "application/pdf",
-]
+# Allowed MIME types for PDFs with their corresponding extensions
+ALLOWED_PDF_MIMETYPES = {
+    "application/pdf": ".pdf",
+}
 
 
 def validate_file_type(file_extension: str, content_type: str, directory: str) -> None:
     """
-    Validate that the file type matches the expected type for the directory.
+    Validate that the file type is allowed for the specified directory.
 
     Args:
         file_extension (str): The file extension (e.g., '.jpg', '.pdf')
@@ -40,17 +37,27 @@ def validate_file_type(file_extension: str, content_type: str, directory: str) -
         directory (str): The target directory path
 
     Raises:
-        ValueError: If the file type doesn't match the expected type for the directory
+        HTTPException: If the file type is not allowed for the directory
     """
     is_images_dir = "images" in directory.lower()
     is_pdf_dir = "pdf" in directory.lower()
 
     if is_images_dir:
-        if content_type and content_type not in ALLOWED_IMAGE_MIMETYPES:
-            raise ValueError("Het geüploade bestand is geen geldige afbeelding. Alleen afbeeldingen (JPEG, PNG, GIF, WebP, BMP, SVG) zijn toegestaan.")
+        isAllowedMimeType = content_type in ALLOWED_IMAGE_MIMETYPES
+        isAllowedFileExtension = file_extension.lower() in ALLOWED_IMAGE_MIMETYPES.values()
+        if not (isAllowedMimeType and isAllowedFileExtension):
+            raise HTTPException(
+                status_code=400,
+                detail="Het geüploade bestand is geen geldige afbeelding. Alleen PNG, JPG, JPEG en WebP zijn toegestaan."
+            )
     elif is_pdf_dir:
-        if content_type and content_type not in ALLOWED_PDF_MIMETYPES:
-            raise ValueError("Het geüploade bestand is geen geldig PDF-bestand. Alleen PDF-bestanden zijn toegestaan.")
+        isAllowedMimeType = content_type in ALLOWED_PDF_MIMETYPES
+        isAllowedFileExtension = file_extension.lower() in ALLOWED_PDF_MIMETYPES.values()
+        if not (isAllowedMimeType and isAllowedFileExtension):
+            raise HTTPException(
+                status_code=400,
+                detail="Het geüploade bestand is geen geldig PDF-bestand. Alleen PDF-bestanden zijn toegestaan."
+            )
 
 
 def is_safe_url(url: str) -> tuple[bool, str]:
@@ -165,17 +172,7 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> str
 
         # If no extension in URL, derive it from validated content_type
         if not file_extension:
-            ext_map = {
-                'image/jpeg': '.jpg',
-                'image/jpg': '.jpg',
-                'image/png': '.png',
-                'image/gif': '.gif',
-                'image/webp': '.webp',
-                'image/bmp': '.bmp',
-                'image/svg+xml': '.svg',
-                'application/pdf': '.pdf'
-            }
-            file_extension = ext_map.get(content_type, '.jpg')
+            file_extension = ALLOWED_IMAGE_MIMETYPES.get(content_type, '.jpg')
 
         # Generate a unique filename
         unique_filename = generate_unique_filename(file_extension)
