@@ -23,7 +23,7 @@ export default function StudentProfileCv({ cv }) {
 
     return (
         <div className="flex flex-col gap-4 w-full bg-gray-100 rounded-b-lg overflow-hidden">
-            <div className="bg-gray-200 p-1 rounded-lg">
+            <div className="bg-gray-200 p-3 rounded-lg">
                 <h2 className="text-lg ms-1 mb-2 font-semibold">CV</h2>
                 {(exists === null || exists === undefined) && (
                     <img src="/loading.gif" alt="Laden..." className="h-6 w-6" />
