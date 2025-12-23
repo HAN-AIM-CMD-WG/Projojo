@@ -179,7 +179,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                     </svg>
                     <h2>Klik hier of sleep hier een bestand heen</h2>
                 </div>
-                <button className="btn-primary sm:hidden w-full" onClick={() => fileInput.current.click()}>Voeg een bestand toe</button>
+                <button type="button" className="btn-primary sm:hidden w-full" onClick={() => fileInput.current.click()}>Voeg een bestand toe</button>
             </div>
 
             {!!error && (
