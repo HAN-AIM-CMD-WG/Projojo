@@ -12,11 +12,14 @@ EXCLUDED_ENDPOINTS = [
     "/docs",  # Swagger UI
     "/redoc",  # ReDoc
     "/openapi.json",  # OpenAPI schema
+
     "/auth/login/*",  # Login endpoint
     "/auth/oauth/callback/*",  # OAuth callback
+
     "/pdf/*",  # Public PDF access
     "/image/*",  # Public image access
 
+    # Development
     "/typedb/status",  # TypeDB status check
     "/auth/test/login/*",  # Localhost testing - test login
     "/users/",  # Localhost testing - all users

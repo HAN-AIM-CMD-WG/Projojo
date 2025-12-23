@@ -25,6 +25,9 @@ export default function TestUserSelector() {
 				if (response.ok) {
 					const data = await response.json();
 					setTestUsers(data);
+				} else {
+					const data = await response.json();
+					notification.error(data.detail, response.status);
 				}
 			} catch (error) {
 				console.error("Error fetching test users:", error);

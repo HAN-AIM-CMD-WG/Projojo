@@ -13,7 +13,6 @@ router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
 # Default frontend URL as fallback
 DEFAULT_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "none").lower()
 
 
 def get_frontend_url_from_login(request: Request) -> str:
@@ -95,11 +94,8 @@ async def test_login(user_id: str, request: Request):
     This endpoint should only be used in development environments.
     """
     # Check if the request is from localhost
-    if not ENVIRONMENT == "development":
-        raise HTTPException(
-            status_code=403,
-            detail="Dit kan alleen in de test-omgeving"
-        )
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
 
     # Get user from database
     user = user_repo.get_by_id(user_id)

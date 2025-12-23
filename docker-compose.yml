@@ -28,6 +28,8 @@ services:
     environment:
       - TYPEDB_SERVER_ADDR=typedb:1729
       - TYPEDB_NAME=projojo_db
+      - FRONTEND_URL=http://localhost:5173
+      - ENVIRONMENT=development # (development/production)
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports

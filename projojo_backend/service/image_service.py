@@ -255,9 +255,6 @@ def delete_image(filename: str, directory: str = "static/images") -> bool:
     Returns:
         bool: True if the file was successfully deleted or doesn't exist, False if an error occurred
     """
-    # Don't delete files for now. The testdata re-uses images, so deleting them causes issues.
-    return True
-
     if os.getenv("ENVIRONMENT", "none").lower() == "development":
         return True
 

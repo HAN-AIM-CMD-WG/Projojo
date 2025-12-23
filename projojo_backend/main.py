@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -89,6 +89,7 @@ def get_db():
 
 app.mount("/image", StaticFiles(directory="static/images"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}
@@ -96,6 +97,9 @@ async def root():
 @app.get("/typedb/status")
 async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
     try:
         # Try to get database name to verify connection
         db_name = db.name  # dit kon wel eens slagen, ook als er geen verbinding is met de Db.
