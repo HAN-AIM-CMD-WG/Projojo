@@ -163,12 +163,12 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> str
         parsed_url = urlparse(image_url)
         file_extension = os.path.splitext(parsed_url.path)[1]
 
-        # Validate file type before proceeding
-        validate_file_type(file_extension, content_type, directory)
-
-        # If no extension in URL, derive it from validated content_type
+        # If no extension in URL, derive it from content_type
         if not file_extension:
             file_extension = ALLOWED_IMAGE_MIMETYPES.get(content_type, '.jpg')
+
+        # Validate file type after determining extension
+        validate_file_type(file_extension, content_type, directory)
 
         # Generate a unique filename
         unique_filename = generate_unique_filename(file_extension)

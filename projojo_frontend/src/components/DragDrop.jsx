@@ -199,7 +199,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                         ) : file.type.startsWith("image/") ? (
                             <img
                                 src={URL.createObjectURL(file)}
-                                className="w-48 h-48"
+                                className="w-48 h-48 object-cover rounded"
                                 alt="Toegevoegde foto"
                                 key={index}
                             />
