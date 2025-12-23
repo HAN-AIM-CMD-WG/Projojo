@@ -58,7 +58,7 @@ def auth(role: str, owner_id_key: str | None = None):
             request = get_request_context()
             if not request:
                 print("Request context not found in auth decorator")
-                raise HTTPException(status_code=500, detail="Er is iets misgegaan bij de autorisatie. Probeer het later opnieuw.")
+                raise HTTPException(status_code=500, detail="Er is een onverwachte fout opgetreden. Probeer het later opnieuw.")
 
             # Extract auth info from request state (set by JWT middleware)
             user_id = request.state.user_id
@@ -77,8 +77,8 @@ def auth(role: str, owner_id_key: str | None = None):
                 if not resource_id:
                     print(f"Owner ID key '{owner_id_key}' not found in path parameters")
                     raise HTTPException(
-                        status_code=400,
-                        detail="Er ging iets mis met de autorisatie. Probeer het later opnieuw."
+                        status_code=500,
+                        detail="Er is een onverwachte fout opgetreden. Probeer het later opnieuw."
                     )
 
                 is_owner = await _validate_ownership(

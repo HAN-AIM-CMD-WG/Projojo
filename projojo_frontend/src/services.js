@@ -71,8 +71,8 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
         .then(json => {
             if (errorStatus !== undefined) {
                 let message;
-                const jsonObj = JSON.parse(json);
                 try {
+                    const jsonObj = JSON.parse(json);
                     // checks if detail field exists and is non-empty
                     if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
                         // doesnt exist or is empty. Go to catch block

@@ -27,10 +27,6 @@ async def get_colleague_email_addresses(request: Request, task_id: str = Path(..
     """
     Get email addresses of supervisors which are colleagues of the requesting supervisor (or teacher) for the business of the task
     """
-    # Backend supports both supervisors and teachers, but this may be unwanted behavior. For now, return 403 for teachers.
-    if request.state.user_role != "supervisor":
-        raise HTTPException(status_code=403, detail="Alleen supervisors kunnen collega's opvragen")
-
     # Get colleagues in the business of the task
     return user_repo.get_colleagues(task_id, request.state.user_id)
 

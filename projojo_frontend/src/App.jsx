@@ -27,6 +27,10 @@ export default function App() {
     const handleUnhandledRejection = (event) => {
       if (event.reason instanceof HttpError) {
         notification.error(event.reason.message || "Er is een onbekende fout opgetreden.");
+      } else {
+        // Log non-HttpError rejections for debugging and show a generic error to the user
+        console.error('Unhandled promise rejection:', event.reason);
+        notification.error("Er is een onverwachte fout opgetreden.");
       }
     };
 

@@ -14,7 +14,7 @@ EXCLUDED_ENDPOINTS = [
     "/openapi.json",  # OpenAPI schema
 
     "/auth/login/*",  # Login endpoint
-    "/auth/oauth/callback/*",  # OAuth callback
+    "/auth/callback/*",  # OAuth callback
 
     "/pdf/*",  # Public PDF access
     "/image/*",  # Public image access
@@ -64,7 +64,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
             request.state.user = payload
             request.state.user_id = payload.get("sub")
             request.state.user_role = payload.get("role")
-            request.state.business_id = payload.get("businessId") if "businessId" in payload else None
+            request.state.business_id = payload.get("businessId")
         except HTTPException as e:
             return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
         except Exception as e:
