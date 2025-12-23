@@ -66,7 +66,8 @@ async def update_skill_acceptance(
             skill_repo.delete_by_id(skill_id)
             return {"message": "Skill afgewezen en verwijderd"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken/verwijderen van de skill: " + str(e))
+        print(f"Error {'updating' if accepted else 'deleting'} skill {skill_id}: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken/verwijderen van de skill.")
 
 @router.patch("/{skill_id}/name")
 @auth(role="teacher")
@@ -94,4 +95,5 @@ async def update_skill_name(
         # Unique constraint (if enforced by TypeDB schema) could surface here
         if "unique" in str(e).lower() or "key constraint" in str(e).lower():
             raise HTTPException(status_code=409, detail=f"Er bestaat al een skill met de naam '{new_name}'.")
-        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van de skillnaam: " + str(e))
+        print(f"Error updating name for skill {skill_id}: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van de skillnaam.")

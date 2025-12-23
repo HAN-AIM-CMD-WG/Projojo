@@ -86,6 +86,7 @@ async def create_business(name: str = Body(...)):
                 status_code=409,
                 detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
             )
+        print(f"Error creating business with name {name}: {e}")
         raise HTTPException(
             status_code=500,
             detail="Er is een fout opgetreden bij het aanmaken van het bedrijf",

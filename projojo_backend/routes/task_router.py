@@ -133,7 +133,8 @@ async def update_registration(
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie." + str(e))
+        print(f"Error updating registration for task {task_id} and student {student_id}: {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie.")
 
 @router.post("/{project_id}", response_model=Task, status_code=201)
 @auth(role="supervisor", owner_id_key="project_id")
@@ -157,4 +158,5 @@ async def create_task(
         created_task = task_repo.create(task)
         return created_task
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Er is iets misgegaan bij het aanmaken van de taak: {str(e)}")
+        print(f"Error creating task for project {project_id}: {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
