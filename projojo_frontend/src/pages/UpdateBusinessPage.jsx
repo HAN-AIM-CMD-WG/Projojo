@@ -93,7 +93,7 @@ export default function UpdateBusinessPage() {
                 />
                 <DragDrop
                     name="image"
-                    accept="image/*"
+                    accept="image"
                     label="Bedrijfslogo"
                     initialFilePath={IMAGE_BASE_URL + business?.image_path}
                 />

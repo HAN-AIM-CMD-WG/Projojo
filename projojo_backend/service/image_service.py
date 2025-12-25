@@ -26,6 +26,44 @@ ALLOWED_PDF_MIMETYPES = {
     "application/pdf": ".pdf",
 }
 
+# Maximum file size (5MB)
+MAX_FILE_SIZE = 5 * 1024 * 1024
+
+
+def validate_header_bytes(header: bytes, content_type: str) -> None:
+    """
+    Validate the file header bytes (magic numbers) against the content type.
+
+    Args:
+        header (bytes): The first few bytes of the file
+        content_type (str): The MIME type to validate against
+
+    Raises:
+        HTTPException: If the header doesn't match the content type
+    """
+    is_valid = False
+
+    file_type = "Het bestand"
+
+    if content_type == "image/png":
+        is_valid = header.startswith(b"\x89PNG\r\n\x1a\n")
+        file_type = "De afbeelding"
+    elif content_type in ["image/jpeg", "image/jpg"]:
+        is_valid = header.startswith(b"\xff\xd8")
+        file_type = "De afbeelding"
+    elif content_type == "image/webp":
+        is_valid = header.startswith(b"RIFF") and header[8:12] == b"WEBP"
+        file_type = "De afbeelding"
+    elif content_type == "application/pdf":
+        is_valid = header.startswith(b"%PDF")
+        file_type = "Het PDF-bestand"
+
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{file_type} komt niet overeen met het opgegeven bestandstype."
+        )
+
 
 def validate_file_type(file_extension: str, content_type: str, directory: str) -> None:
     """
@@ -43,16 +81,35 @@ def validate_file_type(file_extension: str, content_type: str, directory: str) -
     is_pdf_dir = "pdf" in directory.lower()
 
     if is_images_dir:
-        if not (content_type in ALLOWED_IMAGE_MIMETYPES and file_extension.lower() in ALLOWED_IMAGE_MIMETYPES.values()):
+        if content_type not in ALLOWED_IMAGE_MIMETYPES:
             raise HTTPException(
                 status_code=400,
                 detail="Het geüploade bestand is geen geldige afbeelding. Alleen PNG, JPG, JPEG en WebP zijn toegestaan."
             )
+
+        expected_ext = ALLOWED_IMAGE_MIMETYPES[content_type]
+        current_ext = file_extension.lower()
+
+        # Allow .jpeg, .jfif, .pjpeg, .pjp for .jpg expected extension
+        is_valid_jpeg = expected_ext == ".jpg" and current_ext in [".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp"]
+        is_exact_match = current_ext == expected_ext
+
+        if not (is_valid_jpeg or is_exact_match):
+            raise HTTPException(
+                status_code=400,
+                detail="Het bestandstype van de afbeelding komt niet overeen met de extensie."
+            )
     elif is_pdf_dir:
-        if not (content_type in ALLOWED_PDF_MIMETYPES and file_extension.lower() in ALLOWED_PDF_MIMETYPES.values()):
+        if content_type not in ALLOWED_PDF_MIMETYPES:
             raise HTTPException(
                 status_code=400,
                 detail="Het geüploade bestand is geen geldig PDF-bestand. Alleen PDF-bestanden zijn toegestaan."
+            )
+
+        if file_extension.lower() != ALLOWED_PDF_MIMETYPES[content_type]:
+            raise HTTPException(
+                status_code=400,
+                detail="Het bestandstype van het PDF-bestand komt niet overeen met de extensie."
             )
 
 
@@ -109,6 +166,22 @@ def save_image(file: UploadFile, directory: str = "static/images") -> str:
     _, file_extension = os.path.splitext(file.filename)
     validate_file_type(file_extension, content_type, directory)
 
+    # Check file size
+    file.file.seek(0, 2)
+    size = file.file.tell()
+    file.file.seek(0)
+
+    if size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Het bestand is te groot. De maximale grootte is {MAX_FILE_SIZE // (1024 * 1024)}MB."
+        )
+
+    # Validate magic bytes
+    header = file.file.read(12)
+    file.file.seek(0)
+    validate_header_bytes(header, content_type)
+
     # Create the directory if it doesn't exist
     os.makedirs(directory, exist_ok=True)
 
@@ -156,6 +229,12 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> str
         response = requests.get(image_url, stream=True, timeout=10)
         response.raise_for_status()
 
+        # Check Content-Length if present
+        content_length = response.headers.get('Content-Length')
+        if content_length and int(content_length) > MAX_FILE_SIZE:
+            print(f"File too large from URL: {content_length}")
+            return ""
+
         # Get Content-Type from response
         content_type = response.headers.get('Content-Type', '').split(';')[0].strip()
 
@@ -175,8 +254,28 @@ def save_image_from_url(image_url: str, directory: str = "static/images") -> str
         file_path = os.path.join(directory, unique_filename)
 
         # Save the image
+        downloaded_size = 0
+        first_chunk = True
+
         with open(file_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
+                downloaded_size += len(chunk)
+                if downloaded_size > MAX_FILE_SIZE:
+                    f.close()
+                    os.remove(file_path)
+                    print(f"File too large from URL (streamed): >{MAX_FILE_SIZE}")
+                    return ""
+
+                if first_chunk:
+                    try:
+                        validate_header_bytes(chunk[:12], content_type)
+                    except HTTPException as e:
+                        f.close()
+                        os.remove(file_path)
+                        print(f"Magic bytes validation failed for URL: {e.detail}")
+                        return ""
+                    first_chunk = False
+
                 f.write(chunk)
 
         return unique_filename
@@ -207,11 +306,23 @@ def save_image_from_bytes(image_bytes: bytes, file_extension: str = ".jpg", dire
         return ""
 
     try:
+        # Check file size
+        if len(image_bytes) > MAX_FILE_SIZE:
+            print(f"Image too large: {len(image_bytes)} bytes")
+            return ""
+
         # Guess MIME type from file extension
         content_type = mimetypes.guess_type(f"file{file_extension}")[0] or ""
 
         # Validate file type
         validate_file_type(file_extension, content_type, directory)
+
+        # Validate magic bytes
+        try:
+            validate_header_bytes(image_bytes[:12], content_type)
+        except HTTPException as e:
+            print(f"Magic bytes validation failed: {e.detail}")
+            return ""
 
         # Create the directory if it doesn't exist
         os.makedirs(directory, exist_ok=True)

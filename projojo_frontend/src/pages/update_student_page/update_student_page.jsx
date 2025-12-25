@@ -112,7 +112,7 @@ export default function UpdateStudentPage() {
                                 setError={setDescriptionError}
                             />
                             <DragDrop
-                                accept="image/*"
+                                accept="image"
                                 name="profilePicture"
                                 label="Upload je profielfoto"
                                 initialFilePath={IMAGE_BASE_URL + data?.image_path}
@@ -120,7 +120,7 @@ export default function UpdateStudentPage() {
                         </Page>
                         <Page className="flex flex-col gap-4">
                             <DragDrop
-                                accept="application/pdf"
+                                accept="pdf"
                                 onFileChanged={onCVAdded}
                                 name="cv"
                                 label="Upload je CV (PDF)"

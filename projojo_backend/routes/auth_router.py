@@ -79,11 +79,11 @@ async def auth_callback(
 
     except ValueError as e:
         # Redirect to frontend auth callback with error
-        print(f"OAuth callback handling failed for {provider}: {e}")
+        print(f"ValueError - OAuth callback handling failed for {provider}: {e}")
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
     except Exception as e:
         # Redirect to frontend auth callback with error for any other exception
-        print(f"OAuth callback handling failed for {provider}: {e}")
+        print(f"Exception - OAuth callback handling failed for {provider}: {e}")
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
 
 @router.post("/test/login/{user_id}")
