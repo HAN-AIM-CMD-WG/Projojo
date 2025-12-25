@@ -16,7 +16,7 @@ class AuthService:
         # Get OAuth client
         client = getattr(oauth_client, provider, None)
         if not client:
-            raise ValueError(f"Provider '{provider}' not configured")
+            raise ValueError(f"We ondersteunen '{provider}' nog niet")
 
         # Exchange authorization code for access token
         token = await client.authorize_access_token(request)
@@ -41,14 +41,14 @@ class AuthService:
         elif provider == 'microsoft':
             return await self._extract_microsoft_user(client, token)
         else:
-            raise ValueError(f"Provider '{provider}' not supported")
+            raise ValueError(f"'{provider}' is geen ondersteunde OAuth-provider")
 
     async def _extract_google_user(self, token) -> User:
         """Extract user info from Google OAuth token"""
         user_info = token.get('userinfo')
 
         if not user_info:
-            raise ValueError("Failed to get user info from Google")
+            raise ValueError("We kunnen je Google-gegevens niet ophalen")
 
         oauth_provider = OAuthProvider(
             provider_name='google',
@@ -74,7 +74,7 @@ class AuthService:
         emails = emails_resp.json()
 
         if not user_info:
-            raise ValueError("Failed to get user info from GitHub")
+            raise ValueError("We kunnen je GitHub-gegevens niet ophalen")
 
         # Find primary email
         primary_email = self._find_primary_email(emails)
@@ -101,14 +101,14 @@ class AuthService:
         if emails:
             return emails[0]['email']
 
-        raise ValueError("No email found for GitHub user")
+        raise ValueError("Je GitHub-account heeft geen e-mailadres")
 
     async def _extract_microsoft_user(self, client, token) -> User:
         """Extract user info from Microsoft OAuth token"""
         user_info = token.get('userinfo')
 
         if not user_info:
-            raise ValueError("Failed to get user info from Microsoft")
+            raise ValueError("We kunnen je Microsoft-gegevens niet ophalen")
 
         oauth_provider = OAuthProvider(
             provider_name='microsoft',
@@ -160,7 +160,7 @@ class AuthService:
     def _get_or_create_user(self, extracted_user: User) -> tuple[User, bool]:
         """Get existing user or create new one. Returns (user, is_new_user)"""
         if not extracted_user.oauth_providers or len(extracted_user.oauth_providers) == 0:
-            raise ValueError("No OAuth provider information found")
+            raise ValueError("Geen login-provider gevonden")
 
         oauth_provider = extracted_user.oauth_providers[0]
 

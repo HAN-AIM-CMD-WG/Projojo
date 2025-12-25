@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { createErrorMessage, getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
+import { getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
 import useFetch from '../useFetch';
 
 /**
@@ -49,16 +49,8 @@ export default function UpdateBusinessPage() {
         updateBusiness(authData.businessId, formData)
             .then(() => {
                 navigation(`/business/${authData.businessId}`);
-            }).catch(error =>
-                setError(createErrorMessage(
-                    error,
-                    {
-                        401: "De bedrijfspagina kan niet aangepast worden als je niet bent ingelogd",
-                        403: "Je bent niet geautoriseerd om de bedrijfspagina aan te passen",
-                        404: "De bedrijfspagina kan niet gevonden worden",
-                    }
-                ))
-            );
+            })
+            .catch(error => setError(error.message));
     }
 
     return (
@@ -101,7 +93,7 @@ export default function UpdateBusinessPage() {
                 />
                 <DragDrop
                     name="image"
-                    accept="image/*"
+                    accept="image"
                     label="Bedrijfslogo"
                     initialFilePath={IMAGE_BASE_URL + business?.image_path}
                 />

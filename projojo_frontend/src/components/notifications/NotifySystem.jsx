@@ -8,8 +8,7 @@ class NotificationSystem {
     #previousMessage = undefined;
 
     /**
-     * 
-     * @param {(message: string, color: string) => void} callback 
+     * @param {(message: string, color: string) => void} callback
      */
     listen(callback) {
         this.#listeners.push(callback);
@@ -81,7 +80,7 @@ class NotificationSystem {
     }
 }
 
-const notificationDuration = 3000; // in milliseconds   
+const notificationDuration = 7000; // in milliseconds
 // eslint-disable-next-line react-refresh/only-export-components
 export const notification = new NotificationSystem();
 

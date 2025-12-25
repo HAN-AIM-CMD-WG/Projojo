@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-
+from auth.permissions import auth
 from domain.repositories import UserRepository
 
 user_repo = UserRepository()
@@ -7,6 +7,7 @@ user_repo = UserRepository()
 router = APIRouter(prefix="/teachers", tags=["Teacher Endpoints"])
 
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_teachers():
     """
     Get all teachers for debugging purposes

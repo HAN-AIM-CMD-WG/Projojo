@@ -90,7 +90,7 @@ docker compose up -d
 
 2. **Container Management**:
    - View logs: `docker compose logs -f`
-   - Rebuild after dependency changes: `docker compose up --build [service_name]`
+   - Rebuild after dependency changes: `docker compose up --build -d [service_name]`
 
 3. **Debugging**:
    - Frontend: Browser developer tools

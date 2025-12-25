@@ -3,7 +3,7 @@ export default function PdfPreview({ url, className = "" }) {
         <iframe
             src={`${url}#view=FitV`}
             type="application/pdf"
-            className={`w-full h-[40rem] ${className}`}
+            className={`w-full h-[40rem] rounded-sm ${className}`}
             allow="fullscreen"
             title="PDF Preview"
         />
