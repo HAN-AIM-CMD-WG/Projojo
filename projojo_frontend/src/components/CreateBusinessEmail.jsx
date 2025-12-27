@@ -69,7 +69,7 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
 
     return (
         <>
-            <button data-testid="open-create-mail-button" className="btn-primary w-full" onClick={onCreateMailButtonClick}>Creeër email</button>
+            <button data-testid="open-create-mail-button" className="btn-primary w-full" onClick={onCreateMailButtonClick}>Creëer email</button>
             <Modal modalHeader="Genereer email" isModalOpen={isCreateMailModalOpen} setIsModalOpen={setIsCreateMailModalOpen}>                <form onSubmit={onMailtoButtonClick} className="flex flex-col gap-3">
                 <div>
                     <FormInput label="Mail naar aangemelde studenten" type="checkbox" name="registered" />
