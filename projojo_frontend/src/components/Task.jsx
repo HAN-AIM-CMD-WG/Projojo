@@ -145,11 +145,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     isPending={skill.isPending ?? skill.is_pending}
                                 />
                             ))}
-                            {/* {isOwner && !isEditing && (
+                            {isOwner && !isEditing && (
                                 <button className="btn-secondary py-1 px-3" onClick={() => setIsEditing(true)}>
                                     Aanpassen ✏️
                                 </button>
-                            )} */}
+                            )}
                         </div>
                     </SkillsEditor>
                 </div>
