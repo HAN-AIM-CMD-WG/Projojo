@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends
 
-from domain.repositories import TaskRepository, UserRepository
+from domain.repositories import TaskRepository, UserRepository, SkillRepository
 from auth.jwt_utils import get_token_payload
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
@@ -8,6 +8,7 @@ from datetime import datetime
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
+skill_repo = SkillRepository()
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -171,3 +172,20 @@ async def create_task(
         return created_task
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Er is iets misgegaan bij het aanmaken van de taak: {str(e)}")
+
+@router.put("/{id}/skills")
+async def update_task_skills(
+    id: str = Path(..., description="Task ID"),
+    skills: list[str] = Body(..., description="List of skill IDs"),
+):
+    """
+    Update skills for a task
+    """
+    try:
+        skill_repo.update_task_skills(id, skills)
+        return {"message": "Skills succesvol bijgewerkt"}
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Er is iets misgegaan bij het bijwerken van de skills",
+        )

@@ -115,6 +115,34 @@ class SkillRepository(BaseRepository[Skill]):
             "description": description
         })
 
+    def update_task_skills(self, task_id: str, updated_skills: list[str]) -> None:
+        current_skills = self.get_task_skills(task_id)
+        current_skill_ids = {skill.id for skill in current_skills}
+
+        to_add = set(updated_skills) - (current_skill_ids)
+        to_remove = (current_skill_ids) - set(updated_skills)
+
+        for skill_id in to_add:
+            query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
+                insert
+                    $taskSkill isa requiresSkill (task: $task, skill: $skill);
+            """
+            Db.write_transact(query, {"task_id": task_id, "skill_id": skill_id})
+
+        for skill_id in to_remove:
+            query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
+                    $taskSkill isa requiresSkill (task: $task, skill: $skill);
+                delete
+                    $taskSkill;
+            """
+            Db.write_transact(query, {"task_id": task_id, "skill_id": skill_id})
+
     def create(self, skill: Skill) -> Skill:
         id = generate_uuid()
         # Generate a creation timestamp if not provided

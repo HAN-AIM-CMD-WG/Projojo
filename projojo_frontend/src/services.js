@@ -338,7 +338,10 @@ export function updateRegistration(registration) {
     });
 }
 
-//Not implemented in the backend yet
+/**
+ * @param {string} taskId
+ * @param {string[]} taskSkills - Array of skill IDs
+ */
 export function updateTaskSkills(taskId, taskSkills) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {
         method: "PUT",
