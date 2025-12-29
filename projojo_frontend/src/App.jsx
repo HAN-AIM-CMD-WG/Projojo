@@ -44,7 +44,7 @@ export default function App() {
 
   return (
     <>
-      {location.pathname !== "/" && <Navbar />}
+      {location.pathname !== "/" && location.pathname !== "/auth/callback" && <Navbar />}
       <div className="max-w-7xl min-h-dvh px-4 mx-auto relative">
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />

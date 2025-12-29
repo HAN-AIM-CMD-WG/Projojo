@@ -7,11 +7,24 @@ export default function LoginPage() {
       <div className="flex flex-col gap-2 w-96 p-4 border border-gray-300 rounded-lg shadow-md">
 
         <h1 className="text-4xl text-center font-bold mb-3">
-          {/* Projojo */}
-          HAN Opdrachtenbox
+          Projojo
         </h1>
 
         <TestUserSelector />
+
+        <a href={`${API_BASE_URL}auth/login/surf`} className="w-full bg-white text-gray-900 font-semibold py-3 px-6 rounded-lg border border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center gap-3">
+          <svg version="1.1" id="Laag_1" viewBox="0 0 100 52" className="h-5 w-auto">
+            <path id="a_1_" d="M92.4 31.4c4.2 0 7.6 3.5 7.6 7.8v5c0 4.3-3.4 7.8-7.6 7.8H80.9c-4.2 0-7.6-3.5-7.6-7.8v-3.1c0-5.4-4.3-9.7-9.5-9.7H9.5c-5.3 0-9.5-4.3-9.5-9.7v-12C0 4.3 4.3 0 9.5 0h54.3c5.3 0 9.5 4.3 9.5 9.7v12c0 5.4 4.3 9.7 9.5 9.7h9.6z" fill="#000" />
+            <path d="M60.6 17.8c1 0 1.5-.5 1.5-1.5s-.5-1.6-1.5-1.6h-3.8v-3h6c1 0 1.5-.5 1.5-1.6 0-1-.5-1.5-1.5-1.5h-7.6c-1 0-1.6.5-1.6 1.6v11c0 1.1.5 1.6 1.6 1.6 1 0 1.6-.5 1.6-1.6v-3.5c0 .1 3.8.1 3.8.1zm-12.5-.3c1.4-.7 2.2-2.1 2.2-3.9 0-2.9-2.1-5-5.1-5h-4.5c-1 0-1.6.5-1.6 1.6v11c0 1.1.5 1.6 1.6 1.6 1 0 1.6-.5 1.6-1.6v-2.9H45l1.6 3.4c.3.7.7 1 1.3 1 .8 0 1.8-.6 1.8-1.5 0-.3-.1-.6-.2-.9l-1.4-2.8zm-3.3-2h-2.7v-3.8h2.7c1.2 0 2.2.6 2.2 1.9 0 1.3-1 1.9-2.2 1.9zm-12.7.8c0 2.2-1.3 3.5-3.1 3.5s-3.1-1.3-3.1-3.5v-6.2c0-1.1-.5-1.6-1.6-1.6-1 0-1.6.5-1.6 1.6v6.2c0 4.1 2.7 6.7 6.3 6.7 3.6 0 6.3-2.6 6.3-6.7v-6.2c0-1.1-.5-1.6-1.6-1.6-1 0-1.6.5-1.6 1.6v6.2zM14.2 20c-1.2 0-2.1-.3-2.7-.5-.5-.2-.9-.3-1.4-.3-.9 0-1.4.6-1.4 1.5 0 1.5 3 2.3 5.6 2.3 3.1 0 5.5-1.7 5.5-4.3 0-2.4-1.6-3.5-3.3-4.1l-2.6-.8c-1.1-.3-1.6-.6-1.6-1.3 0-.7 1.1-1.1 2-1.1 1.1 0 1.9.3 2.5.5.4.1.8.3 1.3.3.8 0 1.3-.6 1.3-1.5 0-1.5-2.7-2.3-5.1-2.3-3 0-5.2 1.7-5.2 4.2 0 2.1 1.5 3.3 3.1 3.8l2.3.7c1.2.4 2.1.7 2.1 1.4-.2 1-1.4 1.5-2.4 1.5z" fill="#fff" />
+          </svg>
+          Studenten / docenten login (SURF)
+        </a>
+
+        <div className="relative flex py-2 items-center">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">Supervisors</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
 
         <a href={`${API_BASE_URL}auth/login/google`} className="w-full bg-white text-gray-900 font-semibold py-3 px-6 rounded-lg border border-gray-300 hover:bg-gray-100 hover:border-gray-400 transition-colors duration-200 flex items-center justify-center gap-3">
           <svg width="20" height="20" viewBox="0 0 24 24">
