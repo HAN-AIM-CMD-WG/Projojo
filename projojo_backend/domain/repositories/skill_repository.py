@@ -205,6 +205,40 @@ class SkillRepository(BaseRepository[Skill]):
             )
         return skills
 
+    def update_task_skills(self, task_id: str, updated_skills: list[str]) -> None:
+        """
+        Set-based update of a task's required skills (requiresSkill relation).
+        """
+        # Current skills on the task
+        current_skills = self.get_task_skills(task_id)
+        current_skill_ids = {skill.id for skill in current_skills}
+
+        updated_skill_ids = set(updated_skills)
+        to_add = updated_skill_ids - current_skill_ids
+        to_remove = current_skill_ids - updated_skill_ids
+
+        # Add new relations
+        for skill_id in to_add:
+            query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
+                insert
+                    $requiresSkill isa requiresSkill (task: $task, skill: $skill);
+            """
+            Db.write_transact(query, {"task_id": task_id, "skill_id": skill_id})
+        # Remove stale relations
+        for skill_id in to_remove:
+            query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
+                    $requiresSkill isa requiresSkill (task: $task, skill: $skill);
+                delete
+                    $requiresSkill;
+            """
+            Db.write_transact(query, {"task_id": task_id, "skill_id": skill_id})
+
     def update_is_pending(self, skill_id: str, is_pending: bool) -> None:
         """
         Update the isPending attribute of a skill.

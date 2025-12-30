@@ -23,10 +23,12 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isEditing, setIsEditing] = useState(false);
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
+    const [isSavingSkills, setIsSavingSkills] = useState(false);
 
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
 
     const isFull = task.total_accepted >= task.total_needed;
+    const visibleTaskSkills = (authData.type === "student" ? (task.skills || []).filter(s => !(s.isPending ?? s.is_pending)) : (task.skills || []));
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -106,13 +108,16 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         const skillIds = skills.map((skill) => skill.skillId || skill.id);
 
         setTaskSkillsError("");
+        setIsSavingSkills(true);
 
         try {
             await updateTaskSkills(task.id, skillIds);
-            setIsEditing(false)
+            setIsEditing(false);
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
             setTaskSkillsError(error.message);
+        } finally {
+            setIsSavingSkills(false);
         }
     };
 
@@ -135,21 +140,22 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         onCancel={() => setIsEditing(false)}
                         setError={setTaskSkillsError}
                         isAllowedToAddSkill={isOwner}
+                        isSaving={isSavingSkills}
                     >
                         <div className="flex flex-wrap gap-2 items-center">
-                            {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
-                            {task.skills && task.skills.map((skill) => (
+                            {visibleTaskSkills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
+                            {visibleTaskSkills.map((skill) => (
                                 <SkillBadge
                                     key={skill.skillId ?? skill.id}
                                     skillName={skill.name}
                                     isPending={skill.isPending ?? skill.is_pending}
                                 />
                             ))}
-                            {/* {isOwner && !isEditing && (
+                            {isOwner && !isEditing && (
                                 <button className="btn-secondary py-1 px-3" onClick={() => setIsEditing(true)}>
                                     Aanpassen ✏️
                                 </button>
-                            )} */}
+                            )}
                         </div>
                     </SkillsEditor>
                 </div>
