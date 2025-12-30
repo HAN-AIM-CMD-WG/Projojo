@@ -1,4 +1,4 @@
-import { expect, fn, within } from '@storybook/test';
+import { expect, fn, within } from 'storybook/test';
 import UpdateStudentPage from '../pages/update_student_page/update_student_page';
 
 export default {
