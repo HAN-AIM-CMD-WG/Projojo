@@ -101,7 +101,7 @@ export default function TestUserSelector() {
 		return null;
 	}
 
-	return (<div className="mb-6 p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
+	return (<div className="w-full max-w-md p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
 		<h3 className="font-bold text-orange-700 mb-2">
 			TEST GEBRUIKERS
 		</h3>
