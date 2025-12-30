@@ -75,7 +75,7 @@ export default function LoginPage() {
         {/* ============================================================================ */}
         <div className="mt-4 pt-4 border-t border-dashed border-orange-300 bg-orange-50 p-3 rounded-lg">
           <p className="text-xs text-orange-600 font-semibold mb-2">
-            🧪 EMAIL TEST (Development Only)
+            EMAIL TEST (Development Only)
           </p>
           <div className="flex flex-col gap-2">
             <input
@@ -90,7 +90,7 @@ export default function LoginPage() {
               disabled={isLoading}
               className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-orange-600 disabled:bg-orange-300 transition-colors duration-200 text-sm"
             >
-              {isLoading ? "Sending..." : "📧 Send Test Email"}
+              {isLoading ? "Sending..." : "Send Test Email"}
             </button>
             {emailStatus && (
               <p className={`text-xs ${emailStatus.type === "success" ? "text-green-600" : "text-red-600"}`}>

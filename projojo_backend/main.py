@@ -141,14 +141,14 @@ async def send_test_email(request: TestEmailRequest):
             "business_name": "Test Business B.V.",
             "task_name": "Test Task",
             "invite_link": "https://projojo.nl/invite/test123",
-            "message": "This is a test email to verify the email service is working correctly. If you received this, the MailHog integration is functioning!",
+            "message": "This is a test email to verify the email service is working correctly. If you received this, the mail integration is functioning!",
         }
     )
     
     if result.success:
         return {
             "status": "success",
-            "message": f"Test email sent to {request.recipient_email}. Check MailHog at http://localhost:8025"
+            "message": f"Test email sent to {request.recipient_email}. Check your mailbox."
         }
     else:
         return {
