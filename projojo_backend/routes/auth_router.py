@@ -39,7 +39,8 @@ def get_frontend_url_from_login(request: Request) -> str:
 @auth(role="unauthenticated")
 async def auth_login(
     request: Request,
-    provider: str
+    provider: str,
+    invite_token: str | None = None
 ):
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
@@ -47,6 +48,10 @@ async def auth_login(
     # Get frontend URL from the request and store it in the session
     frontend_url = get_frontend_url_from_login(request)
     request.session['frontend_url'] = frontend_url
+
+    # Store invite token in session if present
+    if invite_token:
+        request.session['invite_token'] = invite_token
 
     # Get the OAuth client for the specified provider
     client = getattr(oauth_client, provider, None)
@@ -69,9 +74,14 @@ async def auth_callback(
     """Step 2: Handle callback from OAuth provider with authorization code"""
     # Retrieve frontend URL from session (stored during login)
     frontend_url = request.session.get('frontend_url', DEFAULT_FRONTEND_URL)
+    invite_token = request.session.get('invite_token')
 
     try:
-        jwt_token, is_new_user = await auth_service.handle_oauth_callback(request, provider)
+        jwt_token, is_new_user = await auth_service.handle_oauth_callback(request, provider, invite_token)
+
+        # Clear invite token from session
+        if 'invite_token' in request.session:
+            del request.session['invite_token']
 
         # Redirect with token and new user flag
         redirect_url = f"{frontend_url}/auth/callback?access_token={jwt_token}&is_new_user={str(is_new_user).lower()}"

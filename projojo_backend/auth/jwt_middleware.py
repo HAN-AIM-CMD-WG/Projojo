@@ -15,6 +15,7 @@ EXCLUDED_ENDPOINTS = [
 
     "/auth/login/*",  # Login endpoint
     "/auth/callback/*",  # OAuth callback
+    "/invites/validate/*",  # Invite validation
 
     "/pdf/*",  # Public PDF access
     "/image/*",  # Public image access

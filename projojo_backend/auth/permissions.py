@@ -155,6 +155,7 @@ def _get_role_error(user_role: str | None, required_role: str) -> tuple[int, str
         "supervisor": "een supervisor",
         "teacher": "een leraar",
         "authenticated": "ingelogd",
+        "unauthenticated": "uitgelogd",
     }
 
     required_description = role_descriptions.get(required_role, required_role)

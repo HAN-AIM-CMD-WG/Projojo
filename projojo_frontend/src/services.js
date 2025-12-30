@@ -397,19 +397,20 @@ export function createNewBusiness(newBusinessName) {
  * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
  */
 export function createSupervisorInviteKey(businessId) {
-    return fetchWithError(`${API_BASE_URL}invites/supervisor/${businessId}`, {
+    return fetchWithError(`${API_BASE_URL}invites/${businessId}`, {
         method: "POST",
     });
 }
 
 /**
- * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ * Validate an invite token
+ * @param {string} token
+ * @returns {Promise<{valid: boolean, business: {id: string, name: string, imagePath: string}}>}
  */
-export function createTeacherInviteKey() {
-    return fetchWithError(`${API_BASE_URL}invites/teacher`, {
-        method: "POST",
-    });
+export function validateInvite(token) {
+    return fetchWithError(`${API_BASE_URL}invites/validate/${token}`);
 }
+
 
 /**
  * @returns {Promise<User[]>}
