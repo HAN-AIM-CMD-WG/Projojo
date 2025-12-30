@@ -10,6 +10,15 @@ from dotenv import load_dotenv
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 
+# ============================================================================
+# EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
+from service.email_service import send_templated_email
+from pydantic import BaseModel
+# ============================================================================
+# END EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
+
 # Import routers
 from routes.auth_router import router as auth_router
 from routes.business_router import router as business_router
@@ -105,6 +114,51 @@ async def typedb_status(db=Depends(get_db)):
             "status": "error",
             "message": str(e)
         }
+
+
+# ============================================================================
+# EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+class TestEmailRequest(BaseModel):
+    """Request model for test email endpoint - REMOVE AFTER TESTING"""
+    recipient_email: str
+
+@app.post("/test/email")
+async def send_test_email(request: TestEmailRequest):
+    """
+    TEST ENDPOINT - Send a test email using the invitation template.
+    This endpoint is for development testing only.
+    
+    REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
+    """
+    result = await send_templated_email(
+        recipient=request.recipient_email,
+        subject="[TEST] Projojo Email Test - Invitation Template",
+        template_name="invitation.html",
+        context={
+            "user_name": "Test User",
+            "project_name": "Test Project",
+            "business_name": "Test Business B.V.",
+            "task_name": "Test Task",
+            "invite_link": "https://projojo.nl/invite/test123",
+            "message": "This is a test email to verify the email service is working correctly. If you received this, the MailHog integration is functioning!",
+        }
+    )
+    
+    if result.success:
+        return {
+            "status": "success",
+            "message": f"Test email sent to {request.recipient_email}. Check MailHog at http://localhost:8025"
+        }
+    else:
+        return {
+            "status": "error",
+            "message": result.error
+        }
+# ============================================================================
+# END EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

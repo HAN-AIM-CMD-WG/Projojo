@@ -35,11 +35,7 @@ services:
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
-      # Email configuration (MailHog for development)
-      - EMAIL_SMTP_HOST=mailhog
-      - EMAIL_SMTP_PORT=1025
-      - EMAIL_SMTP_USE_TLS=false
-      - EMAIL_DEFAULT_SENDER=noreply@projojo.nl
+      # Email configuration is now read from .env file (can be MailHog or SMTP2GO)
     networks:
       - projojo-network
 
