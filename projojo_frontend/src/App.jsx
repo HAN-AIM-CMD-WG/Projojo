@@ -16,6 +16,7 @@ import { getAuthorization } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
+import UpdateTaskPage from "./pages/UpdateTaskPage";
 
 export default function App() {
   const { setAuthData } = useAuth();
@@ -51,6 +52,9 @@ export default function App() {
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
+          <Route path="/tasks">
+            <Route path=":taskId/update" element={<UpdateTaskPage />} />
+          </Route>
           <Route path="/teacher" element={<TeacherPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -59,5 +63,3 @@ export default function App() {
     </>
   )
 }
-
-

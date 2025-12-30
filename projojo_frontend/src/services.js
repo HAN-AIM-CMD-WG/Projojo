@@ -356,6 +356,18 @@ export function updateBusiness(businessId, formData) {
         method: "PUT",
         body: formData,
     }, true);
+    }
+
+/**
+ * @param {string} taskId - The task ID to update
+ * @param {FormData} formData - The form data containing task information (name, description, total_needed)
+ * @returns {Promise<void>}
+ */
+export function updateTask(taskId, formData) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
 }
 
 /**

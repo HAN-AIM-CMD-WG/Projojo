@@ -276,3 +276,26 @@ class TaskRepository(BaseRepository[Task]):
             "accepted": accepted,
             "response": response
         })
+
+    def update(self, task_id: str, name: str, description: str, total_needed: int) -> Task:
+            # Build the update query dynamically based on what needs to be updated
+            update_clauses = [
+                '$task has name ~name;',
+                '$task has description ~description;',
+                '$task has totalNeeded ~total_needed;',
+            ]
+            update_params = {
+                "task_id": task_id,
+                "name": name,
+                "description": description,
+                "total_needed": total_needed,
+            }
+
+            query = f"""
+                match
+                    $task isa task, has id ~task_id;
+                update
+                    {' '.join(update_clauses)}
+            """
+
+            Db.write_transact(query, update_params)
