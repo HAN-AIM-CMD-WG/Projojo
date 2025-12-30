@@ -177,29 +177,6 @@ class TaskRepository(BaseRepository[Task]):
         task.created_at = created_at
         return task
 
-    def update(self, id: str, task: Task) -> Task | None:
-        # First delete the old task
-        delete_query = """
-            match
-                $task isa task,
-                has id ~id;
-            delete $task isa task;
-        """
-        Db.write_transact(delete_query, {"id": id})
-
-        # Then create a new one with updated values
-        return self.create(task)
-
-    def delete(self, id: str) -> bool:
-        query = """
-            match
-                $task isa task,
-                has id ~id;
-            delete $task isa task;
-        """
-        Db.write_transact(query, {"id": id})
-        return True
-
     def get_registrations(self, task_id: str) -> list[dict]:
         """
         Get all registrations for a task with student details and skills
