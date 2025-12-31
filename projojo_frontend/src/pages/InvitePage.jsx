@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { validateInvite, API_BASE_URL, IMAGE_BASE_URL } from '../services';
+import { notification } from '@/components/notifications/NotifySystem';
 
 export default function InvitePage() {
     const { token } = useParams();
-    const [status, setStatus] = useState('loading'); // loading, valid, error
+    const [isLoading, setIsLoading] = useState(true);
     const [business, setBusiness] = useState(null);
-    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         let ignore = false;
@@ -14,12 +15,12 @@ export default function InvitePage() {
             .then(data => {
                 if (ignore) return;
                 setBusiness(data.business);
-                setStatus('valid');
+                setIsLoading(false);
             })
-            .catch(err => {
+            .catch(error => {
                 if (ignore) return;
-                setStatus('error');
-                setError(err.message || "Ongeldige of verlopen uitnodiging");
+                notification.error(error.message);
+                navigate('/', { replace: true });
             });
 
         return () => {
@@ -27,7 +28,7 @@ export default function InvitePage() {
         };
     }, [token]);
 
-    if (status === 'loading') {
+    if (isLoading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -35,22 +36,9 @@ export default function InvitePage() {
         );
     }
 
-    if (status === 'error') {
-        return (
-            <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
-                <div className="text-red-500 text-5xl mb-4">
-                    <i className="fas fa-exclamation-circle"></i>
-                </div>
-                <h2 className="text-2xl font-bold mb-2">Uitnodiging ongeldig</h2>
-                <p className="text-gray-600 mb-6">{error}</p>
-                <a href="/" className="text-primary hover:underline">Terug naar home</a>
-            </div>
-        );
-    }
-
     return (
         <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md text-center">
-            <h2 className="text-2xl font-bold mb-6">Uitnodiging voor Supervisor</h2>
+            <h2 className="text-2xl font-bold mb-6">Uitnodiging gevonden</h2>
 
             <div className="mb-8">
                 <p className="text-gray-600 mb-4">Je bent uitgenodigd om supervisor te worden voor:</p>
@@ -71,25 +59,34 @@ export default function InvitePage() {
             <div className="space-y-3">
                 <a
                     href={`${API_BASE_URL}auth/login/google?invite_token=${token}`}
-                    className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="w-full bg-white text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-3"
                 >
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-5 w-5 mr-2" />
+                    <img src="/assets/icons/google.svg" alt="Google" className="h-5 w-5" />
                     Registreren met Google
                 </a>
                 <a
                     href={`${API_BASE_URL}auth/login/microsoft?invite_token=${token}`}
-                    className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="w-full bg-white text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-3"
                 >
-                    <img src="https://www.svgrepo.com/show/452062/microsoft.svg" alt="Microsoft" className="h-5 w-5 mr-2" />
+                    <img src="/assets/icons/microsoft.svg" alt="Microsoft" className="h-5 w-5" />
                     Registreren met Microsoft
                 </a>
                 <a
                     href={`${API_BASE_URL}auth/login/github?invite_token=${token}`}
-                    className="flex items-center justify-center w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="w-full bg-white text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-3"
                 >
-                    <img src="https://www.svgrepo.com/show/512317/github-142.svg" alt="GitHub" className="h-5 w-5 mr-2" />
+                    <img src="/assets/icons/github.svg" alt="GitHub" className="h-5 w-5" />
                     Registreren met GitHub
                 </a>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-100">
+                <Link to="/" className="text-gray-500 hover:text-gray-700 text-sm hover:underline flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 -mb-0.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    Annuleren en terug naar home
+                </Link>
             </div>
         </div>
     );
