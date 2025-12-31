@@ -10,22 +10,24 @@ between MailHog (development) and SMTP2GO (production) without code changes.
 
 Environment Variables:
     EMAIL_SMTP_HOST: SMTP server hostname (default: localhost)
-    EMAIL_SMTP_PORT: SMTP server port (default: 1025 for MailHog)
-    EMAIL_SMTP_USERNAME: SMTP username (optional)
-    EMAIL_SMTP_PASSWORD: SMTP password (optional)
-    EMAIL_SMTP_USE_TLS: Whether to use TLS (default: false)
+    EMAIL_SMTP_PORT: SMTP server port (default: 1025)
+    EMAIL_SMTP_USERNAME: SMTP username (empty = no auth)
+    EMAIL_SMTP_PASSWORD: SMTP password (empty = no auth)
     EMAIL_DEFAULT_SENDER: Default sender email address
+
+Note:
+    TLS/STARTTLS is auto-negotiated by aiosmtplib - no manual configuration needed.
 
 Example:
     >>> from service.email_service import send_email, send_templated_email
-    >>> 
+    >>>
     >>> # Simple email (must be awaited)
     >>> result = await send_email(
     ...     recipient="user@example.com",
     ...     subject="Hello!",
     ...     body_text="Welcome to Projojo!"
     ... )
-    >>> 
+    >>>
     >>> # Template-based email (must be awaited)
     >>> result = await send_templated_email(
     ...     recipient="user@example.com",
@@ -35,28 +37,27 @@ Example:
     ... )
 """
 
-import os
 import logging
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
+import os
 from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any
 
 import aiosmtplib
-from pydantic import BaseModel
-from jinja2 import Environment, FileSystemLoader, select_autoescape, TemplateNotFound
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
+from pydantic import BaseModel, ConfigDict
 
 
-
-# Configure logger for this module
 logger = logging.getLogger(__name__)
 
 
 # ============================================================================
 # Pydantic Models
 # ============================================================================
+
 
 class EmailAttachment(BaseModel):
     """
@@ -67,12 +68,11 @@ class EmailAttachment(BaseModel):
         content: Raw bytes of the file content
         mime_type: MIME type of the file (e.g., "application/pdf")
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     filename: str
     content: bytes
     mime_type: str = "application/octet-stream"
-    
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class EmailResult(BaseModel):
@@ -81,12 +81,10 @@ class EmailResult(BaseModel):
     
     Attributes:
         success: Whether the email was sent successfully
-        message_id: Optional message ID from the SMTP server
         error: Error message if sending failed
     """
     success: bool
-    message_id: Optional[str] = None
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ============================================================================
@@ -97,7 +95,7 @@ class EmailResult(BaseModel):
 _TEMPLATE_DIR = Path(__file__).parent.parent / "templates" / "email"
 
 # Jinja2 environment (lazy-loaded)
-_jinja_env: Optional[Environment] = None
+_jinja_env: Environment | None = None
 
 
 def _get_template_env() -> Environment:
@@ -152,30 +150,31 @@ def _get_smtp_config() -> dict:
         Dictionary with SMTP configuration:
         - host: SMTP server hostname
         - port: SMTP server port
-        - username: SMTP authentication username
-        - password: SMTP authentication password
-        - use_tls: Whether to use STARTTLS
+        - username: SMTP authentication username (None if empty)
+        - password: SMTP authentication password (None if empty)
         - default_sender: Default sender email address
         
     Note:
-        Port is safely parsed with a default of 1025 if invalid.
+        - Port is safely parsed with a default of 1025 if invalid.
+        - TLS is auto-negotiated by aiosmtplib (STARTTLS if server supports it).
+        - Authentication is skipped if username/password are None.
     """
-    # Safe port parsing (Issue 8)
     port_str = os.getenv("EMAIL_SMTP_PORT", "1025")
     try:
         port = int(port_str.strip())
     except (ValueError, AttributeError):
-        logger.warning(
-            f"Invalid EMAIL_SMTP_PORT value '{port_str}', using default 1025"
-        )
+        logger.warning(f"Invalid EMAIL_SMTP_PORT value '{port_str}', using default 1025")
         port = 1025
+    
+    # Convert empty strings to None so aiosmtplib skips authentication
+    username = os.getenv("EMAIL_SMTP_USERNAME", "") or None
+    password = os.getenv("EMAIL_SMTP_PASSWORD", "") or None
     
     return {
         "host": os.getenv("EMAIL_SMTP_HOST", "localhost"),
         "port": port,
-        "username": os.getenv("EMAIL_SMTP_USERNAME", ""),
-        "password": os.getenv("EMAIL_SMTP_PASSWORD", ""),
-        "use_tls": os.getenv("EMAIL_SMTP_USE_TLS", "false").lower() == "true",
+        "username": username,
+        "password": password,
         "default_sender": os.getenv("EMAIL_DEFAULT_SENDER", "noreply@projojo.nl"),
     }
 
@@ -187,24 +186,25 @@ def _get_smtp_config() -> dict:
 async def send_email(
     recipient: str | list[str],
     subject: str,
-    body_text: Optional[str] = None,
-    body_html: Optional[str] = None,
-    sender: Optional[str] = None,
-    cc: Optional[list[str]] = None,
-    bcc: Optional[list[str]] = None,
-    reply_to: Optional[str] = None,
-    attachments: Optional[list[EmailAttachment]] = None,
+    body_text: str | None = None,
+    body_html: str | None = None,
+    sender: str | None = None,
+    cc: list[str] | None = None,
+    bcc: list[str] | None = None,
+    reply_to: str | None = None,
+    attachments: list[EmailAttachment] | None = None,
 ) -> EmailResult:
     """
     Send an email via SMTP asynchronously.
     
-    The SMTP server is configured via environment variables:
-    - EMAIL_SMTP_HOST: SMTP server hostname (default: localhost for MailHog)
-    - EMAIL_SMTP_PORT: SMTP server port (default: 1025 for MailHog)
-    - EMAIL_SMTP_USERNAME: SMTP username (optional, empty for MailHog)
-    - EMAIL_SMTP_PASSWORD: SMTP password (optional, empty for MailHog)
-    - EMAIL_SMTP_USE_TLS: Whether to use TLS (default: false)
+    SMTP server is configured via environment variables:
+    - EMAIL_SMTP_HOST: SMTP server hostname (default: localhost)
+    - EMAIL_SMTP_PORT: SMTP server port (default: 1025)
+    - EMAIL_SMTP_USERNAME: SMTP username (empty = no auth)
+    - EMAIL_SMTP_PASSWORD: SMTP password (empty = no auth)
     - EMAIL_DEFAULT_SENDER: Default sender email address
+    
+    Note: TLS/STARTTLS is auto-negotiated by aiosmtplib.
     
     Args:
         recipient: Email address or list of addresses to send to
@@ -231,28 +231,23 @@ async def send_email(
         ...     print("Email sent!")
     """
     config = _get_smtp_config()
-    
-    # Normalize recipient to list
-    if isinstance(recipient, str):
-        recipients = [recipient]
-    else:
-        recipients = list(recipient)
-    
-    # Use default sender if not provided
     from_addr = sender or config["default_sender"]
     
-    # Build the email message
+    # Normalize recipient to list for the To header
+    to_list = [recipient] if isinstance(recipient, str) else list(recipient)
+    
+    # Build the email message with headers
+    # aiosmtplib extracts recipients from To, Cc, Bcc headers and strips Bcc before sending
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = from_addr
-    msg["To"] = ", ".join(recipients)
+    msg["To"] = ", ".join(to_list)
     
     if cc:
         msg["Cc"] = ", ".join(cc)
-        recipients.extend(cc)
     
     if bcc:
-        recipients.extend(bcc)
+        msg["Bcc"] = ", ".join(bcc)  # aiosmtplib will strip this before sending
     
     if reply_to:
         msg["Reply-To"] = reply_to
@@ -282,27 +277,17 @@ async def send_email(
             msg.attach(part)
     
     # Send via async SMTP
+    # aiosmtplib auto-negotiates STARTTLS if server supports it
+    # Authentication is skipped if username/password are None
     try:
-        if config["use_tls"]:
-            # TLS connection (SMTP2GO, Gmail, etc.)
-            await aiosmtplib.send(
-                msg,
-                hostname=config["host"],
-                port=config["port"],
-                username=config["username"] or None,
-                password=config["password"] or None,
-                start_tls=True,
-                timeout=30,
-            )
-        else:
-            # Plain connection (MailHog)
-            await aiosmtplib.send(
-                msg,
-                hostname=config["host"],
-                port=config["port"],
-                timeout=30,
-            )
-        
+        await aiosmtplib.send(
+            msg,
+            hostname=config["host"],
+            port=config["port"],
+            username=config["username"],
+            password=config["password"],
+            timeout=30,
+        )
         return EmailResult(success=True)
         
     except aiosmtplib.SMTPAuthenticationError as e:
@@ -335,12 +320,12 @@ async def send_templated_email(
     subject: str,
     template_name: str,
     context: dict[str, Any],
-    text_template_name: Optional[str] = None,
-    sender: Optional[str] = None,
-    cc: Optional[list[str]] = None,
-    bcc: Optional[list[str]] = None,
-    reply_to: Optional[str] = None,
-    attachments: Optional[list[EmailAttachment]] = None,
+    text_template_name: str | None = None,
+    sender: str | None = None,
+    cc: list[str] | None = None,
+    bcc: list[str] | None = None,
+    reply_to: str | None = None,
+    attachments: list[EmailAttachment] | None = None,
 ) -> EmailResult:
     """
     Send an email using a Jinja2 template asynchronously.
@@ -376,22 +361,21 @@ async def send_templated_email(
         >>> if result.success:
         ...     print("Invitation sent!")
     """
-    # Render templates (Issue 6: improved error handling)
-    body_html: Optional[str] = None
-    body_text: Optional[str] = None
+    body_html: str | None = None
+    body_text: str | None = None
     
     try:
         body_html = _render_template(template_name, context)
     except TemplateNotFound as e:
         logger.error(f"HTML template not found: {e.name}")
         return EmailResult(
-            success=False, 
+            success=False,
             error=f"Template not found: {e.name}. Check that it exists in templates/email/"
         )
     except Exception as e:
         logger.exception(f"Error rendering HTML template '{template_name}': {e}")
         return EmailResult(
-            success=False, 
+            success=False,
             error=f"Template rendering error for '{template_name}': {str(e)}"
         )
     
@@ -401,26 +385,17 @@ async def send_templated_email(
             body_text = _render_template(text_template_name, context)
         except TemplateNotFound as e:
             logger.warning(f"Text template not found: {e.name}, proceeding without text body")
-            # Don't fail, just proceed without text body
         except Exception as e:
             logger.warning(f"Error rendering text template '{text_template_name}': {e}")
-            # Don't fail, just proceed without text body
     
-    # Call send_email and handle any errors it might raise
-    try:
-        return await send_email(
-            recipient=recipient,
-            subject=subject,
-            body_text=body_text,
-            body_html=body_html,
-            sender=sender,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            attachments=attachments,
-        )
-    except Exception as e:
-        # This shouldn't happen since send_email catches all exceptions,
-        # but we handle it defensively (Issue 6)
-        logger.exception(f"Unexpected error in send_templated_email: {e}")
-        return EmailResult(success=False, error=f"Failed to send email: {str(e)}")
+    return await send_email(
+        recipient=recipient,
+        subject=subject,
+        body_text=body_text,
+        body_html=body_html,
+        sender=sender,
+        cc=cc,
+        bcc=bcc,
+        reply_to=reply_to,
+        attachments=attachments,
+    )
