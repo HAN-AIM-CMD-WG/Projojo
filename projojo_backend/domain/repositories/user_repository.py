@@ -502,7 +502,7 @@ class UserRepository(BaseRepository[User]):
                 $provider isa oauthProvider, has name ~provider_name;
                 $auth isa oauthAuthentication($user, $provider),
                 has oauthSub ~oauth_sub;
-                $user isa $usertype;
+                $user isa! $usertype;
             fetch {
                 'id': $user.id,
                 'email': $user.email,
@@ -575,6 +575,14 @@ class UserRepository(BaseRepository[User]):
             if not business_id:
                 raise HTTPException(400, "Business ID is vereist voor het aanmaken van een supervisor")
 
+            location_query = "match $business isa business, has id ~id; fetch { 'location': $business.location };"
+            location_results = Db.read_transact(location_query, {"id": business_id})
+
+            if not location_results:
+                raise HTTPException(404, "Business niet gevonden of heeft geen locatie")
+
+            location_value = location_results[0]['location']
+
             create_user_query = """
                 match
                     $provider isa oauthProvider, has name ~provider_name;
@@ -587,7 +595,7 @@ class UserRepository(BaseRepository[User]):
                     has imagePath ~image_path;
                     $auth isa oauthAuthentication($supervisor, $provider),
                     has oauthSub ~oauth_sub;
-                    (supervisor: $supervisor, business: $business) isa manages;
+                    (supervisor: $supervisor, business: $business) isa manages, has location ~location;
             """
             Db.write_transact(create_user_query, {
                 "provider_name": oauth_provider.provider_name,
@@ -596,7 +604,8 @@ class UserRepository(BaseRepository[User]):
                 "email": user.email,
                 "full_name": user.full_name,
                 "image_path": downloaded_image_name,
-                "oauth_sub": oauth_provider.oauth_sub
+                "oauth_sub": oauth_provider.oauth_sub,
+                "location": location_value
             })
 
             # Return the created supervisor

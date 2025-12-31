@@ -32,8 +32,14 @@ class AuthService:
         # Create JWT token
         # Pass business_id if user is a supervisor
         business_id = None
-        if final_user.type == 'supervisor' and hasattr(final_user, 'business_association_id'):
-            business_id = final_user.business_association_id
+        if final_user.type == 'supervisor':
+            if hasattr(final_user, 'business_association_id') and final_user.business_association_id:
+                business_id = final_user.business_association_id
+            else:
+                # Fetch supervisor details to get business_id if not present in the user object
+                supervisor = self.user_repo.get_supervisor_by_id(final_user.id)
+                if supervisor:
+                    business_id = supervisor.business_association_id
 
         jwt_token = create_jwt_token(user_id=final_user.id, role=final_user.type, business_id=business_id)
 
