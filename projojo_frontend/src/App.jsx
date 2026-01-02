@@ -54,14 +54,17 @@ export default function App() {
           <Route path="/invite/:token" element={<InvitePage />} />
           <Route path="/home" element={<OverviewPage />} />
           <Route path="/projects">
+            <Route index element={<NotFound />} />
             <Route path="add" element={<ProjectsAddPage />} />
             <Route path=":projectId" element={<ProjectDetailsPage />} />
           </Route>
           <Route path="/business">
+            <Route index element={<NotFound />} />
             <Route path=":businessId" element={<BusinessPage />} />
             <Route path="update" element={<UpdateBusinessPage />} />
           </Route>
           <Route path="/student">
+            <Route index element={<NotFound />} />
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
