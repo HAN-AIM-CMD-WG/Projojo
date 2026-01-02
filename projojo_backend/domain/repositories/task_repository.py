@@ -255,24 +255,64 @@ class TaskRepository(BaseRepository[Task]):
         })
 
     def update(self, task_id: str, name: str, description: str, total_needed: int) -> Task:
-            # Build the update query dynamically based on what needs to be updated
-            update_clauses = [
-                '$task has name ~name;',
-                '$task has description ~description;',
-                '$task has totalNeeded ~total_needed;',
-            ]
-            update_params = {
-                "task_id": task_id,
-                "name": name,
-                "description": description,
-                "total_needed": total_needed,
-            }
+        # First, get the project info for the current task
+        project_query = """
+            match
+                $currentTask isa task, has id ~task_id;
+                $projectTask isa containsTask (project: $project, task: $currentTask);
+                $project isa project, has name $project_name, has id $project_id;
+            fetch {
+                'project_name': $project_name,
+                'project_id': $project_id
+            };
+        """
+        project_results = Db.read_transact(project_query, {"task_id": task_id})
+        
+        if not project_results:
+            raise ItemRetrievalException("Task", f"Taak met ID '{task_id}' niet gevonden.")
+            
+        project_id = project_results[0]['project_id']
+        project_name = project_results[0]['project_name']
+        
+        # Then check for duplicates
+        duplicate_query = """
+            match
+                $project isa project, has id ~project_id;
+                $existingTask isa task, has name ~task_name;
+                $projectTask isa containsTask (project: $project, task: $existingTask);
+            fetch {
+                'task_id': $existingTask.id
+            };
+        """
+        duplicate_results = Db.read_transact(duplicate_query, {
+            "project_id": project_id,
+            "task_name": name
+        })
+        
+        # Check if any duplicates found that are NOT the current task
+        for duplicate in duplicate_results:
+            if duplicate['task_id'] != task_id:
+                raise ValueError(f"Er bestaat al een taak met de naam '{name}' in project '{project_name}'.")
 
-            query = f"""
-                match
-                    $task isa task, has id ~task_id;
-                update
-                    {' '.join(update_clauses)}
-            """
+        # Build the update query dynamically based on what needs to be updated
+        update_clauses = [
+            '$task has name ~name;',
+            '$task has description ~description;',
+            '$task has totalNeeded ~total_needed;',
+        ]
+        update_params = {
+            "task_id": task_id,
+            "name": name,
+            "description": description,
+            "total_needed": total_needed,
+        }
 
-            Db.write_transact(query, update_params)
+        query = f"""
+            match
+                $task isa task, has id ~task_id;
+            update
+                {' '.join(update_clauses)}
+        """
+
+        Db.write_transact(query, update_params)
+
