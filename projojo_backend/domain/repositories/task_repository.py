@@ -289,6 +289,25 @@ class TaskRepository(BaseRepository[Task]):
             if conflict['conflict_id'] != task_id:
                 raise ValueError(f"Er bestaat al een taak met de naam '{name}' in project '{project_name}'.")
 
+        # Validate that total_needed is not less than current total_accepted
+        accepted_count_query = """
+            match
+                $task isa task, has id ~task_id;
+            fetch {
+                'total_accepted': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true;
+                    return count;
+                )
+            };
+        """
+        accepted_results = Db.read_transact(accepted_count_query, {"task_id": task_id})
+        current_accepted = accepted_results[0]['total_accepted'] if accepted_results else 0
+        
+        if total_needed < current_accepted:
+            raise ValueError(f"Het totaal aantal plekken ({total_needed}) kan niet lager zijn dan het aantal al geaccepteerde deelnemers ({current_accepted}).")
+
         # Build the update query dynamically based on what needs to be updated
         update_clauses = [
             '$task has name ~name;',
