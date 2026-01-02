@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ notification_title }}{% endblock %}
+
+{% block header_subtitle %}
+<p class="subtitle">{{ notification_type|default('Notificatie') }}</p>
+{% endblock %}
+
+{% block content %}
+<h2>{{ notification_title }}</h2>
+
+<p>{{ notification_body }}</p>
+
+{% if details %}
+<div class="info-box">
+    {% for key, value in details.items() %}
+    <p><strong>{{ key }}:</strong> {{ value }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if action_url %}
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="button">{{ action_text|default('Bekijk Details') }}</a>
+</p>
+
+<p class="link-text">
+    Of kopieer deze link: {{ action_url }}
+</p>
+{% endif %}
+
+{% if secondary_action_url %}
+<p style="text-align: center;">
+    <a href="{{ secondary_action_url }}" class="button button-secondary">{{ secondary_action_text|default('Meer informatie') }}</a>
+</p>
+{% endif %}
+
+{% if note %}
+<p style="font-size: 14px; color: #6b7280;">
+    <em>{{ note }}</em>
+</p>
+{% endif %}
+{% endblock %}
