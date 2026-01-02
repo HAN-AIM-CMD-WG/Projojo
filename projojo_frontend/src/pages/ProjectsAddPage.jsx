@@ -15,7 +15,7 @@ export default function ProjectsAddPage() {
             })
             .catch((error) => {
                 console.error("Error creating project:", error);
-                setServerErrorMessage(error.message || "Failed to create project");
+                setServerErrorMessage(error.message || "Kan project niet aanmaken");
             });
     }
 
