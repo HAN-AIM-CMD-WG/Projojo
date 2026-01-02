@@ -166,6 +166,7 @@ class AuthService:
                 # Save the image bytes
                 image_filename = save_image_from_bytes(picture_resp.content, file_extension)
         except Exception as e:
+            # Log error but don't fail. User can proceed without profile picture.
             print(f"Failed to download Microsoft profile picture: {e}")
 
         return image_filename

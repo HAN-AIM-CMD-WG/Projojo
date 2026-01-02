@@ -63,7 +63,6 @@ async def auth_login(
     # Authlib will handle the state parameter for CSRF protection
     return await client.authorize_redirect(request, redirect_uri)
 
-
 @router.get("/callback/{provider}")
 @auth(role="unauthenticated")
 async def auth_callback(
@@ -100,6 +99,7 @@ async def auth_callback(
         # Redirect to frontend auth callback with error for any other exception
         print(f"Exception - OAuth callback handling failed for {provider}: {e}")
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed" + invite_token_query)
+
 @router.post("/test/login/{user_id}")
 @auth(role="unauthenticated")
 async def test_login(user_id: str, request: Request):

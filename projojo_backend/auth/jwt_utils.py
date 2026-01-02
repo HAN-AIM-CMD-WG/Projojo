@@ -62,4 +62,4 @@ def get_token_payload(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Er is iets fout gegaan met je sessie. Log opnieuw in.")
     except Exception as e:
         print(f"Unexpected error while decoding JWT token: {e}")
-        raise HTTPException(status_code=401, detail="Je moet ingelogd zijn")
+        raise HTTPException(status_code=401, detail="Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw.")
