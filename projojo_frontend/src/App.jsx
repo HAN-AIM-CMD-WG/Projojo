@@ -16,6 +16,7 @@ import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
+import UpdateTaskPage from "./pages/UpdateTaskPage";
 import { notification } from './components/notifications/NotifySystem.jsx';
 
 export default function App() {
@@ -63,6 +64,9 @@ export default function App() {
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
+          <Route path="/tasks">
+            <Route path=":taskId/update" element={<UpdateTaskPage />} />
+          </Route>
           <Route path="/teacher" element={<TeacherPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -71,5 +75,3 @@ export default function App() {
     </>
   )
 }
-
-

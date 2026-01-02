@@ -24,7 +24,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
 
-    const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
+    const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
     const isFull = task.total_accepted >= task.total_needed;
 
@@ -172,6 +172,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     )}
                     {isOwner && (<>
                         <button className="btn-primary w-full" onClick={() => setIsRegistrationsModalOpen(true)}>Bekijk aanmeldingen</button>
+                        <Link to={`/tasks/${task.id}/update`} className="btn-primary w-full text-center">
+                            <p>Taak aanpassen</p>
+                        </Link>
                         <CreateBusinessEmail taskId={task.id} />
                     </>
                     )}
