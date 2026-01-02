@@ -98,6 +98,8 @@ def auth(role: str, owner_id_key: str | None = None):
             # All checks passed, call the endpoint function
             return await func(*args, **kwargs)
 
+        # Attach the role to the wrapper function so middleware can inspect it
+        wrapper.auth_role = role
         return wrapper
     return decorator
 

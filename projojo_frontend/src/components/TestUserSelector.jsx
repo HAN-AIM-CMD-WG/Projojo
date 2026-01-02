@@ -76,11 +76,11 @@ export default function TestUserSelector() {
 				}
 			});
 
+			const data = await response.json();
 			if (!response.ok) {
-				throw new Error('Kan testtoken niet genereren');
+				throw new Error(`${data.detail || 'Fout bij inloggen met testgebruiker'}`);
 			}
 
-			const data = await response.json();
 			const token = data.access_token;
 
 			// Store the token in localStorage
@@ -89,8 +89,8 @@ export default function TestUserSelector() {
 			navigate('/home');
 
 		} catch (error) {
-			console.error("Error logging in with test user:", error);
-			notification.error("Fout bij inloggen met testgebruiker");
+			console.error(error);
+			notification.error(error.message || "Fout bij inloggen met testgebruiker");
 		} finally {
 			setIsLoggingIn(false);
 		}
