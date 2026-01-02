@@ -162,7 +162,7 @@ async def create_task(
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
 
 @router.put("/{task_id}")
-@auth(role="supervisor", owner_id_key="project_id")
+@auth(role="supervisor", owner_id_key="task_id")
 async def update_task(
     task_id: str = Path(..., description="Task ID to update"),
     name: str = Form(...),
