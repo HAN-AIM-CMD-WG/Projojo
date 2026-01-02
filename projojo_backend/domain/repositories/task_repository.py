@@ -255,43 +255,38 @@ class TaskRepository(BaseRepository[Task]):
         })
 
     def update(self, task_id: str, name: str, description: str, total_needed: int) -> Task:
-        # First, get the project info for the current task
-        project_query = """
+        # Get project info and check for duplicate task names
+        validation_query = """
             match
                 $currentTask isa task, has id ~task_id;
                 $projectTask isa containsTask (project: $project, task: $currentTask);
                 $project isa project, has name $project_name, has id $project_id;
             fetch {
                 'project_name': $project_name,
-                'project_id': $project_id
+                'project_id': $project_id,
+                'conflicting_tasks': [
+                    match
+                        $sameProject isa project, has id $project_id;
+                        $conflictTask isa task, has name ~task_name, has id $conflict_id;
+                        $containsConflict isa containsTask (project: $sameProject, task: $conflictTask);
+                    fetch { 'conflict_id': $conflict_id };
+                ]
             };
         """
-        project_results = Db.read_transact(project_query, {"task_id": task_id})
-        
-        if not project_results:
-            raise ItemRetrievalException("Task", f"Taak met ID '{task_id}' niet gevonden.")
-            
-        project_id = project_results[0]['project_id']
-        project_name = project_results[0]['project_name']
-        
-        # Then check for duplicates
-        duplicate_query = """
-            match
-                $project isa project, has id ~project_id;
-                $existingTask isa task, has name ~task_name;
-                $projectTask isa containsTask (project: $project, task: $existingTask);
-            fetch {
-                'task_id': $existingTask.id
-            };
-        """
-        duplicate_results = Db.read_transact(duplicate_query, {
-            "project_id": project_id,
+        validation_results = Db.read_transact(validation_query, {
+            "task_id": task_id,
             "task_name": name
         })
         
-        # Check if any duplicates found that are NOT the current task
-        for duplicate in duplicate_results:
-            if duplicate['task_id'] != task_id:
+        if not validation_results:
+            raise ItemRetrievalException("Task", f"Taak met ID '{task_id}' niet gevonden.")
+            
+        result = validation_results[0]
+        project_name = result['project_name']
+        
+        # Check if any conflicting tasks found that are NOT the current task
+        for conflict in result.get('conflicting_tasks', []):
+            if conflict['conflict_id'] != task_id:
                 raise ValueError(f"Er bestaat al een taak met de naam '{name}' in project '{project_name}'.")
 
         # Build the update query dynamically based on what needs to be updated
