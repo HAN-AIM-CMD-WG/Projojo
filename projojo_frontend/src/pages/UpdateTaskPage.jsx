@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider';
 import Card from '../components/Card';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { createErrorMessage, getTaskById, updateTask } from '../services';
+import { getTaskById, updateTask } from '../services';
 import useFetch from '../useFetch';
 
 export default function UpdateTaskPage() {
@@ -43,16 +43,7 @@ export default function UpdateTaskPage() {
         updateTask(taskId, formData)
             .then(() => {
                 navigation(-1);
-            }).catch(error =>
-                setError(createErrorMessage(
-                    error,
-                    {
-                        401: "De taak kan niet aangepast worden als je niet bent ingelogd",
-                        403: "Je bent niet geautoriseerd om de taak aan te passen",
-                        404: "De taak kan niet gevonden worden",
-                    }
-                ))
-            );
+            }).catch(error => setError(error.message));
     }
 
     return (
