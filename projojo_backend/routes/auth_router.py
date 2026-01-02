@@ -3,6 +3,7 @@ from fastapi.responses import RedirectResponse
 from domain.repositories.user_repository import UserRepository
 from auth.oauth_config import oauth_client
 from auth.jwt_utils import create_jwt_token
+from auth.permissions import auth
 from service.auth_service import AuthService
 import os
 from urllib.parse import urlparse
@@ -12,7 +13,6 @@ router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
 # Default frontend URL as fallback
 DEFAULT_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "none").lower()
 
 
 def get_frontend_url_from_login(request: Request) -> str:
@@ -36,6 +36,7 @@ def get_frontend_url_from_login(request: Request) -> str:
 
 
 @router.get("/login/{provider}")
+@auth(role="unauthenticated")
 async def auth_login(
     request: Request,
     provider: str
@@ -59,6 +60,7 @@ async def auth_login(
 
 
 @router.get("/callback/{provider}")
+@auth(role="unauthenticated")
 async def auth_callback(
     request: Request,
     provider: str,
@@ -77,32 +79,30 @@ async def auth_callback(
 
     except ValueError as e:
         # Redirect to frontend auth callback with error
-        print(f"OAuth callback handling failed for {provider}: {e}")
+        print(f"ValueError - OAuth callback handling failed for {provider}: {e}")
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
     except Exception as e:
         # Redirect to frontend auth callback with error for any other exception
-        print(f"OAuth callback handling failed for {provider}: {e}")
+        print(f"Exception - OAuth callback handling failed for {provider}: {e}")
         return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
 
 @router.post("/test/login/{user_id}")
+@auth(role="unauthenticated")
 async def test_login(user_id: str, request: Request):
     """
     LOCALHOST ONLY: Generate a JWT token for any user ID for testing purposes.
     This endpoint should only be used in development environments.
     """
     # Check if the request is from localhost
-    if not ENVIRONMENT == "development":
-        raise HTTPException(
-            status_code=403,
-            detail="This endpoint is only available from localhost in development environments"
-        )
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
 
     # Get user from database
     user = user_repo.get_by_id(user_id)
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail="Gebruiker niet gevonden"
         )
 
     # Handle both dict and object responses from repository
