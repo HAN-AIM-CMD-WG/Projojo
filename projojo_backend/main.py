@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 from auth.jwt_middleware import JWTMiddleware
+from service.custom_static_files import FallbackStaticFiles
 
 # Import routers
 from routes.auth_router import router as auth_router
@@ -87,7 +88,7 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/image", StaticFiles(directory="static/images"), name="image")
+app.mount("/image", FallbackStaticFiles(directory="static/images", default_file="static/default.svg"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 
 @app.get("/")

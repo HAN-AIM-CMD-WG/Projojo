@@ -10,21 +10,29 @@ export default function AuthCallback() {
         const accessToken = searchParams.get('access_token');
         const isNewUser = searchParams.get('is_new_user') === 'true';
         const error = searchParams.get('error');
+        const message = searchParams.get('message');
+        const inviteToken = searchParams.get('invite_token');
 
         // Handle error cases
         if (error) {
-            let errorMessage = "Authenticatie mislukt. Probeer het opnieuw.";
+            let errorMessage = message || "Authenticatie mislukt. Probeer het opnieuw.";
 
-            if (error === 'unsupported_provider') {
-                errorMessage = "Deze login methode wordt niet ondersteund.";
-            } else if (error === 'auth_failed') {
-                errorMessage = "Authenticatie mislukt. Probeer het opnieuw.";
-            } else if (error === 'access_denied') {
-                errorMessage = "Je hebt de login geannuleerd.";
+            if (!message) {
+                if (error === 'unsupported_provider') {
+                    errorMessage = "Deze login methode wordt niet ondersteund.";
+                } else if (error === 'auth_failed') {
+                    errorMessage = "Authenticatie mislukt. Probeer het opnieuw.";
+                } else if (error === 'access_denied') {
+                    errorMessage = "Je hebt de login geannuleerd.";
+                }
             }
 
             notification.error(errorMessage);
-            navigate('/', { replace: true });
+            if (inviteToken) {
+                navigate(`/invite/${inviteToken}`, { replace: true });
+            } else {
+                navigate('/', { replace: true });
+            }
             return;
         }
 

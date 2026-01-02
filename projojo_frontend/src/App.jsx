@@ -16,6 +16,7 @@ import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
+import InvitePage from "./pages/InvitePage";
 import { notification } from './components/notifications/NotifySystem.jsx';
 
 export default function App() {
@@ -44,22 +45,26 @@ export default function App() {
 
   return (
     <>
-      {location.pathname !== "/" && <Navbar />}
+      {location.pathname !== "/" && location.pathname !== "/auth/callback" && !location.pathname.startsWith("/invite") && <Navbar />}
       <div className="max-w-7xl min-h-dvh px-4 mx-auto relative">
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />
           <Route path="/" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/invite/:token" element={<InvitePage />} />
           <Route path="/home" element={<OverviewPage />} />
           <Route path="/projects">
+            <Route index element={<NotFound />} />
             <Route path="add" element={<ProjectsAddPage />} />
             <Route path=":projectId" element={<ProjectDetailsPage />} />
           </Route>
           <Route path="/business">
+            <Route index element={<NotFound />} />
             <Route path=":businessId" element={<BusinessPage />} />
             <Route path="update" element={<UpdateBusinessPage />} />
           </Route>
           <Route path="/student">
+            <Route index element={<NotFound />} />
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
