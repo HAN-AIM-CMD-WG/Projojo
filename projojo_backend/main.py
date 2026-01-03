@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+import logging
 from contextlib import asynccontextmanager
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
@@ -21,6 +22,9 @@ from routes.user_router import router as user_router
 
 # Import the TypeDB connection module
 from db.initDatabase import get_database
+
+# Set up logger
+logger = logging.getLogger('uvicorn.error')
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -45,11 +49,24 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
+    # allow_origin_regex=r"https?://.*",  # Allows all origins with http or https
     allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+@app.middleware("http")
+async def print_headers(request: Request, call_next):
+    logger.debug("Request headers:")
+    for header, value in request.headers.items():
+        logger.debug(f"  {header}: {value}")
+    response = await call_next(request)
+    logger.debug("Response headers:")
+    for header, value in response.headers.items():
+        logger.debug(f"  {header}: {value}")
+    return response
+
 
 # Include routers
 app.include_router(auth_router)
@@ -72,7 +89,8 @@ def get_db():
     return get_database()
 
 app.mount("/image", StaticFiles(directory="static/images"), name="image")
-# app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}

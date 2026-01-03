@@ -21,7 +21,7 @@ export default function ProfilePage() {
                 // Combine student data with CV for testing purposes
                 const studentWithCV = {
                     ...data,
-                    cv_path: "PVDCV.pdf" // Placeholder for CV path, replace with actual data if available
+                    cv_path: "CV_Daan.pdf" // Placeholder for CV path, replace with actual data if available
                 };
                 setStudent(studentWithCV);
             })

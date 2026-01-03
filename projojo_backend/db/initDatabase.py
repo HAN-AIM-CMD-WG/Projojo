@@ -4,9 +4,12 @@ import pprint
 from environs import Env
 from typing import Any
 
-# Load environment variables from .env file with variable expansion
+# Load environment variables.
+# This will read from .env.production first, then .env
+# .env is only available for local development, and overrides settings from .env.production
 env = Env(expand_vars=True)
-env.read_env()
+env.read_env(".env.production", recurse=True, override=True)
+env.read_env(".env", recurse=True, override=True) 
 
 class Db:
     address = env.str("TYPEDB_SERVER_ADDR")
@@ -32,12 +35,19 @@ class Db:
         
         # Try new credentials first
         try:
-            print("Trying new credentials...")
+            print(f"Trying new credentials... {cls.username}:{cls.new_password}")
             cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.new_password), DriverOptions(False, None))
             print("✓ Connected with new credentials - password is already correct")
             
         except Exception as new_cred_error:
-            print(f"⚠ New credentials failed: {new_cred_error}")
+            print(f"⚠ New credentials failed: {new_cred_error} {cls.address}::{cls.username}:{cls.new_password}")
+            print("Loaded by environs:")
+            for key in env.dump():
+                print(f"{key}={env.dump()[key]}")
+            print("-----")
+            print("Environment variables:")
+            for key, value in os.environ.items():
+                print(f"{key}={value}")
             print("Trying default credentials...")
             
             try:
@@ -46,17 +56,17 @@ class Db:
                 
                 # Update password if default and new are different
                 if cls.default_password != cls.new_password:
-                    print("Updating password...")
+                    print(f"Updating password... {cls.username}:{cls.default_password}->{cls.new_password}")
                     try:
                         current_user = cls.driver.users.get_current_user()
                         if current_user:
-                            current_user.update_password(cls.new_password)
-                            print("✓ Password updated successfully")
-                            
+                            result = current_user.update_password(cls.new_password)
+                            print(f"✓ Password updated successfully {result}")
+
                             # Reconnect with new password
                             cls.driver.close()
                             cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.new_password), DriverOptions(False, None))
-                            print("✓ Reconnected with new credentials")
+                            print(f"✓ Reconnected with new credentials {cls.address}::{cls.username}:{cls.new_password}")
                         else:
                             print("⚠ Could not get current user for password update")
                     except Exception as password_error:

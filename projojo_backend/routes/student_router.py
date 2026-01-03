@@ -20,7 +20,7 @@ async def get_all_students():
     return students
 
 
-@router.get("/{email}/skills")
+@router.get("/{email}/skills/")
 async def get_student_skills(email: str = Path(..., description="Student email")):
     """
     Get all skills for a student
@@ -32,7 +32,7 @@ async def get_student_skills(email: str = Path(..., description="Student email")
     return student
 
 
-@router.put("/{email}/skills")
+@router.put("/{email}/skills/")
 async def update_student_skills(
     email: str = Path(..., description="Student email"),
     skills: list[str] = Body(..., description="List of skillnames"),
@@ -67,12 +67,12 @@ async def update_student_skill_description(
     if not user:
         raise HTTPException(status_code=404, detail="Student bestaat niet")
 
-    skill_ids = [skill.get("id") for skill in user.get("Skills")]
+    skill_ids = [skill.get("id") for skill in (user.get("Skills") or [])]
     if skill_id not in skill_ids:
         raise HTTPException(status_code=404, detail="De skill die je probeert te updaten staat niet in jouw profiel")
 
     try:
-        skill_repo.update_student_skill_description(student_id, skill_id, skill.description)
+        skill_repo.update_student_skill_description(student_id, skill_id, (skill.description or ""))
         return {"message": "Skill description successfully updated"}
     except Exception:
         raise HTTPException(

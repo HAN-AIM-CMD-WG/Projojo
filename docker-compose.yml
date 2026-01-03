@@ -1,50 +1,37 @@
+# This is the Docker Compose file for Projojo, used in development. 
+# In production, use docker-compose.prod.yml, which includes this file, and overrides some settings.
+
 services:
   typedb:
-    # https://github.com/typedb/typedb/releases/tag/3.4.0
-    container_name: projojo_typedb
-    image: typedb/typedb:3.4.0
-    restart: unless-stopped
+    extends:
+      file: docker-compose.base.yml
+      service: typedb
     env_file:
-      - settings.env
       - .env
-    ports:
-      - "${TYPEDB_PORT}:1729"
-      - "${TYPEDB_STUDIO_PORT}:8000" # this is the port used for the new TypeDB Studio
-    volumes:
-      - typedb-data:/opt/typedb-all-linux-x86_64/server/data
-    platform: linux/amd64
     networks:
       - projojo-network
 
   backend:
-    container_name: projojo_backend
-    depends_on:
-      - typedb
+    extends:
+      file: docker-compose.base.yml
+      service: backend
     build:
-      context: ./projojo_backend
       target: development  # Use development stage
     env_file:
-      - settings.env
       - .env
-    ports:
-      - "${BACKEND_PORT}:8000"
     volumes:
       - ./projojo_backend:/app  # Volume mount for development
       - /app/__pycache__        # Anonymous volume to prevent host __pycache__ from mounting (avoids Python version/platform conflicts)
-    environment:
-      - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
-      - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
-      - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
     networks:
       - projojo-network
 
   frontend:
-    container_name: projojo_frontend
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
     build:
-      context: ./projojo_frontend
       target: development  # Use development stage
     env_file:
-      - settings.env
       - .env
     ports:
       - "${FRONTEND_PORT}:5173"
@@ -54,9 +41,9 @@ services:
     networks:
       - projojo-network
 
+volumes:
+  typedb-data:
+
 networks:
   projojo-network:
     driver: bridge
-
-volumes:
-  typedb-data:

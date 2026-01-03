@@ -1,0 +1,44 @@
+# This is the base Docker Compose file for Projojo, used in both development and production.
+
+services:
+  typedb:
+    # https://github.com/typedb/typedb/releases/tag/3.4.0
+    container_name: projojo_typedb
+    image: typedb/typedb:3.4.0
+    restart: unless-stopped
+    ports:
+      - "${TYPEDB_PORT}:1729"
+      - "${TYPEDB_STUDIO_PORT}:8000" # this is the port used for the new TypeDB Studio
+    volumes:
+      - typedb-data:/opt/typedb-all-linux-x86_64/server/data
+    platform: linux/amd64
+
+  backend:
+    container_name: projojo_backend
+    depends_on:
+      - typedb
+    build:
+      context: ./projojo_backend
+    environment:
+      - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
+      - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
+      - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
+    ports:
+      - ${BACKEND_PORT}:${BACKEND_PORT}
+    networks:
+      - projojo-network
+
+  frontend:
+    container_name: projojo_frontend
+    build:
+      context: ./projojo_frontend
+    environment:
+      - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}  
+      - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
+      - VITE_APP_NAME=${VITE_APP_NAME}
+      - VITE_APP_VERSION=${VITE_APP_VERSION}
+    networks:
+      - projojo-network
+
+volumes:
+  typedb-data:

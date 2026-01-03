@@ -1,4 +1,6 @@
-FROM python:3.13-slim AS base
+# This is the Dockerifile for the Projojo backend service.
+
+FROM python:3.13-bullseye AS base
 
 WORKDIR /app
 
@@ -16,15 +18,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Development stage - expects volume mount for live reloading
 FROM base AS development
-EXPOSE 8000
+EXPOSE ${BACKEND_PORT}
 # Print environment variables for debugging
-RUN echo "=== B: DEVELOPMENT STAGE ENVIRONMENT ===" && env | grep -E "(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)" | sort || true
-CMD ["sh", "-c", "echo 'Starting development server...' && echo 'Environment:' && env | grep -E '(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)' | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
+RUN echo "=== B: DEVELOPMENT STAGE ENVIRONMENT ===" && env | sort || true
+CMD ["sh", "-c", "echo 'B: Starting development server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"]
 
 # Preview stage - copies source code for production
 FROM base AS preview
 COPY . .
-EXPOSE 8000
+EXPOSE ${BACKEND_PORT}
 # Print environment variables for debugging
-RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | grep -E "(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)" | sort || true
-CMD ["sh", "-c", "echo 'Starting production server...' && echo 'Environment:' && env | grep -E '(TYPEDB_|PYTHON|FRONTEND_|BACKEND_)' | sort && uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info"]
+RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
+CMD ["sh", "-c", "echo 'B: Starting production server...' && echo 'Environment:' && env | sort && uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT} --workers 1 --log-level debug"]

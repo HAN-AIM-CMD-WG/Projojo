@@ -1,26 +1,26 @@
 // Dynamically determine API URL based on current browser location
 const getApiBaseUrl = () => {
-  const backendPort = import.meta.env.VITE_BACKEND_PORT || "8000"
+  console.log("######", import.meta.env);
+  const backendPort = import.meta.env.VITE_BACKEND_PORT
+  let result
 
-  console.log(
-    `##### Using backend port: [${import.meta.env.VITE_BACKEND_PORT}]`
-  )
-
-  // Check if VITE_BACKEND_HOST is set in environment variables
+// Check if VITE_BACKEND_HOST is set in environment variables
   // This allows overriding the default host in development or production builds
   // Useful for different environments like staging or production
   // If not set, fallback to the current window location
   // or a default url for server-side rendering
 
   if (import.meta.env.VITE_BACKEND_HOST) {
-    return `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
-  }
-  if (typeof window !== "undefined") {
+    result = `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
+  } else if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname } = window.location
-    return `${protocol}//${hostname}:${backendPort}/`
+    result = `${protocol}//${hostname}:${backendPort}/`
+  } else {
+    // Fallback for server-side rendering or non-browser environments
+    return `http://localhost:${backendPort}/`
   }
-  // Fallback for server-side rendering or non-browser environments
-  return `http://localhost:${backendPort}/`
+  console.log(`######   getApiBaseUrl(): ${result}    #######`)
+  return result
 }
 
 export const API_BASE_URL = getApiBaseUrl()
@@ -224,14 +224,14 @@ export function getUser(email) {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getSkills() {
-    return fetchWithError(`${API_BASE_URL}skills`);
+    return fetchWithError(`${API_BASE_URL}skills/`);
 }
 /**
  * @param {string} email
  * @returns {Promise<{student: any, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
 export function getSkillsFromStudent(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`);
 }
 
 
@@ -240,7 +240,7 @@ export function getSkillsFromStudent(email) {
  * @param {string[]} skills
  */
 export function updateStudentSkills(email, skills) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`, {
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`, {
         method: "PUT",
         body: JSON.stringify(skills),
     });
@@ -275,7 +275,7 @@ export function getStudentRegistrations() {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}>}
  */
 export function createSkill(skill) {
-    return fetchWithError(`${API_BASE_URL}skills`, {
+    return fetchWithError(`${API_BASE_URL}skills/`, {
         method: "POST",
         body: JSON.stringify(skill),
     });
@@ -347,7 +347,7 @@ export function updateRegistration(registration) {
 
 //Not implemented in the backend yet
 export function updateTaskSkills(name, taskSkills) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills`, {
+    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills/`, {
         method: "PUT",
         body: JSON.stringify(taskSkills),
     });
@@ -358,7 +358,7 @@ export function updateTaskSkills(name, taskSkills) {
  * @returns {Promise<void>}
  */
 export function getSkill(name) {
-    return fetchWithError(`${API_BASE_URL}task/${name}/skills`);
+    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills/`);
 }
 
 /**
@@ -366,7 +366,7 @@ export function getSkill(name) {
  * @returns {Promise<void>}
  */
 export function getStudentSkills(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills`);
+    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`);
 }
 
 // This function is not available in the backend
@@ -377,7 +377,7 @@ export function getStudentSkills(email) {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getTaskSkills(taskName) {
-    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills`)
+    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills/`)
 }
 
 
