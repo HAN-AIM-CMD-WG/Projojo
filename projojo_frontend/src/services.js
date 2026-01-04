@@ -76,7 +76,7 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
     const token = localStorage.getItem("token");
 
     if (token) {
-        headers.authorization = `bearer ${token}`;
+        headers.authorization = `Bearer ${token}`;
     }
 
     return fetch(url, {
@@ -96,34 +96,42 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
         .then(json => {
             if (errorStatus !== undefined) {
                 let message;
-                const jsonObj = JSON.parse(json);
                 try {
+                    const jsonObj = JSON.parse(json);
+                    // checks if detail field exists and is non-empty
                     if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
+                        // doesnt exist or is empty. Go to catch block
                         throw new Error();
                     }
                     message = jsonObj.detail;
                 } catch {
-
+                    // assign default message based on status code
                     switch (errorStatus) {
+                        case 400:
+                            message = "Ongeldig verzoek. Controleer je invoer.";
+                            break;
                         case 401:
-                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
+                            message = "Je moet ingelogd zijn om dit te doen.";
                             break;
                         case 403:
-                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
+                            message = "Je hebt geen rechten voor deze actie.";
                             break;
                         case 404:
-                            message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
+                            message = "Dit konden we niet vinden.";
                             break;
                         case 409:
-                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan in het systeem.";
+                            message = "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            break;
+                        case 429:
+                            message = "Te veel verzoeken. Probeer het later opnieuw.";
                             break;
                         default:
-                            message = message ?? "Er is een onverwachte fout opgetreden.";
+                            message = "Er is een onverwachte fout opgetreden.";
                             break;
                     }
                 }
 
-
+                // makes the error catchable in the calling code
                 throw new HttpError(message, errorStatus);
             }
             return json;
@@ -131,25 +139,11 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
 }
 
 /**
- * @param {Error} error
- * @param {Record<number, string>} mapper
- */
-export function createErrorMessage(error, mapper) {
-    let message = error?.message;
-    if (error instanceof HttpError) {
-        message = mapper[error.statusCode];
-    }
-    return message ?? "Er is een onverwachte fout opgetreden.";
-}
-
-// These functions have been replaced by getBusinessByName
-
-/**
- * @param {string} businessName optional business name parameter for getting only the projects for 1 business
+ * @param {string} businessId business ID parameter for getting only the projects for 1 business
  * @returns { Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string}[]> }
  */
-export function getProjectsWithBusinessId(businessName) {
-    return fetchWithError(`${API_BASE_URL}businesses/${businessName}/projects`)
+export function getProjectsWithBusinessId(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/projects`)
 }
 
 /**
@@ -175,11 +169,11 @@ export function getBusinessesBasic() {
 
 /**
  *
- * @param {string} projectName
+ * @param {string} projectId
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, created_at: string, business_id: string, tasks: any[]}>}
  */
-export function getProject(projectName) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectName}/complete`)
+export function getProject(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/complete`)
 }
 
 // This function is not available in the backend
@@ -197,22 +191,22 @@ export function getAuthorization() {
 // This function is not available in the backend
 
 /**
- * @param {string} projectName
+ * @param {string} projectId
  * @returns {Promise<{id: string, name: string, description: string, total_needed: number, created_at: string, project_id: string, skills: skill[]}[]>}
  */
-export function getTasks(projectName) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectName}/tasks`);
+export function getTasks(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/tasks`);
 }
 
 // This function is not available in the backend
 
 /**
  *
- * @param {string} email
- * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, password_hash: string, type: string, school_account_name: string, skill_ids: {skill_name: string}[], registered_task_ids: {task_name: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
+ * @param {string} userId
+ * @returns {Promise<{id: string, email: string, full_name: string, image_path: string, type: string, oauth_providers: {provider_name: string, oauth_sub: string}[] | null, skill_ids: {skill_id: string}[], registered_task_ids: {task_id: string}[], Skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
-export function getUser(email) {
-    return fetchWithError(`${API_BASE_URL}users/${email}`);
+export function getUser(userId) {
+    return fetchWithError(`${API_BASE_URL}users/${userId}`);
 }
 
 // This function is not available in the backend
@@ -227,29 +221,42 @@ export function getSkills() {
     return fetchWithError(`${API_BASE_URL}skills/`);
 }
 /**
- * @param {string} email
+ * @param {string} studentId
  * @returns {Promise<{student: any, skills: {id: string, name: string, is_pending: boolean, created_at: string, description: string}[]}>}
  */
-export function getSkillsFromStudent(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`);
+export function getSkillsFromStudent(studentId) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills`);
 }
 
 
 /**
- * @param {string} email
- * @param {string[]} skills
+ * @param {string} studentId
+ * @param {string[]} skillIds - Array of skill IDs
  */
-export function updateStudentSkills(email, skills) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`, {
+export function updateStudentSkills(studentId, skillIds) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills`, {
         method: "PUT",
-        body: JSON.stringify(skills),
+        body: JSON.stringify(skillIds),
     });
 }
 
-export function updateStudentSkillDescription(email, skill) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills/${skill.id}`, {
+export function updateStudentSkillDescription(studentId, skill) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills/${skill.id}`, {
         method: "PATCH",
         body: JSON.stringify(skill),
+    });
+}
+
+/**
+ * Update student profile (description, profile picture, CV)
+ * @param {string} email - Student email
+ * @param {FormData} formData - Form data containing description, profilePicture, and cv
+ * @returns {Promise<{message: string}>}
+ */
+export function updateStudent(email, formData) {
+    return fetchWithError(`${API_BASE_URL}students/${email}`, {
+        method: "PUT",
+        body: formData,
     });
 }
 
@@ -307,11 +314,17 @@ export function createProject(project_data) {
         body: formData,
     });
 }
-//not implemented in the backend yet
-export function createTask(task) {
-    return fetchWithError(`${API_BASE_URL}projects`, {
+
+export function createTask(projectId, formDataObj) {
+    const taskData = {
+        name: formDataObj.title,
+        description: formDataObj.description,
+        total_needed: formDataObj.totalNeeded
+    };
+
+    return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {
         method: "POST",
-        body: JSON.stringify(task),
+        body: JSON.stringify(taskData),
     });
 }
 
@@ -346,38 +359,50 @@ export function updateRegistration(registration) {
 }
 
 //Not implemented in the backend yet
-export function updateTaskSkills(name, taskSkills) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills/`, {
+export function updateTaskSkills(taskId, taskSkills) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {
         method: "PUT",
         body: JSON.stringify(taskSkills),
     });
 }
 
 /**
- * @param {string} name
+ * @param {string} businessId - The business ID to update
+ * @param {FormData} formData - The form data containing business information (name, location, description, image)
  * @returns {Promise<void>}
  */
-export function getSkill(name) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}/skills/`);
+export function updateBusiness(businessId, formData) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
 }
 
 /**
- * @param {string} email
+ * @param {string} skillId
  * @returns {Promise<void>}
  */
-export function getStudentSkills(email) {
-    return fetchWithError(`${API_BASE_URL}students/${email}/skills/`);
+export function getSkill(skillId) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}`);
+}
+
+/**
+ * @param {string} studentId
+ * @returns {Promise<void>}
+ */
+export function getStudentSkills(studentId) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills`);
 }
 
 // This function is not available in the backend
 
 /**
  *
- * @param {string} taskName
+ * @param {string} taskId
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
-export function getTaskSkills(taskName) {
-    return fetchWithError(`${API_BASE_URL}tasks/${taskName}/skills/`)
+export function getTaskSkills(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`)
 }
 
 
@@ -411,22 +436,6 @@ export function createTeacherInviteKey() {
     });
 }
 
-
-export function login(credentials) {
-    return fetchWithError(`${API_BASE_URL}login`, {
-        method: "POST",
-        body: JSON.stringify(credentials),
-    });
-}
-export function logout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("payload");
-    return this
-}
-
-
-
-
 /**
  * @returns {Promise<User[]>}
  */
@@ -456,19 +465,19 @@ export function getAllTeachers() {
 }
 
 /**
- * @param {string} name
+ * @param {string} businessId
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}>}
  */
-export function getBusinessByName(name) {
-    return fetchWithError(`${API_BASE_URL}businesses/${name}`);
+export function getBusinessById(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}`);
 }
 
 /**
- * @param {string} name
+ * @param {string} taskId
  * @returns {Promise<Task>}
  */
-export function getTaskByName(name) {
-    return fetchWithError(`${API_BASE_URL}tasks/${name}`);
+export function getTaskById(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}`);
 }
 
 export function preprocessMarkdown(input) {
@@ -496,6 +505,32 @@ export function getStudentEmailAddresses(selection, taskId) {
  * Get colleague email addresses (teachers and supervisors)
  * @returns {Promise<string[]>} Array of email addresses
  */
-export function getColleaguesEmailAddresses() {
-    return fetchWithError(`${API_BASE_URL}tasks/emails/colleagues`);
+export function getColleaguesEmailAddresses(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/emails/colleagues`);
+}
+
+/**
+ * Mark a skill as accepted/declined (both remove pending state)
+ * @param {string} skillId
+ * @param {boolean} accepted
+ * @returns {Promise<void>}
+ */
+export function updateSkillAcceptance(skillId, accepted) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}/acceptance`, {
+        method: "PATCH",
+        body: JSON.stringify({ accepted }),
+    }, true);
+}
+
+/**
+ * Rename a skill (teacher-only)
+ * @param {string} skillId
+ * @param {string} name
+ * @returns {Promise<void>}
+ */
+export function updateSkillName(skillId, name) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}/name`, {
+        method: "PATCH",
+        body: JSON.stringify({ name }),
+    }, true);
 }

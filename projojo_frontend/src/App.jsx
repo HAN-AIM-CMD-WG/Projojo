@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from './components/AuthProvider';
+import { useAuth } from './auth/AuthProvider';
 import Footer from "./components/Footer";
 import Navbar from './components/Navbar';
 import BusinessPage from './pages/BusinessPage';
@@ -12,9 +12,11 @@ import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import ProjectsAddPage from './pages/ProjectsAddPage';
 import UpdateStudentPage from "./pages/update_student_page/update_student_page";
 import UpdateBusinessPage from './pages/UpdateBusinessPage';
-import { getAuthorization } from './services';
+import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
+import AuthCallback from "./auth/AuthCallback";
+import { notification } from './components/notifications/NotifySystem.jsx';
 
 export default function App() {
   const { setAuthData } = useAuth();
@@ -22,11 +24,22 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let ignore = false;
+    const handleUnhandledRejection = (event) => {
+      if (event.reason instanceof HttpError) {
+        notification.error(event.reason.message || "Er is een onbekende fout opgetreden.");
+      } else {
+        // Log non-HttpError rejections for debugging and show a generic error to the user
+        console.error('Unhandled promise rejection:', event.reason);
+        notification.error("Er is een onverwachte fout opgetreden.");
+      }
+    };
 
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, []);
+
+  useEffect(() => {
     getAuthorization()
-
-
   }, [location, setAuthData]);
 
   return (
@@ -36,6 +49,7 @@ export default function App() {
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />
           <Route path="/" element={<LoginPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/home" element={<OverviewPage />} />
           <Route path="/projects">
             <Route path="add" element={<ProjectsAddPage />} />

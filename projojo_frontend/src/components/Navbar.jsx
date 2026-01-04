@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { IMAGE_BASE_URL, getUser } from "../services";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 
 export default function Navbar() {
     const { authData, logout } = useAuth();
     const [profilePicture, setProfilePicture] = useState("/default_profile_picture.png");
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
+    const navRef = useRef(null);
 
     const routes = [];
 
@@ -38,14 +40,7 @@ export default function Navbar() {
     useEffect(() => {
         let ignore = false;
 
-        if (authData.type === "student") {
-            getUser(authData.userId)
-                .then(data => {
-                    if (ignore) return;
-                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`); // data.profilePicture is formatted like "/uuid.png"
-                })
-        }
-        if (authData.type === "supervisor") {
+        if (authData.type !== "none") {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
@@ -57,6 +52,21 @@ export default function Navbar() {
             ignore = true;
         }
     }, [authData])
+
+    useEffect(() => {
+        setIsCollapsed(true);
+    }, [location])
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (navRef.current && !navRef.current.contains(event.target)) {
+                setIsCollapsed(true);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     const signOut = () => {
         logout();
@@ -73,7 +83,7 @@ export default function Navbar() {
     // Source: https://flowbite.com/docs/components/navbar/
     return (
         <header>
-            <nav className="bg-gray-100 border-gray-200 fixed w-full z-20 top-0 start-0">
+            <nav ref={navRef} className="bg-gray-100 border-gray-200 fixed w-full z-20 top-0 start-0">
                 <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                     <Link to="/home" className="flex items-center space-x-3">
                         <img src="/han_logo.png" className="h-6 mt-1" alt="Han Logo" />
@@ -99,13 +109,10 @@ export default function Navbar() {
                                     Uitloggen
                                 </button>
                             </li>
-                            {
-                                // profile picture, only for students
-                                authData.type === "student" || authData.type === "supervisor" ?
-                                     <li key="profile-picture" className="flex items-center ml-2">
-                                        <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
-                                    </li>
-                                    : null
+                            {authData.type !== "none" &&
+                                <li key="profile-picture" className="flex items-center ml-2">
+                                    <img src={profilePicture} className="w-8 h-8 rounded-full" alt="Standaard profielfoto" />
+                                </li>
                             }
                         </ul>
                     </div>

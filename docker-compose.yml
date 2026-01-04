@@ -22,6 +22,7 @@ services:
     volumes:
       - ./projojo_backend:/app  # Volume mount for development
       - /app/__pycache__        # Anonymous volume to prevent host __pycache__ from mounting (avoids Python version/platform conflicts)
+      - /app/.venv # Anonymous volume to prevent host .venv from mounting
     networks:
       - projojo-network
 

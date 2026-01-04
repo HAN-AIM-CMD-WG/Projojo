@@ -8,13 +8,13 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
 
   const handleTaskClick = (taskId) => (e) => {
     e.preventDefault();
-    navigate(`/projects/${project.name}#task-${taskId}`);
+    navigate(`/projects/${project.id}#task-${taskId}`);
   }
 
   return (
     <div className={`h-[350px] w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden transition-all transform hover:scale-102 hover:shadow-2xl ${!isExpanded && (index == 2 ? 'hidden [@media(min-width:1195px)]:block' : index == 1 && 'hidden [@media(min-width:813px)]:block')}`}>
       <Link
-        to={`/projects/${project.name}`}
+        to={`/projects/${project.id}`}
         className="block h-full focus:outline-none group"
       >
         <div className="relative h-full bg-slate-200">
@@ -33,7 +33,7 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
           </div>
         </div>
 
-        <div className="hidden sm:group-hover:block group-focus:block absolute inset-0 bg-white bg-opacity-60 overflow-y-auto p-8">
+        <div className="hidden sm:group-hover:block group-focus:block absolute inset-0 bg-white/60 overflow-y-auto p-8">
           <div className="space-y-3">
             <div className="block max-w-sm bg-slate-100 border border-gray-200 rounded-lg shadow-lg mb-8 hover:rounded-lg hover:ring-4 hover:ring-pink-300 transition-all duration-300 ease-in-out">
               <div className="flex flex-col gap-3 p-4">

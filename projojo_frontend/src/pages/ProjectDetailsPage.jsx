@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import ProjectDetails from "../components/ProjectDetails";
 import ProjectTasks from "../components/ProjectTasks";
 import { getProject, getProjectsWithBusinessId, getTasks, getTaskSkills } from "../services";
+import { normalizeSkill } from "../utils/skills";
 import NotFoundPage from "./NotFound";
 import PageHeader from '../components/PageHeader';
 
@@ -18,23 +19,32 @@ export default function ProjectDetailsPage() {
     const fetchProjectAndTasks = () => {
         getProject(projectId)
             .then(data => {
-                const allSkills = data.tasks?.flatMap(task => task.skills) || [];
+                // Normalize skills from tasks
+                const allSkills = (data.tasks || []).flatMap(task => (task.skills || []).map(s => normalizeSkill(s)).filter(Boolean));
 
+                // Aggregate by stable key (skillId fallback to name)
                 const skillCounts = allSkills.reduce((acc, skill) => {
-                    if (!acc[skill.name]) {
-                        acc[skill.name] = { count: 0, is_pending: skill.is_pending };
+                    const key = skill.skillId;
+                    if (!acc[key]) {
+                        acc[key] = { count: 0, isPending: skill.isPending, name: skill.name, skillId: key };
                     }
-                    acc[skill.name].count++;
+                    acc[key].count++;
                     return acc;
                 }, {});
 
                 const topSkills = Object.entries(skillCounts)
                     .sort(([, a], [, b]) => b.count - a.count)
                     .slice(0, 5)
-                    .map(([name, { is_pending }]) => ({ name, is_pending }));
+                    .map(([, { name, isPending, skillId }]) => ({ skillId, name, isPending }));
+
+                // Normalize each task's skills as well
+                const normalizedTasks = (data.tasks || []).map(task => ({
+                    ...task,
+                    skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
+                }));
 
                 setProject({ ...data, topSkills });
-                setTasks(data.tasks);
+                setTasks(normalizedTasks);
             })
             .catch(() => setShowNotFound(true));
     };

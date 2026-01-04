@@ -1,10 +1,21 @@
+// @ts-nocheck
+/// <reference types="vite/client" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
+import tailwindcss from '@tailwindcss/vite'
+import * as path from "path"
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-  envDir: "../", // Look for .env files in the project root directory
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  envDir: "../",   
   server: {
     watch: {
       usePolling: true,  // Required for file changes to be detected in Docker on Windows

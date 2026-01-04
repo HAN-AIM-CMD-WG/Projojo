@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Depends
-from auth.jwt_utils import get_token_payload
+from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form
+from auth.permissions import auth
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
-from domain.models import StudentSkills
+from service.image_service import save_image, delete_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
 
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_students():
     """
     Get all students for debugging purposes
@@ -20,28 +21,30 @@ async def get_all_students():
     return students
 
 
-@router.get("/{email}/skills/")
-async def get_student_skills(email: str = Path(..., description="Student email")):
+@router.get("/{student_id}/skills")
+@auth(role="authenticated")
+async def get_student_skills(student_id: str = Path(..., description="Student ID")):
     """
     Get all skills for a student
     """
-    student = user_repo.get_student_by_id(email)
+    student = user_repo.get_student_by_id(student_id)
 
     if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+        raise HTTPException(status_code=404, detail="Student niet gevonden")
     return student
 
 
-@router.put("/{email}/skills/")
+@router.put("/{student_id}/skills")
+@auth(role="student", owner_id_key="student_id")
 async def update_student_skills(
-    email: str = Path(..., description="Student email"),
-    skills: list[str] = Body(..., description="List of skillnames"),
+    student_id: str = Path(..., description="Student ID"),
+    skills: list[str] = Body(..., description="List of skill IDs"),
 ):
     """
     Update skills for a student
     """
     try:
-        skill_repo.update_student_skills(email, skills)
+        skill_repo.update_student_skills(student_id, skills)
         return {"message": "Skills succesvol bijgewerkt"}
     except Exception:
         raise HTTPException(
@@ -51,18 +54,15 @@ async def update_student_skills(
 
 
 @router.patch("/{student_id}/skills/{skill_id}")
+@auth(role="student", owner_id_key="student_id")
 async def update_student_skill_description(
     student_id: str = Path(..., description="Student ID"),
     skill_id: str = Path(..., description="Skill ID"),
-    skill: StudentSkill = Body(..., description="Skill object with updated description"),
-    payload: dict = Depends(get_token_payload)
+    skill: StudentSkill = Body(..., description="Skill object with updated description")
 ):
     """
     Update a specific skill's description for a student
     """
-    if payload.get("role") != "student" or payload.get("sub") != student_id:
-        raise HTTPException(status_code=403, detail="Studenten kunnen alleen hun eigen skills bijwerken")
-
     user = user_repo.get_student_by_id(student_id)
     if not user:
         raise HTTPException(status_code=404, detail="Student bestaat niet")
@@ -72,8 +72,8 @@ async def update_student_skill_description(
         raise HTTPException(status_code=404, detail="De skill die je probeert te updaten staat niet in jouw profiel")
 
     try:
-        skill_repo.update_student_skill_description(student_id, skill_id, (skill.description or ""))
-        return {"message": "Skill description successfully updated"}
+        skill_repo.update_student_skill_description(student_id, skill_id, skill.description or "")
+        return {"message": "Skillbeschrijving succesvol bijgewerkt"}
     except Exception:
         raise HTTPException(
             status_code=500,
@@ -81,13 +81,75 @@ async def update_student_skill_description(
         )
 
 @router.get("/registrations")
-async def get_student_registrations(payload: dict = Depends(get_token_payload)) -> list[str]:
+@auth(role="student")
+async def get_student_registrations(request: Request) -> list[str]:
     """
     Get all student registrations for debugging purposes
     """
-    if payload.get("role") != "student":
-        raise HTTPException(status_code=403, detail="Alleen studenten kunnen hun registraties bekijken")
-
-    student_email = payload.get("sub")
-    registrations = user_repo.get_student_registrations(student_email)
+    student_id = request.state.user_id
+    registrations = user_repo.get_student_registrations(student_id)
     return registrations
+
+
+@router.put("/{student_id}")
+@auth(role="student", owner_id_key="student_id")
+async def update_student(
+    student_id: str = Path(..., description="Student ID"),
+    description: str = Form(None),
+    profilePicture: UploadFile = File(None),
+    cv: UploadFile = File(None),
+    cv_deleted: str = Form(None)
+):
+    """
+    Update student profile information (description, profile picture, CV)
+    """
+    # Verify student exists
+    student = user_repo.get_student_by_id(student_id)
+    if not student:
+        raise HTTPException(status_code=404, detail="Student niet gevonden")
+
+    # Store old file paths for deletion after successful update
+    old_image_path = student.get("image_path")
+    old_cv_path = student.get("cv_path")
+
+    image_filename = None
+    cv_filename = None
+
+    try:
+        # Handle profile picture upload
+        if profilePicture and profilePicture.filename:
+            image_filename = save_image(profilePicture)
+
+        # Handle CV upload or deletion
+        if cv and cv.filename:
+            cv_filename = save_image(cv, "static/pdf")
+        elif cv_deleted == "true":
+            # User explicitly deleted the CV
+            cv_filename = ""
+
+        # Update student in database
+        user_repo.update_student(
+            id=student_id,
+            description=description,
+            image_path=image_filename,
+            cv_path=cv_filename
+        )
+
+        # Delete old files after successful database update
+        if image_filename and old_image_path:
+            delete_image(old_image_path)
+
+        if cv_filename is not None and old_cv_path:
+            # Delete old CV if we uploaded a new one or explicitly deleted it
+            delete_image(old_cv_path, "static/pdf")
+
+        return {"message": "Profiel succesvol bijgewerkt"}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating student {student_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het bijwerken van het profiel"
+        )

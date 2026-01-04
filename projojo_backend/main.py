@@ -1,12 +1,15 @@
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
 from contextlib import asynccontextmanager
+from environs import Env
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
+from auth.jwt_middleware import JWTMiddleware
 
 # Import routers
 from routes.auth_router import router as auth_router
@@ -25,6 +28,11 @@ from db.initDatabase import get_database
 
 # Set up logger
 logger = logging.getLogger('uvicorn.error')
+
+# Load environment variables
+env = Env(expand_vars=True)
+env.read_env(".env.production", recurse=True, override=True)
+env.read_env(".env", recurse=True, override=True)
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -54,6 +62,15 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
+)
+
+# Add JWT validation middleware
+app.add_middleware(JWTMiddleware)
+
+# Add session middleware (required by authlib for OAuth state)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=env.str("SESSIONS_SECRET_KEY", "supersecretkey123456789abcdefghijklmnop")
 )
 
 @app.middleware("http")
@@ -98,6 +115,9 @@ async def root():
 @app.get("/typedb/status")
 async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
+    if env.str("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
     try:
         # Try to get database name to verify connection
         db_name = db.name  # dit kon wel eens slagen, ook als er geen verbinding is met de Db.

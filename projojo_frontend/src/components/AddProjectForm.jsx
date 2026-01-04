@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import Alert from "./Alert";
 import DragDrop from "./DragDrop";
 import FormInput from "./FormInput";
@@ -77,7 +77,12 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     error={descriptionError}
                     setError={setDescriptionError}
                 />
-                <DragDrop onFileChanged={handleImageChange} multiple={false} name="image" />
+                <DragDrop
+                    accept="image"
+                    name="image"
+                    label="Upload een projectafbeelding"
+                    onFileChanged={handleImageChange}
+                />
                 {imageError && <p className="text-red-500">{imageError}</p>}
                 <div className="grid grid-cols-2 gap-2">
                     <button type="button" className="btn-secondary w-full" onClick={() => navigation(-1)}>Annuleren</button>

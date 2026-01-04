@@ -1,58 +1,67 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import jwt
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
+from environs import Env
+
+# Load environment variables
+env = Env(expand_vars=True)
+env.read_env(".env.production", recurse=True, override=True)
+env.read_env(".env", recurse=True, override=True)
 
 # Security scheme for extracting Bearer tokens
 security = HTTPBearer()
 
 # JWT configuration
-SECRET_KEY = "test"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+JWT_SECRET_KEY = env.str("JWT_SECRET_KEY", None)
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRATION_TIME_MINUTES = 60 * 8
 
-def create_jwt_token(user, supervisor_data=None) -> str:
+if (not JWT_SECRET_KEY) or (JWT_SECRET_KEY.strip() == ""):
+    raise Exception("JWT_SECRET_KEY is not set in environment variables")
+
+def create_jwt_token(user_id: str, role: str = "student", business_id: str | None = None) -> str:
     """
-    Create a JWT token for a user
+    Create a JWT token containing only the user ID (UUID)
     """
+    # Calculate expiration time with timezone-aware datetime
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=JWT_EXPIRATION_TIME_MINUTES)
+
+    # Create the payload with only the user ID
     payload = {
-        "sub": user.email,
-        "password_hash": user.password_hash,
-        "role": user.type.lower(),
-        "exp": datetime.now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        "sub": user_id,  # Subject (user UUID) - only data stored in JWT
+        "role": role,
+        "exp": expire,  # Expires at
+        "iat": now,  # Issued at
+        "iss": "projojo"  # Issuer
     }
 
-    # Add supervisor-specific data if provided
-    if user.type == "supervisor" and supervisor_data:
-        payload["business"] = supervisor_data.get("business_association_id")
-        payload["projects"] = supervisor_data.get("created_project_ids", [])
+    if role == "supervisor" and business_id:
+        payload["businessId"] = business_id
 
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    # Encode the JWT token
+    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return token
 
-def decode_jwt_token(token) -> dict:
-    """
-    Decode and validate a JWT token
-    Returns the payload if valid, raises HTTPException if invalid/expired
-    """
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-def get_token_payload(token: str = Depends(security)) -> dict:
+def get_token_payload(request: Request) -> dict:
     """
     FastAPI dependency to extract and validate JWT token
     Returns the decoded payload if valid, raises HTTPException if invalid
     """
-    # Remove 'Bearer ' prefix if present (HTTPBearer should handle this, but just in case)
-    if token.credentials.startswith("Bearer "):
-        token_str = token.credentials[7:]
-    else:
-        token_str = token.credentials
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Er is iets fout gegaan met je sessie. Log opnieuw in.")
 
-    # Decode and validate token (this will raise HTTPException if invalid)
-    return decode_jwt_token(token_str)
+    token_str = auth_header[7:]
+
+    try:
+        return jwt.decode(token_str, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Je sessie is verlopen. Log opnieuw in.")
+    except jwt.InvalidTokenError as ite:
+        print(f"Invalid JWT token: {ite}")
+        raise HTTPException(status_code=401, detail="Er is iets fout gegaan met je sessie. Log opnieuw in.")
+    except Exception as e:
+        print(f"Unexpected error while decoding JWT token: {e}")
+        raise HTTPException(status_code=401, detail="Je moet ingelogd zijn")

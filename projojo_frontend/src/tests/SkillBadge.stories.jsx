@@ -1,4 +1,4 @@
-import { expect, within } from '@storybook/test';
+import { expect, within } from 'storybook/test';
 import SkillBadge from '../components/SkillBadge';
 
 export default {

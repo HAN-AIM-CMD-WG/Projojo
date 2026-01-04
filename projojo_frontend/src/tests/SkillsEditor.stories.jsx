@@ -1,28 +1,35 @@
-import { expect, fn, userEvent, within } from '@storybook/test';
-import { AuthProvider, useAuth } from '../components/AuthProvider';
+import { expect, fn, userEvent, within } from 'storybook/test';
+import { AuthProvider, useAuth } from '../auth/AuthProvider';
 import SkillsEditor from '../components/SkillsEditor';
+import { useEffect, useState } from 'react';
 
 const onSaveMock = fn()
 const onCancelMock = fn()
 const setErrorMock = fn()
+
+// Default fetch mock
+if (!window.fetch) {
+    window.fetch = fn().mockResolvedValue({
+        ok: true,
+        json: fn().mockResolvedValue({ skills: [{ skill: { skillId: 2 } }] }),
+    });
+}
 
 export default {
     title: 'Components/SkillsEditor',
     component: SkillsEditor,
     decorators: [
         (Story) => {
-            window.fetch = fn()
-                .mockResolvedValueOnce({
-                    ok: true,
-                    json: fn().mockResolvedValueOnce({ skills: [{ skill: { skillId: 2 } }] }),
-                });
-
             const Wrapper = () => {
                 const { setAuthData } = useAuth();
+                const [isReady, setIsReady] = useState(false);
 
-                // Ensure auth data is set before rendering the story
-                setAuthData({ type: "student", userId: 1, businessId: null, profilePicture: { path: "" } });
+                useEffect(() => {
+                    setAuthData({ type: "student", userId: 1, businessId: null, profilePicture: { path: "" } });
+                    setIsReady(true);
+                }, [setAuthData]);
 
+                if (!isReady) return null;
                 return <Story />;
             };
 

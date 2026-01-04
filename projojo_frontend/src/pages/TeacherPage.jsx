@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../components/AuthProvider";
+import { useAuth } from "../auth/AuthProvider";
 import BusinessesOverview from "../components/BusinessesOverview";
 import FormInput from "../components/FormInput";
 import Loading from "../components/Loading";
@@ -120,8 +120,8 @@ export default function TeacherPage() {
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="btn-primary mb-4">Bedrijf aanmaken</button>
             </div>
             <BusinessesOverview businesses={businesses} />
-            {/* <hr className="mt-8 mb-3" />
-            <NewSkillsManagement /> */}
+            <hr className="mt-8 mb-3" />
+            <NewSkillsManagement />
 
             <Modal
                 modalHeader={`Collega toevoegen`}

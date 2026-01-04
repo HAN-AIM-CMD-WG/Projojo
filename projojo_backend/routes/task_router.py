@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends
-
+from fastapi import APIRouter, Path, Query, Body, HTTPException, Request
 from domain.repositories import TaskRepository, UserRepository
-from auth.jwt_utils import get_token_payload
+from auth.permissions import auth
 from service import task_service
-from domain.models.task import RegistrationCreate, RegistrationUpdate
+from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
+from datetime import datetime
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
 # Task endpoints
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_tasks():
     """
     Get all tasks for debugging purposes
@@ -20,25 +21,19 @@ async def get_all_tasks():
     return tasks
 
 
-# Specific routes first (more specific paths before generic ones)
-@router.get("/emails/colleagues")
-async def get_colleague_email_addresses(payload: dict = Depends(get_token_payload)):
+@router.get("/{task_id}/emails/colleagues")
+@auth(role="supervisor", owner_id_key="task_id")
+async def get_colleague_email_addresses(request: Request, task_id: str = Path(..., description="Task ID")):
     """
-    Get email addresses of colleague supervisors in the same business
+    Get email addresses of supervisors which are colleagues of the requesting supervisor (or teacher) for the business of the task
     """
-    # Check if user is a supervisor
-    if payload.get("role") != "supervisor":
-        raise HTTPException(status_code=403, detail="Alleen supervisors kunnen collega's opvragen")
+    # Get colleagues in the business of the task
+    return user_repo.get_colleagues(task_id, request.state.user_id)
 
-    supervisor_email = payload["sub"]  # Extract email from JWT sub field
-
-    # Get colleagues for this supervisor
-    colleagues = user_repo.get_colleagues(supervisor_email)
-    return [colleague.email for colleague in colleagues]
-
-@router.get("/{name}/student-emails")
+@router.get("/{task_id}/student-emails")
+@auth(role="supervisor", owner_id_key="task_id")
 async def get_student_email_addresses(
-    name: str = Path(..., description="Task name"),
+    task_id: str = Path(..., description="Task ID"),
     selection: str = Query(..., description="Comma-separated list: registered,accepted,rejected")
 ):
     """
@@ -51,7 +46,7 @@ async def get_student_email_addresses(
     # Get students based on selection criteria
     for status in statuses:
         if status in ["registered", "accepted", "rejected"]:
-            students = user_repo.get_students_by_task_status(name, status)
+            students = user_repo.get_students_by_task_status(task_id, status)
             emails.extend([student.email for student in students])
 
     # Remove duplicates
@@ -59,44 +54,44 @@ async def get_student_email_addresses(
     return unique_emails
 
 # Generic routes last
-@router.get("/{name}")
-async def get_task(name: str = Path(..., description="Task name")):
+@router.get("/{task_id}")
+@auth(role="authenticated")
+async def get_task(task_id: str = Path(..., description="Task ID")):
     """
-    Get a specific task by name
+    Get a specific task by ID
     """
-    task = task_repo.get_by_id(name)
+    task = task_repo.get_by_id(task_id)
     return task
 
-@router.get("/{name}/skills")
-async def get_task_skills(name: str = Path(..., description="Task name")):
+@router.get("/{task_id}/skills")
+@auth(role="authenticated")
+async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     """
     Get all skills required for a task
     """
-    task_skills = task_service.get_task_with_skills(name)
+    task_skills = task_service.get_task_with_skills(task_id)
     return task_skills
 
-@router.get("/{name}/registrations")
-async def get_registrations(name: str = Path(..., description="Task name")):
+@router.get("/{task_id}/registrations")
+@auth(role="supervisor", owner_id_key="task_id")
+async def get_registrations(task_id: str = Path(..., description="Task ID")):
     """
     Get all open registrations for a task with student details and skills
     """
-    registrations = task_repo.get_registrations(name)
+    registrations = task_repo.get_registrations(task_id)
     return registrations
 
 @router.post("/{task_id}/registrations")
+@auth(role="student")
 async def create_registration(
+    request: Request,
     task_id: str = Path(..., description="Task ID"),
-    registration: RegistrationCreate = Body(..., description="The motivation for registration"),
-    payload: dict = Depends(get_token_payload)
+    registration: RegistrationCreate = Body(..., description="The motivation for registration")
 ):
     """
     Create a new registration for a student to a task
     """
-    # Check if user is a student
-    if payload.get("role") != "student":
-        raise HTTPException(status_code=403, detail="Alleen studenten kunnen zich registreren voor taken")
-
-    student_email = payload["sub"]
+    student_id = request.state.user_id
 
     task = task_repo.get_by_id(task_id)
     if not task:
@@ -106,30 +101,27 @@ async def create_registration(
         raise HTTPException(status_code=400, detail="Deze taak heeft geen beschikbare plekken meer")
 
     # check if the student is already registered for this task
-    existing_registration = user_repo.get_student_registrations(student_email)
+    existing_registration = user_repo.get_student_registrations(student_id)
     if task_id in existing_registration:
         raise HTTPException(status_code=400, detail="Je bent al geregistreerd voor deze taak")
 
     try:
-        task_repo.create_registration(task_id, student_email, registration.motivation)
+        task_repo.create_registration(task_id, student_id, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
-    except Exception:
+    except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
 
 @router.put("/{task_id}/registrations/{student_id}")
+@auth(role="supervisor", owner_id_key="task_id")
 async def update_registration(
     task_id: str = Path(..., description="Task ID"),
     student_id: str = Path(..., description="Student ID"),
-    registration: RegistrationUpdate = Body(..., description="Whether the registration is accepted or rejected, and optional response"),
-    payload: dict = Depends(get_token_payload)
+    registration: RegistrationUpdate = Body(..., description="Whether the registration is accepted or rejected, and optional response")
 ):
     """
     Update a registration status (accept/reject) with optional response
     """
-    # Check if user is a supervisor or teacher
-    if payload.get("role") not in ["supervisor", "teacher"]:
-        raise HTTPException(status_code=403, detail="Alleen supervisors of docenten kunnen registraties bijwerken")
-
     task = task_repo.get_by_id(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
@@ -141,5 +133,30 @@ async def update_registration(
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie." + str(e))
+        print(f"Error updating registration for task {task_id} and student {student_id}: {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie.")
 
+@router.post("/{project_id}", response_model=Task, status_code=201)
+@auth(role="supervisor", owner_id_key="project_id")
+async def create_task(
+    project_id: str = Path(..., description="Project ID"),
+    task_create: TaskCreate = Body(...)
+):
+    """
+    Create a new task
+    """
+    try:
+        task = Task(
+            id=None,  # ID will be generated by repository
+            name=task_create.name,
+            description=task_create.description,
+            total_needed=task_create.total_needed,
+            project_id=project_id,
+            created_at=datetime.now()
+        )
+
+        created_task = task_repo.create(task)
+        return created_task
+    except Exception as e:
+        print(f"Error creating task for project {project_id}: {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
