@@ -3,6 +3,7 @@
 .env.local
 .env.development.local
 .env.test.local
+.env.preview.local
 .env.production.local
 
 # Frontend Dependencies

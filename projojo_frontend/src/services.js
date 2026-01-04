@@ -1,6 +1,5 @@
 // Dynamically determine API URL based on current browser location
 const getApiBaseUrl = () => {
-  console.log("######", import.meta.env);
   const backendPort = import.meta.env.VITE_BACKEND_PORT
   let result
 

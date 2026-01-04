@@ -9,10 +9,10 @@ from environs import Env
 from uuid import UUID
 
 # Load environment variables.
-# This will read from .env.production first, then .env
-# .env is only available for local development, and overrides settings from .env.production
+# This will read from .env.preview first, then .env
+# .env is only available for local development, and overrides settings from .env.preview
 env = Env(expand_vars=True)
-env.read_env(".env.production", recurse=True, override=True)
+env.read_env(".env.preview", recurse=True, override=True)
 env.read_env(".env", recurse=True, override=True) 
 
 class Db:
@@ -47,7 +47,7 @@ class Db:
         except Exception as new_cred_error:
             print(f"⚠ New credentials failed: {new_cred_error} {Db.address}::{Db.username}:{Db.new_password}")
             # TODO: When introducing dev/test/preview/prod environments, this debug logging
-            # should be removed or restricted to non-production environments only.
+            # should be removed or restricted to development/test environments only.
             # Printing all environment variables is a security risk as it may expose secrets.
             print("Loaded by environs:")
             for key in env.dump():

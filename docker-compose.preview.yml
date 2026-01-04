@@ -1,12 +1,12 @@
-# This is the production Docker Compose file for Projojo, which uses environment variables set in Dokploy's UI.
-# It includes the base Docker Compose file and overrides some settings for production use.
+# This is the Preview Docker Compose file for Projojo, which uses environment variables set in Dokploy's UI.
+# It includes the base Docker Compose file and overrides some settings for preview use.
 services:
   typedb:
     extends:
       file: docker-compose.base.yml
       service: typedb
     env_file:
-      - .env.production  
+      - .env.preview  
     networks:
       - projojo-network
 
@@ -17,13 +17,13 @@ services:
     build:
       target: preview  # Use preview stage
     env_file:
-      - .env.production  
+      - .env.preview  
     environment:
       - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD} 
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
-    # No volumes for production (source code copied into container)
+    # No volumes for preview (source code copied into container)
     networks:
       - projojo-network
     
@@ -37,10 +37,10 @@ services:
         - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
         - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
     env_file:
-      - .env.production 
+      - .env.preview
     ports:
       - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
-    # No volumes for production (source code copied into container)
+    # No volumes for preview (source code copied into container)
     networks:
       - projojo-network
 

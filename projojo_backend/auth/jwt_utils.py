@@ -6,7 +6,7 @@ from environs import Env
 
 # Load environment variables
 env = Env(expand_vars=True)
-env.read_env(".env.production", recurse=True, override=True)
+env.read_env(".env.preview", recurse=True, override=True)
 env.read_env(".env", recurse=True, override=True)
 
 # Security scheme for extracting Bearer tokens

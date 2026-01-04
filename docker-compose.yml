@@ -1,5 +1,5 @@
 # This is the Docker Compose file for Projojo, used in development. 
-# In production, use docker-compose.prod.yml, which includes this file, and overrides some settings.
+# In preview, use docker-compose.preview.yml, which includes this file, and overrides some settings.
 
 services:
   typedb:
