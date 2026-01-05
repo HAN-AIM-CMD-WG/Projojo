@@ -30,7 +30,7 @@ class UserRepository(BaseRepository[User]):
             return teacher
 
         if not supervisor and not student and not teacher:
-            raise ItemRetrievalException(User, f"User with ID {id} not found.")
+            raise ItemRetrievalException(User, f"Gebruiker met ID {id} niet gevonden")
         return None
 
     def get_all(self) -> list[User]:
@@ -421,27 +421,35 @@ class UserRepository(BaseRepository[User]):
         task_ids = [result['id'] for result in results]
         return task_ids
 
-    def get_colleagues(self, supervisor_id: str) -> list[User]:
+    def get_colleagues(self, task_id: str, excluded_id: str) -> list[str]:
         """
-        Get supervisors who work in the same business as the authenticated supervisor
+        Get supervisors linked to the same business as the given task
+
+        Args:
+            task_id: The task ID
+            excluded_id: Supervisor ID to exclude from results (or teacher ID, but teachers wouldn't be included anyway)
+
+        Returns:
+            List of supervisor emails
         """
         query = """
             match
-                $auth_supervisor isa supervisor, has id ~supervisor_id;
-                $manages_auth isa manages (supervisor: $auth_supervisor, business: $business);
-                $manages_colleague isa manages (supervisor: $colleague, business: $business);
-                $colleague isa supervisor,
-                has email $email,
-                has fullName $fullName;
+                $task isa task, has id ~task_id;
+                $ct isa containsTask (project: $project, task: $task);
+                $hp isa hasProjects (business: $business, project: $project);
+                $m isa manages (supervisor: $supervisor, business: $business);
+                not { $supervisor has id ~excluded_id; };
             fetch {
-                'id': $colleague.id,
-                'email': $email,
-                'full_name': $fullName,
+                "email": $supervisor.email
             };
         """
-
-        results = Db.read_transact(query, {"supervisor_id": supervisor_id})
-        return [User(**result) for result in results]
+        results = Db.read_transact(query, {
+            "task_id": task_id,
+            "excluded_id": excluded_id
+        })
+        if not results:
+            return []
+        return [result['email'] for result in results]
 
     def update_student(self, id: str, description: str | None = None, image_path: str | None = None, cv_path: str | None = None) -> None:
         """
@@ -524,10 +532,10 @@ class UserRepository(BaseRepository[User]):
         # Currently always creates a student
 
         if not user.oauth_providers or len(user.oauth_providers) == 0:
-            raise ValueError("Cannot create user without OAuth provider information")
+            raise ValueError("OAuth-providerinformatie ontbreekt")
 
         if len(user.oauth_providers) > 1:
-            raise ValueError("Cannot create user with multiple OAuth providers. Users can only be created with a single OAuth provider.")
+            raise ValueError("Je kan maar met één provider een account aanmaken")
 
         # Get the OAuth provider
         oauth_provider = user.oauth_providers[0]
@@ -544,7 +552,7 @@ class UserRepository(BaseRepository[User]):
         })
 
         if not provider_results:
-            raise ValueError(f"OAuth provider '{oauth_provider.provider_name}' is not configured.")
+            raise ValueError(f"We ondersteunen '{oauth_provider.provider_name}' nog niet")
 
         id = generate_uuid()
 
@@ -589,3 +597,58 @@ class UserRepository(BaseRepository[User]):
         # Return the created user
         return created_user
 
+    async def get_supervisor_accessible_resources_with_id(self, supervisor_company_id: str, resource_id: str) -> dict:
+        """
+        Fetch all accessible resources (projects, tasks, users) for a supervisor's company by resource ID.
+        (should only have 1 result, but its technically possible to have multiple matches, though infinitely unlikely)
+
+        Args:
+            supervisor_company_id: The supervisor's business ID
+            resource_id: The resource ID to check against all resource types
+
+        Returns:
+            dict with keys 'projects', 'tasks', 'users' containing lists of matching resource IDs
+        """
+        query = """
+            match
+                $business isa business, has id ~business_id;
+            fetch {
+                'projects': [
+                    match
+                        $p1 isa project, has id ~project_id;
+                        $hp1 isa hasProjects(business: $business, project: $p1);
+                    fetch { 'project_id': $p1.id };
+                ],
+                'tasks': [
+                    match
+                        $p2 isa project;
+                        $hp2 isa hasProjects(business: $business, project: $p2);
+                        $t2 isa task, has id ~task_id;
+                        $ct2 isa containsTask(project: $p2, task: $t2);
+                    fetch { 'task_id': $t2.id };
+                ],
+                'users': [
+                    match
+                        $u3 isa supervisor, has id ~supervisor_id;
+                        $m3 isa manages(supervisor: $u3, business: $business);
+                    fetch { 'user_id': $u3.id };
+                ]
+            };
+        """
+
+        results = Db.read_transact(query, {
+            "business_id": supervisor_company_id,
+            "project_id": resource_id,
+            "task_id": resource_id,
+            "supervisor_id": resource_id
+        })
+
+        if not results:
+            return {'projects': [], 'tasks': [], 'users': []}
+
+        result = results[0]
+        return {
+            'projects': [item['project_id'] for item in result.get('projects', [])],
+            'tasks': [item['task_id'] for item in result.get('tasks', [])],
+            'users': [item['user_id'] for item in result.get('users', [])]
+        }

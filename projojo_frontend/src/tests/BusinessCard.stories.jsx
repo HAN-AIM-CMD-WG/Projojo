@@ -1,4 +1,4 @@
-import { expect, within, fn } from '@storybook/test';
+import { expect, within, fn } from 'storybook/test';
 import BusinessCard from '../components/BusinessCard';
 import { useAuth, AuthProvider } from '../auth/AuthProvider';
 

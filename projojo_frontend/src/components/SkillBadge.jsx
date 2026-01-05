@@ -12,7 +12,7 @@ import Tooltip from "./Tooltip";
 export default function SkillBadge({ children, skillName, isPending, onClick = null, ariaLabel = null }) {
     const toolTipRef = useRef(null);
 
-    let classNames = isPending ? 'bg-gray-300 text-black border border-gray-400' : 'from-primary to-darkPrimary bg-gradient-to-r text-white';
+    let classNames = isPending ? 'bg-gray-300 text-black border border-gray-400' : 'bg-primary text-white';
     classNames += ' px-3 py-1 text-nowrap text-sm font-medium rounded-full shadow-md';
 
     const content = (

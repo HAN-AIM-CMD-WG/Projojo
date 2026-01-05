@@ -40,7 +40,7 @@ class TaskRepository(BaseRepository[Task]):
         """
         results = Db.read_transact(query, {"id": id})
         if not results:
-            raise ItemRetrievalException(Task, f"Task with ID {id} not found.")
+            raise ItemRetrievalException(Task, f"Taak met ID {id} niet gevonden")
 
         # Convert to Task using Pydantic's model_validate
         return Task.model_validate(results[0])
@@ -159,7 +159,7 @@ class TaskRepository(BaseRepository[Task]):
         })
 
         if not validation_results:
-            raise ItemRetrievalException("Project", f"Project with ID '{task.project_id}' not found.")
+            raise ItemRetrievalException("Project", f"Project met ID '{task.project_id}' niet gevonden.")
 
         # Check if duplicate tasks were found
         if validation_results[0].get('duplicate_tasks'):
