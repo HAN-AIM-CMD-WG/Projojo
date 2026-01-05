@@ -136,7 +136,8 @@ class SkillRepository(BaseRepository[Skill]):
             "created_at": created_at
         })
 
-        # Update the created_at in the returned skill if it wasn't provided
+        # Update the returned skill with id and created_at if missing
+        skill.id = id
         if not skill.created_at:
             skill.created_at = created_at
 

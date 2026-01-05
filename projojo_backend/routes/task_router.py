@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends, request
-
+from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends, Request
 from domain.repositories import TaskRepository, UserRepository, SkillRepository
 from auth.jwt_utils import get_token_payload
 from domain.repositories import TaskRepository, UserRepository
@@ -75,11 +74,11 @@ async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     """
     # Ensure task exists
     try:
-        task_repo.get_by_id(id)
+        task_repo.get_by_id(task_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
-    skills = skill_repo.get_task_skills(id)
+    skills = skill_repo.get_task_skills(task_id)
     return skills
 
 @router.put("/{task_id}/skills")

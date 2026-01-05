@@ -105,7 +105,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     }
 
     const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId || skill.id);
+        // Map selected skills to IDs and remove any falsy values (e.g., undefined)
+        const skillIds = skills.map((skill) => skill.skillId || skill.id).filter(Boolean);
 
         setTaskSkillsError("");
         setIsSavingSkills(true);
