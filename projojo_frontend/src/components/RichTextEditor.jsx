@@ -138,11 +138,20 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
 
     return (
         <div className={className}>
-            <label className="block text-sm font-medium leading-6 text-gray-900" htmlFor="editor-content" id="editor-label">
-                {label} {required && <span className="text-red-600">*</span>}
-            </label>
-            <div className="border border-solid border-gray-300 rounded p-4">
-                <div className="mb-4 flex flex-wrap gap-2 editor-menu">
+            {label && (
+                <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="editor-content" id="editor-label">
+                    {label} {required && <span className="text-primary">*</span>}
+                </label>
+            )}
+            <div 
+                className="rounded-2xl overflow-hidden"
+                style={{ 
+                    background: '#EFEEEE',
+                    boxShadow: 'inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF'
+                }}
+            >
+                {/* Toolbar */}
+                <div className="px-3 py-2 flex flex-wrap gap-1.5 editor-menu bg-gradient-to-b from-white/60 to-transparent border-b border-gray-200/50">
                     <RichTextEditorButton
                         label={'Vetgedrukt'}
                         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -220,50 +229,70 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                         }
                     />
                 </div>
-                {internalError &&
-                    <div className="my-3">
+                
+                {/* Error message */}
+                {internalError && (
+                    <div className="px-4 py-2">
                         <Alert text={internalError} />
                     </div>
-                }
+                )}
+                
+                {/* Editor content area */}
                 <EditorContent
                     ref={editorRef}
                     editor={editor}
                     title="Editor content"
-                    className="rounded border border-gray-300 border-solid [&>*]:outline-none [&>div]:min-h-[4.1rem] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:p-2 [&_ul]:list-disc [&_ul]:pl-10 [&_ol]:list-decimal [&_ol]:pl-10 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-2xl [&_h2]:font-semibold [&_pre]:bg-gray-200 [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:shadow-md [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-2 [&_a]:text-[#0000EE] [&_a]:underline [&_a:visited]:text-[#551A8B] [&_a]:cursor-pointer"
+                    className="bg-transparent [&>*]:outline-none [&>div]:min-h-[100px] [&>div]:max-h-[300px] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:px-4 [&>div]:py-3 [&>div]:text-gray-700 [&>div]:text-sm [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-800 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gray-800 [&_pre]:bg-gray-700 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_a]:text-primary [&_a]:underline [&_a]:font-medium [&_a]:cursor-pointer [&_p]:leading-relaxed"
                 />
-                <div className={`text-right text-sm text-gray-500 ${error ? 'text-red-600' : ''}`}>
-                    {charCount}/{max} karakters
+                
+                {/* Character count */}
+                <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200/50 bg-white/30">
+                    <span className="text-xs text-gray-400">Gebruik de toolbar voor opmaak</span>
+                    <span className={`text-xs font-medium ${charCount > max ? 'text-red-500' : 'text-gray-500'}`}>
+                        {charCount}/{max}
+                    </span>
                 </div>
             </div>
-            <Modal isModalOpen={isLinkModalOpen} setIsModalOpen={setIsLinkModalOpen} modalHeader="Link toevoegen">
-                <label htmlFor="link-ref" className="block text-sm/6 font-medium text-gray-900">
-                    Link naar de website
-                </label>
-                <div className="mt-1">
-                    <div className={`flex items-center rounded-md bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 ${urlError ? 'outline-red-500 focus-within:outline-red-600' : ''}`}>
-                        <div className="shrink-0 select-none text-base text-gray-500 sm:text-sm/6">https://</div>
-                        <input
-                            id="link-ref"
-                            name="link-ref"
-                            type="text"
-                            placeholder="www.voorbeeld.nl"
-                            value={linkUrl}
-                            onChange={changeLinkUrl}
-                            className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6"
-                        />
+            <Modal isModalOpen={isLinkModalOpen} setIsModalOpen={setIsLinkModalOpen} modalHeader="Link toevoegen" modalIcon="link">
+                <div className="space-y-4">
+                    <div>
+                        <label htmlFor="link-ref" className="block text-sm font-bold text-gray-700 mb-2">
+                            Link naar de website
+                        </label>
+                        <div 
+                            className={`flex items-center rounded-xl overflow-hidden transition-all ${urlError ? 'ring-2 ring-red-400' : 'focus-within:ring-2 focus-within:ring-primary/50'}`}
+                            style={{ 
+                                background: '#EFEEEE',
+                                boxShadow: 'inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF'
+                            }}
+                        >
+                            <div className="shrink-0 select-none text-sm text-gray-500 pl-4 pr-1 py-3 bg-gray-200/50">https://</div>
+                            <input
+                                id="link-ref"
+                                name="link-ref"
+                                type="text"
+                                placeholder="www.voorbeeld.nl"
+                                value={linkUrl}
+                                onChange={changeLinkUrl}
+                                className="block min-w-0 grow py-3 px-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none bg-transparent"
+                            />
+                        </div>
+                        {urlError && (
+                            <p className='text-red-500 text-sm mt-2 font-medium'>{urlError}</p>
+                        )}
                     </div>
-                    {urlError && <div className='text-red-600 text-sm mt-1'>
-                        {urlError}
-                    </div>
-                    }
-
+                    
+                    <button
+                        onClick={handleLinkInsert}
+                        className="w-full rounded-xl py-3 font-bold text-white transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-primary to-orange-600"
+                        style={{ boxShadow: '0 4px 14px rgba(255, 127, 80, 0.3)' }}
+                    >
+                        <span className="flex items-center justify-center gap-2">
+                            <span className="material-symbols-outlined text-lg">add_link</span>
+                            Link toevoegen
+                        </span>
+                    </button>
                 </div>
-                <button
-                    onClick={handleLinkInsert}
-                    className="btn-primary mt-3"
-                >
-                    Link aanmaken
-                </button>
             </Modal>
         </div>
     );

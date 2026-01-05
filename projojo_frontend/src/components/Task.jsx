@@ -239,26 +239,81 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             {/* Registration modal for students */}
             {!(studentAlreadyRegistered || isFull) && (
                 <Modal
-                    modalHeader={`Aanmelden voor ${task.name}`}
+                    modalHeader="Aanmelden voor taak"
+                    modalSubtitle={task.name}
+                    modalIcon="rocket_launch"
                     isModalOpen={isModalOpen}
                     setIsModalOpen={setIsModalOpen}
                 >
-                    <form className="p-5" onSubmit={handleSubmit}>
-                        <div className="flex flex-col gap-4">
+                    <form onSubmit={handleSubmit}>
+                        <div className="flex flex-col gap-5">
+                            {/* Info banner */}
+                            <div 
+                                className="flex items-start gap-3 p-4 rounded-xl"
+                                style={{ background: 'rgba(255, 127, 80, 0.05)', border: '1px solid rgba(255, 127, 80, 0.15)' }}
+                            >
+                                <span className="material-symbols-outlined text-lg mt-0.5 text-primary">lightbulb</span>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    <span className="font-semibold text-primary">Tip:</span> Een goede motivatie vertelt waarom jij de perfecte match bent voor deze taak.
+                                </p>
+                            </div>
+
                             <Alert text={error} />
+
+                            {/* Skills match indicator */}
+                            {task.skills && task.skills.length > 0 && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-bold text-gray-700">Jouw skills match</span>
+                                        <span className="text-sm font-bold text-primary">
+                                            {task.skills.filter(s => studentSkillIds.has(s.skillId ?? s.id)).length} van {task.skills.length}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {task.skills.map((skill) => {
+                                            const skillId = skill.skillId ?? skill.id;
+                                            const isMatch = studentSkillIds.has(skillId);
+                                            return (
+                                                <span 
+                                                    key={skillId}
+                                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg ${
+                                                        isMatch 
+                                                            ? 'bg-primary text-white' 
+                                                            : 'bg-gray-200 text-gray-500'
+                                                    }`}
+                                                >
+                                                    {isMatch && '✓ '}{skill.name}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Motivation editor */}
                             <RichTextEditor
-                                label="Motivatiebrief"
+                                label="Jouw motivatie"
                                 onSave={setMotivation}
                                 setCanSubmit={setCanSubmit}
                             />
-                            <div className="flex gap-3 pt-2">
-                                <button type="button" className="flex-1 neu-btn" onClick={() => setIsModalOpen(false)}>
+
+                            {/* Footer buttons */}
+                            <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-100">
+                                <button 
+                                    type="button" 
+                                    className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors py-2"
+                                    onClick={() => setIsModalOpen(false)}
+                                >
                                     Annuleren
                                 </button>
-                                <button type="submit" className="flex-1 neu-btn-primary">
-                                    <span className="flex items-center justify-center gap-2">
-                                        <span className="material-symbols-outlined">send</span>
-                                        Verzenden
+                                <button 
+                                    type="submit" 
+                                    className="group relative overflow-hidden rounded-xl px-6 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-primary to-orange-600"
+                                    style={{ boxShadow: '0 4px 14px rgba(255, 127, 80, 0.3)' }}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-lg">send</span>
+                                        Verstuur aanmelding
                                     </span>
                                 </button>
                             </div>
@@ -269,86 +324,142 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
             {/* Registrations modal for owners */}
             {isOwner && (
-                <Modal maxWidth={"max-w-2xl"} modalHeader={`Aanmeldingen voor "${task.name}"`} isModalOpen={isRegistrationsModalOpen} setIsModalOpen={setIsRegistrationsModalOpen}>
-                    <div className="flex flex-col gap-4 p-5">
+                <Modal 
+                    maxWidth="max-w-2xl" 
+                    modalHeader="Aanmeldingen bekijken"
+                    modalSubtitle={task.name}
+                    modalIcon="group"
+                    isModalOpen={isRegistrationsModalOpen} 
+                    setIsModalOpen={setIsRegistrationsModalOpen}
+                >
+                    <div className="flex flex-col gap-4">
                         {registrations.length === 0 && (
-                            <p className="text-gray-500 text-center py-4">Er zijn geen open aanmeldingen voor deze taak</p>
+                            <div className="text-center py-8">
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-3xl text-gray-400">inbox</span>
+                                </div>
+                                <p className="text-gray-500 font-medium">Er zijn geen open aanmeldingen voor deze taak</p>
+                            </div>
                         )}
                         {isFull && (
                             <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
                         )}
-                        {registrations.map((registration) => (
-                            <div key={registration.student.id} className="neu-pressed p-5 rounded-xl">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <span className="material-symbols-outlined text-primary text-2xl">person</span>
-                                    <Link 
-                                        to={`/student/${registration.student.id}`} 
-                                        className="text-lg font-bold text-gray-700 hover:text-primary transition" 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                    >
-                                        {registration.student.full_name}
-                                    </Link>
-                                </div>
-                                <div className="text-gray-600 text-sm mb-3">
-                                    <RichTextViewer text={registration.reason} />
-                                </div>
-                                <div className="mb-4">
-                                    <span className="neu-label mb-2 block">Skills</span>
-                                    <div className="flex flex-wrap gap-2">
-                                    {registration.student.skills.map((skill) => {
-                                        const skillId = skill.skillId ?? skill.id;
-                                        // Highlight skills that match task requirements
-                                        const taskSkillIds = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
-                                        const matchesTask = taskSkillIds.has(skillId);
-                                        return (
-                                            <SkillBadge
-                                                key={skillId}
-                                                skillName={skill.name}
-                                                isPending={skill.isPending ?? skill.is_pending}
-                                                isOwn={matchesTask}
-                                            >
-                                                {matchesTask && (
-                                                    <span className="material-symbols-outlined text-xs mr-1">check</span>
-                                                )}
-                                            </SkillBadge>
-                                        );
-                                    })}
+                        {registrations.map((registration) => {
+                            const taskSkillIds = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
+                            const matchingSkills = registration.student.skills.filter(s => taskSkillIds.has(s.skillId ?? s.id)).length;
+                            
+                            return (
+                                <div 
+                                    key={registration.student.id} 
+                                    className="rounded-2xl overflow-hidden border border-gray-100"
+                                    style={{ background: 'linear-gradient(145deg, #fafafa, #ffffff)' }}
+                                >
+                                    {/* Student header */}
+                                    <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-transparent">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-orange-400/20 flex items-center justify-center">
+                                                    <span className="material-symbols-outlined text-primary text-xl">person</span>
+                                                </div>
+                                                <div>
+                                                    <Link 
+                                                        to={`/student/${registration.student.id}`} 
+                                                        className="text-lg font-bold text-gray-800 hover:text-primary transition" 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        {registration.student.full_name}
+                                                    </Link>
+                                                    <p className="text-xs text-gray-500">
+                                                        <span className="font-semibold text-primary">{matchingSkills}</span> van {task.skills?.length || 0} skills match
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Motivation */}
+                                    <div className="p-5 space-y-4">
+                                        <div>
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Motivatie</span>
+                                            <div className="text-gray-600 text-sm bg-gray-50 p-4 rounded-xl">
+                                                <RichTextViewer text={registration.reason} />
+                                            </div>
+                                        </div>
+
+                                        {/* Skills */}
+                                        <div>
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Skills</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {registration.student.skills.map((skill) => {
+                                                    const skillId = skill.skillId ?? skill.id;
+                                                    const matchesTask = taskSkillIds.has(skillId);
+                                                    return (
+                                                        <SkillBadge
+                                                            key={skillId}
+                                                            skillName={skill.name}
+                                                            isPending={skill.isPending ?? skill.is_pending}
+                                                            isOwn={matchesTask}
+                                                        >
+                                                            {matchesTask && (
+                                                                <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                                            )}
+                                                        </SkillBadge>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
+                                        
+                                        {/* Response form */}
+                                        <form onSubmit={handleRegistrationResponse} className="pt-2 border-t border-gray-100">
+                                            <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
+                                            <input type="hidden" name="userId" value={registration.student.id} />
+                                            <div className="flex gap-3 mt-4">
+                                                <button 
+                                                    type="submit" 
+                                                    value={true} 
+                                                    disabled={isFull} 
+                                                    className={`flex-1 rounded-xl py-3 font-bold transition-all ${
+                                                        isFull 
+                                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                                                            : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"
+                                                    }`}
+                                                    style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}
+                                                >
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <span className="material-symbols-outlined">check</span>
+                                                        Accepteren
+                                                    </span>
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    value={false} 
+                                                    className="flex-1 rounded-xl py-3 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all"
+                                                    style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+                                                >
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <span className="material-symbols-outlined">close</span>
+                                                        Weigeren
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                                <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
-                                <form onSubmit={handleRegistrationResponse}>
-                                    <FormInput label={`Reden (optioneel)`} max={400} min={0} type="textarea" name={`response`} rows={1} />
-                                    <input type="hidden" name="userId" value={registration.student.id} />
-                                    <div className="flex gap-3 mt-4">
-                                        <button 
-                                            type="submit" 
-                                            value={true} 
-                                            disabled={isFull} 
-                                            className={`flex-1 neu-btn ${isFull ? "opacity-50" : "!bg-emerald-500 !text-white hover:!bg-emerald-600"}`}
-                                        >
-                                            <span className="flex items-center justify-center gap-2">
-                                                <span className="material-symbols-outlined">check</span>
-                                                Accepteren
-                                            </span>
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            value={false} 
-                                            className="flex-1 neu-btn !bg-red-500 !text-white hover:!bg-red-600"
-                                        >
-                                            <span className="flex items-center justify-center gap-2">
-                                                <span className="material-symbols-outlined">close</span>
-                                                Weigeren
-                                            </span>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
-                    <div className="flex justify-center p-5 pt-0">
-                        <button className="neu-btn" onClick={() => setIsRegistrationsModalOpen(false)}>Sluiten</button>
+                    
+                    {/* Footer */}
+                    <div className="flex justify-center pt-4 mt-4 border-t border-gray-100">
+                        <button 
+                            className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+                            onClick={() => setIsRegistrationsModalOpen(false)}
+                        >
+                            Sluiten
+                        </button>
                     </div>
                 </Modal>
             )}

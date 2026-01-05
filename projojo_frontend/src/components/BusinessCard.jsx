@@ -268,9 +268,11 @@ export default function BusinessCard({
                 )}
             </div>
 
-            {/* Modal stays the same */}
+            {/* Modal voor collega toevoegen */}
             <Modal
-                modalHeader={`Collega toevoegen aan ${name}`}
+                modalHeader="Collega toevoegen"
+                modalSubtitle={name}
+                modalIcon="person_add"
                 isModalOpen={isModalOpen}
                 setIsModalOpen={setIsModalOpen}
             >

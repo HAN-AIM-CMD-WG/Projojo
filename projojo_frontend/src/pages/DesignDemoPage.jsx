@@ -672,37 +672,129 @@ export default function DesignDemoPage() {
                     </div>
                 </section>
 
-                {/* Section: Modal Preview */}
+                {/* Section: Modal Preview - Motivatie Schrijven */}
                 <section className="space-y-6">
                     <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
-                        <span className="material-symbols-outlined" style={{ color: theme.primary }}>open_in_new</span>
-                        Modal Preview
+                        <span className="material-symbols-outlined" style={{ color: theme.primary }}>edit_document</span>
+                        Modal - Motivatie Schrijven
                     </h2>
-                    <div className="neu-card-lg">
-                        <p className="text-sm font-bold text-text-secondary mb-4">Statische modal preview (styling voorbeeld):</p>
-                        <div className="relative bg-black/40 backdrop-blur-sm rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
-                            <div className="neu-card-lg max-w-md w-full">
-                                <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-                                    <h3 className="text-xl font-bold text-text-primary">
-                                        Modal Titel
-                                    </h3>
-                                    <button 
-                                        className="text-text-muted rounded-xl text-sm w-10 h-10 inline-flex justify-center items-center transition-colors"
-                                        style={{ '--hover-color': theme.primary, '--hover-bg': `${theme.primary}15` }}
-                                        onMouseEnter={(e) => { e.target.style.color = theme.primary; e.target.style.backgroundColor = `${theme.primary}15`; }}
-                                        onMouseLeave={(e) => { e.target.style.color = ''; e.target.style.backgroundColor = ''; }}
-                                    >
-                                        <span className="material-symbols-outlined">close</span>
-                                    </button>
-                                </div>
-                                <div className="pt-4 space-y-4">
-                                    <p className="text-sm text-text-secondary">
-                                        Dit is de inhoud van de modal. Hier kun je formulieren, tekst of andere content plaatsen.
-                                    </p>
-                                    <div className="flex gap-3 justify-end pt-2">
-                                        <button className="bg-neu-bg font-bold rounded-xl px-5 py-2.5 transition-all duration-200" style={{ boxShadow: '5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF' }}>Annuleren</button>
-                                        <button className="font-bold rounded-xl px-5 py-2.5 text-white transition-all duration-200" style={{ background: theme.gradient }}>Bevestigen</button>
+                    
+                    {/* Modal met backdrop */}
+                    <div className="relative rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.6) 100%)' }}>
+                        <div className="absolute inset-0 backdrop-blur-md"></div>
+                        
+                        {/* Modal Content */}
+                        <div className="relative p-6 md:p-10 flex items-center justify-center min-h-[500px]">
+                            <div 
+                                className="w-full max-w-lg rounded-3xl overflow-hidden"
+                                style={{ 
+                                    background: 'linear-gradient(145deg, #f5f4f4, #ffffff)',
+                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)'
+                                }}
+                            >
+                                {/* Header met gradient accent */}
+                                <div 
+                                    className="px-6 py-5 border-b border-gray-100"
+                                    style={{ background: `linear-gradient(135deg, ${theme.primary}08 0%, transparent 100%)` }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div 
+                                                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                                                style={{ background: theme.gradient, boxShadow: `0 4px 12px ${theme.shadow}` }}
+                                            >
+                                                <span className="material-symbols-outlined text-white text-lg">rocket_launch</span>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-gray-800">Aanmelden voor taak</h3>
+                                                <p className="text-xs text-gray-500 font-medium">UX Research • SmartFarm Analytics</p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                                        >
+                                            <span className="material-symbols-outlined text-xl">close</span>
+                                        </button>
                                     </div>
+                                </div>
+
+                                {/* Body */}
+                                <div className="p-6 space-y-5">
+                                    {/* Info banner */}
+                                    <div 
+                                        className="flex items-start gap-3 p-4 rounded-xl"
+                                        style={{ background: `${theme.primary}08`, border: `1px solid ${theme.primary}20` }}
+                                    >
+                                        <span className="material-symbols-outlined text-lg mt-0.5" style={{ color: theme.primary }}>lightbulb</span>
+                                        <p className="text-sm text-gray-600 leading-relaxed">
+                                            <span className="font-semibold" style={{ color: theme.primary }}>Tip:</span> Een goede motivatie vertelt waarom jij de perfecte match bent voor deze taak.
+                                        </p>
+                                    </div>
+
+                                    {/* Textarea met neumorphic style */}
+                                    <div className="space-y-2">
+                                        <label className="flex items-center justify-between">
+                                            <span className="text-sm font-bold text-gray-700">Jouw motivatie</span>
+                                            <span className="text-xs text-gray-400">0 / 500</span>
+                                        </label>
+                                        <div 
+                                            className="rounded-2xl p-1"
+                                            style={{ 
+                                                background: '#EFEEEE',
+                                                boxShadow: 'inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF'
+                                            }}
+                                        >
+                                            <textarea 
+                                                placeholder="Vertel waarom jij geschikt bent voor deze taak. Wat spreekt je aan? Welke ervaring breng je mee?"
+                                                rows={5}
+                                                className="w-full bg-transparent px-4 py-3 text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Skills match indicator */}
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-bold text-gray-700">Jouw skills match</span>
+                                            <span className="text-sm font-bold" style={{ color: theme.primary }}>3 van 4</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <span 
+                                                className="px-3 py-1.5 text-xs font-bold rounded-lg text-white"
+                                                style={{ background: theme.primary }}
+                                            >✓ Figma</span>
+                                            <span 
+                                                className="px-3 py-1.5 text-xs font-bold rounded-lg text-white"
+                                                style={{ background: theme.primary }}
+                                            >✓ User Testing</span>
+                                            <span 
+                                                className="px-3 py-1.5 text-xs font-bold rounded-lg text-white"
+                                                style={{ background: theme.primary }}
+                                            >✓ Prototyping</span>
+                                            <span className="px-3 py-1.5 text-xs font-bold rounded-lg bg-gray-200 text-gray-500">
+                                                Data Analysis
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Footer met buttons */}
+                                <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between gap-4">
+                                    <button className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors">
+                                        Annuleren
+                                    </button>
+                                    <button 
+                                        className="group relative overflow-hidden rounded-xl px-6 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-0.5"
+                                        style={{ 
+                                            background: theme.gradient,
+                                            boxShadow: `0 4px 14px ${theme.shadow}`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span className="material-symbols-outlined text-lg">send</span>
+                                            <span>Verstuur aanmelding</span>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         </div>
