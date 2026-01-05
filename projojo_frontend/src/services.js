@@ -73,12 +73,26 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                 let message;
                 try {
                     const jsonObj = JSON.parse(json);
-                    // checks if detail field exists and is non-empty
-                    if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
-                        // doesnt exist or is empty. Go to catch block
+                    const detail = jsonObj?.detail;
+
+                    if (detail === undefined || detail === null || detail === "") {
                         throw new Error();
                     }
-                    message = jsonObj.detail;
+
+                    if (Array.isArray(detail)) {
+                        // FastAPI validation errors: list of objects {loc,msg,type,...}
+                        message = detail.map((d) => {
+                            if (typeof d === "string") return d;
+                            if (typeof d === "object" && d !== null) {
+                                return d.msg || d.message || JSON.stringify(d);
+                            }
+                            return String(d);
+                        }).join("; ");
+                    } else if (typeof detail === "object") {
+                        message = detail.message || detail.msg || JSON.stringify(detail);
+                    } else {
+                        message = String(detail);
+                    }
                 } catch {
                     // assign default message based on status code
                     switch (errorStatus) {
@@ -96,6 +110,9 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                             break;
                         case 409:
                             message = "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            break;
+                        case 422:
+                            message = "Ongeldige invoer. Controleer je gegevens.";
                             break;
                         case 429:
                             message = "Te veel verzoeken. Probeer het later opnieuw.";
