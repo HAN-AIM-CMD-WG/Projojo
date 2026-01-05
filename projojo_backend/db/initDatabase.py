@@ -5,23 +5,20 @@ import re
 import pprint
 from datetime import datetime, date
 import time
-from environs import Env
 from uuid import UUID
-
-# Load environment variables.
-# This will read from .env.preview first, then .env
-# .env is only available for local development, and overrides settings from .env.preview
-env = Env(expand_vars=True)
-env.read_env(".env.preview", recurse=True, override=True)
-env.read_env(".env", recurse=True, override=True) 
+from config.settings import (
+    env,
+    TYPEDB_SERVER_ADDR, TYPEDB_NAME, TYPEDB_USERNAME,
+    TYPEDB_DEFAULT_PASSWORD, TYPEDB_NEW_PASSWORD, RESET_DB
+)
 
 class Db:
-    address = env.str("TYPEDB_SERVER_ADDR")
-    name = env.str("TYPEDB_NAME")
-    username = env.str("TYPEDB_USERNAME")
-    default_password = env.str("TYPEDB_DEFAULT_PASSWORD")
-    new_password = env.str("TYPEDB_NEW_PASSWORD")
-    reset = env.bool("RESET_DB", default=False)
+    address = TYPEDB_SERVER_ADDR
+    name = TYPEDB_NAME
+    username = TYPEDB_USERNAME
+    default_password = TYPEDB_DEFAULT_PASSWORD
+    new_password = TYPEDB_NEW_PASSWORD
+    reset = RESET_DB
     base_path = os.path.dirname(os.path.abspath(__file__))
     schema_path = os.path.join(base_path, "schema.tql")
     seed_path = os.path.join(base_path, "seed.tql")

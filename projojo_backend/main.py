@@ -5,8 +5,8 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
 from contextlib import asynccontextmanager
-from environs import Env
 
+from config.settings import SESSIONS_SECRET_KEY, IS_DEVELOPMENT
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 from auth.jwt_middleware import JWTMiddleware
@@ -28,11 +28,6 @@ from db.initDatabase import get_database
 
 # Set up logger
 logger = logging.getLogger('uvicorn.error')
-
-# Load environment variables
-env = Env(expand_vars=True)
-env.read_env(".env.preview", recurse=True, override=True)
-env.read_env(".env", recurse=True, override=True)
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -70,7 +65,7 @@ app.add_middleware(JWTMiddleware)
 # Add session middleware (required by authlib for OAuth state)
 app.add_middleware(
     SessionMiddleware,
-    secret_key=env.str("SESSIONS_SECRET_KEY", "supersecretkey123456789abcdefghijklmnop")
+    secret_key=SESSIONS_SECRET_KEY
 )
 
 @app.middleware("http")
@@ -115,7 +110,7 @@ async def root():
 @app.get("/typedb/status")
 async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
-    if env.str("ENVIRONMENT", "none").lower() != "development":
+    if not IS_DEVELOPMENT:
         raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
 
     try:

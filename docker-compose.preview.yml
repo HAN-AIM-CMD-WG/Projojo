@@ -39,7 +39,7 @@ services:
     env_file:
       - .env.preview
     ports:
-      - "${FRONTEND_PORT}:4173"  # Preview runs on port 4173
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"  # Same port inside and outside container
     # No volumes for preview (source code copied into container)
     networks:
       - projojo-network

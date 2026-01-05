@@ -35,10 +35,26 @@ services:
     env_file:
       - .env
     ports:
-      - "${FRONTEND_PORT}:5173"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"  # Same port inside and outside container
     volumes:
       - ./projojo_frontend:/app  # Volume mount for development
       - /app/node_modules        # Anonymous volume to prevent host node_modules from mounting
+    networks:
+      - projojo-network
+
+  mailhog:
+    # MailHog - Email testing tool for development
+    # Web UI: http://localhost:${MAILHOG_WEB_PORT} (default: 10106)
+    # SMTP: localhost:${EMAIL_SMTP_PORT} (default: 10105)
+    container_name: projojo_mailhog
+    image: mailhog/mailhog:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${EMAIL_SMTP_PORT}:1025"      # SMTP server (internal port 1025)
+      - "${MAILHOG_WEB_PORT}:8025"     # Web UI (internal port 8025)
     networks:
       - projojo-network
 
