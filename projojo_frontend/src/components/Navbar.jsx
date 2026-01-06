@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { IMAGE_BASE_URL, getUser, getBusinessById } from "../services";
 import { useAuth } from "../auth/AuthProvider";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
     const { authData, logout } = useAuth();
@@ -88,7 +89,7 @@ export default function Navbar() {
 
     return (
         <header>
-            <nav className="bg-neu-bg fixed w-full z-40 top-0 start-0 border-b border-white/20" style={{ boxShadow: '0 4px 20px rgba(209, 217, 230, 0.6)' }}>
+            <nav className="bg-[var(--neu-bg)] fixed w-full z-40 top-0 start-0 border-b border-[var(--neu-border)]" style={{ boxShadow: '0 4px 20px var(--neu-shadow-dark)' }}>
                 <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 h-20">
                     {/* Logo */}
                     <Link to="/home" className="flex items-center gap-3 group" aria-label="Projojo - Ga naar home">
@@ -96,10 +97,10 @@ export default function Navbar() {
                             <span className="material-symbols-outlined text-2xl text-primary" aria-hidden="true">school</span>
                         </div>
                         <div>
-                            <h1 className="font-extrabold text-lg text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
+                            <h1 className="font-extrabold text-lg text-[var(--text-primary)] tracking-tight leading-none group-hover:text-primary transition-colors">
                                 Projojo
                             </h1>
-                            <p className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase mt-0.5">
+                            <p className="text-[10px] text-[var(--text-muted)] font-semibold tracking-widest uppercase mt-0.5">
                                 Student Hub
                             </p>
                         </div>
@@ -121,7 +122,7 @@ export default function Navbar() {
 
                     {/* Navigation */}
                     <div 
-                        className={`${isCollapsed ? 'hidden' : 'absolute top-full left-0 right-0 bg-neu-bg border-b border-white/20 shadow-lg'} md:relative md:block md:w-auto md:bg-transparent md:border-0 md:shadow-none`} 
+                        className={`${isCollapsed ? 'hidden' : 'absolute top-full left-0 right-0 bg-[var(--neu-bg)] border-b border-[var(--neu-border)] shadow-lg'} md:relative md:block md:w-auto md:bg-transparent md:border-0 md:shadow-none`} 
                         id="navbar-default"
                     >
                         <ul className="flex flex-col p-4 md:p-0 gap-2 md:flex-row md:items-center md:gap-2">
@@ -140,6 +141,11 @@ export default function Navbar() {
                             
                             {/* Divider (desktop) */}
                             <li className="hidden md:block w-px h-6 bg-gray-300/50 mx-3"></li>
+                            
+                            {/* Theme Toggle */}
+                            <li className="flex items-center py-2 md:py-0">
+                                <ThemeToggle />
+                            </li>
                             
                             {/* Sign out */}
                             <li>

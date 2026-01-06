@@ -126,38 +126,103 @@
     --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* ===========================================
+   DARK MODE - Warm Brown Theme
+   Complementary to coral primary color
+   =========================================== */
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Base colors - Warm espresso/coffee tones */
+    --background: #1A1512;
+    --foreground: #F5F0EB;
+    --card: #2D221C;
+    --card-foreground: #F5F0EB;
+    --popover: #2D221C;
+    --popover-foreground: #F5F0EB;
+    
+    /* Primary - Slightly lighter coral for dark bg contrast */
+    --primary: #FF8C5A;
+    --primary-foreground: #1A1512;
+    
+    /* Secondary/Muted - Coffee brown tones */
+    --secondary: #3D2E26;
+    --secondary-foreground: #F5F0EB;
+    --muted: #3D2E26;
+    --muted-foreground: #C9B8A8;
+    --accent: #3D2E26;
+    --accent-foreground: #F5F0EB;
+    
+    /* Other */
+    --destructive: #FF6B6B;
+    --border: rgba(255, 140, 90, 0.15);
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: #FF8C5A;
+    
+    /* Charts */
+    --chart-1: #FF8C5A;
+    --chart-2: #C9B8A8;
+    --chart-3: #8B7355;
+    --chart-4: #FFB088;
+    --chart-5: #D4A574;
+    
+    /* Sidebar */
+    --sidebar: #2D221C;
+    --sidebar-foreground: #F5F0EB;
+    --sidebar-primary: #FF8C5A;
+    --sidebar-primary-foreground: #1A1512;
+    --sidebar-accent: #3D2E26;
+    --sidebar-accent-foreground: #F5F0EB;
+    --sidebar-border: rgba(255, 140, 90, 0.15);
+    --sidebar-ring: #FF8C5A;
+}
+
+/* ===========================================
+   HIGH CONTRAST MODE - WCAG AAA Compliance
+   For users with visual impairments
+   =========================================== */
+.high-contrast {
+    /* Maximum contrast colors */
+    --background: #FFFFFF;
+    --foreground: #000000;
+    --card: #FFFFFF;
+    --card-foreground: #000000;
+    --popover: #FFFFFF;
+    --popover-foreground: #000000;
+    
+    /* Primary - Darker for better contrast */
+    --primary: #C65030;
+    --primary-foreground: #FFFFFF;
+    
+    /* Secondary/Muted */
+    --secondary: #F0F0F0;
+    --secondary-foreground: #000000;
+    --muted: #F0F0F0;
+    --muted-foreground: #333333;
+    --accent: #F0F0F0;
+    --accent-foreground: #000000;
+    
+    /* Other */
+    --destructive: #CC0000;
+    --border: #000000;
+    --input: #000000;
+    --ring: #000000;
+}
+
+/* High contrast + dark mode combination */
+.dark.high-contrast {
+    --background: #000000;
+    --foreground: #FFFFFF;
+    --card: #1A1A1A;
+    --card-foreground: #FFFFFF;
+    --popover: #1A1A1A;
+    --popover-foreground: #FFFFFF;
+    --primary: #FFB088;
+    --primary-foreground: #000000;
+    --secondary: #333333;
+    --secondary-foreground: #FFFFFF;
+    --muted: #333333;
+    --muted-foreground: #CCCCCC;
+    --border: #FFFFFF;
+    --input: #FFFFFF;
 }
 
 @layer base {
@@ -173,119 +238,241 @@
 /* ===========================================
    NEUMORPHIC DESIGN SYSTEM - Coral Theme
    Verfijnd gebaseerd op Gemini Design (Projojo_design.html)
+   Now with Dark Mode + High Contrast support
    =========================================== */
 
-@theme {
-    /* Neumorphic Colors */
-    --color-neu-bg: #EFEEEE;
-    --color-neu-light: #FFFFFF;
-    --color-neu-dark: #D1D9E6;
+/* Light mode neumorphic colors (default) */
+:root {
+    /* Neumorphic Colors - Used in shadows */
+    --neu-bg: #EFEEEE;
+    --neu-shadow-light: #FFFFFF;
+    --neu-shadow-dark: #D1D9E6;
+    --neu-border: rgba(255, 255, 255, 0.4);
+    --neu-border-hover: rgba(255, 127, 80, 0.2);
     
-    /* Text Colors - Gemini Design Exact */
-    --color-text-primary: #2D3748;
-    --color-text-secondary: #4A5568;
-    --color-text-muted: #718096;
-    --color-text-light: #A0AEC0;
+    /* Text Colors */
+    --text-primary: #2D3748;
+    --text-secondary: #4A5568;
+    --text-muted: #718096;
+    --text-light: #A0AEC0;
+    
+    /* Coral Primary shades */
+    --primary-color: #FF7F50;
+    --primary-hover: #FF6347;
+    --primary-light: #FFA07A;
+    --primary-dark: #E06A3D;
+    
+    /* Gray Scale */
+    --gray-200: #E5E7EB;
+    --gray-300: #D1D5DB;
+    --gray-400: #9CA3AF;
+    --gray-500: #6B7280;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    
+    /* Scrollbar */
+    --scrollbar-thumb: #CBD5E0;
+    --scrollbar-thumb-hover: #A0AEC0;
+}
+
+/* Dark mode neumorphic colors - Warm brown theme */
+.dark {
+    --neu-bg: #1A1512;
+    --neu-shadow-light: #3D2E26;
+    --neu-shadow-dark: #0D0A08;
+    --neu-border: rgba(255, 140, 90, 0.1);
+    --neu-border-hover: rgba(255, 140, 90, 0.3);
+    
+    /* Text Colors - Cream/Sand tones */
+    --text-primary: #F5F0EB;
+    --text-secondary: #C9B8A8;
+    --text-muted: #A89080;
+    --text-light: #8B7B6B;
+    
+    /* Coral Primary shades - Slightly adjusted for dark bg */
+    --primary-color: #FF8C5A;
+    --primary-hover: #FF9F73;
+    --primary-light: #FFB088;
+    --primary-dark: #E06A3D;
+    
+    /* Brown/Coffee Scale */
+    --gray-200: #3D2E26;
+    --gray-300: #4D3D35;
+    --gray-400: #6D5D55;
+    --gray-500: #8D7D75;
+    --gray-600: #A89890;
+    --gray-700: #C9B8A8;
+    --gray-800: #E5DCD5;
+    
+    /* Scrollbar */
+    --scrollbar-thumb: #4D3D35;
+    --scrollbar-thumb-hover: #6D5D55;
+}
+
+/* High contrast mode - Maximum visibility */
+.high-contrast {
+    --neu-bg: #FFFFFF;
+    --neu-shadow-light: transparent;
+    --neu-shadow-dark: transparent;
+    --neu-border: #000000;
+    --neu-border-hover: #C65030;
+    
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --text-muted: #333333;
+    --text-light: #666666;
+    
+    --primary-color: #C65030;
+    --primary-hover: #A04020;
+    --primary-light: #E07050;
+    --primary-dark: #8B3020;
+    
+    --gray-200: #E0E0E0;
+    --gray-300: #C0C0C0;
+    --gray-400: #808080;
+    --gray-500: #606060;
+    --gray-600: #404040;
+    --gray-700: #202020;
+    --gray-800: #000000;
+    
+    --scrollbar-thumb: #666666;
+    --scrollbar-thumb-hover: #333333;
+}
+
+/* High contrast + dark mode */
+.dark.high-contrast {
+    --neu-bg: #000000;
+    --neu-shadow-light: transparent;
+    --neu-shadow-dark: transparent;
+    --neu-border: #FFFFFF;
+    --neu-border-hover: #FFB088;
+    
+    --text-primary: #FFFFFF;
+    --text-secondary: #FFFFFF;
+    --text-muted: #CCCCCC;
+    --text-light: #999999;
+    
+    --primary-color: #FFB088;
+    --primary-hover: #FFC0A0;
+    
+    --scrollbar-thumb: #666666;
+    --scrollbar-thumb-hover: #999999;
+}
+
+@theme {
+    /* Neumorphic Colors - Now use CSS variables */
+    --color-neu-bg: var(--neu-bg);
+    --color-neu-light: var(--neu-shadow-light);
+    --color-neu-dark: var(--neu-shadow-dark);
+    
+    /* Text Colors */
+    --color-text-primary: var(--text-primary);
+    --color-text-secondary: var(--text-secondary);
+    --color-text-muted: var(--text-muted);
+    --color-text-light: var(--text-light);
     
     /* Coral Primary */
-    --color-light-primary: #FFA07A;
-    --color-primary-dark: #E06A3D;
+    --color-light-primary: var(--primary-light);
+    --color-primary-dark: var(--primary-dark);
     
-    /* Gray Scale - Gemini */
-    --color-gray-200: #E5E7EB;
-    --color-gray-300: #D1D5DB;
-    --color-gray-400: #9CA3AF;
-    --color-gray-500: #6B7280;
-    --color-gray-600: #4B5563;
-    --color-gray-700: #374151;
-    --color-gray-800: #1F2937;
+    /* Gray Scale */
+    --color-gray-200: var(--gray-200);
+    --color-gray-300: var(--gray-300);
+    --color-gray-400: var(--gray-400);
+    --color-gray-500: var(--gray-500);
+    --color-gray-600: var(--gray-600);
+    --color-gray-700: var(--gray-700);
+    --color-gray-800: var(--gray-800);
 }
 
 @layer components {
     /* --- Base: Elevated Card (Level 1) - Verfijnd --- */
     .neu-flat {
-        @apply bg-neu-bg;
+        background: var(--neu-bg);
         border-radius: 1.5rem;
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border);
     }
 
     /* Grote card variant (2rem radius) */
     .neu-flat-xl {
-        @apply bg-neu-bg;
+        background: var(--neu-bg);
         border-radius: 2rem;
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border);
     }
 
     /* Hover-effect voor interactieve cards - Subtle & Elegant */
     .neu-flat-interactive {
-        @apply bg-neu-bg;
+        background: var(--neu-bg);
         border-radius: 1.5rem;
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
                     box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                    border-color 0.3s ease;
+                    border-color 0.3s ease,
+                    background 0.3s ease;
     }
 
     .neu-flat-interactive:hover {
         transform: translateY(-6px);
-        box-shadow: 10px 10px 24px #D1D9E6, -10px -10px 24px #FFFFFF;
-        border-color: rgba(255, 127, 80, 0.2);
+        box-shadow: 10px 10px 24px var(--neu-shadow-dark), -10px -10px 24px var(--neu-shadow-light);
+        border-color: var(--neu-border-hover);
     }
 
     .neu-flat-interactive:active {
         transform: translateY(-2px);
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
     }
 
     /* --- Pressed/Inset (Level -1) - Voor inputs & containers --- */
     .neu-pressed {
-        @apply bg-neu-bg;
+        background: var(--neu-bg);
         border-radius: 1rem;
-        box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
+        box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
     }
 
     /* Extra diepe pressed variant */
     .neu-pressed-deep {
-        @apply bg-neu-bg;
+        background: var(--neu-bg);
         border-radius: 1rem;
-        box-shadow: inset 5px 5px 10px #D1D9E6, inset -5px -5px 10px #FFFFFF;
+        box-shadow: inset 5px 5px 10px var(--neu-shadow-dark), inset -5px -5px 10px var(--neu-shadow-light);
     }
 
     /* --- Interactive Buttons - Verfijnd --- */
     .neu-btn {
-        @apply bg-neu-bg font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
-        color: #4A5568;
+        @apply font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
+        background: var(--neu-bg);
+        color: var(--text-secondary);
         border-radius: 0.75rem;
         padding: 0.625rem 1.25rem;
-        box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
+        box-shadow: 5px 5px 10px var(--neu-shadow-dark), -5px -5px 10px var(--neu-shadow-light);
     }
 
     .neu-btn:hover {
-        color: #FF7F50;
+        color: var(--primary-color);
         transform: translateY(-2px);
-        box-shadow: 6px 6px 14px #D1D9E6, -6px -6px 14px #FFFFFF;
+        box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
     }
 
     .neu-btn:active {
         transform: translateY(0);
-        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+        box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
     }
 
     /* --- Primary Button - Verfijnd --- */
     .neu-btn-primary {
         @apply font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
-        background: #FF7F50;
+        background: var(--primary-color);
         color: white;
         border-radius: 0.75rem;
         padding: 0.625rem 1.25rem;
-        box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
+        box-shadow: 5px 5px 10px var(--neu-shadow-dark), -5px -5px 10px var(--neu-shadow-light);
     }
 
     .neu-btn-primary:hover {
-        background: #FF6347;
+        background: var(--primary-hover);
         transform: translateY(-2px);
     }
 
@@ -297,36 +484,36 @@
     /* --- Outline Button - Tertiary actions with neumorphic style --- */
     .neu-btn-outline {
         @apply font-bold transition-all duration-200 cursor-pointer inline-flex items-center justify-center;
-        background: #EFEEEE;
-        color: #FF7F50;
-        border: 2px solid #FF7F50;
+        background: var(--neu-bg);
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
         border-radius: 0.75rem;
         padding: 0.5rem 1.125rem;
-        box-shadow: 4px 4px 8px #D1D9E6, -4px -4px 8px #FFFFFF;
+        box-shadow: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
     }
 
     .neu-btn-outline:hover {
         background: rgba(255, 127, 80, 0.08);
         transform: translateY(-2px);
-        box-shadow: 5px 5px 12px #D1D9E6, -5px -5px 12px #FFFFFF;
+        box-shadow: 5px 5px 12px var(--neu-shadow-dark), -5px -5px 12px var(--neu-shadow-light);
     }
 
     .neu-btn-outline:active {
         transform: translateY(0);
-        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
+        box-shadow: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
     }
 
     /* --- Text Button - Tertiary actions, minimal styling --- */
     .neu-btn-text {
         @apply font-semibold transition-all duration-200 cursor-pointer inline-flex items-center justify-center gap-1;
         background: transparent;
-        color: #718096;
+        color: var(--text-muted);
         border-radius: 0.75rem;
         padding: 0.5rem 1rem;
     }
 
     .neu-btn-text:hover {
-        color: #FF7F50;
+        color: var(--primary-color);
         background: rgba(255, 127, 80, 0.08);
     }
 
@@ -336,22 +523,23 @@
 
     /* --- Icon Button - Circulair zoals Gemini --- */
     .neu-icon-btn {
-        @apply bg-neu-bg transition-all duration-200 cursor-pointer flex items-center justify-center;
-        color: #718096;
+        @apply transition-all duration-200 cursor-pointer flex items-center justify-center;
+        background: var(--neu-bg);
+        color: var(--text-muted);
         width: 44px;
         height: 44px;
         border-radius: 50%;
-        box-shadow: 5px 5px 10px #D1D9E6, -5px -5px 10px #FFFFFF;
+        box-shadow: 5px 5px 10px var(--neu-shadow-dark), -5px -5px 10px var(--neu-shadow-light);
     }
 
     .neu-icon-btn:hover {
-        color: #FF7F50;
+        color: var(--primary-color);
         transform: scale(1.05);
     }
 
     .neu-icon-btn:active {
         transform: scale(0.98);
-        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
+        box-shadow: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
     }
 
     /* --- Icon Container (voor iconen met achtergrond) --- */
@@ -360,8 +548,8 @@
         width: 3.5rem;
         height: 3.5rem;
         border-radius: 1rem;
-        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
-        background: #EFEEEE;
+        box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+        background: var(--neu-bg);
     }
 
     .neu-icon-container-sm {
@@ -369,35 +557,37 @@
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 0.75rem;
-        box-shadow: inset 2px 2px 4px #D1D9E6, inset -2px -2px 4px #FFFFFF;
-        background: #EFEEEE;
+        box-shadow: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+        background: var(--neu-bg);
     }
 
     /* --- Input Fields - Verfijnd --- */
     .neu-input {
-        @apply bg-neu-bg outline-none transition-all duration-200;
-        color: #4A5568;
+        @apply outline-none transition-all duration-200;
+        background: var(--neu-bg);
+        color: var(--text-secondary);
         font-weight: 600;
         border-radius: 1rem;
         padding: 1rem 1.5rem;
-        box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF;
+        box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
     }
 
     .neu-input::placeholder {
-        color: #A0AEC0;
+        color: var(--text-light);
     }
 
     .neu-input:focus {
-        box-shadow: inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF, 0 0 0 2px rgba(255, 127, 80, 0.2);
+        box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light), 0 0 0 2px rgba(255, 127, 80, 0.3);
     }
 
     /* --- Card Variants --- */
     .neu-card-lg {
-        @apply bg-neu-bg transition-all duration-200;
+        @apply transition-all duration-200;
+        background: var(--neu-bg);
         border-radius: 2rem;
         padding: 1.5rem;
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border);
     }
 
     @media (min-width: 640px) {
@@ -408,11 +598,12 @@
 
     /* --- Stat Card - Verfijnd --- */
     .neu-stat-card {
-        @apply bg-neu-bg flex flex-col justify-center items-center text-center transition-transform duration-300;
+        @apply flex flex-col justify-center items-center text-center transition-transform duration-300;
+        background: var(--neu-bg);
         border-radius: 1.5rem;
         padding: 1.25rem;
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
-        border: 1px solid rgba(255,255,255,0.4);
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border);
     }
 
     .neu-stat-card:hover {
@@ -423,14 +614,14 @@
     .neu-progress {
         @apply w-full overflow-hidden;
         height: 0.625rem;
-        background: #E5E7EB;
+        background: var(--gray-200);
         border-radius: 9999px;
         box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
     }
 
     .neu-progress-bar {
         @apply h-full transition-all duration-1000;
-        background: #FF7F50;
+        background: var(--primary-color);
         border-radius: 9999px;
     }
 
@@ -438,7 +629,15 @@
     /* Default/requested skill: subtle outline style */
     .skill-badge {
         @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
-        @apply bg-white/50 text-gray-600 border border-gray-300;
+        background: rgba(255, 255, 255, 0.5);
+        color: var(--text-secondary);
+        border: 1px solid var(--gray-300);
+    }
+
+    .dark .skill-badge {
+        background: rgba(61, 46, 38, 0.6);
+        color: var(--text-secondary);
+        border-color: var(--gray-400);
     }
 
     /* Own/matching skill: prominent solid coral - this skill matches! */
@@ -636,9 +835,9 @@
     /* --- Segmented Control (Tab buttons) --- */
     .neu-segment-container {
         @apply flex gap-2 p-1.5;
-        background: #EFEEEE;
+        background: var(--neu-bg);
         border-radius: 0.75rem;
-        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+        box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
     }
 
     .neu-segment-btn {
@@ -647,26 +846,30 @@
         font-size: 0.75rem;
         font-weight: 700;
         border-radius: 0.5rem;
-        color: #718096;
+        color: var(--text-muted);
     }
 
     .neu-segment-btn:hover {
-        color: #4A5568;
+        color: var(--text-secondary);
         background: rgba(229, 231, 235, 0.5);
     }
 
+    .dark .neu-segment-btn:hover {
+        background: rgba(61, 46, 38, 0.5);
+    }
+
     .neu-segment-btn.active {
-        color: #FF7F50;
-        background: #EFEEEE;
-        box-shadow: 6px 6px 12px #D1D9E6, -6px -6px 12px #FFFFFF;
+        color: var(--primary-color);
+        background: var(--neu-bg);
+        box-shadow: 6px 6px 12px var(--neu-shadow-dark), -6px -6px 12px var(--neu-shadow-light);
     }
 
     /* --- Project Card (Inner Card) --- */
     .neu-project-card {
         @apply overflow-hidden flex flex-col transition-all duration-300;
-        background: #EFEEEE;
+        background: var(--neu-bg);
         border-radius: 1rem;
-        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
+        box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
     }
 
     /* --- Section Header --- */
@@ -674,12 +877,12 @@
         @apply flex items-center gap-3;
         font-size: 1.5rem;
         font-weight: 800;
-        color: #374151;
+        color: var(--text-primary);
     }
 
     .neu-section-header .material-symbols-outlined {
         font-size: 1.875rem;
-        color: #FF7F50;
+        color: var(--primary-color);
     }
 
     /* --- Label Styling --- */
@@ -688,7 +891,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.1em;
-        color: #9CA3AF;
+        color: var(--text-muted);
     }
 
     .neu-label-sm {
@@ -696,7 +899,7 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #9CA3AF;
+        color: var(--text-muted);
     }
 
     /* --- Custom Scrollbar --- */
@@ -709,12 +912,12 @@
     }
 
     ::-webkit-scrollbar-thumb {
-        background: #CBD5E0;
+        background: var(--scrollbar-thumb);
         border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: #A0AEC0;
+        background: var(--scrollbar-thumb-hover);
     }
 
     /* --- Animations --- */
@@ -762,15 +965,20 @@
         border-radius: 0.75rem;
         font-size: 0.75rem;
         font-weight: 700;
-        color: #6B7280;
+        color: var(--text-muted);
         background: rgba(255, 255, 255, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.5);
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
+    .dark .neu-task-box {
+        background: rgba(61, 46, 38, 0.4);
+        border: 1px solid rgba(255, 140, 90, 0.15);
+    }
+
     .neu-task-box .material-symbols-outlined {
         font-size: 0.875rem;
-        color: #FF7F50;
+        color: var(--primary-color);
     }
 
     /* --- Online Status Indicator --- */
@@ -779,20 +987,89 @@
         height: 0.75rem;
         background: #4ade80;
         border-radius: 9999px;
-        border: 2px solid #EFEEEE;
+        border: 2px solid var(--neu-bg);
     }
 
     /* --- Nav Link Active State --- */
     .nav-link.active {
-        box-shadow: inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF;
-        color: #FF7F50;
+        box-shadow: inset 3px 3px 6px var(--neu-shadow-dark), inset -3px -3px 6px var(--neu-shadow-light);
+        color: var(--primary-color);
     }
 
     /* --- Selection Color --- */
     ::selection {
-        background: #FF7F50;
+        background: var(--primary-color);
         color: white;
     }
+}
+
+/* ===========================================
+   HIGH CONTRAST MODE OVERRIDES
+   Removes neumorphic shadows for clearer borders
+   =========================================== */
+.high-contrast .neu-flat,
+.high-contrast .neu-flat-xl,
+.high-contrast .neu-flat-interactive,
+.high-contrast .neu-card-lg,
+.high-contrast .neu-stat-card {
+    box-shadow: none;
+    border: 2px solid var(--neu-border);
+}
+
+.high-contrast .neu-pressed,
+.high-contrast .neu-pressed-deep,
+.high-contrast .neu-segment-container,
+.high-contrast .neu-project-card,
+.high-contrast .neu-icon-container,
+.high-contrast .neu-icon-container-sm,
+.high-contrast .neu-input {
+    box-shadow: none;
+    border: 2px solid var(--neu-border);
+}
+
+.high-contrast .neu-btn,
+.high-contrast .neu-btn-outline,
+.high-contrast .neu-icon-btn {
+    box-shadow: none;
+    border: 2px solid var(--neu-border);
+}
+
+.high-contrast .neu-btn:hover,
+.high-contrast .neu-btn-outline:hover,
+.high-contrast .neu-icon-btn:hover {
+    box-shadow: none;
+    border-color: var(--primary-color);
+}
+
+.high-contrast .neu-btn:active,
+.high-contrast .neu-btn-outline:active,
+.high-contrast .neu-icon-btn:active {
+    box-shadow: none;
+    background: var(--gray-200);
+}
+
+.high-contrast .neu-btn-primary {
+    box-shadow: none;
+    border: 2px solid var(--primary-color);
+}
+
+.high-contrast .neu-input:focus {
+    box-shadow: none;
+    border-color: var(--primary-color);
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* High contrast focus indicators */
+.high-contrast *:focus {
+    outline: 3px solid var(--primary-color) !important;
+    outline-offset: 2px !important;
+}
+
+.high-contrast a:focus,
+.high-contrast button:focus {
+    outline: 3px solid var(--primary-color) !important;
+    outline-offset: 2px !important;
 }
 
 /* Leaflet map z-index fixes */
