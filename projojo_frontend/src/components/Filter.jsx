@@ -513,9 +513,9 @@ export default function Filter({ onFilter, businesses = [] }) {
                                 aria-pressed={showOnlyMatches}
                             >
                                 <span className="material-symbols-outlined text-sm mr-1">
-                                    {showOnlyMatches ? 'visibility' : 'visibility_off'}
+                                    {showOnlyMatches ? 'close' : 'filter_alt'}
                                 </span>
-                                {showOnlyMatches ? 'Toon alle' : 'Mijn skills'}
+                                {showOnlyMatches ? 'Toon alles' : 'Alleen mijn matches'}
                             </button>
                         )}
                         
