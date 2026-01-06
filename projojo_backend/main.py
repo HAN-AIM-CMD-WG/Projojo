@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
@@ -67,6 +68,10 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=SESSIONS_SECRET_KEY
 )
+
+# Trust proxy headers from Traefik (X-Forwarded-Proto, X-Forwarded-For)
+# This ensures request.url_for() generates HTTPS URLs when behind a reverse proxy
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 @app.middleware("http")
 async def print_headers(request: Request, call_next):

@@ -38,5 +38,7 @@ COPY . .
 EXPOSE ${BACKEND_PORT}
 # Print environment variables for debugging
 RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
-CMD ["sh", "-c", "echo 'B: Starting production server...' && env | sort && uv run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT} --log-level debug"]
+# --proxy-headers: Trust X-Forwarded-Proto header from Traefik for HTTPS detection
+# --forwarded-allow-ips "*": Allow proxy headers from any IP (Traefik runs in Docker network)
+CMD ["sh", "-c", "echo 'B: Starting production server...' && env | sort && uv run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT} --proxy-headers --forwarded-allow-ips '*' --log-level info"]
 

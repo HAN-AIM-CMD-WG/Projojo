@@ -9,7 +9,8 @@
 services:
   typedb:
     # https://github.com/typedb/typedb/releases/tag/3.4.0
-    container_name: projojo_typedb
+    # Note: container_name moved to docker-compose.yml for development use only
+    # Preview/Dokploy uses auto-generated names to avoid conflicts between projects
     image: typedb/typedb:3.4.0
     restart: unless-stopped
     ports:
@@ -20,7 +21,6 @@ services:
     platform: linux/amd64
 
   backend:
-    container_name: projojo_backend
     depends_on:
       - typedb
     build:
@@ -31,11 +31,8 @@ services:
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"  # Host:Container - Backend uses same port internally
-    networks:
-      - projojo-network
 
   frontend:
-    container_name: projojo_frontend
     build:
       context: ./projojo_frontend
     environment:
@@ -43,8 +40,7 @@ services:
       - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
       - VITE_APP_NAME=${VITE_APP_NAME}
       - VITE_APP_VERSION=${VITE_APP_VERSION}
-    networks:
-      - projojo-network
+    # Note: networks defined per environment in docker-compose.yml and docker-compose.preview.yml
 
 volumes:
   typedb-data:

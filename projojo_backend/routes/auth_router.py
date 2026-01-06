@@ -43,6 +43,10 @@ async def auth_login(
 ):
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
+    
+    # Force HTTPS when behind reverse proxy (non-development environments)
+    if not IS_DEVELOPMENT:
+        redirect_uri = str(redirect_uri).replace('http://', 'https://')
 
     # Get frontend URL from the request and store it in the session
     frontend_url = get_frontend_url_from_login(request)

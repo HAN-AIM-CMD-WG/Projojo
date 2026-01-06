@@ -1,8 +1,13 @@
 from environs import Env
 
 env = Env(expand_vars=True, eager=False)
-env.read_env(".env.preview", recurse=True, override=True)
-env.read_env(".env", recurse=True, override=True)
+
+# Read .env file with override=False so that actual environment variables
+# (set by Dokploy/Docker) take precedence over file values.
+# This allows:
+# - Production/Preview: Real env vars from Dokploy override any file values
+# - Development: .env file provides local defaults (copy from .env.example)
+env.read_env(".env", recurse=True, override=False)
 
 # Environment
 ENVIRONMENT: str = env.str("ENVIRONMENT", "none")

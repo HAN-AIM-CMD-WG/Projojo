@@ -70,8 +70,9 @@ graph TB
     end
     
     User -->|"HTTPS"| Traefik
-    Traefik -->|"projojo.dp..."| Frontend
-    Traefik -->|"backend.projojo..."| Backend
+    Traefik -->|"preview.projojo.nl"| Frontend
+    Traefik -->|"backend.preview..."| Backend
+    Traefik -->|"typedb.preview..."| TypeDB
     Frontend -.->|"via browser"| Backend
     Backend -->|"TypeQL"| TypeDB
     
@@ -83,10 +84,10 @@ graph TB
 
 ### Quick Reference
 
-| Environment | Docker Compose File | Env File | Purpose |
-|-------------|-------------------|----------|---------|
-| Development | `docker-compose.yml` | `.env` | Local development with hot reload |
-| Preview | `docker-compose.preview.yml` | `.env.preview` | Staging on Dokploy |
+| Environment | Docker Compose File | Env Source | Purpose |
+|-------------|-------------------|------------|---------|
+| Development | `docker-compose.yml` | `.env` (local file) | Local development with hot reload |
+| Preview | `docker-compose.preview.yml` | Dokploy UI → `.env` | Staging on Dokploy |
 | (Shared) | `docker-compose.base.yml` | — | Common service definitions |
 
 ---
@@ -134,16 +135,15 @@ ports:
 |------|------------|---------|
 | `.env.example` | ✅ Yes | Template with documentation |
 | `.env` | ❌ No | Local development (copy from .example) |
-| `.env.preview` | ✅ Yes | Preview environment (no secrets!) |
 
 ### File Usage
 
 ```
-Development:  docker-compose.yml      → reads .env
-Preview:      docker-compose.preview.yml → reads .env.preview
+Development:  docker-compose.yml  → reads local .env file
+Preview:      Dokploy Environment UI → generates .env file in container
 ```
 
-> **Note**: The backend's `settings.py` reads both `.env.preview` and `.env` files (with `.env` taking priority). This allows local overrides during development.
+> **Note**: For Dokploy deployments, configure all environment variables in Dokploy's Environment tab. Dokploy writes these to a `.env` file that Docker Compose reads automatically.
 
 ### Secrets Management
 
@@ -154,7 +154,7 @@ Preview:      docker-compose.preview.yml → reads .env.preview
 | JWT secrets | `.env` file | Dokploy UI |
 | SMTP password | `.env` file | Dokploy UI |
 
-**Never commit secrets to `.env.preview`** — set them in Dokploy's environment UI.
+**Never commit secrets** — always set them in Dokploy's Environment UI for preview/staging.
 
 ### Variable Naming
 
@@ -261,15 +261,16 @@ volumes:
 Dokploy uses Traefik as reverse proxy:
 
 ```
-projojo.dp.demopreview.nl         → Frontend container
-backend.projojo.dp.demopreview.nl → Backend container
+preview.projojo.nl         → Frontend container
+backend.preview.projojo.nl → Backend container
+typedb.preview.projojo.nl  → TypeDB HTTP API
 ```
 
 ### Public URLs
 
 ```env
-FRONTEND_URL=https://projojo.dp.demopreview.nl
-VITE_BACKEND_HOST=backend.projojo.dp.demopreview.nl
+FRONTEND_URL=https://preview.projojo.nl
+VITE_BACKEND_HOST=backend.preview.projojo.nl
 VITE_BACKEND_PORT=443
 ```
 
@@ -348,7 +349,7 @@ graph TB
     Base --> Preview
     
     Dev -.->|"reads"| EnvDev[".env"]
-    Preview -.->|"reads"| EnvPrev[".env.preview"]
+    Preview -.->|"reads"| DokployEnv["Dokploy UI → .env"]
     
     style Base fill:#e1f5fe
     style Dev fill:#c8e6c9

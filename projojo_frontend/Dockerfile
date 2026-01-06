@@ -20,15 +20,23 @@ FROM base AS development
 RUN echo "=== F: DEVELOPMENT STAGE ENVIRONMENT ===" && env | sort || true
 CMD ["sh", "-c", "echo 'F: Starting development server on port ${FRONTEND_PORT:-5173}...' && echo 'Environment:' && env | sort && npm run dev"]
 
-# Preview stage - copies source code and builds for production
+# Preview stage - builds for production and serves with 'serve' package
+# Uses 'serve' instead of Vite preview server to avoid host restriction issues
 FROM base AS preview
 ARG VITE_BACKEND_HOST
 ARG VITE_BACKEND_PORT
 ENV VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
 ENV VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
-# FRONTEND_PORT is set via env_file in docker-compose
-RUN echo "=== F: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
+
+# Install serve globally for serving static files
+RUN npm install -g serve
+
+# Copy source and build
 COPY . .
+RUN echo "=== F: PREVIEW STAGE BUILD ===" && env | sort || true
 RUN npm run build
-# Print environment variables for debugging
-CMD ["sh", "-c", "echo 'F: Starting preview server on port ${FRONTEND_PORT:-4173}...' && echo 'Environment:' && env | sort && npm run preview"]
+
+# Serve the built static files
+# -s: Single-page app mode (redirects 404s to index.html for client-side routing)
+# -l: Listen on specified port
+CMD ["sh", "-c", "echo 'F: Serving static build on port ${FRONTEND_PORT:-10101}...' && serve -s dist -l ${FRONTEND_PORT:-10101}"]

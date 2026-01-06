@@ -1,11 +1,12 @@
-# This is the Docker Compose file for Projojo, used in development. 
-# In preview, use docker-compose.preview.yml, which includes this file, and overrides some settings.
+# This is the Docker Compose file for Projojo, used in development.
+# In preview, use docker-compose.preview.yml, which uses different network and container naming.
 
 services:
   typedb:
     extends:
       file: docker-compose.base.yml
       service: typedb
+    container_name: projojo_typedb  # Explicit name for development
     env_file:
       - .env
     networks:
@@ -15,6 +16,7 @@ services:
     extends:
       file: docker-compose.base.yml
       service: backend
+    container_name: projojo_backend  # Explicit name for development
     build:
       target: development  # Use development stage
     env_file:
@@ -30,6 +32,7 @@ services:
     extends:
       file: docker-compose.base.yml
       service: frontend
+    container_name: projojo_frontend  # Explicit name for development
     build:
       target: development  # Use development stage
     env_file:

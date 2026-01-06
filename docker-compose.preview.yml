@@ -1,52 +1,110 @@
-# This is the Preview Docker Compose file for Projojo, which uses environment variables set in Dokploy's UI.
-# It includes the base Docker Compose file and overrides some settings for preview use.
+# This is the Preview Docker Compose file for Projojo, optimized for Dokploy deployment.
+#
+# Key differences from development:
+# - Traefik labels for HTTPS routing via Dokploy's reverse proxy
+# - Unique internal network (projojo-preview-network) to isolate from other deployments
+# - dokploy-network (external) for Traefik connectivity
+# - No container_name - auto-generated to avoid conflicts between projects
+# - No volume mounts - code is built into container images
+# - No env_file directive - Dokploy creates .env from its UI, docker-compose reads it automatically
+
 services:
   typedb:
     extends:
       file: docker-compose.base.yml
       service: typedb
-    env_file:
-      - .env.preview  
+    # env_file removed - Dokploy generates .env from UI, docker-compose reads it by default
     networks:
-      - projojo-network
+      - projojo-preview-network  # Internal service-to-service communication
+      - dokploy-network          # External access via Traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.projojo-preview-typedb.rule=Host(`typedb.preview.projojo.nl`)"
+      - "traefik.http.routers.projojo-preview-typedb.entrypoints=websecure"
+      - "traefik.http.routers.projojo-preview-typedb.tls.certResolver=letsencrypt"
+      - "traefik.http.services.projojo-preview-typedb.loadbalancer.server.port=8000"
+      - "traefik.docker.network=dokploy-network"
 
   backend:
     extends:
       file: docker-compose.base.yml
       service: backend
     build:
+      context: ./projojo_backend
       target: preview  # Use preview stage
-    env_file:
-      - .env.preview  
     environment:
-      - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD} 
-      - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
-      - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
-      - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
-    # No volumes for preview (source code copied into container)
+      # Python settings
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPATH=/app
+      # Environment & Ports
+      - ENVIRONMENT=${ENVIRONMENT}
+      - BACKEND_PORT=${BACKEND_PORT}
+      - FRONTEND_URL=${FRONTEND_URL}
+      # Session & Security
+      - SESSIONS_SECRET_KEY=${SESSIONS_SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      # OAuth Providers
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID}
+      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET}
+      # TypeDB Configuration
+      - TYPEDB_SERVER_ADDR=${TYPEDB_SERVER_ADDR}
+      - TYPEDB_NAME=${TYPEDB_NAME}
+      - TYPEDB_USERNAME=${TYPEDB_USERNAME}
+      - TYPEDB_DEFAULT_PASSWORD=${TYPEDB_DEFAULT_PASSWORD}
+      - TYPEDB_NEW_PASSWORD=${TYPEDB_NEW_PASSWORD}
+      # Email Configuration
+      - EMAIL_DEFAULT_SENDER=${EMAIL_DEFAULT_SENDER}
+      - EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST}
+      - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT}
+      - EMAIL_SMTP_USERNAME=${EMAIL_SMTP_USERNAME}
+      - EMAIL_SMTP_PASSWORD=${EMAIL_SMTP_PASSWORD}
     networks:
-      - projojo-network
-    
+      - projojo-preview-network  # Connects to typedb via this network
+      - dokploy-network          # External access via Traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.projojo-preview-backend.rule=Host(`backend.preview.projojo.nl`)"
+      - "traefik.http.routers.projojo-preview-backend.entrypoints=websecure"
+      - "traefik.http.routers.projojo-preview-backend.tls.certResolver=letsencrypt"
+      - "traefik.http.services.projojo-preview-backend.loadbalancer.server.port=10102"
+      - "traefik.docker.network=dokploy-network"
+
   frontend:
     extends:
       file: docker-compose.base.yml
       service: frontend
     build:
+      context: ./projojo_frontend
       target: preview  # Use preview stage
       args:
         - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
         - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
-    env_file:
-      - .env.preview
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"  # Same port inside and outside container
-    # No volumes for preview (source code copied into container)
+    environment:
+      - FRONTEND_PORT=${FRONTEND_PORT}
     networks:
-      - projojo-network
+      - projojo-preview-network  # Could call backend internally if needed
+      - dokploy-network          # External access via Traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.projojo-preview-frontend.rule=Host(`preview.projojo.nl`)"
+      - "traefik.http.routers.projojo-preview-frontend.entrypoints=websecure"
+      - "traefik.http.routers.projojo-preview-frontend.tls.certResolver=letsencrypt"
+      - "traefik.http.services.projojo-preview-frontend.loadbalancer.server.port=10101"
+      - "traefik.docker.network=dokploy-network"
 
 volumes:
   typedb-data:
 
 networks:
-  projojo-network:
-    driver: bridge    
+  projojo-preview-network:
+    # Internal network for service-to-service communication
+    # Isolated from other Dokploy projects to prevent DNS conflicts
+    driver: bridge
+  dokploy-network:
+    # Pre-existing Dokploy network for Traefik routing
+    external: true
