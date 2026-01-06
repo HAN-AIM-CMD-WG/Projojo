@@ -28,8 +28,8 @@ export default function EmailNotFound() {
             <div className="neu-flat rounded-2xl p-8">
                 <div className="text-center mb-6">
                     <span className="material-symbols-outlined text-5xl text-primary mb-4">mail</span>
-                    <h2 className="text-2xl font-extrabold text-gray-800">Email niet gevonden</h2>
-                    <p className="text-gray-500 mt-2">Uw email kon niet opgehaald worden bij het maken van uw account. Voer deze hieronder in.</p>
+                    <h2 className="text-2xl font-extrabold text-[var(--text-primary)]">Email niet gevonden</h2>
+                    <p className="text-[var(--text-muted)] mt-2">Uw email kon niet opgehaald worden bij het maken van uw account. Voer deze hieronder in.</p>
                 </div>
                 
                 <form className="flex flex-col gap-4" onSubmit={onSubmit}>

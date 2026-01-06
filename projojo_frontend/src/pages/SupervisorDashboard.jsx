@@ -51,17 +51,17 @@ export default function SupervisorDashboard() {
         return (
             <div className="space-y-6">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+                    <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
                         {getGreeting()}!
                     </h1>
-                    <p className="text-sm text-gray-500 font-medium mt-1">
+                    <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
                         Welkom bij Projojo
                     </p>
                 </div>
                 
                 <div className="neu-flat p-8 text-center">
                     <span className="material-symbols-outlined text-4xl text-gray-400 mb-3">business</span>
-                    <p className="text-gray-600 font-medium">
+                    <p className="text-[var(--text-secondary)] font-medium">
                         Dit dashboard is alleen beschikbaar voor supervisors.
                     </p>
                     <Link to="/ontdek" className="neu-btn-primary mt-4 inline-flex items-center gap-2">
@@ -77,10 +77,10 @@ export default function SupervisorDashboard() {
         <div className="space-y-6">
             {/* Welcome header */}
             <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
                     {getGreeting()}!
                 </h1>
-                <p className="text-sm text-gray-500 font-medium mt-1">
+                <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
                     {dashboardData?.stats?.pending_count > 0 ? (
                         <>
                             Je hebt <span className="text-primary font-bold">{dashboardData.stats.pending_count}</span> openstaande {dashboardData.stats.pending_count === 1 ? 'aanmelding' : 'aanmeldingen'}
@@ -110,7 +110,7 @@ export default function SupervisorDashboard() {
                         {/* Pending Registrations Section */}
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
-                                <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                                <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
                                     <span className="material-symbols-outlined text-primary">pending_actions</span>
                                     Openstaande Aanmeldingen
                                 </h2>
@@ -122,7 +122,7 @@ export default function SupervisorDashboard() {
                             {(!dashboardData?.pending_registrations || dashboardData.pending_registrations.length === 0) ? (
                                 <div className="neu-pressed p-6 text-center">
                                     <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inbox</span>
-                                    <p className="text-gray-500 text-sm">
+                                    <p className="text-[var(--text-muted)] text-sm">
                                         Geen openstaande aanmeldingen
                                     </p>
                                 </div>
@@ -142,7 +142,7 @@ export default function SupervisorDashboard() {
                         {/* Projects Section */}
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
-                                <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                                <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
                                     <span className="material-symbols-outlined text-primary">folder</span>
                                     Mijn Projecten
                                 </h2>
@@ -154,7 +154,7 @@ export default function SupervisorDashboard() {
                             {(!dashboardData?.projects || dashboardData.projects.length === 0) ? (
                                 <div className="neu-pressed p-6 text-center">
                                     <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">folder_off</span>
-                                    <p className="text-gray-500 text-sm mb-4">
+                                    <p className="text-[var(--text-muted)] text-sm mb-4">
                                         Nog geen projecten aangemaakt
                                     </p>
                                     <Link to="/projects/add" className="neu-btn-primary inline-flex items-center gap-2">
@@ -185,7 +185,7 @@ export default function SupervisorDashboard() {
                         {/* Active Students Section */}
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
-                                <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                                <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
                                     <span className="material-symbols-outlined text-green-500">group</span>
                                     Actieve Studenten
                                 </h2>
@@ -197,7 +197,7 @@ export default function SupervisorDashboard() {
                             {(!dashboardData?.active_students || dashboardData.active_students.length === 0) ? (
                                 <div className="neu-pressed p-6 text-center">
                                     <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">person_off</span>
-                                    <p className="text-gray-500 text-sm">
+                                    <p className="text-[var(--text-muted)] text-sm">
                                         Nog geen actieve studenten
                                     </p>
                                 </div>
@@ -218,7 +218,7 @@ export default function SupervisorDashboard() {
                     <div className="space-y-6">
                         {/* Quick Stats */}
                         <section className="neu-flat p-5">
-                            <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-4">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
                                 Statistieken
                             </h3>
                             <div className="space-y-3">
@@ -232,7 +232,7 @@ export default function SupervisorDashboard() {
                                     icon="task" 
                                     label="Taken" 
                                     value={dashboardData?.stats?.total_tasks || 0}
-                                    color="text-gray-500"
+                                    color="text-[var(--text-muted)]"
                                 />
                                 <StatItem 
                                     icon="hourglass_top" 
@@ -251,7 +251,7 @@ export default function SupervisorDashboard() {
 
                         {/* Quick Actions */}
                         <section className="neu-flat p-5">
-                            <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-4">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
                                 Snelle acties
                             </h3>
                             <div className="space-y-2">
@@ -275,8 +275,8 @@ export default function SupervisorDashboard() {
                             <div className="flex items-start gap-3">
                                 <span className="material-symbols-outlined text-primary">lightbulb</span>
                                 <div>
-                                    <h4 className="font-bold text-gray-700 text-sm">Tip</h4>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <h4 className="font-bold text-[var(--text-primary)] text-sm">Tip</h4>
+                                    <p className="text-xs text-[var(--text-muted)] mt-1">
                                         Reageer snel op aanmeldingen om gemotiveerde studenten te behouden voor je projecten.
                                     </p>
                                 </div>
@@ -350,11 +350,11 @@ function RegistrationCard({ registration, onUpdate }) {
                     <div>
                         <Link 
                             to={`/student/${registration.student_id}`}
-                            className="font-bold text-gray-700 hover:text-primary transition-colors text-lg"
+                            className="font-bold text-[var(--text-primary)] hover:text-primary transition-colors text-lg"
                         >
                             {registration.student_name}
                         </Link>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-[var(--text-muted)] mt-1">
                             Student
                         </p>
                         {/* Skills compact */}
@@ -367,7 +367,7 @@ function RegistrationCard({ registration, onUpdate }) {
                                     />
                                 ))}
                                 {registration.student_skills.length > 3 && (
-                                    <span className="text-xs text-gray-400 self-center">+{registration.student_skills.length - 3}</span>
+                                    <span className="text-xs text-[var(--text-muted)] self-center">+{registration.student_skills.length - 3}</span>
                                 )}
                             </div>
                         )}
@@ -380,10 +380,10 @@ function RegistrationCard({ registration, onUpdate }) {
                         <div className="flex items-start gap-3 mb-3">
                             <span className="material-symbols-outlined text-primary text-lg">task</span>
                             <div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wide">Taak</p>
+                                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Taak</p>
                                 <Link 
                                     to={`/projects/${registration.project_id}#task-${registration.task_id}`}
-                                    className="font-bold text-gray-700 hover:text-primary transition-colors"
+                                    className="font-bold text-[var(--text-primary)] hover:text-primary transition-colors"
                                 >
                                     {registration.task_name}
                                 </Link>
@@ -392,8 +392,8 @@ function RegistrationCard({ registration, onUpdate }) {
                         <div className="flex items-start gap-3">
                             <span className="material-symbols-outlined text-gray-400 text-lg">folder</span>
                             <div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wide">Project</p>
-                                <p className="font-semibold text-gray-600">{registration.project_name}</p>
+                                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Project</p>
+                                <p className="font-semibold text-[var(--text-secondary)]">{registration.project_name}</p>
                             </div>
                         </div>
                     </div>
@@ -401,8 +401,8 @@ function RegistrationCard({ registration, onUpdate }) {
                     {/* Motivation */}
                     {registration.motivation && (
                         <div className="mt-3">
-                            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Motivatie</p>
-                            <p className="text-sm text-gray-600 font-normal">
+                            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1">Motivatie</p>
+                            <p className="text-sm text-[var(--text-secondary)] font-normal">
                                 {registration.motivation}
                             </p>
                         </div>
@@ -423,7 +423,7 @@ function RegistrationCard({ registration, onUpdate }) {
                     {showResponse ? (
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs text-gray-400 uppercase tracking-wide mb-1 block">
+                                <label className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1 block">
                                     {actionType === 'accept' ? 'Bericht (optioneel)' : 'Reden (optioneel)'}
                                 </label>
                                 <textarea
@@ -495,7 +495,7 @@ function ActiveStudentCard({ student }) {
                     }}
                 />
                 <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-700 text-lg">
+                    <p className="font-bold text-[var(--text-primary)] text-lg">
                         {student.student_name}
                     </p>
                     <span className="neu-badge-success-solid text-xs">Actief</span>
@@ -507,15 +507,15 @@ function ActiveStudentCard({ student }) {
                 <div className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-gray-400 text-sm mt-0.5">folder</span>
                     <div>
-                        <p className="text-xs text-gray-400 uppercase tracking-wide">Project</p>
-                        <p className="text-sm font-semibold text-gray-700">{student.project_name}</p>
+                        <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Project</p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">{student.project_name}</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-2">
                     <span className="material-symbols-outlined text-primary text-sm mt-0.5">task</span>
                     <div>
-                        <p className="text-xs text-gray-400 uppercase tracking-wide">Taak</p>
-                        <p className="text-sm font-semibold text-gray-700">{student.task_name}</p>
+                        <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Taak</p>
+                        <p className="text-sm font-semibold text-[var(--text-primary)]">{student.task_name}</p>
                     </div>
                 </div>
             </div>
@@ -552,10 +552,10 @@ function ProjectCard({ project, pendingCount = 0 }) {
                     )}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-700 text-base leading-tight">
+                    <h4 className="font-bold text-[var(--text-primary)] text-base leading-tight">
                         {project.name}
                     </h4>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
                         Project
                     </p>
                 </div>
@@ -563,10 +563,10 @@ function ProjectCard({ project, pendingCount = 0 }) {
             
             {/* Stats */}
             <div className="flex items-center gap-4 mb-3">
-                <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                <div className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
                     <span className="material-symbols-outlined text-base text-gray-400">task</span>
                     <span className="font-semibold">{taskCount}</span>
-                    <span className="text-gray-400">{taskCount === 1 ? 'taak' : 'taken'}</span>
+                    <span className="text-[var(--text-muted)]">{taskCount === 1 ? 'taak' : 'taken'}</span>
                 </div>
                 {/* Pending registrations indicator */}
                 {pendingCount > 0 && (
@@ -605,9 +605,9 @@ function StatItem({ icon, label, value, color }) {
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <span className={`material-symbols-outlined text-lg ${color}`}>{icon}</span>
-                <span className="text-sm text-gray-600">{label}</span>
+                <span className="text-sm text-[var(--text-secondary)]">{label}</span>
             </div>
-            <span className="font-bold text-gray-700">{value}</span>
+            <span className="font-bold text-[var(--text-primary)]">{value}</span>
         </div>
     );
 }

@@ -95,16 +95,15 @@ export default function Modal({
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby={titleId}
-                    className="rounded-3xl overflow-hidden"
+                    className="rounded-3xl overflow-hidden bg-[var(--neu-bg)] border border-[var(--neu-border)]"
                     style={{ 
-                        background: 'linear-gradient(145deg, #f5f4f4, #ffffff)',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)'
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.2)'
                     }}
                 >
                     {/* Header met gradient accent */}
                     <div 
-                        className="px-6 py-5 border-b border-gray-100"
-                        style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}
+                        className="px-6 py-5 border-b border-[var(--neu-border)]"
+                        style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.05) 0%, transparent 100%)' }}
                     >
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -117,18 +116,18 @@ export default function Modal({
                                     </div>
                                 )}
                                 <div>
-                                    <h2 id={titleId} className="text-lg font-bold text-gray-800">
+                                    <h2 id={titleId} className="text-lg font-bold text-[var(--text-primary)]">
                                         {modalHeader}
                                     </h2>
                                     {modalSubtitle && (
-                                        <p className="text-xs text-gray-500 font-medium">{modalSubtitle}</p>
+                                        <p className="text-xs text-[var(--text-muted)] font-medium">{modalSubtitle}</p>
                                     )}
                                 </div>
                             </div>
                             <button
                                 ref={closeButtonRef}
                                 onClick={() => setIsModalOpen(false)}
-                                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                className="w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--gray-200)]/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
                                 type="button"
                                 aria-label="Modal sluiten"
                             >

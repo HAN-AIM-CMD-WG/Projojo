@@ -146,7 +146,7 @@ export default function UpdateStudentPage() {
                 <div className="neu-flat p-8 rounded-2xl">
                     <div className="flex items-center gap-3">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-gray-600 font-medium">Profiel laden...</span>
+                        <span className="text-[var(--text-secondary)] font-medium">Profiel laden...</span>
                     </div>
                 </div>
             </div>
@@ -166,8 +166,8 @@ export default function UpdateStudentPage() {
                         <span className="material-symbols-outlined">arrow_back</span>
                     </Link>
                     <div>
-                        <h1 className="text-2xl font-extrabold text-gray-800">Profiel bewerken</h1>
-                        <p className="text-sm text-gray-500">Pas je gegevens aan</p>
+                        <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Profiel bewerken</h1>
+                        <p className="text-sm text-[var(--text-muted)]">Pas je gegevens aan</p>
                     </div>
                 </div>
             </div>
@@ -177,7 +177,7 @@ export default function UpdateStudentPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Photo Section */}
                     <div className="neu-flat p-6 rounded-2xl">
-                        <h2 className="font-bold text-gray-700 flex items-center gap-2 mb-4">
+                        <h2 className="font-bold text-[var(--text-primary)] flex items-center gap-2 mb-4">
                             <span className="material-symbols-outlined text-primary">photo_camera</span>
                             Profielfoto
                         </h2>
@@ -225,7 +225,7 @@ export default function UpdateStudentPage() {
                                 />
                             </label>
                             
-                            <p className="text-xs text-gray-400 mt-3 text-center">
+                            <p className="text-xs text-[var(--text-muted)] mt-3 text-center">
                                 JPG, PNG of GIF<br/>Max 5MB
                             </p>
                         </div>
@@ -233,28 +233,28 @@ export default function UpdateStudentPage() {
 
                     {/* Bio Section */}
                     <div className="lg:col-span-2 neu-flat p-6 rounded-2xl">
-                        <h2 className="font-bold text-gray-700 flex items-center gap-2 mb-4">
+                        <h2 className="font-bold text-[var(--text-primary)] flex items-center gap-2 mb-4">
                             <span className="material-symbols-outlined text-primary">person</span>
                             Over jou
                         </h2>
 
                         {/* Name (readonly) */}
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-600 mb-2">
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Naam
                             </label>
-                            <div className="neu-pressed px-4 py-3 rounded-xl text-gray-700 font-medium flex items-center gap-2">
+                            <div className="neu-pressed px-4 py-3 rounded-xl text-[var(--text-primary)] font-medium flex items-center gap-2">
                                 <span className="material-symbols-outlined text-gray-400 text-lg">badge</span>
                                 {data?.full_name}
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-[var(--text-muted)] mt-1">
                                 Neem contact op met een docent om je naam te wijzigen
                             </p>
                         </div>
 
                         {/* Bio */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-2">
+                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Bio <span className="text-primary">*</span>
                             </label>
                             <RichTextEditor
@@ -272,10 +272,10 @@ export default function UpdateStudentPage() {
                 {/* CV Section */}
                 <div className="neu-flat p-6 rounded-2xl">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="font-bold text-gray-700 flex items-center gap-2">
+                        <h2 className="font-bold text-[var(--text-primary)] flex items-center gap-2">
                             <span className="material-symbols-outlined text-primary">description</span>
                             Curriculum Vitae
-                            <span className="text-xs font-normal text-gray-400 ml-1">(optioneel)</span>
+                            <span className="text-xs font-normal text-[var(--text-muted)] ml-1">(optioneel)</span>
                         </h2>
                         
                         {cvPreview && (
@@ -314,10 +314,10 @@ export default function UpdateStudentPage() {
                                     <div className="neu-flat p-4 rounded-full mb-4">
                                         <span className="material-symbols-outlined text-3xl text-primary">upload_file</span>
                                     </div>
-                                    <p className="font-medium text-gray-700 mb-1">
+                                    <p className="font-medium text-[var(--text-primary)] mb-1">
                                         Sleep je CV hierheen of klik om te uploaden
                                     </p>
-                                    <p className="text-sm text-gray-400">
+                                    <p className="text-sm text-[var(--text-muted)]">
                                         Alleen PDF-bestanden • Max 10MB
                                     </p>
                                 </div>
@@ -336,7 +336,7 @@ export default function UpdateStudentPage() {
                 {serverError && (
                     <div className="neu-flat p-4 rounded-xl border-l-4 border-red-500 flex items-center gap-3">
                         <span className="material-symbols-outlined text-red-500">error</span>
-                        <span className="text-red-600 font-medium">{serverError}</span>
+                        <span className="text-red-500 font-medium">{serverError}</span>
                     </div>
                 )}
 

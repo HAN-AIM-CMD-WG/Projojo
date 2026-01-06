@@ -44,8 +44,8 @@ export default function ProfilePage() {
                 <div className="neu-pressed rounded-full p-4">
                     <span className="material-symbols-outlined text-3xl text-gray-400">lock</span>
                 </div>
-                <h1 className="text-2xl font-extrabold text-gray-700">Geen toegang</h1>
-                <p className="text-sm text-gray-500 text-center">Je hebt geen toegang tot dit profiel.</p>
+                <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">Geen toegang</h1>
+                <p className="text-sm text-[var(--text-muted)] text-center">Je hebt geen toegang tot dit profiel.</p>
                 <Link to="/home" className="neu-btn-primary">Ga naar Home</Link>
             </div>
         )
@@ -58,10 +58,10 @@ export default function ProfilePage() {
         <>
             {/* Personalized header */}
             <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
                     {isOwnProfile ? 'Jouw profiel' : firstName ? `Profiel van ${firstName}` : 'Profiel'}
                 </h1>
-                <p className="text-sm text-gray-500 font-medium mt-1">
+                <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
                     {isOwnProfile 
                         ? 'Beheer je skills en CV om betere matches te krijgen'
                         : student.full_name ? `Bekijk de skills en ervaring van ${student.full_name}` : 'Bekijk dit profiel'

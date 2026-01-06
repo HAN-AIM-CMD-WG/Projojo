@@ -16,7 +16,7 @@ export default function StudentProfileCv({ cv, studentId }) {
         <div className="neu-flat p-6 rounded-2xl">
             {/* Section header */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="font-extrabold text-gray-700 flex items-center gap-2 text-lg">
+                <h2 className="font-extrabold text-[var(--text-primary)] flex items-center gap-2 text-lg">
                     <span className="material-symbols-outlined text-primary">description</span>
                     Curriculum Vitae
                 </h2>
@@ -53,10 +53,10 @@ export default function StudentProfileCv({ cv, studentId }) {
             {!exists && (
                 <div className="neu-pressed p-8 rounded-xl text-center">
                     <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">upload_file</span>
-                    <p className="text-sm text-gray-500 font-medium">
+                    <p className="text-sm text-[var(--text-muted)] font-medium">
                         Er is nog geen CV geupload.
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
                         Upload een CV om je profiel compleet te maken.
                     </p>
                     {isOwnProfile && (

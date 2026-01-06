@@ -81,17 +81,21 @@ export default function ThemeToggle() {
                 aria-hidden="true"
             />
 
-            {/* Hover/Focus Panel with Options */}
+            {/* Hover/Focus Panel with Options - Popup style with drop shadow */}
             <div 
                 className={`
                     absolute right-0 top-full mt-3 z-50
-                    neu-flat p-3 min-w-[200px] rounded-xl
+                    bg-[var(--neu-bg)] p-3 min-w-[200px] rounded-xl
+                    border border-[var(--neu-border)]
                     transition-all duration-200 origin-top-right
                     ${isPanelOpen 
                         ? 'opacity-100 scale-100 visible' 
                         : 'opacity-0 scale-95 invisible pointer-events-none'
                     }
                 `}
+                style={{
+                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
                 role="menu"
                 aria-label="Thema opties"
             >

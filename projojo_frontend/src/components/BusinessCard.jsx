@@ -128,20 +128,25 @@ export default function BusinessCard({
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                                <Link 
-                                    to={`/business/${businessId}`}
-                                    className="block"
-                                >
-                                    <h2 className="text-xl font-extrabold text-gray-800 truncate hover:underline">
-                                        {name}
-                                    </h2>
-                                </Link>
-                                {locationText && (
-                                    <p className="text-sm text-gray-500 flex items-center gap-1.5 mt-1">
-                                        <span className="material-symbols-outlined text-base text-primary/70">location_on</span>
-                                        {locationText}
-                                    </p>
-                                )}
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                                    Bedrijf
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <Link 
+                                        to={`/business/${businessId}`}
+                                        className="min-w-0"
+                                    >
+                                        <h2 className="text-xl font-extrabold text-[var(--text-primary)] truncate hover:underline">
+                                            {name}
+                                        </h2>
+                                    </Link>
+                                    {locationText && (
+                                        <span className="text-xs text-[var(--text-muted)] flex items-center gap-1 shrink-0">
+                                            <span className="material-symbols-outlined text-xs">location_on</span>
+                                            {locationText}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Action button */}
@@ -163,14 +168,14 @@ export default function BusinessCard({
                     <div className="flex flex-wrap gap-3 mt-5">
                         {sectorText && (
                             <div className="neu-pressed px-4 py-2 rounded-xl flex items-center gap-2">
-                                <span className="material-symbols-outlined text-base text-gray-500">domain</span>
-                                <span className="text-sm font-bold text-gray-600">{sectorText}</span>
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)]">domain</span>
+                                <span className="text-sm font-bold text-[var(--text-secondary)]">{sectorText}</span>
                             </div>
                         )}
                         {companySizeText && (
                             <div className="neu-pressed px-4 py-2 rounded-xl flex items-center gap-2">
-                                <span className="material-symbols-outlined text-base text-gray-500">groups</span>
-                                <span className="text-sm font-bold text-gray-600">{formatCompanySize(companySizeText)} medewerkers</span>
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)]">groups</span>
+                                <span className="text-sm font-bold text-[var(--text-secondary)]">{formatCompanySize(companySizeText)} medewerkers</span>
                             </div>
                         )}
                         {websiteUrl && (
@@ -190,22 +195,22 @@ export default function BusinessCard({
 
                 {/* Description (optional) */}
                 {showDescription && description && (
-                    <div className={`mt-4 text-sm text-gray-600 ${!showUpdateButton ? 'line-clamp-3' : ''}`}>
+                    <div className={`mt-4 text-sm text-[var(--text-secondary)] ${!showUpdateButton ? 'line-clamp-3' : ''}`}>
                         <RichTextViewer text={description} />
                     </div>
                 )}
 
                 {/* Skills section */}
                 {visibleSkills.length > 0 && (
-                    <div className="mt-5 pt-4 border-t border-gray-200/60">
-                        <div className="flex items-center justify-between mb-3">
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">psychology</span>
-                            Gevraagde skills
-                        </p>
+                    <div className="mt-5 pt-4 border-t border-[var(--neu-border)]">
+                        <div className="flex items-center gap-4 mb-3">
+                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
+                                <span className="material-symbols-outlined text-sm">psychology</span>
+                                Gevraagde skills
+                            </p>
                             {matchingSkills.length > 0 && studentSkills.length > 0 && (
-                                <span className="text-xs font-bold text-primary flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-sm">local_fire_department</span>
+                                <span className="text-xs font-bold text-[#156064] dark:text-[#00C49A] flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">check_circle</span>
                                     {matchingSkills.length} match{matchingSkills.length !== 1 && 'es'}
                                 </span>
                             )}
@@ -227,7 +232,7 @@ export default function BusinessCard({
                                 );
                             })}
                             {remainingSkills > 0 && (
-                                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-gray-200 text-gray-500">
+                                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-[var(--gray-200)] text-[var(--text-muted)]">
                                     +{remainingSkills}
                                 </span>
                             )}
@@ -237,7 +242,7 @@ export default function BusinessCard({
 
                 {/* Management buttons for supervisors of this business */}
                 {showUpdateButton && authData.businessId === businessId && (
-                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200/50">
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--neu-border)]">
                         <Link to={`/projects/add`} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-lg">add</span>
                             Project toevoegen
@@ -255,7 +260,7 @@ export default function BusinessCard({
 
                 {/* Management buttons for teachers (can edit any business) */}
                 {showUpdateButton && authData.type === "teacher" && authData.businessId !== businessId && (
-                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200/50">
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--neu-border)]">
                         <Link to={`/business/${businessId}/update`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-lg">edit</span>
                             Aanpassen
@@ -317,8 +322,8 @@ export default function BusinessCard({
                                         </Tooltip>
                                     </button>
                                 </div>
-                                <p className='text-sm mt-2 text-gray-500'>Geldig tot {formatDate(expiry)}</p>
-                                <p className='text-xs mt-1 text-gray-400'>De link is slechts één keer bruikbaar.</p>
+                                <p className='text-sm mt-2 text-[var(--text-muted)]'>Geldig tot {formatDate(expiry)}</p>
+                                <p className='text-xs mt-1 text-[var(--text-muted)]'>De link is slechts één keer bruikbaar.</p>
                                 <button
                                     type="button"
                                     className="neu-btn mt-4 text-sm"

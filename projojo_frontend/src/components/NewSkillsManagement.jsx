@@ -91,11 +91,11 @@ export default function NewSkillsManagement() {
             
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-extrabold text-gray-800 flex items-center gap-2">
+                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">psychology</span>
                     Skill beheer
                 </h1>
-                <p className="text-gray-500 mt-1">
+                <p className="text-[var(--text-muted)] mt-1">
                     Er {pendingSkills.length === 1 ? 'is' : 'zijn'} <strong className="text-primary">{pendingSkills.length}</strong> skill{pendingSkills.length !== 1 ? 's' : ''} om te verwerken.
                 </p>
             </div>
@@ -103,7 +103,7 @@ export default function NewSkillsManagement() {
             {/* Skills Table */}
             <div className="neu-flat rounded-2xl overflow-hidden">
                 <table className="w-full text-sm text-left">
-                    <thead className="text-xs text-gray-500 uppercase bg-gray-100/50 border-b border-gray-200">
+                    <thead className="text-xs text-[var(--text-muted)] uppercase bg-[var(--gray-200)]/50 border-b border-[var(--neu-border)]">
                         <tr>
                             <th scope="col" className="px-4 md:px-6 py-4 font-bold">Skill</th>
                             <th scope="col" className="px-4 md:px-6 py-4 font-bold">Acties</th>
@@ -112,15 +112,15 @@ export default function NewSkillsManagement() {
                     <tbody>
                         {pendingSkills.length === 0 && (
                             <tr>
-                                <td colSpan="2" className="px-4 md:px-6 py-8 text-center text-gray-400">
+                                <td colSpan="2" className="px-4 md:px-6 py-8 text-center text-[var(--text-muted)]">
                                     <span className="material-symbols-outlined text-4xl mb-2 block">check_circle</span>
                                     Er zijn geen nieuwe skills om te verwerken
                                 </td>
                             </tr>
                         )}
                         {pendingSkills.map(skill => (
-                            <tr key={skill.skillId || skill.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                                <th scope="row" className="px-4 md:px-6 py-4 font-bold text-gray-800 w-full">
+                            <tr key={skill.skillId || skill.id} className="border-b border-[var(--neu-border)] hover:bg-[var(--gray-200)]/30 transition-colors">
+                                <th scope="row" className="px-4 md:px-6 py-4 font-bold text-[var(--text-primary)] w-full">
                                     {skill.name}
                                 </th>
                                 <td className="px-4 md:px-6 py-4">
@@ -160,13 +160,13 @@ export default function NewSkillsManagement() {
                     <Alert text={updateError} />
                     <form onSubmit={(e) => e.preventDefault()}>
                         <div>
-                            <label htmlFor="skillname" className="block text-sm font-bold text-gray-600 mb-2">Nieuwe naam</label>
+                            <label htmlFor="skillname" className="block text-sm font-bold text-[var(--text-secondary)] mb-2">Nieuwe naam</label>
                             <input 
                                 type="text" 
                                 id="skillname" 
                                 value={newSkillName} 
                                 onChange={(e) => setNewSkillName(e.target.value)} 
-                                className="w-full px-4 py-3 neu-pressed rounded-xl outline-none text-gray-700 font-semibold focus:ring-2 focus:ring-primary/20 transition-all" 
+                                className="w-full px-4 py-3 neu-pressed rounded-xl outline-none text-[var(--text-primary)] font-semibold focus:ring-2 focus:ring-primary/20 transition-all" 
                             />
                         </div>
 

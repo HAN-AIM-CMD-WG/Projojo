@@ -59,11 +59,11 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
         <div className="neu-flat p-6 rounded-2xl" data-skills-section>
             {/* Section header */}
             <div className="flex justify-between items-center mb-6">
-                <h2 className="font-extrabold text-gray-700 flex items-center gap-2 text-lg">
+                <h2 className="font-extrabold text-[var(--text-primary)] flex items-center gap-2 text-lg">
                     <span className="material-symbols-outlined text-primary">psychology</span>
                     Skills
                     {currentSkills.length > 0 && (
-                        <span className="text-xs font-bold text-gray-400 bg-gray-200/50 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold text-[var(--text-muted)] bg-[var(--gray-200)]/50 px-2 py-0.5 rounded-full">
                             {currentSkills.length}
                         </span>
                     )}
@@ -89,7 +89,7 @@ export default function StudentProfileSkills({ student, setFetchAmount }) {
                 {(!student?.Skills || student.Skills.length === 0) && !isEditing && (
                     <div className="neu-pressed p-6 rounded-xl text-center">
                         <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">lightbulb</span>
-                        <p className="text-sm text-gray-500 font-medium">
+                        <p className="text-sm text-[var(--text-muted)] font-medium">
                             {isOwnProfile 
                                 ? 'Je hebt nog geen skills toegevoegd. Voeg skills toe om betere matches te krijgen!'
                                 : 'Deze student heeft nog geen skills toegevoegd.'

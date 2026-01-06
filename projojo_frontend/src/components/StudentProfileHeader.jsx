@@ -27,7 +27,7 @@ export default function StudentProfileHeader({ student }) {
             {isOwnProfile && (
                 <Link 
                     to="/student/update" 
-                    className="absolute top-5 right-5 neu-btn !p-2.5 !rounded-xl text-gray-400 hover:text-primary"
+                    className="absolute top-5 right-5 neu-btn !p-2.5 !rounded-xl text-[var(--text-muted)] hover:text-primary"
                     aria-label="Profiel bewerken"
                 >
                     <span className="material-symbols-outlined text-lg">edit</span>
@@ -68,13 +68,13 @@ export default function StudentProfileHeader({ student }) {
                 </div>
 
                 {/* Name */}
-                <h3 className="text-2xl font-extrabold text-gray-800 text-center">
+                <h3 className="text-2xl font-extrabold text-[var(--text-primary)] text-center">
                     {student?.full_name || 'Laden...'}
                 </h3>
                 
                 {/* Bio - strip HTML/markdown for clean display */}
                 {student?.description && (
-                    <p className="text-sm text-gray-500 mt-3 text-center leading-relaxed max-w-[280px]">
+                    <p className="text-sm text-[var(--text-muted)] mt-3 text-center leading-relaxed max-w-[280px]">
                         {(() => {
                             const cleanText = student.description
                                 .replace(/<[^>]*>/g, '')  // Strip HTML tags
@@ -118,7 +118,7 @@ export default function StudentProfileHeader({ student }) {
                 {/* Profile Completeness Progress Bar */}
                 <div className="w-full mt-4">
                     <div className="flex justify-between text-xs font-bold mb-2">
-                        <span className="text-gray-400">Profiel compleetheid</span>
+                        <span className="text-[var(--text-muted)]">Profiel compleetheid</span>
                         <span className="text-primary">{completeness}%</span>
                     </div>
                     <div className="w-full h-4 neu-pressed rounded-full overflow-hidden p-[2px]">
@@ -133,12 +133,12 @@ export default function StudentProfileHeader({ student }) {
                     {/* Completeness tips - actionable links */}
                     {completeness < 100 && isOwnProfile && (
                         <div className="mt-5 space-y-2">
-                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Maak je profiel compleet:</p>
+                            <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Maak je profiel compleet:</p>
                             <div className="space-y-2">
                                 {!student?.image_path && (
                                     <Link 
                                         to="/student/update" 
-                                        className="flex items-center gap-2 text-xs text-gray-500 hover:text-primary transition-colors group/tip"
+                                        className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-primary transition-colors group/tip"
                                     >
                                         <span className="material-symbols-outlined text-sm text-amber-500 group-hover/tip:text-primary">add_a_photo</span>
                                         <span>Voeg een profielfoto toe</span>
@@ -148,7 +148,7 @@ export default function StudentProfileHeader({ student }) {
                                 {(!student?.Skills || student.Skills.length < 3) && (
                                     <button 
                                         onClick={() => document.querySelector('[data-skills-section]')?.scrollIntoView({ behavior: 'smooth' })}
-                                        className="flex items-center gap-2 text-xs text-gray-500 hover:text-primary transition-colors group/tip w-full text-left"
+                                        className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-primary transition-colors group/tip w-full text-left"
                                     >
                                         <span className="material-symbols-outlined text-sm text-amber-500 group-hover/tip:text-primary">psychology</span>
                                         <span>Voeg minimaal 3 skills toe ({student?.Skills?.length || 0}/3)</span>
@@ -158,7 +158,7 @@ export default function StudentProfileHeader({ student }) {
                                 {!student?.cv_path && (
                                     <Link 
                                         to="/student/update" 
-                                        className="flex items-center gap-2 text-xs text-gray-500 hover:text-primary transition-colors group/tip"
+                                        className="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-primary transition-colors group/tip"
                                     >
                                         <span className="material-symbols-outlined text-sm text-amber-500 group-hover/tip:text-primary">description</span>
                                         <span>Upload je CV</span>

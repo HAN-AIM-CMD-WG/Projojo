@@ -52,7 +52,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                             </span>
                         </div>
                         <div>
-                            <h2 className="text-base font-bold text-gray-800 group-hover:text-primary transition-colors">
+                            <h2 className="text-base font-bold text-[var(--text-primary)] group-hover:text-primary transition-colors">
                                 {skill.name}
                             </h2>
                             {skill.is_pending ? (
@@ -109,7 +109,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                     </div>
                 ) : skill.description !== "" && skill.description !== null && (
                     <div className="mt-3 ml-11">
-                        <p className="text-gray-600 text-sm break-words leading-relaxed">
+                        <p className="text-[var(--text-secondary)] text-sm break-words leading-relaxed">
                             {skill.description}
                         </p>
                     </div>

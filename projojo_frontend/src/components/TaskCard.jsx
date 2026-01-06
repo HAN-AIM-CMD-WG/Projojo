@@ -18,8 +18,8 @@ export default function TaskCard({ task, compact = false }) {
             <div className="neu-task-box cursor-pointer hover:bg-white/60 transition-all">
                 <span className="material-symbols-outlined text-primary">assignment</span>
                 <div className="flex-1 min-w-0">
-                    <span className="block truncate font-bold text-gray-600">{task.name}</span>
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wide">
+                    <span className="block truncate font-bold text-[var(--text-secondary)]">{task.name}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">
                         {spotsAvailable > 0 ? `${spotsAvailable} plekken beschikbaar` : 'Geen plekken'}
                     </span>
                 </div>
@@ -54,7 +54,7 @@ export default function TaskCard({ task, compact = false }) {
                             <span className="material-symbols-outlined">assignment</span>
                         </div>
                         <div>
-                            <h5 className="text-lg font-extrabold tracking-tight text-gray-700">
+                            <h5 className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">
                                 {task.name}
                             </h5>
                             <span className="neu-label">Taak</span>
@@ -74,7 +74,7 @@ export default function TaskCard({ task, compact = false }) {
                 {/* Availability progress */}
                 {spotsTotal > 0 && (
                     <div>
-                        <div className="flex justify-between text-xs font-bold text-gray-500 mb-2">
+                        <div className="flex justify-between text-xs font-bold text-[var(--text-muted)] mb-2">
                             <span>Bezetting</span>
                             <span className="text-primary">{task.total_accepted || 0} van {spotsTotal} plekken</span>
                         </div>

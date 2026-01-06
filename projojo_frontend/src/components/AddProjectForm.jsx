@@ -59,13 +59,13 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
             <div className="mb-8">
                 <Link 
                     to={`/business/${authData.businessId}`}
-                    className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-4"
+                    className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-4"
                 >
                     <span className="material-symbols-outlined text-xl">arrow_back</span>
                     Terug naar bedrijfspagina
                 </Link>
-                <h1 className="text-3xl font-extrabold text-gray-800">Project aanmaken</h1>
-                <p className="text-gray-500 mt-2">Maak een nieuw project aan voor je bedrijf</p>
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Project aanmaken</h1>
+                <p className="text-[var(--text-muted)] mt-2">Maak een nieuw project aan voor je bedrijf</p>
             </div>
 
             <form onSubmit={handleSubmit} aria-label="Project aanmaken form">
@@ -73,7 +73,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                 
                 {/* Project Image Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">image</span>
                         Projectafbeelding
                         <span className="text-sm font-normal text-red-500 ml-1">*</span>
@@ -93,7 +93,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
                 {/* Project Details Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">assignment</span>
                         Projectgegevens
                     </h2>
@@ -123,8 +123,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                 {/* Info Box */}
                 <div className="neu-pressed rounded-xl p-4 mb-6 flex items-start gap-3">
                     <span className="material-symbols-outlined text-primary mt-0.5">info</span>
-                    <div className="text-sm text-gray-600">
-                        <p className="font-semibold text-gray-700">Tip</p>
+                    <div className="text-sm text-[var(--text-secondary)]">
+                        <p className="font-semibold text-[var(--text-primary)]">Tip</p>
                         <p>Na het aanmaken kun je taken en benodigde skills toevoegen aan je project.</p>
                     </div>
                 </div>

@@ -197,17 +197,17 @@ export default function OverviewPage() {
     <>
       {/* Personalized welcome - UX: Recognition > Recall, Personal context */}
       <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+        <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
           {studentName ? `${getGreeting()}, ${studentName}!` : `${getGreeting()}!`}
         </h1>
-        <p className="text-sm text-gray-500 font-medium mt-1">
+        <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
           {matchingOpenPositions > 0 && studentSkills.length > 0 ? (
             <>
               <span className="text-primary font-bold">{matchingOpenPositions}</span> skill {matchingOpenPositions === 1 ? 'match' : 'matches'}
             </>
           ) : totalOpenPositions > 0 ? (
             <>
-              <span className="text-gray-700 font-bold">{totalOpenPositions}</span> open {totalOpenPositions === 1 ? 'plek' : 'plekken'} beschikbaar
+              <span className="text-[var(--text-primary)] font-bold">{totalOpenPositions}</span> open {totalOpenPositions === 1 ? 'plek' : 'plekken'} beschikbaar
             </>
           ) : (
             'Ontdek projecten die matchen met jouw skills'

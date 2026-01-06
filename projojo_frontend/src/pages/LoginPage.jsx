@@ -9,7 +9,7 @@ export default function LoginPage() {
         {/* Back to landing */}
         <Link 
           to="/" 
-          className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-6 text-sm font-semibold"
+          className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-6 text-sm font-semibold"
         >
           <span className="material-symbols-outlined text-lg">arrow_back</span>
           Terug naar home
@@ -21,7 +21,7 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 pointer-events-none"></div>
             <span className="material-symbols-outlined text-5xl drop-shadow-sm">school</span>
           </div>
-          <h1 className="text-3xl text-center font-extrabold text-gray-700 tracking-tight">
+          <h1 className="text-3xl text-center font-extrabold text-[var(--text-primary)] tracking-tight">
             Projojo
           </h1>
           <p className="neu-label text-center mt-2">

@@ -218,18 +218,19 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                 </div>
             )}
             <div 
-                className={`${isAbsolute ? 'absolute bottom-0 translate-y-full -mb-2 z-30' : ''} flex flex-col gap-3 p-4 neu-flat min-w-full sm:min-w-[400px] md:min-w-[480px] transition-all duration-200 ease-out origin-top ${
+                className={`${isAbsolute ? 'absolute bottom-0 translate-y-full -mb-2 z-30' : ''} flex flex-col gap-3 p-4 bg-[var(--neu-bg)] border border-[var(--neu-border)] rounded-3xl min-w-full sm:min-w-[400px] md:min-w-[480px] transition-all duration-200 ease-out origin-top ${
                     isAnimating 
                         ? 'opacity-100 scale-100' 
                         : 'opacity-0 scale-95 -translate-y-2'
-                }`} 
+                }`}
+                style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)' }}
                 role="dialog" 
                 aria-label="Skill editor dialog"
             >
                 {/* Selected skills indicator - subtle bar at top */}
                 {instantApply && selectedSkills.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-gray-200">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Geselecteerd:</span>
+                    <div className="flex flex-wrap items-center gap-2 pb-3 border-b border-[var(--neu-border)]">
+                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Geselecteerd:</span>
                         {selectedSkills.map((skill) => (
                             <button
                                 key={skill.skillId || skill.id}
@@ -277,7 +278,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="material-symbols-outlined text-primary text-sm">verified</span>
-                                <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">Jouw skills</span>
+                                <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">Jouw skills</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {ownSkills.map((skill) => (
@@ -300,7 +301,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <span className="material-symbols-outlined text-primary/60 text-sm">hourglass_top</span>
-                                <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">In afwachting</span>
+                                <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">In afwachting</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {pendingSkills.map((skill) => (
@@ -322,8 +323,8 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     {otherSkills.length > 0 && (
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="material-symbols-outlined text-gray-400 text-sm">school</span>
-                                <span className="text-xs font-bold text-gray-600 uppercase tracking-wide">Andere skills</span>
+                                <span className="material-symbols-outlined text-[var(--text-muted)] text-sm">school</span>
+                                <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wide">Andere skills</span>
                             </div>
                             <div className="flex flex-wrap gap-2">
                                 {otherSkills.slice(0, showAllSkills ? otherSkills.length : maxSkillsDisplayed).map((skill) => (

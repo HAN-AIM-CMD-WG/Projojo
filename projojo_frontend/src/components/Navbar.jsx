@@ -85,7 +85,7 @@ export default function Navbar() {
     };
 
     const activeNavLink = "flex items-center gap-2 py-2.5 px-5 text-primary font-bold rounded-2xl transition-all duration-200 md:px-4 md:py-2"
-    const inactiveNavLink = "flex items-center gap-2 py-2.5 px-5 text-text-secondary font-semibold rounded-2xl hover:text-primary hover:bg-gray-200/30 transition-all duration-200 md:px-4 md:py-2"
+    const inactiveNavLink = "flex items-center gap-2 py-2.5 px-5 text-text-secondary font-semibold rounded-2xl hover:text-primary hover:bg-[var(--gray-200)]/30 transition-all duration-200 md:px-4 md:py-2"
 
     return (
         <header>
@@ -140,7 +140,7 @@ export default function Navbar() {
                             ))}
                             
                             {/* Divider (desktop) */}
-                            <li className="hidden md:block w-px h-6 bg-gray-300/50 mx-3"></li>
+                            <li className="hidden md:block w-px h-6 bg-[var(--gray-300)]/50 mx-3"></li>
                             
                             {/* Theme Toggle */}
                             <li className="flex items-center py-2 md:py-0">
@@ -180,13 +180,13 @@ export default function Navbar() {
                                                     />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shrink-0">
-                                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-base transition-colors" aria-hidden="true">business</span>
+                                                        <span className="material-symbols-outlined text-[var(--text-muted)] group-hover:text-primary text-base transition-colors" aria-hidden="true">business</span>
                                                     </div>
                                                 )}
                                                 
                                                 {/* Expanding text container - hidden on mobile */}
                                                 <div className="hidden md:block overflow-hidden max-w-0 group-hover:max-w-[120px] transition-all duration-300 ease-out">
-                                                    <span className="pl-2 pr-2 text-xs font-bold text-gray-500 group-hover:text-primary whitespace-nowrap transition-colors duration-200">
+                                                    <span className="pl-2 pr-2 text-xs font-bold text-[var(--text-muted)] group-hover:text-primary whitespace-nowrap transition-colors duration-200">
                                                         {businessData.name}
                                                     </span>
                                                 </div>
@@ -211,7 +211,7 @@ export default function Navbar() {
                                                 
                                                 {/* Expanding text container - hidden on mobile */}
                                                 <div className="hidden md:block overflow-hidden max-w-0 group-hover:max-w-[80px] transition-all duration-300 ease-out">
-                                                    <span className="pl-2 pr-2 text-xs font-bold text-gray-500 group-hover:text-primary whitespace-nowrap transition-colors duration-200">
+                                                    <span className="pl-2 pr-2 text-xs font-bold text-[var(--text-muted)] group-hover:text-primary whitespace-nowrap transition-colors duration-200">
                                                         Docent
                                                     </span>
                                                 </div>

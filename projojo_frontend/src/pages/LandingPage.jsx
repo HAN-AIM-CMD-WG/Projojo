@@ -86,10 +86,10 @@ export default function LandingPage() {
                             </div>
                         </div>
                         <div>
-                            <h1 className="font-black text-xl text-gray-800 tracking-tight">
+                            <h1 className="font-black text-xl text-[var(--text-primary)] tracking-tight">
                                 Projojo
                             </h1>
-                            <p className="text-[10px] text-gray-400 font-bold tracking-wider uppercase">
+                            <p className="text-[10px] text-[var(--text-muted)] font-bold tracking-wider uppercase">
                                 Student Hub
                             </p>
                         </div>
@@ -98,13 +98,13 @@ export default function LandingPage() {
                     <div className="flex items-center gap-4">
                         <a 
                             href="#features" 
-                            className="hidden md:block text-sm font-semibold text-gray-600 hover:text-primary transition-colors"
+                            className="hidden md:block text-sm font-semibold text-[var(--text-secondary)] hover:text-primary transition-colors"
                         >
                             Features
                         </a>
                         <a 
                             href="#journey" 
-                            className="hidden md:block text-sm font-semibold text-gray-600 hover:text-primary transition-colors"
+                            className="hidden md:block text-sm font-semibold text-[var(--text-secondary)] hover:text-primary transition-colors"
                         >
                             Hoe het werkt
                         </a>
@@ -137,12 +137,12 @@ export default function LandingPage() {
                             {/* Badge */}
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-white/40 shadow-lg">
                                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                <span className="text-sm font-bold text-gray-700">Voor ambitieuze studenten</span>
+                                <span className="text-sm font-bold text-[var(--text-primary)]">Voor ambitieuze studenten</span>
                             </div>
                             
                             {/* Main Headline */}
                             <div className="space-y-4">
-                                <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 leading-[1.1]">
+                                <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-[var(--text-primary)] leading-[1.1]">
                                     Van studie naar{" "}
                                     <span className="relative inline-block">
                                         <span className="relative z-10 bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">
@@ -160,7 +160,7 @@ export default function LandingPage() {
                                     </span>
                                 </h1>
                                 
-                                <p className="text-xl md:text-2xl text-gray-600 font-medium leading-relaxed">
+                                <p className="text-xl md:text-2xl text-[var(--text-secondary)] font-medium leading-relaxed">
                                     Werk aan échte projecten, bouw je portfolio en maak het verschil. 
                                     <span className="text-primary font-bold"> Leer door te doen.</span>
                                 </p>
@@ -182,7 +182,7 @@ export default function LandingPage() {
                                 
                                 <a 
                                     href="#journey" 
-                                    className="group px-8 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border-2 border-gray-300/50 hover:border-primary/50 font-bold text-gray-700 text-lg transition-all hover:bg-white/80 flex items-center justify-center gap-2"
+                                    className="group px-8 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border-2 border-gray-300/50 hover:border-primary/50 font-bold text-[var(--text-primary)] text-lg transition-all hover:bg-white/80 flex items-center justify-center gap-2"
                                 >
                                     <span className="material-symbols-outlined">play_circle</span>
                                     <span>Ontdek meer</span>
@@ -203,8 +203,8 @@ export default function LandingPage() {
                                     ))}
                                 </div>
                                 <div>
-                                    <p className="font-black text-gray-800 text-lg">100+ studenten</p>
-                                    <p className="text-sm text-gray-500 font-semibold">werken al aan hun toekomst</p>
+                                    <p className="font-black text-[var(--text-primary)] text-lg">100+ studenten</p>
+                                    <p className="text-sm text-[var(--text-muted)] font-semibold">werken al aan hun toekomst</p>
                                 </div>
                             </div>
                         </div>
@@ -221,15 +221,15 @@ export default function LandingPage() {
                                                 <span className="material-symbols-outlined text-white text-2xl">business</span>
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="font-black text-gray-800 text-lg">Web Development</h3>
-                                                <p className="text-sm text-gray-500 font-semibold">TechStart B.V.</p>
+                                                <h3 className="font-black text-[var(--text-primary)] text-lg">Web Development</h3>
+                                                <p className="text-sm text-[var(--text-muted)] font-semibold">TechStart B.V.</p>
                                             </div>
                                             <div className="px-3 py-1 bg-emerald-100 rounded-full">
                                                 <span className="text-xs font-bold text-emerald-700">Perfect match</span>
                                             </div>
                                         </div>
                                         
-                                        <p className="text-sm text-gray-600 mb-4">
+                                        <p className="text-sm text-[var(--text-secondary)] mb-4">
                                             Bouw een moderne web applicatie met React en TypeScript voor een innovatief tech bedrijf.
                                         </p>
                                         
@@ -240,7 +240,7 @@ export default function LandingPage() {
                                         </div>
                                         
                                         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                            <span className="text-xs font-bold text-gray-500">95% MATCH</span>
+                                            <span className="text-xs font-bold text-[var(--text-muted)]">95% MATCH</span>
                                             <div className="h-2 flex-1 mx-4 bg-gray-100 rounded-full overflow-hidden">
                                                 <div className="h-full w-[95%] bg-gradient-to-r from-primary to-orange-500 rounded-full"></div>
                                             </div>
@@ -254,21 +254,21 @@ export default function LandingPage() {
                                                 <span className="material-symbols-outlined text-white text-xl">check_circle</span>
                                             </div>
                                             <div className="flex-1">
-                                                <p className="font-bold text-gray-800">Je bent aangenomen! 🎉</p>
-                                                <p className="text-sm text-gray-600 font-medium">Start over 2 dagen met je project</p>
+                                                <p className="font-bold text-[var(--text-primary)]">Je bent aangenomen! 🎉</p>
+                                                <p className="text-sm text-[var(--text-secondary)] font-medium">Start over 2 dagen met je project</p>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     {/* Skills */}
                                     <div className="flex flex-wrap gap-2">
-                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 font-semibold text-sm text-gray-700">
+                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 font-semibold text-sm text-[var(--text-primary)]">
                                             Python
                                         </div>
                                         <div className="px-4 py-2 bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-xl border border-primary/30 font-semibold text-sm text-primary">
                                             JavaScript
                                         </div>
-                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 font-semibold text-sm text-gray-700">
+                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 font-semibold text-sm text-[var(--text-primary)]">
                                             Data Science
                                         </div>
                                     </div>
@@ -295,10 +295,10 @@ export default function LandingPage() {
                         <div className="inline-block px-4 py-2 bg-primary/10 rounded-full mb-2">
                             <span className="text-sm font-bold text-primary">Waarom Projojo?</span>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-gray-900">
+                        <h2 className="text-4xl md:text-5xl font-black text-[var(--text-primary)]">
                             Alles voor jouw groei
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
+                        <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto font-medium">
                             De tools en begeleiding die je nodig hebt om je carrière te lanceren
                         </p>
                     </div>
@@ -318,8 +318,8 @@ export default function LandingPage() {
                                         </div>
                                     </div>
                                     <div className="flex-1 space-y-2">
-                                        <h3 className="text-xl font-black text-gray-800">{feature.title}</h3>
-                                        <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                                        <h3 className="text-xl font-black text-[var(--text-primary)]">{feature.title}</h3>
+                                        <p className="text-[var(--text-secondary)] leading-relaxed">{feature.description}</p>
                                     </div>
                                 </div>
                             </div>
@@ -335,10 +335,10 @@ export default function LandingPage() {
                         <div className="inline-block px-4 py-2 bg-primary/10 rounded-full mb-2">
                             <span className="text-sm font-bold text-primary">Jouw Journey</span>
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-gray-900">
+                        <h2 className="text-4xl md:text-5xl font-black text-[var(--text-primary)]">
                             In 4 stappen naar succes
                         </h2>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
+                        <p className="text-xl text-[var(--text-secondary)] max-w-2xl mx-auto font-medium">
                             We begeleiden je van begin tot eind
                         </p>
                     </div>
@@ -366,8 +366,8 @@ export default function LandingPage() {
                                             <span className="inline-block px-3 py-1 bg-primary/10 rounded-full text-xs font-bold text-primary uppercase tracking-wider">
                                                 {step.phase}
                                             </span>
-                                            <h3 className="text-xl font-black text-gray-800">{step.title}</h3>
-                                            <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                                            <h3 className="text-xl font-black text-[var(--text-primary)]">{step.title}</h3>
+                                            <p className="text-[var(--text-secondary)] leading-relaxed">{step.description}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -395,7 +395,7 @@ export default function LandingPage() {
                                     <p className="text-4xl md:text-5xl font-black bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">
                                         {stat.value}
                                     </p>
-                                    <p className="text-gray-600 font-semibold text-sm">{stat.label}</p>
+                                    <p className="text-[var(--text-secondary)] font-semibold text-sm">{stat.label}</p>
                                 </div>
                             ))}
                         </div>
@@ -407,7 +407,7 @@ export default function LandingPage() {
             <section className="py-16 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-12">
-                        <p className="text-gray-400 font-bold uppercase tracking-widest text-xs mb-6">
+                        <p className="text-[var(--text-muted)] font-bold uppercase tracking-widest text-xs mb-6">
                             Samenwerking met
                         </p>
                     </div>
@@ -421,10 +421,10 @@ export default function LandingPage() {
                             />
                         </div>
                         <div className="px-8 py-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-gray-200/50">
-                            <span className="text-gray-400 font-bold text-sm">Partner Logo</span>
+                            <span className="text-[var(--text-muted)] font-bold text-sm">Partner Logo</span>
                         </div>
                         <div className="px-8 py-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-gray-200/50">
-                            <span className="text-gray-400 font-bold text-sm">Partner Logo</span>
+                            <span className="text-[var(--text-muted)] font-bold text-sm">Partner Logo</span>
                         </div>
                     </div>
                 </div>
@@ -472,23 +472,23 @@ export default function LandingPage() {
                                 <span className="material-symbols-outlined text-white text-xl">school</span>
                             </div>
                             <div>
-                                <span className="font-black text-gray-800">Projojo</span>
-                                <p className="text-xs text-gray-400">Student Hub</p>
+                                <span className="font-black text-[var(--text-primary)]">Projojo</span>
+                                <p className="text-xs text-[var(--text-muted)]">Student Hub</p>
                             </div>
                         </div>
                         
-                        <p className="text-gray-400 text-sm font-medium">
+                        <p className="text-[var(--text-muted)] text-sm font-medium">
                             © {new Date().getFullYear()} Projojo. Gemaakt met ❤️ voor studenten.
                         </p>
                         
                         <div className="flex items-center gap-6">
-                            <a href="#" className="text-sm font-semibold text-gray-500 hover:text-primary transition-colors">
+                            <a href="#" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary transition-colors">
                                 Privacy
                             </a>
-                            <a href="#" className="text-sm font-semibold text-gray-500 hover:text-primary transition-colors">
+                            <a href="#" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary transition-colors">
                                 Voorwaarden
                             </a>
-                            <a href="#" className="text-sm font-semibold text-gray-500 hover:text-primary transition-colors">
+                            <a href="#" className="text-sm font-semibold text-[var(--text-muted)] hover:text-primary transition-colors">
                                 Contact
                             </a>
                         </div>

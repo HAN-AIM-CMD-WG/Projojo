@@ -91,7 +91,7 @@ export default function LocationMap({ address, name, coordinates, height = "200p
         <div className={`neu-flat overflow-hidden relative z-0 ${className}`} style={{ height }}>
             {loading ? (
                 <div className="flex items-center justify-center h-full bg-neu-bg">
-                    <div className="flex items-center gap-2 text-gray-500">
+                    <div className="flex items-center gap-2 text-[var(--text-muted)]">
                         <span className="material-symbols-outlined animate-spin">progress_activity</span>
                         <span className="text-sm font-medium">Kaart laden...</span>
                     </div>
@@ -99,7 +99,7 @@ export default function LocationMap({ address, name, coordinates, height = "200p
             ) : error ? (
                 <div className="flex flex-col items-center justify-center h-full bg-neu-bg gap-2">
                     <span className="material-symbols-outlined text-gray-400 text-2xl">location_off</span>
-                    <span className="text-sm text-gray-500">{error}</span>
+                    <span className="text-sm text-[var(--text-muted)]">{error}</span>
                     {address && (
                         <a
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
@@ -126,8 +126,8 @@ export default function LocationMap({ address, name, coordinates, height = "200p
                     <Marker position={[position.lat, position.lng]}>
                         <Popup>
                             <div className="font-sans">
-                                {name && <strong className="block text-gray-800">{name}</strong>}
-                                <span className="text-gray-600 text-sm">{address}</span>
+                                {name && <strong className="block text-[var(--text-primary)]">{name}</strong>}
+                                <span className="text-[var(--text-secondary)] text-sm">{address}</span>
                             </div>
                         </Popup>
                     </Marker>
@@ -135,7 +135,7 @@ export default function LocationMap({ address, name, coordinates, height = "200p
             ) : (
                 <div className="flex flex-col items-center justify-center h-full bg-neu-bg gap-2">
                     <span className="material-symbols-outlined text-gray-400 text-2xl">map</span>
-                    <span className="text-sm text-gray-500">Geen locatie beschikbaar</span>
+                    <span className="text-sm text-[var(--text-muted)]">Geen locatie beschikbaar</span>
                 </div>
             )}
             

@@ -79,8 +79,8 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
                     <span className="material-symbols-outlined">list_alt</span>
                 </div>
                 <div>
-                    <h2 className="text-xl font-extrabold text-gray-700">Beschikbare taken</h2>
-                    <span className="text-sm text-gray-500">{tasks?.length || 0} {tasks?.length === 1 ? 'taak' : 'taken'}</span>
+                    <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Beschikbare taken</h2>
+                    <span className="text-sm text-[var(--text-muted)]">{tasks?.length || 0} {tasks?.length === 1 ? 'taak' : 'taken'}</span>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
             {isEmpty ? (
                 <div className="neu-pressed p-8 rounded-2xl text-center">
                     <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">inbox</span>
-                    <p className="text-gray-500">Er zijn nog geen taken voor dit project</p>
+                    <p className="text-[var(--text-muted)]">Er zijn nog geen taken voor dit project</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">

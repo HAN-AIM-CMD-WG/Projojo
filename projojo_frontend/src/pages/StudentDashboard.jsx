@@ -101,17 +101,17 @@ export default function StudentDashboard() {
         return (
             <div className="space-y-6">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+                    <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
                         {getGreeting()}!
                     </h1>
-                    <p className="text-sm text-gray-500 font-medium mt-1">
+                    <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
                         Welkom bij Projojo
                     </p>
                 </div>
                 
                 <div className="neu-flat p-8 text-center">
                     <span className="material-symbols-outlined text-4xl text-gray-400 mb-3">dashboard</span>
-                    <p className="text-gray-600 font-medium">
+                    <p className="text-[var(--text-secondary)] font-medium">
                         Het dashboard is momenteel alleen beschikbaar voor studenten.
                     </p>
                     <Link to="/ontdek" className="neu-btn-primary mt-4 inline-flex items-center gap-2">
@@ -127,10 +127,10 @@ export default function StudentDashboard() {
         <div className="space-y-6">
             {/* Welcome header */}
             <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-gray-700 tracking-tight">
+                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
                     {studentName ? `${getGreeting()}, ${studentName}!` : `${getGreeting()}!`}
                 </h1>
-                <p className="text-sm text-gray-500 font-medium mt-1">
+                <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
                     {activeTasks.length > 0 ? (
                         <>
                             Je hebt <span className="text-primary font-bold">{activeTasks.length}</span> actieve {activeTasks.length === 1 ? 'taak' : 'taken'}
@@ -153,7 +153,7 @@ export default function StudentDashboard() {
                             {/* Active Tasks Section */}
                             <section className="neu-flat p-6">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                                    <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
                                         <span className="material-symbols-outlined text-green-500">task_alt</span>
                                         Actieve Taken
                                     </h2>
@@ -165,7 +165,7 @@ export default function StudentDashboard() {
                                 {activeTasks.length === 0 ? (
                                     <div className="neu-pressed p-6 text-center">
                                         <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inbox</span>
-                                        <p className="text-gray-500 text-sm">
+                                        <p className="text-[var(--text-muted)] text-sm">
                                             Nog geen actieve taken
                                         </p>
                                     </div>
@@ -181,7 +181,7 @@ export default function StudentDashboard() {
                             {/* Pending Registrations */}
                             <section className="neu-flat p-6">
                                 <div className="flex items-center justify-between mb-5">
-                                    <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700">
+                                    <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
                                         <span className="material-symbols-outlined text-primary">schedule</span>
                                         Aanmeldingen
                                     </h2>
@@ -193,7 +193,7 @@ export default function StudentDashboard() {
                                 {pendingRegistrations.length === 0 ? (
                                     <div className="neu-pressed p-6 text-center">
                                         <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">hourglass_empty</span>
-                                        <p className="text-gray-500 text-sm">
+                                        <p className="text-[var(--text-muted)] text-sm">
                                             Geen openstaande aanmeldingen
                                         </p>
                                     </div>
@@ -217,7 +217,7 @@ export default function StudentDashboard() {
                     <div className="space-y-6">
                         {/* Quick Stats */}
                         <section className="neu-flat p-5">
-                            <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-4">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
                                 Overzicht
                             </h3>
                             <div className="space-y-3">
@@ -246,7 +246,7 @@ export default function StudentDashboard() {
 
                         {/* Quick Actions */}
                         <section className="neu-flat p-5">
-                            <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wide mb-4">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
                                 Snelle acties
                             </h3>
                             <div className="space-y-2">
@@ -266,8 +266,8 @@ export default function StudentDashboard() {
                             <div className="flex items-start gap-3">
                                 <span className="material-symbols-outlined text-primary">lightbulb</span>
                                 <div>
-                                    <h4 className="font-bold text-gray-700 text-sm">Tip</h4>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <h4 className="font-bold text-[var(--text-primary)] text-sm">Tip</h4>
+                                    <p className="text-xs text-[var(--text-muted)] mt-1">
                                         Voeg skills toe aan je profiel om betere matches te krijgen met beschikbare taken.
                                     </p>
                                 </div>
@@ -375,9 +375,9 @@ function TaskCard({ task, status, onCancel }) {
                         </div>
                     )}
                     <div className="min-w-0">
-                        <p className="text-xs font-bold text-gray-600 truncate">{task.business_name}</p>
+                        <p className="text-xs font-bold text-[var(--text-secondary)] truncate">{task.business_name}</p>
                         {task.project_name && (
-                            <p className="text-[10px] text-gray-400 truncate">{task.project_name}</p>
+                            <p className="text-[10px] text-[var(--text-muted)] truncate">{task.project_name}</p>
                         )}
                     </div>
                 </div>
@@ -389,13 +389,13 @@ function TaskCard({ task, status, onCancel }) {
             </div>
 
             {/* Task name */}
-            <h4 className="font-bold text-gray-700 mb-2">
+            <h4 className="font-bold text-[var(--text-primary)] mb-2">
                 {task.name || 'Taak'}
             </h4>
 
             {/* Description - normal weight */}
             {truncatedDescription && (
-                <p className="text-sm text-gray-500 font-normal mb-3">
+                <p className="text-sm text-[var(--text-muted)] font-normal mb-3">
                     {truncatedDescription}
                 </p>
             )}
@@ -403,7 +403,7 @@ function TaskCard({ task, status, onCancel }) {
             {/* Skills */}
             {task.skills && task.skills.length > 0 && (
                 <div className="mb-3">
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1.5">Vereiste skills</p>
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1.5">Vereiste skills</p>
                     <div className="flex flex-wrap gap-1.5">
                         {task.skills.slice(0, 5).map((skill) => {
                             const skillId = skill.skillId || skill.id;
@@ -422,7 +422,7 @@ function TaskCard({ task, status, onCancel }) {
                             );
                         })}
                         {task.skills.length > 5 && (
-                            <span className="text-xs text-gray-400">+{task.skills.length - 5} meer</span>
+                            <span className="text-xs text-[var(--text-muted)]">+{task.skills.length - 5} meer</span>
                         )}
                     </div>
                 </div>
@@ -439,7 +439,7 @@ function TaskCard({ task, status, onCancel }) {
             {/* Confirmation dialog for pending registrations */}
             {status === 'pending' && showConfirm && (
                 <div className="mb-3 p-4 neu-pressed">
-                    <p className="text-sm text-gray-700 font-semibold mb-3 text-center">
+                    <p className="text-sm text-[var(--text-primary)] font-semibold mb-3 text-center">
                         Weet je zeker dat je deze aanmelding wilt annuleren?
                     </p>
                     <div className="flex gap-2">
@@ -483,7 +483,7 @@ function TaskCard({ task, status, onCancel }) {
             )}
 
             {/* Footer with metadata */}
-            <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between text-xs text-[var(--text-muted)] pt-2 border-t border-gray-100">
                 {task.total_needed ? (
                     <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">group</span>
@@ -508,9 +508,9 @@ function StatItem({ icon, label, value, color }) {
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <span className={`material-symbols-outlined text-lg ${color}`}>{icon}</span>
-                <span className="text-sm text-gray-600">{label}</span>
+                <span className="text-sm text-[var(--text-secondary)]">{label}</span>
             </div>
-            <span className="font-bold text-gray-700">{value}</span>
+            <span className="font-bold text-[var(--text-primary)]">{value}</span>
         </div>
     );
 }

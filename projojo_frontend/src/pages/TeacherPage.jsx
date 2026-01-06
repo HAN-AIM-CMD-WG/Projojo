@@ -175,7 +175,7 @@ export default function TeacherPage() {
 
             {/* Active Businesses */}
             <section className="mb-8">
-                <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">business</span>
                     Actieve Bedrijven
                     <span className="neu-badge-primary ml-2">{businesses.length}</span>
@@ -186,7 +186,7 @@ export default function TeacherPage() {
                 ) : businesses.length === 0 ? (
                     <div className="neu-pressed p-8 text-center">
                         <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">business</span>
-                        <p className="text-gray-500">Nog geen bedrijven aangemaakt</p>
+                        <p className="text-[var(--text-muted)]">Nog geen bedrijven aangemaakt</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -205,8 +205,8 @@ export default function TeacherPage() {
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-gray-700 truncate">{business.name}</h3>
-                                        <p className="text-sm text-gray-500 truncate">{business.location || 'Geen locatie'}</p>
+                                        <h3 className="font-bold text-[var(--text-primary)] truncate">{business.name}</h3>
+                                        <p className="text-sm text-[var(--text-muted)] truncate">{business.location || 'Geen locatie'}</p>
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-4">
@@ -234,7 +234,7 @@ export default function TeacherPage() {
             <section className="mb-8">
                 <button 
                     onClick={() => setShowArchivedSection(!showArchivedSection)}
-                    className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors mb-4"
+                    className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4"
                 >
                     <span className={`material-symbols-outlined transition-transform ${showArchivedSection ? 'rotate-90' : ''}`}>
                         chevron_right
@@ -249,7 +249,7 @@ export default function TeacherPage() {
                     archivedBusinesses.length === 0 ? (
                         <div className="neu-pressed p-6 text-center">
                             <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inventory_2</span>
-                            <p className="text-gray-500 text-sm">Geen gearchiveerde bedrijven</p>
+                            <p className="text-[var(--text-muted)] text-sm">Geen gearchiveerde bedrijven</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -268,8 +268,8 @@ export default function TeacherPage() {
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                            <h3 className="font-bold text-gray-600 truncate">{business.name}</h3>
-                                            <p className="text-sm text-gray-400 truncate">{business.location || 'Geen locatie'}</p>
+                                            <h3 className="font-bold text-[var(--text-secondary)] truncate">{business.name}</h3>
+                                            <p className="text-sm text-[var(--text-muted)] truncate">{business.location || 'Geen locatie'}</p>
                                         </div>
                                     </div>
                                     <div className="flex gap-2 mt-4">
@@ -345,7 +345,7 @@ export default function TeacherPage() {
                                     </button>
 
                                 </div>
-                                <p className='text-sm mt-1 text-gray-600 italic'>Deze link is geldig tot {formatDate(expiry)}.</p>
+                                <p className='text-sm mt-1 text-[var(--text-secondary)] italic'>Deze link is geldig tot {formatDate(expiry)}.</p>
                                 <p className='text-sm mt-4'>De link is slechts één keer bruikbaar.</p>
                                 <button
                                     type="button"
@@ -371,10 +371,10 @@ export default function TeacherPage() {
                             <span className="material-symbols-outlined text-red-500 text-2xl">warning</span>
                         </div>
                         <div>
-                            <p className="font-semibold text-gray-700">
+                            <p className="font-semibold text-[var(--text-primary)]">
                                 Weet je zeker dat je <span className="text-primary">{archiveModalBusiness?.name}</span> wilt archiveren?
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-[var(--text-muted)] mt-1">
                                 Het bedrijf wordt verborgen voor studenten en supervisors.
                             </p>
                         </div>
@@ -421,7 +421,7 @@ export default function TeacherPage() {
                 >
                     <div className="flex flex-col mb-4">
                         <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Bedrijfsnaam`} placeholder={"Vul de naam van het bedrijf in..."} name={`title`} required />
-                        <p className="mt-1 text-sm italic text-gray-600">De rest van de informatie vult het bedrijf zelf in.</p>
+                        <p className="mt-1 text-sm italic text-[var(--text-secondary)]">De rest van de informatie vult het bedrijf zelf in.</p>
                     </div>
                     
                     {/* Create as draft checkbox */}
@@ -440,8 +440,8 @@ export default function TeacherPage() {
                             </div>
                         </div>
                         <div>
-                            <span className="font-medium text-gray-700 group-hover:text-primary transition-colors">Aanmaken als concept</span>
-                            <p className="text-xs text-gray-500">Het bedrijf is verborgen totdat je het publiceert</p>
+                            <span className="font-medium text-[var(--text-primary)] group-hover:text-primary transition-colors">Aanmaken als concept</span>
+                            <p className="text-xs text-[var(--text-muted)]">Het bedrijf is verborgen totdat je het publiceert</p>
                         </div>
                     </label>
                     

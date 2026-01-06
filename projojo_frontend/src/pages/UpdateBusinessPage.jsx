@@ -94,13 +94,13 @@ export default function UpdateBusinessPage() {
             <div className="mb-8">
                 <Link 
                     to={`/business/${targetBusinessId}`}
-                    className="inline-flex items-center gap-2 text-gray-500 hover:text-primary transition-colors mb-4"
+                    className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-4"
                 >
                     <span className="material-symbols-outlined text-xl">arrow_back</span>
                     Terug naar bedrijfspagina
                 </Link>
-                <h1 className="text-3xl font-extrabold text-gray-800">Bedrijf aanpassen</h1>
-                <p className="text-gray-500 mt-2">Pas de gegevens van je bedrijf aan</p>
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Bedrijf aanpassen</h1>
+                <p className="text-[var(--text-muted)] mt-2">Pas de gegevens van je bedrijf aan</p>
             </div>
 
             <form onSubmit={onSubmit}>
@@ -108,7 +108,7 @@ export default function UpdateBusinessPage() {
                 
                 {/* Logo Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">image</span>
                         Bedrijfslogo
                     </h2>
@@ -121,7 +121,7 @@ export default function UpdateBusinessPage() {
 
                 {/* Basic Info Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">business</span>
                         Basisgegevens
                     </h2>
@@ -168,10 +168,10 @@ export default function UpdateBusinessPage() {
 
                 {/* Extra Info Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">info</span>
                         Extra informatie
-                        <span className="text-sm font-normal text-gray-400 ml-2">(optioneel)</span>
+                        <span className="text-sm font-normal text-[var(--text-muted)] ml-2">(optioneel)</span>
                     </h2>
                     <div className="space-y-4">
                         <FormInput
@@ -184,13 +184,13 @@ export default function UpdateBusinessPage() {
                         />
                         
                         <div>
-                            <label className="block text-sm font-bold text-gray-600 mb-2">
+                            <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">
                                 Aantal medewerkers
                             </label>
                             <select
                                 name="company_size"
                                 defaultValue={getSingleValue(business?.company_size) || ""}
-                                className="w-full px-4 py-3 neu-pressed rounded-xl outline-none text-gray-700 font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
+                                className="w-full px-4 py-3 neu-pressed rounded-xl outline-none text-[var(--text-primary)] font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
                             >
                                 {companySizeOptions.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>

@@ -139,7 +139,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
     return (
         <div className={className}>
             {label && (
-                <label className="block text-sm font-bold text-gray-700 mb-2" htmlFor="editor-content" id="editor-label">
+                <label className="block text-sm font-bold text-[var(--text-primary)] mb-2" htmlFor="editor-content" id="editor-label">
                     {label} {required && <span className="text-primary">*</span>}
                 </label>
             )}
@@ -242,13 +242,13 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     ref={editorRef}
                     editor={editor}
                     title="Editor content"
-                    className="bg-transparent [&>*]:outline-none [&>div]:min-h-[100px] [&>div]:max-h-[300px] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:px-4 [&>div]:py-3 [&>div]:text-gray-700 [&>div]:text-sm [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-gray-800 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-gray-800 [&_pre]:bg-gray-700 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-600 [&_a]:text-primary [&_a]:underline [&_a]:font-medium [&_a]:cursor-pointer [&_p]:leading-relaxed"
+                    className="bg-transparent [&>*]:outline-none [&>div]:min-h-[100px] [&>div]:max-h-[300px] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:px-4 [&>div]:py-3 [&>div]:text-[var(--text-primary)] [&>div]:text-sm [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-[var(--text-primary)] [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[var(--text-primary)] [&_pre]:bg-gray-700 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--text-secondary)] [&_a]:text-primary [&_a]:underline [&_a]:font-medium [&_a]:cursor-pointer [&_p]:leading-relaxed"
                 />
                 
                 {/* Character count */}
                 <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200/50 bg-white/30">
-                    <span className="text-xs text-gray-400">Gebruik de toolbar voor opmaak</span>
-                    <span className={`text-xs font-medium ${charCount > max ? 'text-red-500' : 'text-gray-500'}`}>
+                    <span className="text-xs text-[var(--text-muted)]">Gebruik de toolbar voor opmaak</span>
+                    <span className={`text-xs font-medium ${charCount > max ? 'text-red-500' : 'text-[var(--text-muted)]'}`}>
                         {charCount}/{max}
                     </span>
                 </div>
@@ -256,7 +256,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
             <Modal isModalOpen={isLinkModalOpen} setIsModalOpen={setIsLinkModalOpen} modalHeader="Link toevoegen" modalIcon="link">
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="link-ref" className="block text-sm font-bold text-gray-700 mb-2">
+                        <label htmlFor="link-ref" className="block text-sm font-bold text-[var(--text-primary)] mb-2">
                             Link naar de website
                         </label>
                         <div 
@@ -266,7 +266,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                                 boxShadow: 'inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF'
                             }}
                         >
-                            <div className="shrink-0 select-none text-sm text-gray-500 pl-4 pr-1 py-3 bg-gray-200/50">https://</div>
+                            <div className="shrink-0 select-none text-sm text-[var(--text-muted)] pl-4 pr-1 py-3 bg-gray-200/50">https://</div>
                             <input
                                 id="link-ref"
                                 name="link-ref"
@@ -274,7 +274,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                                 placeholder="www.voorbeeld.nl"
                                 value={linkUrl}
                                 onChange={changeLinkUrl}
-                                className="block min-w-0 grow py-3 px-2 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none bg-transparent"
+                                className="block min-w-0 grow py-3 px-2 text-sm text-[var(--text-primary)] placeholder:text-gray-400 focus:outline-none bg-transparent"
                             />
                         </div>
                         {urlError && (

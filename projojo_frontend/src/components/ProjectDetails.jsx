@@ -95,11 +95,11 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                             />
                         </div>
                         <div className="flex-1">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Aangeboden door</span>
-                            <p className="font-bold text-lg text-gray-700 group-hover:text-primary transition">
+                            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Aangeboden door</span>
+                            <p className="font-bold text-lg text-[var(--text-primary)] group-hover:text-primary transition">
                                         {project.business.name}
                             </p>
-                            <p className="text-gray-500 text-sm flex items-center gap-1.5 mt-0.5">
+                            <p className="text-[var(--text-muted)] text-sm flex items-center gap-1.5 mt-0.5">
                                 <span className="material-symbols-outlined text-base text-primary">location_on</span>
                                         {project.business.location}
                                     </p>
@@ -114,7 +114,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                 {project.description && (
                     <div className="neu-pressed p-5 rounded-2xl mb-6">
                         <p className="neu-label mb-3">Beschrijving</p>
-                        <div className="text-gray-600">
+                        <div className="text-[var(--text-secondary)]">
                             <RichTextViewer text={project.description} />
                         </div>
                     </div>
@@ -142,7 +142,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         );
                     })}
                             {(!project.topSkills || project.topSkills.length === 0) && (
-                                <li className="text-gray-400 text-sm">Geen skills gespecificeerd</li>
+                                <li className="text-[var(--text-muted)] text-sm">Geen skills gespecificeerd</li>
                             )}
                 </ul>
                     </div>

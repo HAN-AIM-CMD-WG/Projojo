@@ -115,7 +115,7 @@ export default function BusinessPage() {
                     {/* Location Map */}
                     {businessData?.location && (
                         <div className="mt-6">
-                            <h2 className="flex items-center gap-2 text-lg font-bold text-gray-700 mb-4">
+                            <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)] mb-4">
                                 <span className="material-symbols-outlined text-primary">location_on</span>
                                 Locatie
                             </h2>

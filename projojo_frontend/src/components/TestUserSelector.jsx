@@ -127,7 +127,7 @@ export default function TestUserSelector() {
 					<div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
 						<span className="material-symbols-outlined text-primary text-sm">bug_report</span>
 					</div>
-					<span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+					<span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
 						Development Mode
 					</span>
 				</div>
@@ -188,15 +188,18 @@ export default function TestUserSelector() {
 
 					{/* Dropdown menu */}
 					{isOpen && (
-						<div className="absolute z-50 mt-2 w-full neu-flat rounded-xl overflow-hidden shadow-lg animate-fade-in">
+						<div 
+							className="absolute z-50 mt-2 w-full bg-[var(--neu-bg)] border border-[var(--neu-border)] rounded-xl overflow-hidden animate-fade-in"
+							style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)' }}
+						>
 							<ul className="max-h-72 overflow-auto py-2" role="listbox">
 								{/* Reset option */}
 								<li
-									className="px-4 py-2.5 cursor-pointer hover:bg-gray-50 transition-colors flex items-center gap-3"
+									className="px-4 py-2.5 cursor-pointer hover:bg-[var(--gray-200)]/50 transition-colors flex items-center gap-3"
 									onClick={() => handleTestUserSelect(null)}
 								>
 									<div className="w-7 h-7 rounded-full neu-pressed flex items-center justify-center shrink-0">
-										<span className="material-symbols-outlined text-gray-400 text-xs">close</span>
+										<span className="material-symbols-outlined text-[var(--text-muted)] text-xs">close</span>
 									</div>
 									<span className="text-sm font-medium text-text-muted">Geen selectie</span>
 								</li>
@@ -207,11 +210,11 @@ export default function TestUserSelector() {
 									.map(userType => (
 										<div key={userType}>
 											{/* Group header */}
-											<li className="px-4 py-2 flex items-center gap-2 bg-gray-50/80 border-t border-b border-gray-100">
+											<li className="px-4 py-2 flex items-center gap-2 bg-[var(--gray-200)]/50 border-t border-b border-[var(--neu-border)]">
 												<span className="material-symbols-outlined text-primary text-sm">
 													{getUserTypeIcon(userType)}
 												</span>
-												<span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
+												<span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
 													{getUserTypeLabel(userType)}
 												</span>
 											</li>
@@ -224,7 +227,7 @@ export default function TestUserSelector() {
 														className={`px-4 py-2.5 cursor-pointer transition-colors flex items-center gap-3 ${
 															selectedUser?.id === user.id 
 																? 'bg-primary/5 border-l-2 border-primary' 
-																: 'hover:bg-gray-50 border-l-2 border-transparent'
+																: 'hover:bg-[var(--gray-200)]/50 border-l-2 border-transparent'
 														}`}
 														onClick={() => handleTestUserSelect(user)}
 													>
@@ -235,8 +238,8 @@ export default function TestUserSelector() {
 																className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-white shadow-sm"
 															/>
 														) : (
-															<div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-																<span className="material-symbols-outlined text-gray-400 text-xs">person</span>
+															<div className="w-7 h-7 rounded-full bg-[var(--gray-200)] flex items-center justify-center shrink-0">
+																<span className="material-symbols-outlined text-[var(--text-muted)] text-xs">person</span>
 															</div>
 														)}
 														<div className="min-w-0 flex-1">

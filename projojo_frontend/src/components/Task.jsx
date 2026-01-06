@@ -133,14 +133,14 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 <span className="material-symbols-outlined">assignment</span>
                             </div>
                             <div>
-                                <h2 className="text-xl font-extrabold text-gray-700 tracking-tight">
+                                <h2 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">
                         {task.name}
                     </h2>
                                 <span className="neu-label">Taak</span>
                             </div>
                         </div>
 
-                        <div className="text-gray-600 text-sm">
+                        <div className="text-[var(--text-secondary)] text-sm">
                             <RichTextViewer text={task.description} />
                         </div>
 
@@ -160,7 +160,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     >
                         <div className="flex flex-wrap gap-2 items-center">
                                     {task.skills && task.skills.length === 0 && (
-                                        <span className="text-gray-400 text-sm">Geen specifieke skills vereist</span>
+                                        <span className="text-[var(--text-muted)] text-sm">Geen specifieke skills vereist</span>
                                     )}
                             {task.skills && task.skills.map((skill) => {
                                 const skillId = skill.skillId ?? skill.id;
@@ -188,10 +188,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         {/* Stats */}
                         <div className="neu-pressed p-4 rounded-xl space-y-3">
                             <div className="flex items-center gap-2">
-                                <span className={`material-symbols-outlined ${spotsAvailable > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                                <span className={`material-symbols-outlined ${spotsAvailable > 0 ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>
                                     {spotsAvailable > 0 ? 'check_circle' : 'cancel'}
                                 </span>
-                                <span className="text-sm font-bold text-gray-700">
+                                <span className="text-sm font-bold text-[var(--text-primary)]">
                                     {spotsAvailable > 0 ? (
                                         <><span className="text-emerald-600">{spotsAvailable}</span> van {task.total_needed} plekken</>
                                     ) : (
@@ -201,7 +201,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="material-symbols-outlined text-amber-500">pending</span>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-[var(--text-secondary)]">
                                     <span className="font-bold text-amber-600">{task.total_registered}</span> aanmeldingen
                                 </span>
                             </div>
@@ -253,7 +253,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 style={{ background: 'rgba(255, 127, 80, 0.05)', border: '1px solid rgba(255, 127, 80, 0.15)' }}
                             >
                                 <span className="material-symbols-outlined text-lg mt-0.5 text-primary">lightbulb</span>
-                                <p className="text-sm text-gray-600 leading-relaxed">
+                                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                                     <span className="font-semibold text-primary">Tip:</span> Een goede motivatie vertelt waarom jij de perfecte match bent voor deze taak.
                                 </p>
                             </div>
@@ -264,7 +264,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             {task.skills && task.skills.length > 0 && (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-bold text-gray-700">Jouw skills match</span>
+                                        <span className="text-sm font-bold text-[var(--text-primary)]">Jouw skills match</span>
                                         <span className="text-sm font-bold text-primary">
                                             {task.skills.filter(s => studentSkillIds.has(s.skillId ?? s.id)).length} van {task.skills.length}
                                         </span>
@@ -279,7 +279,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                     className={`px-3 py-1.5 text-xs font-bold rounded-lg ${
                                                         isMatch 
                                                             ? 'bg-primary text-white' 
-                                                            : 'bg-gray-200 text-gray-500'
+                                                            : 'bg-[var(--gray-200)] text-[var(--text-muted)]'
                                                     }`}
                                                 >
                                                     {isMatch && '✓ '}{skill.name}
@@ -298,10 +298,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             />
 
                             {/* Footer buttons */}
-                            <div className="flex items-center justify-between gap-4 pt-2 border-t border-gray-100">
+                            <div className="flex items-center justify-between gap-4 pt-2 border-t border-[var(--neu-border)]">
                                 <button 
                                     type="button" 
-                                    className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors py-2"
+                                    className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2"
                                     onClick={() => setIsModalOpen(false)}
                                 >
                                     Annuleren
@@ -335,10 +335,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     <div className="flex flex-col gap-4">
                         {registrations.length === 0 && (
                             <div className="text-center py-8">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-3xl text-gray-400">inbox</span>
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--gray-200)] flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-3xl text-[var(--text-muted)]">inbox</span>
                                 </div>
-                                <p className="text-gray-500 font-medium">Er zijn geen open aanmeldingen voor deze taak</p>
+                                <p className="text-[var(--text-muted)] font-medium">Er zijn geen open aanmeldingen voor deze taak</p>
                             </div>
                         )}
                         {isFull && (
@@ -351,11 +351,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             return (
                                 <div 
                                     key={registration.student.id} 
-                                    className="rounded-2xl overflow-hidden border border-gray-100"
-                                    style={{ background: 'linear-gradient(145deg, #fafafa, #ffffff)' }}
+                                    className="rounded-2xl overflow-hidden border border-[var(--neu-border)] bg-[var(--neu-bg)]"
                                 >
                                     {/* Student header */}
-                                    <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-transparent">
+                                    <div className="p-5 border-b border-[var(--neu-border)]" style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-orange-400/20 flex items-center justify-center">
@@ -364,13 +363,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                 <div>
                                                     <Link 
                                                         to={`/student/${registration.student.id}`} 
-                                                        className="text-lg font-bold text-gray-800 hover:text-primary transition" 
+                                                        className="text-lg font-bold text-[var(--text-primary)] hover:text-primary transition" 
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
                                                     >
                                                         {registration.student.full_name}
                                                     </Link>
-                                                    <p className="text-xs text-gray-500">
+                                                    <p className="text-xs text-[var(--text-muted)]">
                                                         <span className="font-semibold text-primary">{matchingSkills}</span> van {task.skills?.length || 0} skills match
                                                     </p>
                                                 </div>
@@ -381,15 +380,15 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     {/* Motivation */}
                                     <div className="p-5 space-y-4">
                                         <div>
-                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Motivatie</span>
-                                            <div className="text-gray-600 text-sm bg-gray-50 p-4 rounded-xl">
+                                            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">Motivatie</span>
+                                            <div className="text-[var(--text-secondary)] text-sm bg-[var(--gray-200)]/50 p-4 rounded-xl">
                                                 <RichTextViewer text={registration.reason} />
                                             </div>
                                         </div>
 
                                         {/* Skills */}
                                         <div>
-                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Skills</span>
+                                            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">Skills</span>
                                             <div className="flex flex-wrap gap-2">
                                                 {registration.student.skills.map((skill) => {
                                                     const skillId = skill.skillId ?? skill.id;
@@ -413,7 +412,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
                                         
                                         {/* Response form */}
-                                        <form onSubmit={handleRegistrationResponse} className="pt-2 border-t border-gray-100">
+                                        <form onSubmit={handleRegistrationResponse} className="pt-2 border-t border-[var(--neu-border)]">
                                             <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
                                             <input type="hidden" name="userId" value={registration.student.id} />
                                             <div className="flex gap-3 mt-4">
@@ -423,7 +422,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                     disabled={isFull} 
                                                     className={`flex-1 rounded-xl py-3 font-bold transition-all ${
                                                         isFull 
-                                                            ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+                                                            ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" 
                                                             : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"
                                                     }`}
                                                     style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}
@@ -453,9 +452,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     </div>
                     
                     {/* Footer */}
-                    <div className="flex justify-center pt-4 mt-4 border-t border-gray-100">
+                    <div className="flex justify-center pt-4 mt-4 border-t border-[var(--neu-border)]">
                         <button 
-                            className="text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors"
+                            className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
                             onClick={() => setIsRegistrationsModalOpen(false)}
                         >
                             Sluiten

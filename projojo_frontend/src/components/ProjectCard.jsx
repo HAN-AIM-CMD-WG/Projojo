@@ -116,10 +116,12 @@ export default function ProjectCard({ project, index = 0 }) {
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           
-          {/* Status badge - small, clean, no glass effect */}
-          <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
-            {statusLabel}
-          </div>
+          {/* Status badge - only show if NOT open (avoid redundant "OPEN" on every card) */}
+          {status !== 'active' && status !== 'default' && project.status && (
+            <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
+              {statusLabel}
+            </div>
+          )}
 
           {/* Title overlay at bottom of image */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -134,26 +136,23 @@ export default function ProjectCard({ project, index = 0 }) {
           {/* Open positions - Marketplace model */}
           <div className="mb-4">
             <div className="flex items-center gap-2">
-              <span className={`material-symbols-outlined text-lg w-[18px] text-center ${openPositions > 0 ? 'text-primary' : 'text-gray-400'}`}>
+              <span className={`material-symbols-outlined text-lg w-[18px] text-center ${openPositions > 0 ? 'text-primary' : 'text-[var(--text-muted)]'}`}>
                 {openPositions > 0 ? 'work' : 'block'}
               </span>
-              <span className="text-sm font-bold text-gray-700">
+              <span className="text-sm font-bold text-[var(--text-primary)]">
                 {openPositions > 0 ? (
                   <>{openPositions} {openPositions === 1 ? 'plek' : 'plekken'} beschikbaar</>
                 ) : (
                   'Geen plekken beschikbaar'
                 )}
               </span>
-            </div>
-            {/* Show matching positions - icon aligned under work icon */}
-            {studentSkills.length > 0 && matchingPositions > 0 && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className="material-symbols-outlined text-emerald-600 text-lg w-[18px] text-center">local_fire_department</span>
-                <span className="text-sm text-emerald-600 font-bold">
-                  {matchingPositions} skill {matchingPositions === 1 ? 'match' : 'matches'}
+              {/* Match badge - alleen tonen als student skills heeft en er matches zijn */}
+              {studentSkills.length > 0 && matchingPositions > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#156064] dark:bg-[#00C49A] text-white dark:text-[#1A1512]">
+                  Match!
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Skills match indicator - Outline style for visual harmony */}
@@ -164,7 +163,7 @@ export default function ProjectCard({ project, index = 0 }) {
                 {matchingSkills.slice(0, 3).map(skill => (
                   <span 
                     key={skill.id} 
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-bold text-white bg-primary shadow-sm"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[#156064] dark:text-[#00C49A] border border-[#156064] dark:border-[#00C49A] bg-[var(--neu-bg)]/50"
                     title={`Je hebt deze skill: ${skill.name}`}
                   >
                     <span className="material-symbols-outlined text-[12px]">check</span>
@@ -174,14 +173,14 @@ export default function ProjectCard({ project, index = 0 }) {
                 {missingSkills.slice(0, 2).map(skill => (
                   <span 
                     key={skill.id} 
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-gray-500 border border-gray-300 bg-white/50"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[var(--text-muted)] border border-[var(--gray-300)] bg-[var(--neu-bg)]/50"
                     title={`Gevraagde skill: ${skill.name}`}
                   >
                     {skill.name}
                   </span>
                 ))}
                 {(matchingSkills.length + missingSkills.length > 5) && (
-                  <span className="inline-flex items-center px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-gray-500 border border-gray-300 bg-white/50">
+                  <span className="inline-flex items-center px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[var(--text-muted)] border border-[var(--gray-300)] bg-[var(--neu-bg)]/50">
                     +{projectSkills.length - 5}
                   </span>
                 )}
@@ -196,10 +195,10 @@ export default function ProjectCard({ project, index = 0 }) {
 
           {/* Call-to-action hint - subtle */}
           <div className="mt-4 flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide group-hover:text-primary transition-colors">
+            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide group-hover:text-primary transition-colors">
               Bekijk project
             </span>
-            <span className="material-symbols-outlined text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all">
+            <span className="material-symbols-outlined text-[var(--text-muted)] group-hover:text-primary group-hover:translate-x-1 transition-all">
               arrow_forward
             </span>
           </div>
