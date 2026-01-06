@@ -9,6 +9,7 @@ class Business(BaseModel):
     description: str
     image_path: str
     location: str
+    country: str | None = None
     sector: str | None = None
     company_size: str | None = None
     website: str | None = None

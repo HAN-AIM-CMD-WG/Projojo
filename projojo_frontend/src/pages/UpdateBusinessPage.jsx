@@ -79,6 +79,13 @@ export default function UpdateBusinessPage() {
             });
     }
 
+    // Country options
+    const countryOptions = [
+        { value: "Nederland", label: "Nederland" },
+        { value: "Duitsland", label: "Duitsland" },
+        { value: "België", label: "België" },
+    ];
+
     // Company size options
     const companySizeOptions = [
         { value: "", label: "Selecteer..." },
@@ -152,17 +159,33 @@ export default function UpdateBusinessPage() {
                             </div>
                         }
                         
-                        <FormInput
-                            label="Locatie"
-                            type="text"
-                            name="location"
-                            placeholder="bijv. Amsterdam, Noord-Holland"
-                            initialValue={getSingleValue(business?.location)}
-                            error={locationError}
-                            setError={setLocationError}
-                            max={255}
-                            required={true}
-                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">
+                                    Land
+                                </label>
+                                <select
+                                    name="country"
+                                    defaultValue={getSingleValue(business?.country) || "Nederland"}
+                                    className="w-full px-4 py-3 neu-pressed rounded-xl outline-none text-[var(--text-primary)] font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
+                                >
+                                    {countryOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <FormInput
+                                label="Stad / Plaats"
+                                type="text"
+                                name="location"
+                                placeholder="bijv. Amsterdam, Centrum"
+                                initialValue={getSingleValue(business?.location)}
+                                error={locationError}
+                                setError={setLocationError}
+                                max={255}
+                                required={true}
+                            />
+                        </div>
                     </div>
                 </div>
 

@@ -26,6 +26,7 @@ class BusinessRepository(BaseRepository[Business]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'location': $location,
+                'country': [ $business.country ],
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
                 'website': [ $business.website ],
@@ -56,6 +57,7 @@ class BusinessRepository(BaseRepository[Business]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'location': $location,
+                'country': [ $business.country ],
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
                 'website': [ $business.website ],
@@ -87,6 +89,7 @@ class BusinessRepository(BaseRepository[Business]):
                 'description': $description,
                 'imagePath': $imagePath,
                 'location': $location,
+                'country': [ $business.country ],
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
                 'website': [ $business.website ],
@@ -108,6 +111,9 @@ class BusinessRepository(BaseRepository[Business]):
         location = result.get("location", "")
         
         # Handle optional fields that come as lists from TypeDB
+        country_list = result.get("country", [])
+        country = country_list[0] if country_list else None
+        
         sector_list = result.get("sector", [])
         sector = sector_list[0] if sector_list else None
         
@@ -126,6 +132,7 @@ class BusinessRepository(BaseRepository[Business]):
             description=description,
             image_path=image_path,
             location=location,
+            country=country,
             sector=sector,
             company_size=company_size,
             website=website,
@@ -178,6 +185,7 @@ class BusinessRepository(BaseRepository[Business]):
             "description": $business.description,
             "image_path": $business.imagePath,
             "location": $location,
+            "country": [$business.country],
             "sector": [$business.sector],
             "company_size": [$business.companySize],
             "website": [$business.website],
@@ -272,7 +280,7 @@ class BusinessRepository(BaseRepository[Business]):
             id=id, name=name, description="", image_path="default.png", location="", is_archived=as_draft
         )
 
-    def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None, sector: str = None, company_size: str = None, website: str = None) -> Business:
+    def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None, country: str = None, sector: str = None, company_size: str = None, website: str = None) -> Business:
         # Build the update query dynamically based on what needs to be updated
         update_clauses = [
             '$business has name ~name;',
@@ -291,7 +299,11 @@ class BusinessRepository(BaseRepository[Business]):
             update_clauses.append('$business has imagePath ~image_filename;')
             update_params["image_filename"] = image_filename
         
-        # Optional fields - sector, company_size, website
+        # Optional fields - country, sector, company_size, website
+        if country is not None:
+            update_clauses.append('$business has country ~country;')
+            update_params["country"] = country
+        
         if sector is not None:
             update_clauses.append('$business has sector ~sector;')
             update_params["sector"] = sector

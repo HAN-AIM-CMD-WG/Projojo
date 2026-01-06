@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import L from 'leaflet';
 import { IMAGE_BASE_URL } from '../services';
 
-// Custom coral marker icon
+// Custom coral marker icon SVG
 const coralMarkerSvg = `
 <svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
   <path d="M12.5 0C5.596 0 0 5.596 0 12.5c0 2.154.55 4.18 1.516 5.95L12.5 41l10.984-22.55A12.42 12.42 0 0025 12.5C25 5.596 19.404 0 12.5 0z" fill="#FF7F50"/>
@@ -13,6 +13,31 @@ const coralMarkerSvg = `
 </svg>
 `;
 
+// Dimmed marker for non-matching locations
+const dimmedMarkerSvg = `
+<svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12.5 0C5.596 0 0 5.596 0 12.5c0 2.154.55 4.18 1.516 5.95L12.5 41l10.984-22.55A12.42 12.42 0 0025 12.5C25 5.596 19.404 0 12.5 0z" fill="#AAAAAA" opacity="0.6"/>
+  <circle cx="12.5" cy="12.5" r="5" fill="white" opacity="0.6"/>
+</svg>
+`;
+
+// Create marker icon with optional badge
+const createMarkerIcon = (isMatch, matchCount = 0) => {
+    const svg = isMatch ? coralMarkerSvg : dimmedMarkerSvg;
+    const badgeHtml = isMatch && matchCount > 0 
+        ? `<span class="marker-badge">${matchCount}</span>` 
+        : '';
+    
+    return L.divIcon({
+        html: `<div class="marker-with-badge">${svg}${badgeHtml}</div>`,
+        className: isMatch ? 'coral-marker' : 'coral-marker dimmed-marker',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+    });
+};
+
+// Default coral icon (for when no filter is active)
 const coralIcon = L.divIcon({
     html: coralMarkerSvg,
     className: 'coral-marker',
@@ -61,11 +86,12 @@ function FitBounds({ positions }) {
  * Uses Nominatim API for geocoding addresses to coordinates
  * 
  * @param {Object} props
- * @param {Array} props.locations - Array of {id, name, address, type: 'business'|'project', count?, businessName?}
+ * @param {Array} props.locations - Array of {id, name, address, type: 'business'|'project', count?, businessName?, isFilterMatch?, matchCount?}
+ * @param {boolean} [props.showOnlyMatches=false] - If true, only show matching locations
  * @param {string} [props.height="300px"] - Height of the map container
  * @param {string} [props.className] - Additional CSS classes
  */
-export default function OverviewMap({ locations = [], height = "300px", className = "" }) {
+export default function OverviewMap({ locations = [], showOnlyMatches = false, height = "300px", className = "" }) {
     const [geocodedLocations, setGeocodedLocations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -145,6 +171,18 @@ export default function OverviewMap({ locations = [], height = "300px", classNam
         [geocodedLocations]
     );
 
+    // Filter positions based on showOnlyMatches
+    const visiblePositions = useMemo(() => {
+        if (!showOnlyMatches) return positions;
+        return positions.filter(loc => loc.isFilterMatch !== false);
+    }, [positions, showOnlyMatches]);
+
+    // Check if any location has filter info (to decide if we should show badges)
+    const hasFilterInfo = useMemo(() => 
+        positions.some(loc => loc.isFilterMatch !== undefined),
+        [positions]
+    );
+
     if (!locations || locations.length === 0) {
         return (
             <div className={`neu-pressed rounded-xl flex items-center justify-center ${className}`} style={{ height }}>
@@ -192,11 +230,18 @@ export default function OverviewMap({ locations = [], height = "300px", classNam
                         maxClusterRadius={50}
                         spiderLegPolylineOptions={{ weight: 2, color: '#FF7F50', opacity: 0.5 }}
                     >
-                        {positions.map((loc) => (
+                        {visiblePositions.map((loc) => {
+                            // Determine the icon to use
+                            const isMatch = loc.isFilterMatch !== false;
+                            const icon = hasFilterInfo 
+                                ? createMarkerIcon(isMatch, isMatch ? loc.matchCount : 0)
+                                : coralIcon;
+                            
+                            return (
                             <Marker 
                                 key={`${loc.type}-${loc.id}`} 
                                 position={[loc.lat, loc.lng]}
-                                icon={coralIcon}
+                                icon={icon}
                             >
                                 <Popup>
                                     <div className="font-sans min-w-[200px]">
@@ -248,15 +293,16 @@ export default function OverviewMap({ locations = [], height = "300px", classNam
                                     </div>
                                 </Popup>
                             </Marker>
-                        ))}
+                            );
+                        })}
                     </MarkerClusterGroup>
                 </MapContainer>
             )}
             
             {/* Legend */}
-            {!loading && positions.length > 0 && (
+            {!loading && visiblePositions.length > 0 && (
                 <div className="absolute bottom-2 left-2 z-[1000] bg-white/90 dark:bg-[#2D221C]/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--text-muted)]">
-                    {positions.length} {positions.length === 1 ? 'locatie' : 'locaties'}
+                    {visiblePositions.length} {visiblePositions.length === 1 ? 'locatie' : 'locaties'}
                 </div>
             )}
         </div>

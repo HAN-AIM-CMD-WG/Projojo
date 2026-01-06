@@ -29,6 +29,7 @@ entity business,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1),
+    owns country @card(0..1),
     owns sector @card(0..1),
     owns companySize @card(0..1),
     owns website @card(0..1),
@@ -135,6 +136,7 @@ attribute id value string;
 attribute oauthSub value string;
 attribute description value string;
 attribute location value string;
+attribute country value string;
 attribute isPending value boolean;
 attribute createdAt value datetime-tz;
 attribute totalNeeded value integer;

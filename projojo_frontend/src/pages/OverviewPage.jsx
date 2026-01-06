@@ -53,7 +53,10 @@ export default function OverviewPage() {
                 path: business.image_path
               },
               location: business.location && business.location.length > 0 ?
-                (Array.isArray(business.location) ? business.location[0] : business.location) : ""
+                (Array.isArray(business.location) ? business.location[0] : business.location) : "",
+              sector: Array.isArray(business.sector) ? business.sector[0] : business.sector,
+              companySize: Array.isArray(business.company_size) ? business.company_size[0] : business.company_size,
+              country: Array.isArray(business.country) ? business.country[0] : (business.country || 'Nederland')
             },
             projects: business.projects.map(project => {
               return {
@@ -91,17 +94,49 @@ export default function OverviewPage() {
 
   const isSearchInString = (search, string) => string.toLowerCase().includes(search.toLowerCase());
 
-  const handleFilter = ({ searchInput, selectedSkills }) => {
+  const handleFilter = ({ searchInput, selectedSkills, country, sector, location, companySize }) => {
     const formattedSearch = searchInput.trim().replace(/\s+/g, ' ')
     setError(null);
 
-    if (!formattedSearch && selectedSkills.length === 0) {
+    // Check if any filter is active
+    const hasFilters = formattedSearch || selectedSkills.length > 0 || country || sector || location || companySize;
+
+    if (!hasFilters) {
       setShownBusinesses(initialBusinesses);
       return;
     }
 
-    let filteredData = initialBusinesses
+    let filteredData = initialBusinesses;
 
+    // Country filter
+    if (country) {
+      filteredData = filteredData.filter(b => 
+        b.business.country?.toLowerCase() === country.toLowerCase()
+      );
+    }
+
+    // Sector filter
+    if (sector) {
+      filteredData = filteredData.filter(b => 
+        b.business.sector?.toLowerCase() === sector.toLowerCase()
+      );
+    }
+
+    // Location (city) filter - searches in the location string
+    if (location) {
+      filteredData = filteredData.filter(b => 
+        b.business.location?.toLowerCase().includes(location.toLowerCase())
+      );
+    }
+
+    // Company size filter
+    if (companySize) {
+      filteredData = filteredData.filter(b => 
+        b.business.companySize?.toLowerCase() === companySize.toLowerCase()
+      );
+    }
+
+    // Search filter
     if (formattedSearch) {
       filteredData = filteredData.map(business => {
         const filteredProjects = business.projects.filter(project => isSearchInString(formattedSearch, project.title));
@@ -118,6 +153,7 @@ export default function OverviewPage() {
         .sort((a, b) => a.business.name.localeCompare(b.business.name));
     }
 
+    // Skills filter
     if (selectedSkills.length > 0) {
       // Prepare a set of selected ids (fallback to name) for stable comparisons
       const selectedIds = new Set((selectedSkills || []).map(s => String(s.skillId ?? s.name)));
@@ -153,13 +189,15 @@ export default function OverviewPage() {
     }
 
     if (filteredData.length === 0) {
-      if (formattedSearch && selectedSkills.length > 0) {
-        setError(`Er zijn geen zoekresultaten gevonden voor "${formattedSearch}" in combinatie met "${selectedSkills.map(skill => skill.name).join('", "')}".`);
-      } else if (formattedSearch) {
-        setError(`Er zijn geen zoekresultaten gevonden voor "${formattedSearch}".`);
-      } else if (selectedSkills.length > 0) {
-        setError(`Er zijn geen zoekresultaten gevonden voor "${selectedSkills.map(skill => skill.name).join('", "')}".`);
-      }
+      const activeFilters = [];
+      if (formattedSearch) activeFilters.push(`"${formattedSearch}"`);
+      if (selectedSkills.length > 0) activeFilters.push(selectedSkills.map(s => s.name).join(', '));
+      if (country) activeFilters.push(`land: ${country}`);
+      if (sector) activeFilters.push(`sector: ${sector}`);
+      if (location) activeFilters.push(`stad: ${location}`);
+      if (companySize) activeFilters.push(`grootte: ${companySize}`);
+      
+      setError(`Geen resultaten gevonden voor ${activeFilters.join(' + ')}.`);
     }
 
     setShownBusinesses(filteredData);
@@ -222,6 +260,9 @@ export default function OverviewPage() {
           name: b.business.name,
           location: b.business.location,
           image: b.business.photo?.path,
+          sector: b.business.sector,
+          companySize: b.business.companySize,
+          country: b.business.country,
           projects: b.projects,
           topSkills: b.topSkills
         }))}

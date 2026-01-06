@@ -1246,6 +1246,44 @@
     stroke-opacity: 0.5;
 }
 
+/* Marker with badge styling */
+.marker-with-badge {
+    position: relative;
+    display: inline-block;
+}
+
+.marker-badge {
+    position: absolute;
+    top: -4px;
+    right: -10px;
+    background: #00C49A;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    font-family: inherit;
+}
+
+/* Dimmed marker for non-matching locations */
+.dimmed-marker {
+    opacity: 0.5;
+    filter: grayscale(50%);
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.dimmed-marker:hover {
+    opacity: 0.8;
+    filter: grayscale(20%);
+}
+
 /* ===========================================
    ACCESSIBILITY: Reduced Motion Support
    Respects user preference for reduced motion
