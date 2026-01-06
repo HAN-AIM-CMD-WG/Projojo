@@ -50,11 +50,11 @@ export default function SupervisorDashboard() {
     if (authData.type !== 'supervisor') {
         return (
             <div className="space-y-6">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                        {getGreeting()}!
+                <div className="pt-4 mb-8 text-center">
+                    <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                        Dashboard
                     </h1>
-                    <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
+                    <p className="text-base text-[var(--text-muted)] font-medium mt-2">
                         Welkom bij Projojo
                     </p>
                 </div>
@@ -75,18 +75,18 @@ export default function SupervisorDashboard() {
 
     return (
         <div className="space-y-6">
-            {/* Welcome header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                    {getGreeting()}!
+            {/* Page header */}
+            <div className="pt-4 mb-8 text-center">
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                    Bedrijfsdashboard
                 </h1>
-                <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
+                <p className="text-base text-[var(--text-muted)] font-medium mt-2">
                     {dashboardData?.stats?.pending_count > 0 ? (
                         <>
                             Je hebt <span className="text-primary font-bold">{dashboardData.stats.pending_count}</span> openstaande {dashboardData.stats.pending_count === 1 ? 'aanmelding' : 'aanmeldingen'}
                         </>
                     ) : (
-                        'Welkom bij je bedrijfsdashboard'
+                        'Beheer je projecten en aanmeldingen'
                     )}
                 </p>
             </div>

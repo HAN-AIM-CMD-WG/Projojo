@@ -233,22 +233,22 @@ export default function OverviewPage() {
 
   return (
     <>
-      {/* Personalized welcome - UX: Recognition > Recall, Personal context */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-          {studentName ? `${getGreeting()}, ${studentName}!` : `${getGreeting()}!`}
+      {/* Page header - clear purpose */}
+      <div className="pt-4 mb-8 text-center">
+        <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+          Ontdek projecten
         </h1>
-        <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
+        <p className="text-base text-[var(--text-muted)] font-medium mt-2">
           {matchingOpenPositions > 0 && studentSkills.length > 0 ? (
             <>
-              <span className="text-primary font-bold">{matchingOpenPositions}</span> skill {matchingOpenPositions === 1 ? 'match' : 'matches'}
+              <span className="text-primary font-bold">{matchingOpenPositions}</span> {matchingOpenPositions === 1 ? 'project matcht' : 'projecten matchen'} met jouw skills
             </>
           ) : totalOpenPositions > 0 ? (
             <>
               <span className="text-[var(--text-primary)] font-bold">{totalOpenPositions}</span> open {totalOpenPositions === 1 ? 'plek' : 'plekken'} beschikbaar
             </>
           ) : (
-            'Ontdek projecten die matchen met jouw skills'
+            'Vind projecten die passen bij jouw skills en interesses'
           )}
         </p>
       </div>

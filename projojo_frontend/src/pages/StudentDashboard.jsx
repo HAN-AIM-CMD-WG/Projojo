@@ -100,11 +100,11 @@ export default function StudentDashboard() {
     if (authData.type !== 'student') {
         return (
             <div className="space-y-6">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                        {getGreeting()}!
+                <div className="pt-4 mb-8 text-center">
+                    <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                        Dashboard
                     </h1>
-                    <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
+                    <p className="text-base text-[var(--text-muted)] font-medium mt-2">
                         Welkom bij Projojo
                     </p>
                 </div>
@@ -125,18 +125,18 @@ export default function StudentDashboard() {
 
     return (
         <div className="space-y-6">
-            {/* Welcome header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                    {studentName ? `${getGreeting()}, ${studentName}!` : `${getGreeting()}!`}
+            {/* Page header */}
+            <div className="pt-4 mb-8 text-center">
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                    Mijn dashboard
                 </h1>
-                <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
+                <p className="text-base text-[var(--text-muted)] font-medium mt-2">
                     {activeTasks.length > 0 ? (
                         <>
                             Je hebt <span className="text-primary font-bold">{activeTasks.length}</span> actieve {activeTasks.length === 1 ? 'taak' : 'taken'}
                         </>
                     ) : (
-                        'Welkom bij je persoonlijke dashboard'
+                        'Beheer je aanmeldingen en volg je voortgang'
                     )}
                 </p>
             </div>

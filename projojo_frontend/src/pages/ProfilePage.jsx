@@ -56,12 +56,12 @@ export default function ProfilePage() {
 
     return (
         <>
-            {/* Personalized header */}
-            <div className="mb-6">
-                <h1 className="text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                    {isOwnProfile ? 'Jouw profiel' : firstName ? `Profiel van ${firstName}` : 'Profiel'}
+            {/* Page header */}
+            <div className="pt-4 mb-8 text-center">
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                    {isOwnProfile ? 'Mijn profiel' : firstName ? `Profiel van ${firstName}` : 'Profiel'}
                 </h1>
-                <p className="text-sm text-[var(--text-muted)] font-medium mt-1">
+                <p className="text-base text-[var(--text-muted)] font-medium mt-2">
                     {isOwnProfile 
                         ? 'Beheer je skills en CV om betere matches te krijgen'
                         : student.full_name ? `Bekijk de skills en ervaring van ${student.full_name}` : 'Bekijk dit profiel'
