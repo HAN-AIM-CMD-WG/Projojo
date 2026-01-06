@@ -60,8 +60,20 @@ export default function App() {
   return (
     <StudentSkillsProvider>
       <div className="min-h-screen bg-neu-bg">
+        {/* Skip link for keyboard navigation - WCAG 2.4.1 */}
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:font-bold focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
+        >
+          Ga naar hoofdinhoud
+        </a>
+        
         {!isPublicPage && <Navbar />}
-        <main className={isPublicPage ? "" : "max-w-7xl min-h-dvh px-6 mx-auto relative py-6"}>
+        <main 
+          id="main-content" 
+          tabIndex="-1"
+          className={isPublicPage ? "" : "max-w-7xl min-h-dvh px-6 mx-auto relative py-6 focus:outline-none"}
+        >
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />

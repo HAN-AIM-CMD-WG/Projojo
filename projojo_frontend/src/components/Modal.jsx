@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 
 export default function Modal({ 
     isModalOpen, 
@@ -10,80 +10,139 @@ export default function Modal({
     children 
 }) {
     const modalRef = useRef(null);
+    const closeButtonRef = useRef(null);
+    const previousActiveElement = useRef(null);
+    const titleId = useId();
 
     const handleClickOutside = (event) => {
         if (!modalRef.current.contains(event.target)) {
             setIsModalOpen(false);
         }
-    }
+    };
+
+    // Handle ESC key to close modal
+    const handleKeyDown = useCallback((event) => {
+        if (event.key === 'Escape') {
+            setIsModalOpen(false);
+        }
+
+        // Focus trap - keep focus within modal
+        if (event.key === 'Tab' && modalRef.current) {
+            const focusableElements = modalRef.current.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (event.shiftKey) {
+                // Shift + Tab: if on first element, go to last
+                if (document.activeElement === firstElement) {
+                    event.preventDefault();
+                    lastElement?.focus();
+                }
+            } else {
+                // Tab: if on last element, go to first
+                if (document.activeElement === lastElement) {
+                    event.preventDefault();
+                    firstElement?.focus();
+                }
+            }
+        }
+    }, [setIsModalOpen]);
 
     useEffect(() => {
         if (isModalOpen) {
+            // Store currently focused element to restore later
+            previousActiveElement.current = document.activeElement;
+            
+            // Prevent body scroll
             document.body.style.overflow = 'hidden';
+            
+            // Add keyboard listener
+            document.addEventListener('keydown', handleKeyDown);
+            
+            // Focus the close button after a short delay to ensure modal is rendered
+            setTimeout(() => {
+                closeButtonRef.current?.focus();
+            }, 0);
         } else {
             document.body.style.overflow = 'auto';
+            document.removeEventListener('keydown', handleKeyDown);
+            
+            // Restore focus to previously focused element
+            if (previousActiveElement.current) {
+                previousActiveElement.current.focus();
+            }
         }
-    }, [isModalOpen]);
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isModalOpen, handleKeyDown]);
+
+    if (!isModalOpen) {
+        return null;
+    }
 
     return (
-        <div>
-            <div 
-                id="crud-modal" 
-                onClick={handleClickOutside} 
-                aria-hidden={!isModalOpen} 
-                className={`${isModalOpen ? 'flex' : 'hidden'} overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-dvh max-h-full px-4 py-12 bg-black/40 backdrop-blur-md`}
-            >
-                <div className={`relative w-full ${maxWidth} max-h-full`}>
+        <div 
+            className="overflow-y-auto overflow-x-hidden fixed inset-0 z-50 flex justify-center items-center px-4 py-12 bg-black/40 backdrop-blur-md"
+            onClick={handleClickOutside}
+        >
+            <div className={`relative w-full ${maxWidth} max-h-full`}>
+                <div 
+                    ref={modalRef}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby={titleId}
+                    className="rounded-3xl overflow-hidden"
+                    style={{ 
+                        background: 'linear-gradient(145deg, #f5f4f4, #ffffff)',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)'
+                    }}
+                >
+                    {/* Header met gradient accent */}
                     <div 
-                        ref={modalRef} 
-                        className="rounded-3xl overflow-hidden"
-                        style={{ 
-                            background: 'linear-gradient(145deg, #f5f4f4, #ffffff)',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255,255,255,0.1)'
-                        }}
+                        className="px-6 py-5 border-b border-gray-100"
+                        style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}
                     >
-                        {/* Header met gradient accent */}
-                        <div 
-                            className="px-6 py-5 border-b border-gray-100"
-                            style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    {modalIcon && (
-                                        <div 
-                                            className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-orange-600"
-                                            style={{ boxShadow: '0 4px 12px rgba(255, 127, 80, 0.3)' }}
-                                        >
-                                            <span className="material-symbols-outlined text-white text-lg">{modalIcon}</span>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-800">
-                                            {modalHeader}
-                                        </h3>
-                                        {modalSubtitle && (
-                                            <p className="text-xs text-gray-500 font-medium">{modalSubtitle}</p>
-                                        )}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                {modalIcon && (
+                                    <div 
+                                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-orange-600"
+                                        style={{ boxShadow: '0 4px 12px rgba(255, 127, 80, 0.3)' }}
+                                    >
+                                        <span className="material-symbols-outlined text-white text-lg" aria-hidden="true">{modalIcon}</span>
                                     </div>
+                                )}
+                                <div>
+                                    <h2 id={titleId} className="text-lg font-bold text-gray-800">
+                                        {modalHeader}
+                                    </h2>
+                                    {modalSubtitle && (
+                                        <p className="text-xs text-gray-500 font-medium">{modalSubtitle}</p>
+                                    )}
                                 </div>
-                                <button
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
-                                    type="button"
-                                >
-                                    <span className="material-symbols-outlined text-xl">close</span>
-                                    <span className="sr-only">Sluiten</span>
-                                </button>
                             </div>
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="p-6">
-                            {children}
+                            <button
+                                ref={closeButtonRef}
+                                onClick={() => setIsModalOpen(false)}
+                                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                type="button"
+                                aria-label="Modal sluiten"
+                            >
+                                <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
+                            </button>
                         </div>
                     </div>
-                    <div className="h-12" onClick={handleClickOutside}></div>
+                    
+                    {/* Content */}
+                    <div className="p-6">
+                        {children}
+                    </div>
                 </div>
+                <div className="h-12" onClick={handleClickOutside}></div>
             </div>
         </div>
     );

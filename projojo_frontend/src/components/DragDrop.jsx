@@ -33,8 +33,8 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
         }
     }, [initialFilePath]);
 
-    function onKeyUp(event) {
-        if (event.key === "Enter") {
+    function onKeyDown(event) {
+        if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             fileInput.current.click();
         }
@@ -164,27 +164,39 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                         {label} {required && <span className="text-primary">*</span>}
                     </label>
                 )}
-                <div className="border-2 border-dashed rounded pb-6 max-sm:hidden flex flex-col items-center cursor-pointer"
+                <div 
+                    className="border-2 border-dashed rounded pb-6 max-sm:hidden flex flex-col items-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                     onClick={() => fileInput.current.click()}
-                    onKeyUp={onKeyUp}
+                    onKeyDown={onKeyDown}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={onDrop}
                     tabIndex="0"
+                    role="button"
+                    aria-label={`${label || 'Bestand'} uploaden. Klik of sleep een bestand hierheen.${accept.includes('image') ? ' Alleen afbeeldingen toegestaan.' : accept.includes('pdf') ? ' Alleen PDF-bestanden toegestaan.' : ''}`}
                 >
-                    <svg width="20%" height="20%" className='mt-3' viewBox="0 0 24 24">
+                    <svg width="20%" height="20%" className='mt-3' viewBox="0 0 24 24" aria-hidden="true">
                         <g>
                             <path fill="none" d="M0 0h24v24H0z" />
                             <path fillRule="nonzero" d="M16 13l6.964 4.062-2.973.85 2.125 3.681-1.732 1-2.125-3.68-2.223 2.15L16 13zm-2-7h2v2h5a1 1 0 0 1 1 1v4h-2v-3H10v10h4v2H9a1 1 0 0 1-1-1v-5H6v-2h2V9a1 1 0 0 1 1-1h5V6zM4 14v2H2v-2h2zm0-4v2H2v-2h2zm0-4v2H2V6h2zm0-4v2H2V2h2zm4 0v2H6V2h2zm4 0v2h-2V2h2zm4 0v2h-2V2h2z" />
                         </g>
                     </svg>
-                    <h2>Klik hier of sleep hier een bestand heen</h2>
+                    <p className="text-gray-700 font-medium">Klik hier of sleep hier een bestand heen</p>
                 </div>
-                <button className="btn-primary sm:hidden w-full" onClick={() => fileInput.current.click()}>Voeg een bestand toe</button>
+                <button 
+                    type="button"
+                    className="btn-primary sm:hidden w-full" 
+                    onClick={() => fileInput.current.click()}
+                    aria-label={`${label || 'Bestand'} uploaden`}
+                >
+                    Voeg een bestand toe
+                </button>
             </div>
 
-            {!!error && (
-                <span className="text-primary text-center">{error}</span>
-            )}
+            <div role="alert" aria-live="polite" className="text-center">
+                {!!error && (
+                    <span className="text-primary font-medium">{error}</span>
+                )}
+            </div>
 
             <input ref={fileInput} hidden type="file" id={id} name={name} multiple={multiple} accept={accept} onInput={onFileInput} onInvalid={() => setError("Dit bestand is verplicht")} data-testid="fileinput" required={required && !initialPreview} />
 

@@ -91,9 +91,9 @@ export default function Navbar() {
             <nav className="bg-neu-bg fixed w-full z-40 top-0 start-0 border-b border-white/20" style={{ boxShadow: '0 4px 20px rgba(209, 217, 230, 0.6)' }}>
                 <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 h-20">
                     {/* Logo */}
-                    <Link to="/home" className="flex items-center gap-3 group">
+                    <Link to="/home" className="flex items-center gap-3 group" aria-label="Projojo - Ga naar home">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-2xl text-primary">school</span>
+                            <span className="material-symbols-outlined text-2xl text-primary" aria-hidden="true">school</span>
                         </div>
                         <div>
                             <h1 className="font-extrabold text-lg text-gray-700 tracking-tight leading-none group-hover:text-primary transition-colors">
@@ -113,8 +113,8 @@ export default function Navbar() {
                         aria-controls="navbar-default" 
                         aria-expanded={!isCollapsed}
                     >
-                        <span className="sr-only">Hoofdmenu openen</span>
-                        <span className="material-symbols-outlined">
+                        <span className="sr-only">{isCollapsed ? 'Hoofdmenu openen' : 'Hoofdmenu sluiten'}</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">
                             {isCollapsed ? 'menu' : 'close'}
                         </span>
                     </button>
@@ -146,8 +146,9 @@ export default function Navbar() {
                                 <button 
                                     onClick={() => { setIsCollapsed(true); signOut(); }} 
                                     className="flex items-center gap-2 py-2.5 px-5 md:px-4 md:py-2 text-text-secondary font-semibold rounded-2xl hover:text-red-500 hover:bg-red-50/50 transition-all duration-200 w-full md:w-auto"
+                                    aria-label="Uitloggen"
                                 >
-                                    <span className="material-symbols-outlined text-lg">logout</span>
+                                    <span className="material-symbols-outlined text-lg" aria-hidden="true">logout</span>
                                     <span className="md:hidden lg:inline">Uitloggen</span>
                                 </button>
                             </li>
@@ -173,7 +174,7 @@ export default function Navbar() {
                                                     />
                                                 ) : (
                                                     <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shrink-0">
-                                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-base transition-colors">business</span>
+                                                        <span className="material-symbols-outlined text-gray-400 group-hover:text-primary text-base transition-colors" aria-hidden="true">business</span>
                                                     </div>
                                                 )}
                                                 
@@ -193,12 +194,13 @@ export default function Navbar() {
                                             to="/teacher"
                                             className="flex items-center group"
                                             onClick={() => setIsCollapsed(true)}
+                                            aria-label="Docent beheer"
                                         >
                                             {/* Neumorphic container */}
                                             <div className="relative flex items-center neu-pressed rounded-xl p-1 group-hover:shadow-[inset_2px_2px_4px_rgba(209,217,230,0.8),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] transition-all duration-300">
                                                 {/* School icon */}
                                                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                                    <span className="material-symbols-outlined text-primary text-lg">school</span>
+                                                    <span className="material-symbols-outlined text-primary text-lg" aria-hidden="true">school</span>
                                                 </div>
                                                 
                                                 {/* Expanding text container - hidden on mobile */}

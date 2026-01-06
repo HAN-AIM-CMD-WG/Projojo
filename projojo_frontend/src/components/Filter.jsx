@@ -101,14 +101,16 @@ export default function Filter({ onFilter }) {
                         }`}
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => setIsEditing(!isEditing)}
+                        aria-expanded={isEditing}
+                        aria-controls="skills-filter-panel"
                     >
-                        <span className="material-symbols-outlined text-lg">
+                        <span className="material-symbols-outlined text-lg" aria-hidden="true">
                             {isEditing ? 'expand_less' : 'filter_list'}
                         </span>
                         <span className="font-bold">Filter op skills</span>
                         {/* Badge: show selected count only when closed */}
                         {selectedSkills.length > 0 && !isEditing && (
-                            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center" aria-label={`${selectedSkills.length} filters actief`}>
                                 {selectedSkills.length}
                             </span>
                         )}
@@ -136,7 +138,7 @@ export default function Filter({ onFilter }) {
                     <form onSubmit={handleSearch} className="flex w-full gap-3">
                         <div className="relative flex-1 group">
                             <label className="sr-only" htmlFor="search">Zoek een bedrijf of project</label>
-                            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors">
+                            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" aria-hidden="true">
                                 search
                             </span>
                             <input
@@ -154,7 +156,7 @@ export default function Filter({ onFilter }) {
                             className="neu-btn-primary !px-5" 
                             aria-label="Zoeken op bedrijfs- of projectnaam"
                         >
-                            <span className="material-symbols-outlined">search</span>
+                            <span className="material-symbols-outlined" aria-hidden="true">search</span>
                         </button>
 
                         {search && (
@@ -164,7 +166,7 @@ export default function Filter({ onFilter }) {
                                 onClick={handleSearchClear} 
                                 aria-label="Wis zoekopdracht"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined" aria-hidden="true">close</span>
                             </button>
                         )}
                     </form>
@@ -183,13 +185,13 @@ export default function Filter({ onFilter }) {
                             aria-label={`Verwijder filter ${skill.name}`}
                         >
                             {skill.name}
-                            <span className="material-symbols-outlined text-sm opacity-60 group-hover:opacity-100">close</span>
+                            <span className="material-symbols-outlined text-sm opacity-60 group-hover:opacity-100" aria-hidden="true">close</span>
                         </button>
                     ))}
                     {selectedSkills.length > 1 && (
-                        <button className="neu-btn !py-1.5 !px-3 text-xs" onClick={handleSkillsClear}>
+                        <button className="neu-btn !py-1.5 !px-3 text-xs" onClick={handleSkillsClear} aria-label="Alle filters wissen">
                             <span className="flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">delete_sweep</span>
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">delete_sweep</span>
                                 <span className="font-bold">Alles wissen</span>
                             </span>
                         </button>

@@ -804,3 +804,31 @@
 .leaflet-control {
     z-index: 1 !important;
 }
+
+/* ===========================================
+   ACCESSIBILITY: Reduced Motion Support
+   Respects user preference for reduced motion
+   WCAG 2.1 Success Criterion 2.3.3
+   =========================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    
+    /* Keep essential feedback animations but make them instant */
+    .fade-in-up,
+    .fade-in-up-1,
+    .fade-in-up-2,
+    .fade-in-up-3,
+    .fade-in-up-4,
+    .animate-fade-in {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
