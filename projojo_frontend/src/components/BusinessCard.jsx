@@ -132,20 +132,20 @@ export default function BusinessCard({
                                     Bedrijf
                                 </span>
                                 <div className="flex items-center gap-2">
-                                    <Link 
-                                        to={`/business/${businessId}`}
+                                <Link 
+                                    to={`/business/${businessId}`}
                                         className="min-w-0"
-                                    >
+                                >
                                         <h2 className="text-xl font-extrabold text-[var(--text-primary)] truncate hover:underline">
-                                            {name}
-                                        </h2>
-                                    </Link>
-                                    {locationText && (
+                                        {name}
+                                    </h2>
+                                </Link>
+                                {locationText && (
                                         <span className="text-xs text-[var(--text-muted)] flex items-center gap-1 shrink-0">
                                             <span className="material-symbols-outlined text-xs">location_on</span>
-                                            {locationText}
+                                        {locationText}
                                         </span>
-                                    )}
+                                )}
                                 </div>
                             </div>
 
@@ -205,9 +205,9 @@ export default function BusinessCard({
                     <div className="mt-5 pt-4 border-t border-[var(--neu-border)]">
                         <div className="flex items-center gap-4 mb-3">
                             <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
-                                <span className="material-symbols-outlined text-sm">psychology</span>
-                                Gevraagde skills
-                            </p>
+                            <span className="material-symbols-outlined text-sm">psychology</span>
+                            Gevraagde skills
+                        </p>
                             {matchingSkills.length > 0 && studentSkills.length > 0 && (
                                 <span className="text-xs font-bold text-[#156064] dark:text-[#00C49A] flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">check_circle</span>

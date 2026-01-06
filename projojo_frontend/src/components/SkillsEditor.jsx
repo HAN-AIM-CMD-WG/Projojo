@@ -222,7 +222,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     isAnimating 
                         ? 'opacity-100 scale-100' 
                         : 'opacity-0 scale-95 -translate-y-2'
-                }`}
+                }`} 
                 style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)' }}
                 role="dialog" 
                 aria-label="Skill editor dialog"

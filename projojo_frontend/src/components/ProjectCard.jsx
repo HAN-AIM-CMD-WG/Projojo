@@ -118,9 +118,9 @@ export default function ProjectCard({ project, index = 0 }) {
           
           {/* Status badge - only show if NOT open (avoid redundant "OPEN" on every card) */}
           {status !== 'active' && status !== 'default' && project.status && (
-            <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
-              {statusLabel}
-            </div>
+          <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
+            {statusLabel}
+          </div>
           )}
 
           {/* Title overlay at bottom of image */}
@@ -147,12 +147,12 @@ export default function ProjectCard({ project, index = 0 }) {
                 )}
               </span>
               {/* Match badge - alleen tonen als student skills heeft en er matches zijn */}
-              {studentSkills.length > 0 && matchingPositions > 0 && (
+            {studentSkills.length > 0 && matchingPositions > 0 && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#156064] dark:bg-[#00C49A] text-white dark:text-[#1A1512]">
                   Match!
                 </span>
               )}
-            </div>
+              </div>
           </div>
 
           {/* Skills match indicator - Outline style for visual harmony */}

@@ -174,17 +174,17 @@ export default function UpdateBusinessPage() {
                                     ))}
                                 </select>
                             </div>
-                            <FormInput
+                        <FormInput
                                 label="Stad / Plaats"
-                                type="text"
-                                name="location"
+                            type="text"
+                            name="location"
                                 placeholder="bijv. Amsterdam, Centrum"
-                                initialValue={getSingleValue(business?.location)}
-                                error={locationError}
-                                setError={setLocationError}
-                                max={255}
-                                required={true}
-                            />
+                            initialValue={getSingleValue(business?.location)}
+                            error={locationError}
+                            setError={setLocationError}
+                            max={255}
+                            required={true}
+                        />
                         </div>
                     </div>
                 </div>

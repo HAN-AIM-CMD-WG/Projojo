@@ -193,9 +193,9 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
             </div>
 
             <div role="alert" aria-live="polite" className="text-center">
-                {!!error && (
+            {!!error && (
                     <span className="text-primary font-medium">{error}</span>
-                )}
+            )}
             </div>
 
             <input ref={fileInput} hidden type="file" id={id} name={name} multiple={multiple} accept={accept} onInput={onFileInput} onInvalid={() => setError("Dit bestand is verplicht")} data-testid="fileinput" required={required && !initialPreview} />

@@ -112,7 +112,7 @@ export default function Filter({ onFilter, businesses = [] }) {
         setSelectedSkills(normalized);
         // Don't close when in instant apply mode (keepOpen from SkillsEditor)
         if (!keepOpen) {
-            setIsEditing(false);
+        setIsEditing(false);
         }
         triggerFilter({ selectedSkills: normalized });
     };
@@ -187,7 +187,7 @@ export default function Filter({ onFilter, businesses = [] }) {
                             type: 'project',
                             businessName: b.name,
                             matchCount: matchCount
-                        });
+        });
                     });
                 }
             });

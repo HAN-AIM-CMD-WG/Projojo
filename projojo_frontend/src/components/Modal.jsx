@@ -85,63 +85,63 @@ export default function Modal({
     }
 
     return (
-        <div 
+            <div 
             className="overflow-y-auto overflow-x-hidden fixed inset-0 z-50 flex justify-center items-center px-4 py-12 bg-black/40 backdrop-blur-md"
-            onClick={handleClickOutside}
-        >
-            <div className={`relative w-full ${maxWidth} max-h-full`}>
-                <div 
-                    ref={modalRef}
+                onClick={handleClickOutside} 
+            >
+                <div className={`relative w-full ${maxWidth} max-h-full`}>
+                    <div 
+                        ref={modalRef} 
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby={titleId}
                     className="rounded-3xl overflow-hidden bg-[var(--neu-bg)] border border-[var(--neu-border)]"
-                    style={{ 
+                        style={{ 
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.2)'
-                    }}
-                >
-                    {/* Header met gradient accent */}
-                    <div 
+                        }}
+                    >
+                        {/* Header met gradient accent */}
+                        <div 
                         className="px-6 py-5 border-b border-[var(--neu-border)]"
                         style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.05) 0%, transparent 100%)' }}
-                    >
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                {modalIcon && (
-                                    <div 
-                                        className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-orange-600"
-                                        style={{ boxShadow: '0 4px 12px rgba(255, 127, 80, 0.3)' }}
-                                    >
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    {modalIcon && (
+                                        <div 
+                                            className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-primary to-orange-600"
+                                            style={{ boxShadow: '0 4px 12px rgba(255, 127, 80, 0.3)' }}
+                                        >
                                         <span className="material-symbols-outlined text-white text-lg" aria-hidden="true">{modalIcon}</span>
-                                    </div>
-                                )}
-                                <div>
-                                    <h2 id={titleId} className="text-lg font-bold text-[var(--text-primary)]">
-                                        {modalHeader}
-                                    </h2>
-                                    {modalSubtitle && (
-                                        <p className="text-xs text-[var(--text-muted)] font-medium">{modalSubtitle}</p>
+                                        </div>
                                     )}
+                                    <div>
+                                    <h2 id={titleId} className="text-lg font-bold text-[var(--text-primary)]">
+                                            {modalHeader}
+                                    </h2>
+                                        {modalSubtitle && (
+                                        <p className="text-xs text-[var(--text-muted)] font-medium">{modalSubtitle}</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <button
+                                <button
                                 ref={closeButtonRef}
-                                onClick={() => setIsModalOpen(false)}
+                                    onClick={() => setIsModalOpen(false)}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--gray-200)]/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                type="button"
+                                    type="button"
                                 aria-label="Modal sluiten"
-                            >
+                                >
                                 <span className="material-symbols-outlined text-xl" aria-hidden="true">close</span>
-                            </button>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="p-6">
+                            {children}
                         </div>
                     </div>
-                    
-                    {/* Content */}
-                    <div className="p-6">
-                        {children}
-                    </div>
-                </div>
-                <div className="h-12" onClick={handleClickOutside}></div>
+                    <div className="h-12" onClick={handleClickOutside}></div>
             </div>
         </div>
     );

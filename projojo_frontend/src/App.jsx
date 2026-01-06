@@ -60,7 +60,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <StudentSkillsProvider>
+    <StudentSkillsProvider>
         <div className="min-h-screen bg-[var(--neu-bg)] text-[var(--text-primary)] transition-colors duration-300">
           {/* Skip link for keyboard navigation - WCAG 2.4.1 */}
           <a 
@@ -70,40 +70,40 @@ export default function App() {
             Ga naar hoofdinhoud
           </a>
           
-          {!isPublicPage && <Navbar />}
+        {!isPublicPage && <Navbar />}
           <main 
             id="main-content" 
             tabIndex="-1"
             className={isPublicPage ? "" : "max-w-7xl min-h-dvh px-6 mx-auto relative py-6 focus:outline-none"}
           >
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/email-not-found" element={<EmailNotFound />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/ontdek" element={<OverviewPage />} />
-              <Route path="/projects">
-                <Route path="add" element={<ProjectsAddPage />} />
-                <Route path=":projectId" element={<ProjectDetailsPage />} />
-              </Route>
-              <Route path="/business">
-                <Route path=":businessId" element={<BusinessPage />} />
-                <Route path=":businessId/update" element={<UpdateBusinessPage />} />
-                <Route path="update" element={<UpdateBusinessPage />} />
-              </Route>
-              <Route path="/student">
-                <Route path=":profileId" element={<ProfilePage />} />
-                <Route path="update" element={<UpdateStudentPage />} />
-              </Route>
-              <Route path="/teacher" element={<TeacherPage />} />
-              <Route path="/design-demo" element={<DesignDemoPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </main>
-          {!isPublicPage && <Footer />}
-        </div>
-      </StudentSkillsProvider>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/email-not-found" element={<EmailNotFound />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/ontdek" element={<OverviewPage />} />
+            <Route path="/projects">
+              <Route path="add" element={<ProjectsAddPage />} />
+              <Route path=":projectId" element={<ProjectDetailsPage />} />
+            </Route>
+            <Route path="/business">
+              <Route path=":businessId" element={<BusinessPage />} />
+              <Route path=":businessId/update" element={<UpdateBusinessPage />} />
+              <Route path="update" element={<UpdateBusinessPage />} />
+            </Route>
+            <Route path="/student">
+              <Route path=":profileId" element={<ProfilePage />} />
+              <Route path="update" element={<UpdateStudentPage />} />
+            </Route>
+            <Route path="/teacher" element={<TeacherPage />} />
+            <Route path="/design-demo" element={<DesignDemoPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        {!isPublicPage && <Footer />}
+      </div>
+    </StudentSkillsProvider>
     </ThemeProvider>
   )
 }
