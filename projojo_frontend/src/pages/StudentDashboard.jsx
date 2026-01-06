@@ -475,7 +475,7 @@ function TaskCard({ task, status, onCancel }) {
             {status === 'pending' && !showConfirm && (
                 <button
                     onClick={handleCancelClick}
-                    className="neu-btn w-full mb-3 !text-primary"
+                    className="neu-btn-primary w-full mb-3"
                 >
                     <span className="material-symbols-outlined text-sm mr-1.5">cancel</span>
                     Aanmelding annuleren
