@@ -1,13 +1,23 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import { useTheme } from '../context/ThemeContext';
 
-// Fix default marker icon issue with Leaflet + bundlers
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+// Custom coral marker icon SVG
+const coralMarkerSvg = `
+<svg width="25" height="41" viewBox="0 0 25 41" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12.5 0C5.596 0 0 5.596 0 12.5c0 2.154.55 4.18 1.516 5.95L12.5 41l10.984-22.55A12.42 12.42 0 0025 12.5C25 5.596 19.404 0 12.5 0z" fill="#FF7F50"/>
+  <circle cx="12.5" cy="12.5" r="5" fill="white"/>
+</svg>
+`;
+
+// Coral marker icon
+const coralIcon = L.divIcon({
+    html: coralMarkerSvg,
+    className: 'coral-marker',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
 });
 
 /**
@@ -22,6 +32,7 @@ L.Icon.Default.mergeOptions({
  * @param {string} [props.className] - Additional CSS classes
  */
 export default function LocationMap({ address, name, coordinates, height = "200px", className = "" }) {
+    const { isDark } = useTheme();
     const [position, setPosition] = useState(coordinates || null);
     const [loading, setLoading] = useState(!coordinates);
     const [error, setError] = useState(null);
@@ -30,6 +41,15 @@ export default function LocationMap({ address, name, coordinates, height = "200p
     const defaultCenter = [52.1326, 5.2913];
     // Zoom level 8 shows a good portion of the Netherlands region
     const defaultZoom = 8;
+    
+    // Map tile URLs - light and dark variants
+    const tileUrl = isDark 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    
+    const tileAttribution = isDark
+        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
     useEffect(() => {
         // If coordinates are provided, use them directly
@@ -120,14 +140,15 @@ export default function LocationMap({ address, name, coordinates, height = "200p
                     style={{ height: '100%', width: '100%', borderRadius: 'inherit' }}
                 >
                     <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution={tileAttribution}
+                        url={tileUrl}
+                        key={isDark ? 'dark' : 'light'}
                     />
-                    <Marker position={[position.lat, position.lng]}>
+                    <Marker position={[position.lat, position.lng]} icon={coralIcon}>
                         <Popup>
-                            <div className="font-sans">
-                                {name && <strong className="block text-[var(--text-primary)]">{name}</strong>}
-                                <span className="text-[var(--text-secondary)] text-sm">{address}</span>
+                            <div className="font-sans min-w-[150px]">
+                                {name && <strong className="block text-gray-900 text-sm">{name}</strong>}
+                                <span className="text-gray-600 text-sm">{address}</span>
                             </div>
                         </Popup>
                     </Marker>

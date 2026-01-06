@@ -4,6 +4,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Link } from 'react-router-dom';
 import L from 'leaflet';
 import { IMAGE_BASE_URL } from '../services';
+import { useTheme } from '../context/ThemeContext';
 
 // Custom coral marker icon SVG
 const coralMarkerSvg = `
@@ -92,12 +93,22 @@ function FitBounds({ positions }) {
  * @param {string} [props.className] - Additional CSS classes
  */
 export default function OverviewMap({ locations = [], showOnlyMatches = false, height = "300px", className = "" }) {
+    const { isDark } = useTheme();
     const [geocodedLocations, setGeocodedLocations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Default center (Netherlands)
     const defaultCenter = [52.1326, 5.2913];
+    
+    // Map tile URLs - light and dark variants
+    const tileUrl = isDark 
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    
+    const tileAttribution = isDark
+        ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
     // Geocode all locations
     useEffect(() => {
@@ -216,8 +227,9 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
                     style={{ height: '100%', width: '100%', borderRadius: 'inherit' }}
                 >
                     <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution={tileAttribution}
+                        url={tileUrl}
+                        key={isDark ? 'dark' : 'light'}
                     />
                     
                     <FitBounds positions={positions} />
