@@ -215,7 +215,17 @@ export default function OverviewPage() {
         </p>
       </div>
 
-      <Filter onFilter={handleFilter} />
+      <Filter 
+        onFilter={handleFilter} 
+        businesses={shownBusinesses.map(b => ({
+          id: b.business.businessId,
+          name: b.business.name,
+          location: b.business.location,
+          image: b.business.photo?.path,
+          projects: b.projects,
+          topSkills: b.topSkills
+        }))}
+      />
       <div className={`flex flex-col gap-2 ${(error != null) && 'mb-4'}`}>
         <Alert text={error} isCloseable={false} />
       </div>

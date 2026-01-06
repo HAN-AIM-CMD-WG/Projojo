@@ -1192,6 +1192,60 @@
     z-index: 1 !important;
 }
 
+/* Custom coral marker styling */
+.coral-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Coral cluster marker styling */
+.coral-cluster-wrapper {
+    background: transparent !important;
+    border: none !important;
+}
+
+.coral-cluster {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #FF7F50;
+    color: white;
+    font-weight: 700;
+    font-family: inherit;
+    box-shadow: 0 3px 10px rgba(255, 127, 80, 0.4);
+    border: 3px solid white;
+    transition: transform 0.2s ease;
+}
+
+.coral-cluster:hover {
+    transform: scale(1.1);
+}
+
+.coral-cluster-small {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+}
+
+.coral-cluster-medium {
+    width: 42px;
+    height: 42px;
+    font-size: 14px;
+}
+
+.coral-cluster-large {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
+
+/* Spider leg styling */
+.leaflet-cluster-spider-leg {
+    stroke: #FF7F50;
+    stroke-opacity: 0.5;
+}
+
 /* ===========================================
    ACCESSIBILITY: Reduced Motion Support
    Respects user preference for reduced motion

@@ -1,22 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getSkills } from '../services';
 import { normalizeSkill } from '../utils/skills';
+import { useStudentSkills } from '../context/StudentSkillsContext';
 import Alert from "./Alert";
 import SkillBadge from './SkillBadge';
 import SkillsEditor from "./SkillsEditor";
+import OverviewMap from "./OverviewMap";
 
 /**
 * @param {{
-*  onFilter: ({ searchInput: string, selectedSkills: {skillId: number, name: string, isPending?: boolean}[]}) => void
+*  onFilter: ({ searchInput: string, selectedSkills: {skillId: number, name: string, isPending?: boolean}[]}) => void,
+*  businesses?: Array<{id: string, name: string, location: string, projects: Array}>
 *  }} props
 * @returns {JSX.Element}
 */
-export default function Filter({ onFilter }) {
+export default function Filter({ onFilter, businesses = [] }) {
+    const { studentSkills } = useStudentSkills();
     const [allSkills, setAllSkills] = useState([]);
     const [selectedSkills, setSelectedSkills] = useState([]);
     const [search, setSearch] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState('');
+    const [showMap, setShowMap] = useState(false);
+    const [mapView, setMapView] = useState('businesses'); // 'businesses' | 'projects'
+    
+    // Create set of student skill IDs for matching
+    const studentSkillIds = useMemo(() => 
+        new Set(studentSkills.map(s => s.id)), 
+        [studentSkills]
+    );
 
     useEffect(() => {
         let ignore = false;
@@ -86,6 +98,56 @@ export default function Filter({ onFilter }) {
             selectedSkills
         });
     };
+
+    // Compute map locations based on view
+    const mapLocations = useMemo(() => {
+        if (mapView === 'businesses') {
+            return businesses
+                .filter(b => b.location)
+                .map(b => {
+                    // Calculate skill matches for business
+                    const matchCount = b.topSkills?.filter(s => studentSkillIds.has(s.skillId))?.length || 0;
+                    return {
+                        id: b.id,
+                        name: b.name,
+                        address: b.location,
+                        image: b.image,
+                        type: 'business',
+                        count: b.projects?.length || 0,
+                        matchCount: matchCount
+                    };
+                });
+        } else {
+            // Projects view - use business location for now (projects don't have own location yet)
+            const projectLocations = [];
+            businesses.forEach(b => {
+                if (b.location && b.projects) {
+                    b.projects.forEach(p => {
+                        // Get all skills from project tasks
+                        const projectSkills = p.tasks?.flatMap(t => t.skills || []) || [];
+                        const matchCount = projectSkills.filter(s => studentSkillIds.has(s.skillId || s.id))?.length || 0;
+                        
+                        projectLocations.push({
+                            id: p.projectId || p.id,
+                            name: p.title || p.name,
+                            address: b.location, // Use business location
+                            image: b.image, // Use business image
+                            type: 'project',
+                            businessName: b.name,
+                            matchCount: matchCount
+                        });
+                    });
+                }
+            });
+            return projectLocations;
+        }
+    }, [businesses, mapView, studentSkillIds]);
+
+    // Count totals for display
+    const totalProjects = useMemo(() => 
+        businesses.reduce((sum, b) => sum + (b.projects?.length || 0), 0),
+        [businesses]
+    );
 
     return (
         <div className="relative mb-8">
@@ -171,7 +233,58 @@ export default function Filter({ onFilter }) {
                         )}
                     </form>
                 </div>
+
+                {/* Map toggle button */}
+                {businesses.length > 0 && (
+                    <button 
+                        type="button"
+                        className={`neu-btn !px-4 shrink-0 ${showMap ? 'text-primary neu-pressed' : ''}`}
+                        onClick={() => setShowMap(!showMap)}
+                        aria-expanded={showMap}
+                        aria-label={showMap ? 'Verberg kaart' : 'Toon kaart'}
+                    >
+                        <span className="material-symbols-outlined" aria-hidden="true">
+                            {showMap ? 'map' : 'map'}
+                        </span>
+                    </button>
+                )}
             </div>
+
+            {/* Map section - expandable */}
+            {showMap && businesses.length > 0 && (
+                <div className="mt-4 neu-flat p-4 rounded-2xl animate-fade-in">
+                    {/* View toggle */}
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="neu-segment-container">
+                            <button 
+                                className={`neu-segment-btn ${mapView === 'businesses' ? 'active' : ''}`}
+                                onClick={() => setMapView('businesses')}
+                            >
+                                <span className="material-symbols-outlined text-sm mr-1">business</span>
+                                Bedrijven
+                            </button>
+                            <button 
+                                className={`neu-segment-btn ${mapView === 'projects' ? 'active' : ''}`}
+                                onClick={() => setMapView('projects')}
+                            >
+                                <span className="material-symbols-outlined text-sm mr-1">folder_open</span>
+                                Projecten
+                            </button>
+                        </div>
+                        <span className="text-xs text-[var(--text-muted)] font-medium">
+                            {mapView === 'businesses' 
+                                ? `${businesses.length} ${businesses.length === 1 ? 'bedrijf' : 'bedrijven'}` 
+                                : `${totalProjects} ${totalProjects === 1 ? 'project' : 'projecten'}`}
+                        </span>
+                    </div>
+                    
+                    {/* Map */}
+                    <OverviewMap 
+                        locations={mapLocations}
+                        height="350px"
+                    />
+                </div>
+            )}
 
             {/* Selected skills display with individual remove buttons */}
             {selectedSkills.length > 0 && !isEditing && (
