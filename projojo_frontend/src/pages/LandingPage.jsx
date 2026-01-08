@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * Modern Landing Page - Student-focused, professional, innovative
  */
 export default function LandingPage() {
     const [isScrolled, setIsScrolled] = useState(false);
+    const { isDark, setTheme } = useTheme();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -74,7 +76,7 @@ export default function LandingPage() {
             {/* Modern Navigation */}
             <nav className={`fixed w-full z-50 top-0 transition-all duration-300 ${
                 isScrolled 
-                    ? 'bg-white/80 backdrop-blur-xl border-b border-gray-200/50 shadow-sm' 
+                    ? 'bg-[var(--neu-bg)]/80 backdrop-blur-xl border-b border-[var(--neu-border)] shadow-sm' 
                     : 'bg-transparent'
             }`}>
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -108,6 +110,16 @@ export default function LandingPage() {
                         >
                             Hoe het werkt
                         </a>
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-primary hover:bg-[var(--neu-bg)] transition-all"
+                            aria-label={isDark ? 'Schakel naar lichte modus' : 'Schakel naar donkere modus'}
+                        >
+                            <span className="material-symbols-outlined">
+                                {isDark ? 'light_mode' : 'dark_mode'}
+                            </span>
+                        </button>
                         <Link 
                             to="/login" 
                             className="relative group overflow-hidden rounded-2xl px-6 py-3 font-bold text-white"
@@ -135,7 +147,7 @@ export default function LandingPage() {
                         {/* Left: Content */}
                         <div className="space-y-8">
                             {/* Badge */}
-                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/60 backdrop-blur-sm border border-white/40 shadow-lg">
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--neu-bg)]/60 backdrop-blur-sm border border-[var(--neu-border)] shadow-lg">
                                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                                 <span className="text-sm font-bold text-[var(--text-primary)]">Voor ambitieuze studenten</span>
                             </div>
@@ -182,7 +194,7 @@ export default function LandingPage() {
                                 
                                 <a 
                                     href="#journey" 
-                                    className="group px-8 py-4 rounded-2xl bg-white/60 backdrop-blur-sm border-2 border-gray-300/50 hover:border-primary/50 font-bold text-[var(--text-primary)] text-lg transition-all hover:bg-white/80 flex items-center justify-center gap-2"
+                                    className="group px-8 py-4 rounded-2xl bg-[var(--neu-bg)]/60 backdrop-blur-sm border-2 border-[var(--neu-border)] hover:border-primary/50 font-bold text-[var(--text-primary)] text-lg transition-all hover:bg-[var(--neu-bg)]/80 flex items-center justify-center gap-2"
                                 >
                                     <span className="material-symbols-outlined">play_circle</span>
                                     <span>Ontdek meer</span>
@@ -195,7 +207,7 @@ export default function LandingPage() {
                                     {[1,2,3,4,5].map((i) => (
                                         <div 
                                             key={i} 
-                                            className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-orange-400/30 border-3 border-white flex items-center justify-center shadow-lg"
+                                            className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/30 to-orange-400/30 border-3 border-[var(--neu-bg)] flex items-center justify-center shadow-lg"
                                             style={{ animationDelay: `${i * 0.1}s` }}
                                         >
                                             <span className="material-symbols-outlined text-primary text-lg">person</span>
@@ -212,10 +224,10 @@ export default function LandingPage() {
                         {/* Right: Visual */}
                         <div className="relative">
                             {/* Main Card - Project Preview */}
-                            <div className="relative z-10 bg-white/70 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/50">
+                            <div className="relative z-10 bg-[var(--neu-bg)]/70 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-[var(--neu-border)]">
                                 <div className="space-y-6">
                                     {/* Project Card */}
-                                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg border border-gray-100">
+                                    <div className="neu-flat rounded-2xl p-6 shadow-lg">
                                         <div className="flex items-start gap-4 mb-4">
                                             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center shadow-lg">
                                                 <span className="material-symbols-outlined text-white text-2xl">business</span>
@@ -239,16 +251,16 @@ export default function LandingPage() {
                                             <span className="px-3 py-1.5 bg-gradient-to-r from-violet-500 to-purple-500 text-white text-xs font-bold rounded-lg shadow-sm">UI/UX</span>
                                         </div>
                                         
-                                        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                                        <div className="flex items-center justify-between pt-4 border-t border-[var(--neu-border)]">
                                             <span className="text-xs font-bold text-[var(--text-muted)]">95% MATCH</span>
-                                            <div className="h-2 flex-1 mx-4 bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-2 flex-1 mx-4 bg-[var(--neu-shadow-dark)]/20 rounded-full overflow-hidden">
                                                 <div className="h-full w-[95%] bg-gradient-to-r from-primary to-orange-500 rounded-full"></div>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     {/* Success Notification */}
-                                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-5 border-l-4 border-emerald-500 shadow-lg">
+                                    <div className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl p-5 border-l-4 border-emerald-500 shadow-lg">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
                                                 <span className="material-symbols-outlined text-white text-xl">check_circle</span>
@@ -262,13 +274,13 @@ export default function LandingPage() {
                                     
                                     {/* Skills */}
                                     <div className="flex flex-wrap gap-2">
-                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 font-semibold text-sm text-[var(--text-primary)]">
+                                        <div className="px-4 py-2 neu-flat rounded-xl font-semibold text-sm text-[var(--text-primary)]">
                                             Python
                                         </div>
                                         <div className="px-4 py-2 bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-xl border border-primary/30 font-semibold text-sm text-primary">
                                             JavaScript
                                         </div>
-                                        <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200 font-semibold text-sm text-[var(--text-primary)]">
+                                        <div className="px-4 py-2 neu-flat rounded-xl font-semibold text-sm text-[var(--text-primary)]">
                                             Data Science
                                         </div>
                                     </div>
@@ -307,7 +319,7 @@ export default function LandingPage() {
                         {features.map((feature, index) => (
                             <div 
                                 key={feature.title}
-                                className="group relative bg-white/60 backdrop-blur-sm rounded-3xl p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                                className="group relative bg-[var(--neu-bg)]/60 backdrop-blur-sm rounded-3xl p-8 border border-[var(--neu-border)] shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
                                 style={{ animationDelay: `${index * 0.1}s` }}
                             >
                                 <div className="flex items-start gap-6">
@@ -350,14 +362,14 @@ export default function LandingPage() {
                         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                             {journeySteps.map((step, index) => (
                                 <div key={step.phase} className="relative">
-                                    <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 h-full">
+                                    <div className="bg-[var(--neu-bg)]/70 backdrop-blur-sm rounded-3xl p-8 border border-[var(--neu-border)] shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 h-full">
                                         {/* Phase Number */}
                                         <div className="absolute -top-4 -right-4 w-10 h-10 bg-gradient-to-br from-primary to-orange-600 rounded-full flex items-center justify-center shadow-lg">
                                             <span className="text-white font-black text-sm">{index + 1}</span>
                                         </div>
                                         
                                         {/* Icon */}
-                                        <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
+                                        <div className="w-16 h-16 neu-pressed rounded-2xl flex items-center justify-center mb-6">
                                             <span className="material-symbols-outlined text-4xl text-primary">{step.icon}</span>
                                         </div>
                                         
@@ -380,7 +392,7 @@ export default function LandingPage() {
             {/* Stats Section - Modern Cards */}
             <section className="py-24 px-6">
                 <div className="max-w-6xl mx-auto">
-                    <div className="bg-gradient-to-br from-white/80 to-white/60 backdrop-blur-xl rounded-3xl p-12 shadow-2xl border border-white/50">
+                    <div className="bg-[var(--neu-bg)]/80 backdrop-blur-xl rounded-3xl p-12 shadow-2xl border border-[var(--neu-border)]">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                             {[
                                 { value: "50+", label: "Actieve Projecten", icon: "work" },
@@ -420,10 +432,10 @@ export default function LandingPage() {
                                 className="h-full object-contain"
                             />
                         </div>
-                        <div className="px-8 py-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-gray-200/50">
+                        <div className="px-8 py-4 bg-[var(--neu-bg)]/50 backdrop-blur-sm rounded-2xl border border-[var(--neu-border)]">
                             <span className="text-[var(--text-muted)] font-bold text-sm">Partner Logo</span>
                         </div>
-                        <div className="px-8 py-4 bg-white/50 backdrop-blur-sm rounded-2xl border border-gray-200/50">
+                        <div className="px-8 py-4 bg-[var(--neu-bg)]/50 backdrop-blur-sm rounded-2xl border border-[var(--neu-border)]">
                             <span className="text-[var(--text-muted)] font-bold text-sm">Partner Logo</span>
                         </div>
                     </div>
@@ -464,7 +476,7 @@ export default function LandingPage() {
             </section>
 
             {/* Footer - Clean & Modern */}
-            <footer className="py-12 px-6 border-t border-gray-200/30">
+            <footer className="py-12 px-6 border-t border-[var(--neu-border)]">
                 <div className="max-w-7xl mx-auto">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="flex items-center gap-3">
