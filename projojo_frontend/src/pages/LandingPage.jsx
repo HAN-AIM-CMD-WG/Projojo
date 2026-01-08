@@ -266,7 +266,7 @@ export default function LandingPage() {
                                                 <span className="material-symbols-outlined text-white text-xl">check_circle</span>
                                             </div>
                                             <div className="flex-1">
-                                                <p className="font-bold text-[var(--text-primary)]">Je bent aangenomen! 🎉</p>
+                                                <p className="font-bold text-[var(--text-primary)]">Je bent aangenomen!</p>
                                                 <p className="text-sm text-[var(--text-secondary)] font-medium">Start over 2 dagen met je project</p>
                                             </div>
                                         </div>
