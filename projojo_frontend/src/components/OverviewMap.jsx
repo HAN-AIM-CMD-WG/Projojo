@@ -259,12 +259,18 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
                                     <div className="font-sans min-w-[200px]">
                                         <div className="flex items-start gap-3">
                                             {/* Business logo */}
-                                            {loc.image && (
+                                            {loc.image && loc.image !== 'default.png' ? (
                                                 <img 
                                                     src={`${IMAGE_BASE_URL}${loc.image}`}
                                                     alt=""
                                                     className="w-10 h-10 rounded-lg object-cover shrink-0"
                                                 />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(255,127,80,0.2) 0%, rgba(255,127,80,0.05) 100%)' }}>
+                                                    <span className="font-bold text-sm" style={{ color: '#FF7F50' }}>
+                                                        {loc.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
+                                                    </span>
+                                                </div>
                                             )}
                                             <div className="flex-1 min-w-0">
                                                 <strong className="block text-gray-900 text-sm leading-tight">

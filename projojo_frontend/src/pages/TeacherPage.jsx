@@ -193,15 +193,17 @@ export default function TeacherPage() {
                         {businesses.map((business) => (
                             <div key={business.id} className="neu-flat p-4">
                                 <div className="flex items-start gap-3">
-                                    {business.image_path ? (
+                                    {business.image_path && business.image_path !== 'default.png' ? (
                                         <img 
                                             src={`${IMAGE_BASE_URL}${business.image_path}`}
                                             alt={business.name}
                                             className="w-12 h-12 rounded-xl object-cover shrink-0"
                                         />
                                     ) : (
-                                        <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                                            <span className="material-symbols-outlined text-gray-400">business</span>
+                                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+                                            <span className="font-bold text-primary">
+                                                {business.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
+                                            </span>
                                         </div>
                                     )}
                                     <div className="flex-1 min-w-0">
@@ -256,7 +258,7 @@ export default function TeacherPage() {
                             {archivedBusinesses.map((business) => (
                                 <div key={business.id} className="neu-pressed p-4 opacity-75">
                                     <div className="flex items-start gap-3">
-                                        {business.image_path ? (
+                                        {business.image_path && business.image_path !== 'default.png' ? (
                                             <img 
                                                 src={`${IMAGE_BASE_URL}${business.image_path}`}
                                                 alt={business.name}
@@ -264,7 +266,9 @@ export default function TeacherPage() {
                                             />
                                         ) : (
                                             <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center shrink-0">
-                                                <span className="material-symbols-outlined text-gray-400">business</span>
+                                                <span className="font-bold text-gray-400">
+                                                    {business.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
+                                                </span>
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">

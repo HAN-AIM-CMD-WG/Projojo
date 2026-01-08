@@ -88,11 +88,19 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         className="flex items-center gap-4 mb-6 neu-flat p-4 hover:translate-y-[-2px] transition-all duration-200 group"
                     >
                         <div className="shrink-0">
-                            <img
-                                className="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-xl"
-                                src={`${IMAGE_BASE_URL}${project.business.image_path}`}
-                                alt="Bedrijfslogo"
-                            />
+                            {project.business.image_path && project.business.image_path !== 'default.png' ? (
+                                <img
+                                    className="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-xl"
+                                    src={`${IMAGE_BASE_URL}${project.business.image_path}`}
+                                    alt="Bedrijfslogo"
+                                />
+                            ) : (
+                                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                    <span className="font-bold text-primary text-xl">
+                                        {project.business.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex-1">
                             <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Aangeboden door</span>
