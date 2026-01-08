@@ -20,7 +20,7 @@
 #
 # Behavior:
 # - Starts services in detached mode.
-# - Opens the default web browser to http://localhost:5173 after a short delay.
+# - Opens the default web browser to http://localhost:10101 after a short delay.
 # - Streams the last 20 logs and then follows new logs from 'backend' and 'frontend'.
 # - Pressing Ctrl+C while logs are streaming will stop the log stream but will NOT
 #   stop the running containers. Containers should be managed via Docker Desktop or
@@ -46,12 +46,22 @@ echo "Allowing a few seconds for services to initialize..."
 sleep 5
 
 # Attempt to open browser - works on macOS, may work on some Linux distros
-# If not, user can manually open http://localhost:5173
-URL="http://localhost:5173"
+# If not, user can manually open http://localhost:10101
+
+# Default port
+FRONTEND_PORT=10101
+
+# Load environment variables if .env exists
+if [ -f .env ]; then
+  source .env
+fi
+
+URL="http://localhost:${FRONTEND_PORT}"
+
 echo "Attempting to open browser to $URL..."
-if command -v xdg-open &> /dev/null; then
+if command -v xdg-open > /dev/null 2>&1; then
   xdg-open "$URL"
-elif command -v open &> /dev/null; then
+elif command -v open > /dev/null 2>&1; then
   open "$URL"
 else
   echo "Could not detect 'xdg-open' or 'open'. Please open $URL in your browser manually."
