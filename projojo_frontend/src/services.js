@@ -129,13 +129,26 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                             break;
                     }
                 }
-
+    
                 // makes the error catchable in the calling code
                 throw new HttpError(message, errorStatus);
             }
             return json;
         })
-}
+    }
+    
+    /**
+     * Create a user-friendly error message from an error object
+     * @param {Error} error
+     * @param {Record<number, string>} mapper - Optional custom messages by status code
+     */
+    export function createErrorMessage(error, mapper = {}) {
+        let message = error?.message;
+        if (error instanceof HttpError && mapper[error.statusCode]) {
+            message = mapper[error.statusCode];
+        }
+        return message ?? "Er is een onverwachte fout opgetreden.";
+    }
 
 /**
  * @param {string} businessId business ID parameter for getting only the projects for 1 business
@@ -357,6 +370,25 @@ export function updateRegistration(registration) {
     });
 }
 
+/**
+ * Cancel a pending registration for a task
+ * @param {string} taskId - The ID of the task
+ * @returns {Promise<void>}
+ */
+export function cancelRegistration(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`, {
+        method: "DELETE",
+    });
+}
+
+/**
+ * Get dashboard data for the authenticated supervisor
+ * @returns {Promise<{business_id: string, projects: Array, pending_registrations: Array, active_students: Array, stats: Object}>}
+ */
+export function getSupervisorDashboard() {
+    return fetchWithError(`${API_BASE_URL}supervisors/dashboard`);
+}
+
 //Not implemented in the backend yet
 export function updateTaskSkills(taskId, taskSkills) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`, {
@@ -406,13 +438,13 @@ export function getTaskSkills(taskId) {
 
 
 /**
- *
  * @param {string} newBusinessName
+ * @param {boolean} asDraft - If true, create as archived (hidden from students)
  */
-export function createNewBusiness(newBusinessName) {
+export function createNewBusiness(newBusinessName, asDraft = false) {
     return fetchWithError(`${API_BASE_URL}businesses/`, {
         method: "POST",
-        body: JSON.stringify(newBusinessName),
+        body: JSON.stringify({ name: newBusinessName, as_draft: asDraft }),
     });
 }
 
@@ -469,6 +501,36 @@ export function getAllTeachers() {
  */
 export function getBusinessById(businessId) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessId}`);
+}
+
+/**
+ * Get all archived businesses (teacher only)
+ * @returns {Promise<Array>}
+ */
+export function getArchivedBusinesses() {
+    return fetchWithError(`${API_BASE_URL}businesses/archived`);
+}
+
+/**
+ * Archive a business (teacher only)
+ * @param {string} businessId
+ * @returns {Promise<{message: string}>}
+ */
+export function archiveBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/archive`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Restore an archived business (teacher only)
+ * @param {string} businessId
+ * @returns {Promise<{message: string}>}
+ */
+export function restoreBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/restore`, {
+        method: "PATCH",
+    });
 }
 
 /**

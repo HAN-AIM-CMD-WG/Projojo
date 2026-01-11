@@ -1,0 +1,512 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
+import { useStudentSkills } from '../context/StudentSkillsContext';
+import { getStudentRegistrations, getTaskSkills, cancelRegistration, IMAGE_BASE_URL } from '../services';
+import SkillBadge from '../components/SkillBadge';
+import Alert from '../components/Alert';
+import Loading from '../components/Loading';
+
+/**
+ * Student Dashboard - Shows active tasks, registrations and deadlines
+ */
+export default function StudentDashboard() {
+    const { authData } = useAuth();
+    const { studentSkills } = useStudentSkills();
+    const [registrations, setRegistrations] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        if (authData.isLoading || authData.type !== 'student') {
+            setIsLoading(false);
+            return;
+        }
+
+        let ignore = false;
+        setIsLoading(true);
+
+        const fetchRegistrations = async () => {
+            try {
+                // Get all registrations with task details and status
+                const tasks = await getStudentRegistrations();
+                
+                if (ignore) return;
+                
+                if (!tasks || tasks.length === 0) {
+                    setRegistrations([]);
+                    setIsLoading(false);
+                    return;
+                }
+
+                // Fetch skills for each task
+                const tasksWithSkills = await Promise.all(
+                    tasks.map(async (task) => {
+                        try {
+                            const skillsData = await getTaskSkills(task.id);
+                            return { ...task, skills: skillsData.skills || [] };
+                        } catch {
+                            return { ...task, skills: [] };
+                        }
+                    })
+                );
+
+                if (ignore) return;
+
+                // Sort by status (accepted first, then pending)
+                const sortedTasks = tasksWithSkills.sort((a, b) => {
+                    if (a.is_accepted === true && b.is_accepted !== true) return -1;
+                    if (a.is_accepted !== true && b.is_accepted === true) return 1;
+                    return 0;
+                });
+
+                if (!ignore) {
+                    setRegistrations(sortedTasks);
+                }
+            } catch (err) {
+                if (!ignore) {
+                    setError(err.message);
+                }
+            } finally {
+                if (!ignore) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        fetchRegistrations();
+
+        return () => {
+            ignore = true;
+        };
+    }, [authData.isLoading, authData.type]);
+
+    // Separate active (accepted), pending, and rejected registrations
+    // is_accepted: true = accepted, false = rejected, null/undefined = pending
+    const activeTasks = registrations.filter(t => t.is_accepted === true);
+    const pendingRegistrations = registrations.filter(t => t.is_accepted === null || t.is_accepted === undefined);
+    const rejectedRegistrations = registrations.filter(t => t.is_accepted === false);
+
+    // Handle cancellation - remove from local state
+    const handleCancelRegistration = (taskId) => {
+        setRegistrations(prev => prev.filter(t => t.id !== taskId));
+    };
+
+    // Show different dashboard for non-students
+    if (authData.type !== 'student') {
+        return (
+            <div className="space-y-6">
+                <div className="pt-4 mb-8 text-center">
+                    <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                        Dashboard
+                    </h1>
+                    <p className="text-base text-[var(--text-muted)] font-medium mt-2">
+                        Welkom bij Projojo
+                    </p>
+                </div>
+                
+                <div className="neu-flat p-8 text-center">
+                    <span className="material-symbols-outlined text-4xl text-gray-400 mb-3">dashboard</span>
+                    <p className="text-[var(--text-secondary)] font-medium">
+                        Het dashboard is momenteel alleen beschikbaar voor studenten.
+                    </p>
+                    <Link to="/ontdek" className="neu-btn-primary mt-4 inline-flex items-center gap-2">
+                        <span className="material-symbols-outlined">explore</span>
+                        Ontdek projecten
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {/* Page header */}
+            <div className="pt-4 mb-8 text-center">
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                    Mijn dashboard
+                </h1>
+                <p className="text-base text-[var(--text-muted)] font-medium mt-2">
+                    {activeTasks.length > 0 ? (
+                        <>
+                            Je hebt <span className="text-primary font-bold">{activeTasks.length}</span> actieve {activeTasks.length === 1 ? 'taak' : 'taken'}
+                        </>
+                    ) : (
+                        'Beheer je aanmeldingen en volg je voortgang'
+                    )}
+                </p>
+            </div>
+
+            <Alert text={error} />
+
+            {isLoading ? (
+                <Loading />
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Main content - Tasks in two columns */}
+                    <div className="lg:col-span-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Active Tasks Section */}
+                            <section className="neu-flat p-6">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
+                                        <span className="material-symbols-outlined text-green-500">task_alt</span>
+                                        Actieve Taken
+                                    </h2>
+                                    {activeTasks.length > 0 && (
+                                        <span className="neu-badge bg-green-500 text-white">{activeTasks.length}</span>
+                                    )}
+                                </div>
+
+                                {activeTasks.length === 0 ? (
+                                    <div className="neu-pressed p-6 text-center">
+                                        <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inbox</span>
+                                        <p className="text-[var(--text-muted)] text-sm">
+                                            Nog geen actieve taken
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {activeTasks.map((task) => (
+                                            <TaskCard key={task.id} task={task} status="active" studentSkills={studentSkills} />
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+
+                            {/* Pending Registrations */}
+                            <section className="neu-flat p-6">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
+                                        <span className="material-symbols-outlined text-primary">schedule</span>
+                                        Aanmeldingen
+                                    </h2>
+                                    {pendingRegistrations.length > 0 && (
+                                        <span className="neu-badge">{pendingRegistrations.length}</span>
+                                    )}
+                                </div>
+
+                                {pendingRegistrations.length === 0 ? (
+                                    <div className="neu-pressed p-6 text-center">
+                                        <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">hourglass_empty</span>
+                                        <p className="text-[var(--text-muted)] text-sm">
+                                            Geen openstaande aanmeldingen
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {pendingRegistrations.map((task) => (
+                                            <TaskCard 
+                                                key={task.id} 
+                                                task={task} 
+                                                status="pending" 
+                                                onCancel={handleCancelRegistration}
+                                                studentSkills={studentSkills}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </section>
+                        </div>
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className="space-y-6">
+                        {/* Quick Stats */}
+                        <section className="neu-flat p-5">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
+                                Overzicht
+                            </h3>
+                            <div className="space-y-3">
+                                <StatItem 
+                                    icon="check_circle" 
+                                    label="Actieve taken" 
+                                    value={activeTasks.length}
+                                    color="text-green-500"
+                                />
+                                <StatItem 
+                                    icon="hourglass_top" 
+                                    label="In behandeling" 
+                                    value={pendingRegistrations.length}
+                                    color="text-primary"
+                                />
+                                {rejectedRegistrations.length > 0 && (
+                                    <StatItem 
+                                        icon="cancel" 
+                                        label="Afgewezen" 
+                                        value={rejectedRegistrations.length}
+                                        color="text-red-500"
+                                    />
+                                )}
+                            </div>
+                        </section>
+
+                        {/* Quick Actions */}
+                        <section className="neu-flat p-5">
+                            <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
+                                Snelle acties
+                            </h3>
+                            <div className="space-y-2">
+                                <Link to={`/student/${authData.userId}`} className="neu-btn w-full justify-start gap-3 !text-sm">
+                                    <span className="material-symbols-outlined text-primary">person</span>
+                                    Mijn profiel
+                                </Link>
+                                <Link to="/ontdek" className="neu-btn w-full justify-start gap-3 !text-sm">
+                                    <span className="material-symbols-outlined text-primary">explore</span>
+                                    Ontdek projecten
+                                </Link>
+                            </div>
+                        </section>
+
+                        {/* Tips section */}
+                        <section className="neu-pressed p-5">
+                            <div className="flex items-start gap-3">
+                                <span className="material-symbols-outlined text-primary">lightbulb</span>
+                                <div>
+                                    <h4 className="font-bold text-[var(--text-primary)] text-sm">Tip</h4>
+                                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                                        Voeg skills toe aan je profiel om betere matches te krijgen met beschikbare taken.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * Task Card component for the dashboard
+ */
+function TaskCard({ task, status, onCancel, studentSkills = [] }) {
+    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const [isCancelling, setIsCancelling] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [cancelError, setCancelError] = useState(null);
+
+    const handleCancelClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowConfirm(true);
+    };
+
+    const handleConfirmCancel = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isCancelling) return;
+        
+        setIsCancelling(true);
+        setCancelError(null);
+        
+        try {
+            await cancelRegistration(task.id);
+            if (onCancel) onCancel(task.id);
+        } catch (err) {
+            setCancelError(err.message || 'Er is iets misgegaan');
+            setIsCancelling(false);
+            setShowConfirm(false);
+        }
+    };
+
+    const handleCancelConfirm = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShowConfirm(false);
+    };
+    
+    const statusConfig = {
+        active: {
+            badge: 'bg-green-500 text-white',
+            badgeText: 'Aangenomen',
+            borderColor: 'border-l-green-500'
+        },
+        pending: {
+            badge: 'bg-[var(--neu-bg)] text-[var(--text-secondary)]',
+            badgeText: 'In behandeling',
+            borderColor: 'border-l-primary'
+        },
+        rejected: {
+            badge: 'bg-red-500 text-white',
+            badgeText: 'Afgewezen',
+            borderColor: 'border-l-red-500'
+        }
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+
+    // Strip HTML from description and limit to ~40 words
+    const cleanDescription = task.description 
+        ? task.description.replace(/<[^>]*>/g, '').trim()
+        : '';
+    const truncatedDescription = cleanDescription
+        .split(' ')
+        .slice(0, 40)
+        .join(' ') + (cleanDescription.split(' ').length > 40 ? '...' : '');
+
+    // Build the correct link
+    const linkTo = task.project_id 
+        ? `/projects/${task.project_id}#task-${task.id}`
+        : `/tasks/${task.id}`;
+
+    return (
+        <Link 
+            to={linkTo}
+            className={`block neu-btn !p-4 !text-left border-l-4 ${config.borderColor}`}
+        >
+            {/* Business info */}
+            {task.business_name && (
+                <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
+                    {task.business_image ? (
+                        <img 
+                            src={`${IMAGE_BASE_URL}${task.business_image}`}
+                            alt={task.business_name}
+                            className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-gray-200"
+                        />
+                    ) : (
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-gray-400 text-sm">business</span>
+                        </div>
+                    )}
+                    <div className="min-w-0">
+                        <p className="text-xs font-bold text-[var(--text-secondary)] truncate">{task.business_name}</p>
+                        {task.project_name && (
+                            <p className="text-[10px] text-[var(--text-muted)] truncate">{task.project_name}</p>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Status badge */}
+            <div className="mb-2">
+                <span className={`neu-badge ${config.badge}`}>{config.badgeText}</span>
+            </div>
+
+            {/* Task name */}
+            <h4 className="font-bold text-[var(--text-primary)] mb-2">
+                {task.name || 'Taak'}
+            </h4>
+
+            {/* Description - normal weight */}
+            {truncatedDescription && (
+                <p className="text-sm text-[var(--text-muted)] font-normal mb-3">
+                    {truncatedDescription}
+                </p>
+            )}
+
+            {/* Skills */}
+            {task.skills && task.skills.length > 0 && (
+                <div className="mb-3">
+                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1.5">Vereiste skills</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {task.skills.slice(0, 5).map((skill) => {
+                            const skillId = skill.skillId || skill.id;
+                            const isMatch = studentSkillIds.has(skillId);
+                            return (
+                                <SkillBadge 
+                                    key={skillId} 
+                                    skillName={skill.name} 
+                                    isPending={skill.isPending ?? skill.is_pending}
+                                    isOwn={isMatch}
+                                >
+                                    {isMatch && (
+                                        <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                    )}
+                                </SkillBadge>
+                            );
+                        })}
+                        {task.skills.length > 5 && (
+                            <span className="text-xs text-[var(--text-muted)]">+{task.skills.length - 5} meer</span>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Error message */}
+            {cancelError && (
+                <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {cancelError}
+                </p>
+            )}
+
+            {/* Confirmation dialog for pending registrations */}
+            {status === 'pending' && showConfirm && (
+                <div className="mb-3 p-4 neu-pressed">
+                    <p className="text-sm text-[var(--text-primary)] font-semibold mb-3 text-center">
+                        Weet je zeker dat je deze aanmelding wilt annuleren?
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleConfirmCancel}
+                            disabled={isCancelling}
+                            className="neu-btn flex-1 !bg-red-500 !text-white hover:!bg-red-600"
+                        >
+                            {isCancelling ? (
+                                <>
+                                    <span className="material-symbols-outlined text-sm animate-spin mr-1">hourglass_empty</span>
+                                    Bezig...
+                                </>
+                            ) : (
+                                <>
+                                    <span className="material-symbols-outlined text-sm mr-1">check</span>
+                                    Ja, annuleren
+                                </>
+                            )}
+                        </button>
+                        <button
+                            onClick={handleCancelConfirm}
+                            disabled={isCancelling}
+                            className="neu-btn flex-1"
+                        >
+                            Nee, terug
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Cancel button for pending registrations - separate row */}
+            {status === 'pending' && !showConfirm && (
+                <button
+                    onClick={handleCancelClick}
+                    className="neu-btn-primary w-full mb-3"
+                >
+                    <span className="material-symbols-outlined text-sm mr-1.5">cancel</span>
+                    Aanmelding annuleren
+                </button>
+            )}
+
+            {/* Footer with metadata */}
+            <div className="flex items-center justify-between text-xs text-[var(--text-muted)] pt-2 border-t border-gray-100">
+                {task.total_needed ? (
+                    <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">group</span>
+                        {task.total_needed} {task.total_needed === 1 ? 'plek' : 'plekken'}
+                    </span>
+                ) : <span />}
+                
+                <span className="flex items-center gap-1 text-primary font-medium">
+                    Bekijk taak
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </span>
+            </div>
+        </Link>
+    );
+}
+
+/**
+ * Stat item for the sidebar
+ */
+function StatItem({ icon, label, value, color }) {
+    return (
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <span className={`material-symbols-outlined text-lg ${color}`}>{icon}</span>
+                <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+            </div>
+            <span className="font-bold text-[var(--text-primary)]">{value}</span>
+        </div>
+    );
+}

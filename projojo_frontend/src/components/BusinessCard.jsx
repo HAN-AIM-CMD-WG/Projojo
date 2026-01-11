@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
 import { useAuth } from '../auth/AuthProvider';
+import { useStudentSkills } from '../context/StudentSkillsContext';
 import FormInput from './FormInput';
 import Loading from "./Loading";
 import Modal from "./Modal";
@@ -9,8 +10,46 @@ import RichTextViewer from './RichTextViewer';
 import SkillBadge from './SkillBadge';
 import Tooltip from './Tooltip';
 
-export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false }) {
+// Check if business has a valid image (not default.png or empty)
+const hasValidImage = (imagePath) => {
+    return imagePath && imagePath !== 'default.png' && imagePath.trim() !== '';
+};
+
+// Placeholder component for businesses without images
+function BusinessPlaceholder({ name, size = 'md' }) {
+    const sizeClasses = {
+        sm: 'w-10 h-10 text-lg',
+        md: 'w-14 h-14 text-xl',
+        lg: 'w-20 h-20 text-3xl'
+    };
+    
+    // Get initials from business name
+    const initials = name
+        ? name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()
+        : 'B';
+    
+    return (
+        <div className={`${sizeClasses[size]} rounded-[10px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center`}>
+            <span className="font-bold text-primary">{initials}</span>
+        </div>
+    );
+}
+
+export default function BusinessCard({ 
+    name, 
+    image, 
+    location, 
+    businessId, 
+    topSkills, 
+    description, 
+    sector,
+    companySize,
+    website,
+    showDescription = false, 
+    showUpdateButton = false 
+}) {
     const { authData } = useAuth();
+    const { studentSkills } = useStudentSkills();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
     const [expiry, setExpiry] = useState(null);
@@ -61,60 +100,213 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         }, 5000));
     }
 
+    // Handle arrays from API (TypeDB returns optional fields as arrays)
+    const locationText = Array.isArray(location) ? location[0] : location;
+    const sectorText = Array.isArray(sector) ? sector[0] : sector;
+    const companySizeText = Array.isArray(companySize) ? companySize[0] : companySize;
+    const websiteUrl = Array.isArray(website) ? website[0] : website;
+
+    // Format company size for display
+    const formatCompanySize = (size) => {
+        if (!size) return null;
+        const sizeMap = {
+            "1-10": "1-10",
+            "11-50": "11-50", 
+            "51-200": "51-200",
+            "200+": "200+"
+        };
+        return sizeMap[size] || size;
+    };
+
+    // Calculate skill match with student
+    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const matchingSkills = topSkills?.filter(s => studentSkillIds.has(s.skillId)) || [];
+    const otherSkills = topSkills?.filter(s => !studentSkillIds.has(s.skillId)) || [];
+    
+    // Show more skills (max 6, then +X) - show matching first
+    const maxSkillsShown = 6;
+    const sortedSkills = [...matchingSkills, ...otherSkills];
+    const visibleSkills = sortedSkills.slice(0, maxSkillsShown);
+    const remainingSkills = sortedSkills.length - maxSkillsShown;
+
+    // Check if we have any metadata to show
+    const hasMetadata = sectorText || companySizeText || websiteUrl;
+
     return (
-        <div className="flex flex-col items-center bg-slate-200 border border-gray-200 rounded-lg shadow md:flex-row w-full  ">
-            <img className="w-full max-h-64 rounded-t-lg md:h-48 md:w-48 md:rounded-none md:rounded-s-lg object-cover" src={`${IMAGE_BASE_URL}${image}`} alt="Bedrijfslogo" />
-            <div className="flex flex-col justify-between p-4 leading-normal">
-                <h2 className="mb-1 text-4xl font-bold tracking-tight text-gray-900">{name}</h2>
-                <h3 className="mb-1 text-xl font-bold tracking-tight text-gray-900 flex gap-1">
-                    <svg className="w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                    {location && location.length > 0 ?
-                        (Array.isArray(location) ? location[0] : location) :
-                        <p className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</p>
-                    }
-                </h3>
-                {showDescription && <div className="mb-1 tracking-tight text-gray-900 "><RichTextViewer text={description} /></div>}
-                {topSkills && (
-                    <>
-                        <p className="mb-3 font-normal text-gray-700 ">Top {topSkills.length} skills in dit bedrijf: </p><div className="flex flex-wrap gap-2 pt-1 pb-4">
-                            {topSkills.map((skill) => (
-                                <SkillBadge key={skill.skillId ?? skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
-                            ))}
+        <>
+            <div className="neu-flat rounded-2xl p-6">
+                {/* Header row: Logo + Name + Location */}
+                <div className="flex items-start gap-4">
+                    {/* Company logo - clickable */}
+                    <Link 
+                        to={`/business/${businessId}`}
+                        className="w-14 h-14 rounded-xl overflow-hidden shrink-0 neu-pressed p-0.5 hover:scale-105 transition-transform"
+                    >
+                        {hasValidImage(image) ? (
+                            <img 
+                                className="w-full h-full object-cover rounded-[10px]" 
+                                src={`${IMAGE_BASE_URL}${image}`} 
+                                alt={`Logo van ${name}`} 
+                            />
+                        ) : (
+                            <BusinessPlaceholder name={name} size="md" />
+                        )}
+                    </Link>
+
+                    {/* Name and location */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                                    Bedrijf
+                                </span>
+                                <div className="flex items-center gap-2">
+                                <Link 
+                                    to={`/business/${businessId}`}
+                                        className="min-w-0"
+                                >
+                                        <h2 className="text-xl font-extrabold text-[var(--text-primary)] truncate hover:underline">
+                                        {name}
+                                    </h2>
+                                </Link>
+                                {locationText && (
+                                        <span className="text-xs text-[var(--text-muted)] flex items-center gap-1 shrink-0">
+                                            <span className="material-symbols-outlined text-xs">location_on</span>
+                                        {locationText}
+                                        </span>
+                                )}
+                                </div>
+                            </div>
+
+                            {/* Action button */}
+                            {!showUpdateButton && (
+                                <Link 
+                                    to={`/business/${businessId}`} 
+                                    className="neu-btn-primary !py-3 !px-5 font-bold shrink-0 flex items-center gap-2"
+                                >
+                                    Bekijk bedrijf
+                                    <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                                </Link>
+                            )}
                         </div>
-                    </>
-                )
-                }
-            </div>
-            <div className="md:ml-auto p-4 flex gap-3 flex-col">
-                {!showUpdateButton && <Link to={`/business/${businessId}`} className="btn-primary">Bekijk bedrijf</Link>}
-                {showUpdateButton && authData.businessId === businessId && (
-                    <>
-                        <Link to={`/projects/add`} className="btn-primary ps-3 flex flex-row gap-2 justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 448 512" className='h-5 w-5' stroke='#fff'>
-                                <path fill="#ffffff" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z" />
-                            </svg>
-                            <p>Project toevoegen</p>
-                        </Link>
-                        <Link className="btn-primary ps-2 flex flex-row gap-2 justify-center items-center" to={`/business/update`}>
-                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 512 512" className='h-4 w-4'>
-                                <path fill="#ffffff" d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z" />
-                            </svg>
-                            <p>Bedrijf aanpassen</p>
-                        </Link>
-                    </>
+                    </div>
+                </div>
+
+                {/* Info Pills Row - neumorphic pressed style */}
+                {hasMetadata && (
+                    <div className="flex flex-wrap gap-3 mt-5">
+                        {sectorText && (
+                            <div className="neu-pressed px-4 py-2 rounded-xl flex items-center gap-2">
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)]">domain</span>
+                                <span className="text-sm font-bold text-[var(--text-secondary)]">{sectorText}</span>
+                            </div>
+                        )}
+                        {companySizeText && (
+                            <div className="neu-pressed px-4 py-2 rounded-xl flex items-center gap-2">
+                                <span className="material-symbols-outlined text-base text-[var(--text-muted)]">groups</span>
+                                <span className="text-sm font-bold text-[var(--text-secondary)]">{formatCompanySize(companySizeText)} medewerkers</span>
+                            </div>
+                        )}
+                        {websiteUrl && (
+                            <a
+                                href={websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="neu-btn-outline !py-2 !px-4 rounded-xl flex items-center gap-2 text-sm"
+                            >
+                                <span className="material-symbols-outlined text-base">language</span>
+                                Website
+                                <span className="material-symbols-outlined text-sm">open_in_new</span>
+                            </a>
+                        )}
+                    </div>
                 )}
-                {(showUpdateButton && (authData.type === "teacher" || authData.businessId === businessId)) && (
-                    <button className='btn-primary ps-4 flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
-                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 640 512" className='h-5 w-5'>
-                            <path fill="#ffffff" d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
-                        </svg>
-                        <p>Collega toevoegen</p>
-                    </button>
+
+                {/* Description (optional) */}
+                {showDescription && description && (
+                    <div className={`mt-4 text-sm text-[var(--text-secondary)] ${!showUpdateButton ? 'line-clamp-3' : ''}`}>
+                        <RichTextViewer text={description} />
+                    </div>
+                )}
+
+                {/* Skills section */}
+                {visibleSkills.length > 0 && (
+                    <div className="mt-5 pt-4 border-t border-[var(--neu-border)]">
+                        <div className="flex items-center gap-4 mb-3">
+                            <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm">psychology</span>
+                            Gevraagde skills
+                        </p>
+                            {matchingSkills.length > 0 && studentSkills.length > 0 && (
+                                <span className="text-xs font-bold text-[#156064] dark:text-[#00C49A] flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                    {matchingSkills.length} match{matchingSkills.length !== 1 && 'es'}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {visibleSkills.map((skill) => {
+                                const isMatch = studentSkillIds.has(skill.skillId);
+                                return (
+                                <SkillBadge
+                                    key={skill.skillId ?? skill.id}
+                                    skillName={skill.name}
+                                    isPending={skill.isPending ?? skill.is_pending}
+                                        isOwn={isMatch}
+                                    >
+                                        {isMatch && (
+                                            <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                        )}
+                                    </SkillBadge>
+                                );
+                            })}
+                            {remainingSkills > 0 && (
+                                <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-[var(--gray-200)] text-[var(--text-muted)]">
+                                    +{remainingSkills}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Management buttons for supervisors of this business */}
+                {showUpdateButton && authData.businessId === businessId && (
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--neu-border)]">
+                        <Link to={`/projects/add`} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-lg">add</span>
+                            Project toevoegen
+                        </Link>
+                        <Link to={`/business/${businessId}/update`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                            Aanpassen
+                        </Link>
+                        <button onClick={openGenerateLinkModel} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-lg">person_add</span>
+                            Collega
+                        </button>
+                    </div>
+                )}
+
+                {/* Management buttons for teachers (can edit any business) */}
+                {showUpdateButton && authData.type === "teacher" && authData.businessId !== businessId && (
+                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-[var(--neu-border)]">
+                        <Link to={`/business/${businessId}/update`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                            Aanpassen
+                        </Link>
+                        <button onClick={openGenerateLinkModel} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-lg">person_add</span>
+                            Collega toevoegen
+                        </button>
+                    </div>
                 )}
             </div>
 
+            {/* Modal voor collega toevoegen */}
             <Modal
-                modalHeader={`Collega toevoegen aan ${name}`}
+                modalHeader="Collega toevoegen"
+                modalSubtitle={name}
+                modalIcon="person_add"
                 isModalOpen={isModalOpen}
                 setIsModalOpen={setIsModalOpen}
             >
@@ -130,7 +322,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                                 <p className='text-sm'>{error}</p>
                                 <button
                                     type="button"
-                                    className="btn-primary mt-2"
+                                    className="neu-btn-primary mt-2"
                                     onClick={openGenerateLinkModel}
                                 >
                                     Probeer opnieuw
@@ -148,31 +340,30 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                                         />
                                     </div>
                                     <button
-                                        className="hover:bg-gray-200 transition-colors p-2 rounded-md"
+                                        className="neu-btn !p-2"
                                         onClick={onCopyLink}
                                         ref={toolTipRef}
                                     >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className='w-5 h-5'><path stroke="currentColor" d="M104.6 48L64 48C28.7 48 0 76.7 0 112L0 384c0 35.3 28.7 64 64 64l96 0 0-48-96 0c-8.8 0-16-7.2-16-16l0-272c0-8.8 7.2-16 16-16l16 0c0 17.7 14.3 32 32 32l72.4 0C202 108.4 227.6 96 256 96l62 0c-7.1-27.6-32.2-48-62-48l-40.6 0C211.6 20.9 188.2 0 160 0s-51.6 20.9-55.4 48zM144 56a16 16 0 1 1 32 0 16 16 0 1 1 -32 0zM448 464l-192 0c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l140.1 0L464 243.9 464 448c0 8.8-7.2 16-16 16zM256 512l192 0c35.3 0 64-28.7 64-64l0-204.1c0-12.7-5.1-24.9-14.1-33.9l-67.9-67.9c-9-9-21.2-14.1-33.9-14.1L256 128c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64z" /></svg>
-                                        <div className="sr-only">Kopieer link</div>
+                                        <span className="material-symbols-outlined">content_copy</span>
+                                        <span className="sr-only">Kopieer link</span>
                                         <Tooltip parentRef={toolTipRef}>
                                             {tooltipText}
                                         </Tooltip>
                                     </button>
-
                                 </div>
-                                <p className='text-sm mt-1 text-gray-600 italic'>Deze link is geldig tot {formatDate(expiry)}.</p>
-                                <p className='text-sm mt-4'>De link is slechts één keer bruikbaar.</p>
+                                <p className='text-sm mt-2 text-[var(--text-muted)]'>Geldig tot {formatDate(expiry)}</p>
+                                <p className='text-xs mt-1 text-[var(--text-muted)]'>De link is slechts één keer bruikbaar.</p>
                                 <button
                                     type="button"
-                                    className="btn-primary mt-2"
+                                    className="neu-btn mt-4 text-sm"
                                     onClick={openGenerateLinkModel}
                                 >
-                                    Maak een nieuwe link
+                                    Nieuwe link genereren
                                 </button>
                             </div>
                     }
                 </div>
             </Modal>
-        </div>
+        </>
     )
 }

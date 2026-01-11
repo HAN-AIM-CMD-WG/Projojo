@@ -855,3 +855,106 @@
 .leaflet-container {
     z-index: 0;
 }
+
+/* === LANDING PAGE ANIMATIONS === */
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+@keyframes float-delayed {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(-5deg); }
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+    animation: float-delayed 7s ease-in-out infinite;
+}
+
+/* === CORAL MAP MARKER STYLES === */
+.coral-marker {
+    background: transparent !important;
+    border: none !important;
+}
+
+.coral-marker.dimmed-marker {
+    opacity: 0.7;
+}
+
+.marker-with-badge {
+    position: relative;
+    display: inline-block;
+}
+
+.marker-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: #00C49A;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Coral cluster styles */
+.coral-cluster-wrapper {
+    background: transparent !important;
+}
+
+.coral-cluster {
+    background: linear-gradient(135deg, #FF7F50 0%, #E67246 100%);
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 8px rgba(255, 127, 80, 0.4);
+    border: 3px solid white;
+}
+
+.coral-cluster-small {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+}
+
+.coral-cluster-medium {
+    width: 42px;
+    height: 42px;
+    font-size: 14px;
+}
+
+.coral-cluster-large {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+}
+
+/* === DARK MODE SUPPORT FOR NEUMORPHIC COMPONENTS === */
+.dark {
+    --color-neu-bg: #2D221C;
+    --color-neu-bg-dark: #251B16;
+    --color-neu-shadow-light: #3A2D25;
+    --color-neu-shadow-dark: #1F1510;
+    --color-text-primary: #F5F5F5;
+    --color-text-secondary: #BBBBBB;
+    --color-text-muted: #888888;
+    --neu-border: rgba(255, 255, 255, 0.1);
+}
+
+:root {
+    --neu-border: rgba(0, 0, 0, 0.08);
+}
