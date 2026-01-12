@@ -107,7 +107,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'description': $business.description,
                 'image_path': $business.imagePath,
                 'location': $business.location,
-            }};
+            };
         """
         results = Db.read_transact(query, {"project_id": project_id})
         if not results:
@@ -184,16 +184,9 @@ class ProjectRepository(BaseRepository[Project]):
 
     def create(self, project: ProjectCreation) -> ProjectCreation:
         id = generate_uuid()
-        created_at = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-
-        # Escape strings
-        escaped_name = project.name.replace('"', '\\"')
-        escaped_description = project.description.replace('"', '\\"')
-        escaped_image_path = project.image_path.replace('"', '\\"')
-        escaped_business_id = project.business_id.replace('"', '\\"')
-        escaped_location = (project.location.replace('"', '\\"') if getattr(project, "location", None) else "")
-
-        location_clause = f',\n                has location "{escaped_location}"' if escaped_location != "" else ""
+        created_at = datetime.now()
+        # Optional location: None removes clause via build_query
+        location_value = project.location.strip() if getattr(project, "location", None) else None
 
         query = """
             match
@@ -201,11 +194,12 @@ class ProjectRepository(BaseRepository[Project]):
                 has id ~business_id;
             insert
                 $project isa project,
-                has id "{id}",
-                has name "{escaped_name}",
-                has description "{escaped_description}",
-                has imagePath "{escaped_image_path}"{location_clause},
-                has createdAt {created_at};
+                has id ~id,
+                has name ~name,
+                has description ~description,
+                has imagePath ~image_path,
+                has location ~location,
+                has createdAt ~created_at;
                 $hasProjects isa hasProjects($business, $project);
         """
         Db.write_transact(query, {
@@ -214,6 +208,7 @@ class ProjectRepository(BaseRepository[Project]):
             "name": project.name,
             "description": project.description,
             "image_path": project.image_path,
+            "location": location_value,
             "created_at": created_at
         })
 

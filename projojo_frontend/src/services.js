@@ -407,6 +407,18 @@ export function getTaskSkills(taskId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`)
 }
 
+/**
+ * @param {Error} error
+ * @param {Record<number, string>} mapper
+ */
+export function createErrorMessage(error, mapper) {
+    let message = error?.message;
+    if (error instanceof HttpError) {
+        message = mapper[error.statusCode];
+    }
+    return message ?? "Er is een onverwachte fout opgetreden.";
+}
+
 
 /**
  *
