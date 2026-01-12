@@ -12,6 +12,7 @@ import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import ProjectsAddPage from './pages/ProjectsAddPage';
 import UpdateStudentPage from "./pages/update_student_page/update_student_page";
 import UpdateBusinessPage from './pages/UpdateBusinessPage';
+import UpdateProjectPage from './pages/UpdateProjectPage';
 import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
@@ -54,7 +55,10 @@ export default function App() {
           <Route path="/home" element={<OverviewPage />} />
           <Route path="/projects">
             <Route path="add" element={<ProjectsAddPage />} />
-            <Route path=":projectId" element={<ProjectDetailsPage />} />
+            <Route path=":projectId">
+              <Route index element={<ProjectDetailsPage />} />
+              <Route path="update" element={<UpdateProjectPage />} />
+            </Route>
           </Route>
           <Route path="/business">
             <Route path=":businessId" element={<BusinessPage />} />

@@ -277,6 +277,9 @@ export function createProject(project_data) {
     formData.append("description", project_data.description);
     formData.append("supervisor_id", project_data.supervisor_id);
     formData.append("business_id", project_data.business_id);
+    if (project_data.location !== undefined) {
+        formData.append("location", project_data.location);
+    }
 
     // Add image file
     if (project_data.imageFile) {
@@ -366,6 +369,18 @@ export function updateTask(taskId, formData) {
 }
 
 /**
+ * Update a project's full data (name, description, location, image)
+ * @param {string} projectId
+ * @param {FormData} formData
+ */
+export function updateProject(projectId, formData) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
+}
+
+/**
  * @param {string} skillId
  * @returns {Promise<void>}
  */
@@ -390,6 +405,18 @@ export function getStudentSkills(studentId) {
  */
 export function getTaskSkills(taskId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`)
+}
+
+/**
+ * @param {Error} error
+ * @param {Record<number, string>} mapper
+ */
+export function createErrorMessage(error, mapper) {
+    let message = error?.message;
+    if (error instanceof HttpError) {
+        message = mapper[error.statusCode];
+    }
+    return message ?? "Er is een onverwachte fout opgetreden.";
 }
 
 
