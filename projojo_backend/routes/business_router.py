@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form, Request
 from typing import Optional
 from auth.permissions import auth
 
@@ -129,4 +129,51 @@ async def update_business(
         raise HTTPException(
             status_code=500,
             detail="Er is een fout opgetreden bij het bijwerken van het bedrijf."
+        )
+
+@router.get("/archived/basic", response_model=list[Business])
+@auth(role="teacher")
+async def get_archived_businesses_basic():
+    """
+    Get archived businesses (teacher-only)
+    """
+    return business_repo.get_archived()
+
+@router.post("/{business_id}/archive")
+@auth(role="supervisor", owner_id_key="business_id")
+async def archive_business(
+    request: Request,
+    business_id: str = Path(..., description="Business ID")
+):
+    """
+    Archive a business and cascade to projects, tasks, supervisors and registrations.
+    Teacher and owning supervisor are allowed.
+    """
+    try:
+        business_repo.archive(business_id, request.state.user_id)
+        return {"message": "Bedrijf succesvol gearchiveerd"}
+    except Exception as e:
+        print(f"Error archiving business {business_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het archiveren van het bedrijf."
+        )
+
+@router.post("/{business_id}/unarchive")
+@auth(role="teacher")
+async def unarchive_business(
+    business_id: str = Path(..., description="Business ID")
+):
+    """
+    Unarchive a business and cascade to projects, tasks, supervisors and registrations.
+    Teacher-only.
+    """
+    try:
+        business_repo.unarchive(business_id)
+        return {"message": "Bedrijf succesvol hersteld"}
+    except Exception as e:
+        print(f"Error unarchiving business {business_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het herstellen van het bedrijf."
         )

@@ -652,3 +652,16 @@ class UserRepository(BaseRepository[User]):
             'tasks': [item['task_id'] for item in result.get('tasks', [])],
             'users': [item['user_id'] for item in result.get('users', [])]
         }
+
+    def is_supervisor_archived(self, supervisor_id: str) -> bool:
+        """
+        Returns True if the supervisor has archivedAt attribute set.
+        """
+        query = """
+            match
+                $s isa supervisor, has id ~id;
+                $s has archivedAt $ts;
+            fetch { 'archived': true };
+        """
+        results = Db.read_transact(query, {"id": supervisor_id})
+        return len(results) > 0

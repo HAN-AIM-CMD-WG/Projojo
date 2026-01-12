@@ -1,7 +1,7 @@
 import BusinessCard from './BusinessCard';
 import ProjectDashboard from './ProjectDashboard';
 
-export default function BusinessProjectDashboard({ business, projects, topSkills, showDescription = false, showUpdateButton = false, isAlwaysExtended = false }) {
+export default function BusinessProjectDashboard({ business, projects, topSkills, showDescription = false, showUpdateButton = false, isAlwaysExtended = false, isArchived = false, onChanged }) {
     return (
         <div className="bg-slate-100 rounded-lg overflow-hidden">
             <BusinessCard
@@ -13,6 +13,8 @@ export default function BusinessProjectDashboard({ business, projects, topSkills
                 showDescription={showDescription}
                 description={business?.description}
                 topSkills={topSkills}
+                isArchived={isArchived}
+                onChanged={onChanged}
             />
             {projects?.length > 0 && <ProjectDashboard projects={projects} isAlwaysExtended={isAlwaysExtended} />}
         </div>

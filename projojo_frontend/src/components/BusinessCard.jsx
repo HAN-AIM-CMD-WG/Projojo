@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
+import { IMAGE_BASE_URL, createSupervisorInviteKey, archiveBusiness, unarchiveBusiness } from '../services';
 import { useAuth } from '../auth/AuthProvider';
 import FormInput from './FormInput';
 import Loading from "./Loading";
@@ -9,7 +9,7 @@ import RichTextViewer from './RichTextViewer';
 import SkillBadge from './SkillBadge';
 import Tooltip from './Tooltip';
 
-export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false }) {
+export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false, isArchived = false, onChanged }) {
     const { authData } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
@@ -19,6 +19,9 @@ export default function BusinessCard({ name, image, location, businessId, topSki
     const toolTipRef = useRef(null);
     const [tooltipText, setTooltipText] = useState("Kopieer link");
     const [timeoutRef, setTimeoutRef] = useState(null);
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+    const [isArchiveLoading, setIsArchiveLoading] = useState(false);
+    const [archiveError, setArchiveError] = useState(null);
 
     const formatDate = date => {
         const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -59,6 +62,38 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         setTimeoutRef(setTimeout(() => {
             setTooltipText("Kopieer link");
         }, 5000));
+    }
+
+    const openArchiveModal = () => {
+        setArchiveError(null);
+        setIsArchiveModalOpen(true);
+    }
+
+    const handleConfirmArchive = () => {
+        setIsArchiveLoading(true);
+        setArchiveError(null);
+        archiveBusiness(businessId)
+            .then(() => {
+                setIsArchiveModalOpen(false);
+                if (onChanged) onChanged();
+            })
+            .catch(err => {
+                setArchiveError(err.message);
+            })
+            .finally(() => setIsArchiveLoading(false));
+    }
+
+    const handleUnarchive = () => {
+        setIsArchiveLoading(true);
+        setArchiveError(null);
+        unarchiveBusiness(businessId)
+            .then(() => {
+                if (onChanged) onChanged();
+            })
+            .catch(err => {
+                setArchiveError(err.message);
+            })
+            .finally(() => setIsArchiveLoading(false));
     }
 
     return (
@@ -104,11 +139,29 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                     </>
                 )}
                 {(showUpdateButton && (authData.type === "teacher" || authData.businessId === businessId)) && (
-                    <button className='btn-primary ps-4 flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
-                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 640 512" className='h-5 w-5'>
-                            <path fill="#ffffff" d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
+                    <>
+                        <button className='btn-primary ps-4 flex flex-row gap-2 justify-center items-center' onClick={openGenerateLinkModel}>
+                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 640 512" className='h-5 w-5'>
+                                <path fill="#ffffff" d="M96 128a128 128 0 1 1 256 0A128 128 0 1 1 96 128zM0 482.3C0 383.8 79.8 304 178.3 304l91.4 0C368.2 304 448 383.8 448 482.3c0 16.4-13.3 29.7-29.7 29.7L29.7 512C13.3 512 0 498.7 0 482.3zM504 312l0-64-64 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l64 0 0-64c0-13.3 10.7-24 24-24s24 10.7 24 24l0 64 64 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-64 0 0 64c0 13.3-10.7 24-24 24s-24-10.7-24-24z" />
+                            </svg>
+                            <p>Collega toevoegen</p>
+                        </button>
+                        {!isArchived && (
+                            <button className='btn-primary bg-red-600 hover:bg-red-700 ps-4 flex flex-row gap-2 justify-center items-center' onClick={openArchiveModal}>
+                                <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 512 512" className='h-5 w-5'>
+                                    <path fill="#ffffff" d="M256 48C141.1 48 48 141.1 48 256s93.1 208 208 208 208-93.1 208-208S370.9 48 256 48zm69.7 274.3c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0L256 289.9l-35.7 36.3c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l36.3-35.7-36.3-35.7c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0L256 222.1l35.7-36.3c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9L289.1 256l36.6 36.3z"/>
+                                </svg>
+                                <p>Archiveer bedrijf</p>
+                            </button>
+                        )}
+                    </>
+                )}
+                {(isArchived && authData.type === "teacher") && (
+                    <button className='btn-primary bg-green-600 hover:bg-green-700 ps-4 flex flex-row gap-2 justify-center items-center' onClick={handleUnarchive} disabled={isArchiveLoading}>
+                        <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 512 512" className='h-5 w-5'>
+                            <path fill="#ffffff" d="M256 48C141.1 48 48 141.1 48 256c0 34.9 8 67.9 22.3 97.3L29.5 394.1c-14.9 14.9-4.4 40.5 16.6 40.5H208c13.3 0 24-10.7 24-24V309.3c0-21-25.5-31.5-40.5-16.6l-38.9 38.9C136.1 309.9 128 283.8 128 256c0-70.7 57.3-128 128-128s128 57.3 128 128c0 35.3-14.3 67.3-37.5 90.5l45.3 45.3C428.6 356.8 464 309.3 464 256 464 141.1 370.9 48 256 48z"/>
                         </svg>
-                        <p>Collega toevoegen</p>
+                        <p>Herstel bedrijf</p>
                     </button>
                 )}
             </div>
@@ -171,6 +224,30 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                                 </button>
                             </div>
                     }
+                </div>
+            </Modal>
+
+            <Modal
+                modalHeader={`Bedrijf archiveren`}
+                isModalOpen={isArchiveModalOpen}
+                setIsModalOpen={setIsArchiveModalOpen}
+            >
+                <div className="p-4">
+                    {isArchiveLoading ? (
+                        <div className='flex flex-col items-center gap-4'>
+                            <p className='font-semibold'>Aan het archiveren...</p>
+                            <Loading size="48px" />
+                        </div>
+                    ) : (
+                        <>
+                            {archiveError && <p className="text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{archiveError}</p>}
+                            <p className='mb-4'>Weet je zeker dat je “{name}” wilt archiveren? Dit verbergt het bedrijf, alle projecten, taken en supervisor-accounts. Supervisoren kunnen dan niet meer inloggen.</p>
+                            <div className="flex gap-2">
+                                <button className="btn-secondary flex-1" onClick={() => setIsArchiveModalOpen(false)}>Annuleren</button>
+                                <button className="btn-primary bg-red-600 hover:bg-red-700 flex-1" onClick={handleConfirmArchive}>Bevestig archiveren</button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </Modal>
         </div>

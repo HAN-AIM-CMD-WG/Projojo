@@ -8,6 +8,8 @@ entity user @abstract,
     plays oauthAuthentication:user @card(1..10);
 
 entity supervisor sub user,
+    owns archivedAt @card(0..1),
+    owns archivedBy @card(0..1),
     plays manages:supervisor @card(1),
     plays creates:supervisor @card(0..);
 
@@ -29,6 +31,8 @@ entity business,
     owns description @card(1),
     owns imagePath @card(1),
     owns location @card(1),
+    owns archivedAt @card(0..1),
+    owns archivedBy @card(0..1),
     plays manages:business @card(0..),
     plays hasProjects:business @card(0..),
     plays businessInvite:business @card(0..);
@@ -39,6 +43,8 @@ entity project,
     owns description @card(1),
     owns imagePath @card(1),
     owns createdAt @card(1),
+    owns archivedAt @card(0..1),
+    owns archivedBy @card(0..1),
     plays hasProjects:project @card(1),
     plays containsTask:project @card(0..),
     plays creates:project @card(0..);
@@ -49,6 +55,8 @@ entity task,
     owns description @card(1),
     owns totalNeeded @card(1),
     owns createdAt @card(1),
+    owns archivedAt @card(0..1),
+    owns archivedBy @card(0..1),
     plays containsTask:task @card(1),
     plays requiresSkill:task @card(0..),
     plays registersForTask:task @card(0..);
@@ -106,7 +114,9 @@ relation registersForTask,
     owns description @card(1),
     owns isAccepted @card(0..1),
     owns response @card(0..1),
-    owns createdAt @card(1);
+    owns createdAt @card(1),
+    owns archivedAt @card(0..1),
+    owns archivedBy @card(0..1);
 
 relation businessInvite,
     relates business @card(1),
@@ -139,3 +149,6 @@ attribute response value string;
 attribute key value string;
 attribute inviteType value string @values("business", "teacher");
 attribute isUsed value boolean;
+attribute archivedAt value datetime-tz;
+attribute archivedBy value string;
+attribute archivedReason value string;

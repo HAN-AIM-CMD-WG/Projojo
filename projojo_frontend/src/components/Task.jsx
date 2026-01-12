@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
+import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills, archiveTask } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
@@ -23,6 +23,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isEditing, setIsEditing] = useState(false);
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+    const [archiveError, setArchiveError] = useState("");
+    const [archiveLoading, setArchiveLoading] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
@@ -116,6 +119,18 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
+    const confirmArchive = () => {
+        setArchiveError("");
+        setArchiveLoading(true);
+        archiveTask(task.id)
+            .then(() => {
+                setIsArchiveModalOpen(false);
+                if (setFetchAmount) setFetchAmount((v) => v + 1);
+            })
+            .catch((e) => setArchiveError(e.message))
+            .finally(() => setArchiveLoading(false));
+    };
+
     return (
         <div id={`task-${task.id}`} className="group">
             <div className="target flex flex-col sm:flex-row gap-4 justify-between items-center w-full p-5 bg-white rounded-lg shadow-md border border-gray-300 transition hover:shadow-lg">
@@ -175,6 +190,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         <Link to={`/tasks/${task.id}/update`} className="btn-primary w-full text-center">
                             <p>Taak aanpassen</p>
                         </Link>
+                        <button className="btn-primary w-full bg-red-600 hover:bg-red-700" onClick={() => { setArchiveError(""); setIsArchiveModalOpen(true); }}>
+                            Archiveer taak
+                        </button>
                         <CreateBusinessEmail taskId={task.id} />
                     </>
                     )}
@@ -202,6 +220,34 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             </div>
                         </div>
                     </form>
+                </Modal>
+            )}
+
+            {isOwner && (
+                <Modal
+                    modalHeader={`Taak archiveren`}
+                    isModalOpen={isArchiveModalOpen}
+                    setIsModalOpen={setIsArchiveModalOpen}
+                >
+                    <div className="p-4">
+                        {archiveLoading ? (
+                            <div className="flex flex-col items-center gap-4">
+                                <p className="font-semibold">Aan het archiveren...</p>
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent" />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {archiveError && <Alert text={archiveError} onClose={() => setArchiveError("")} />}
+                                <p className="mb-4">Weet je zeker dat je “{task.name}” wilt archiveren? Aanmeldingen worden ook gearchiveerd. Deze taak verdwijnt uit overzichten en zoekresultaten.</p>
+                                <div className="flex gap-2">
+                                    <button className="btn-secondary flex-1" onClick={() => setIsArchiveModalOpen(false)}>Annuleren</button>
+                                    <button className="btn-primary bg-red-600 hover:bg-red-700 flex-1" onClick={confirmArchive}>Bevestig archiveren</button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </Modal>
             )}
 

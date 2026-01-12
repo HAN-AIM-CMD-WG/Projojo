@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { createTask, IMAGE_BASE_URL } from "../services";
+import { createTask, IMAGE_BASE_URL, archiveProject } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import FormInput from "./FormInput";
 import Modal from "./Modal";
@@ -17,6 +17,11 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [formKey, setFormKey] = useState(0);
+
+    // Archive project state
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+    const [archiveError, setArchiveError] = useState("");
+    const [archiveLoading, setArchiveLoading] = useState(false);
 
     const formDataObj = {};
 
@@ -35,6 +40,18 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     }
 
     const handleOpenModal = () => setIsModalOpen(true);
+
+    const confirmArchiveProject = () => {
+        setArchiveError("");
+        setArchiveLoading(true);
+        archiveProject(project.id)
+            .then(() => {
+                setIsArchiveModalOpen(false);
+                if (refreshData) refreshData();
+            })
+            .catch((e) => setArchiveError(e.message))
+            .finally(() => setArchiveLoading(false));
+    };
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setNewTaskDescription("");
@@ -121,12 +138,19 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     ))}
                 </ul>
                 {isOwner && (
-                    <div className="w-fit p-4 pt-0 flex">
+                    <div className="w-fit p-4 pt-0 flex gap-2">
                         <button className="btn-primary w-full border border-gray-400" onClick={handleOpenModal}>Taak toevoegen</button>
+                        <button
+                            className="btn-primary bg-red-600 hover:bg-red-700"
+                            onClick={() => { setArchiveError(""); setIsArchiveModalOpen(true); }}
+                        >
+                            Project archiveren
+                        </button>
                     </div>
                 )}
             </div>
             {isOwner && (
+                <>
                 <Modal
                     modalHeader={`Nieuwe taak`}
                     isModalOpen={isModalOpen}
@@ -159,6 +183,35 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         </button>
                     </form>
                 </Modal>
+
+                <Modal
+                    modalHeader={`Project archiveren`}
+                    isModalOpen={isArchiveModalOpen}
+                    setIsModalOpen={setIsArchiveModalOpen}
+                >
+                    <div className="p-4">
+                        {archiveLoading ? (
+                            <div className="flex flex-col items-center gap-4">
+                                <p className="font-semibold">Aan het archiveren...</p>
+                                <div className="flex items-center justify-center">
+                                    <div className="animate-spin h-8 w-8 border-4 border-primary rounded-full border-t-transparent" />
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                {archiveError && <Alert text={archiveError} onClose={() => setArchiveError("")} />}
+                                <p className="mb-4">
+                                    Weet je zeker dat je “{project.name}” wilt archiveren? Alle taken (en aanmeldingen) van dit project worden ook gearchiveerd. Het project verdwijnt uit overzichten en zoekresultaten.
+                                </p>
+                                <div className="flex gap-2">
+                                    <button className="btn-secondary flex-1" onClick={() => setIsArchiveModalOpen(false)}>Annuleren</button>
+                                    <button className="btn-primary bg-red-600 hover:bg-red-700 flex-1" onClick={confirmArchiveProject}>Bevestig archiveren</button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </Modal>
+                </>
             )}
         </div>
     )

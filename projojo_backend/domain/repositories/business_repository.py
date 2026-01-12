@@ -20,6 +20,7 @@ class BusinessRepository(BaseRepository[Business]):
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
+            not { $business has archivedAt $archivedAt; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -42,6 +43,7 @@ class BusinessRepository(BaseRepository[Business]):
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
+            not { $business has archivedAt $archivedAt; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -112,6 +114,7 @@ class BusinessRepository(BaseRepository[Business]):
         query = """
         match
             $business isa business;
+        not { $business has archivedAt $bArchived; };
         fetch {
             "id": $business.id,
             "name": $business.name,
@@ -122,6 +125,7 @@ class BusinessRepository(BaseRepository[Business]):
                 match
                     ($business, $project) isa hasProjects;
                     $project isa project;
+                not { $project has archivedAt $pArchived; };
                 fetch {
                     "id": $project.id,
                     "name": $project.name,
@@ -132,6 +136,7 @@ class BusinessRepository(BaseRepository[Business]):
                         match
                             ($project, $task) isa containsTask;
                             $task isa task;
+                        not { $task has archivedAt $tArchived; };
                         fetch {
                             "id": $task.id,
                             "name": $task.name,
@@ -213,3 +218,202 @@ class BusinessRepository(BaseRepository[Business]):
         """
 
         Db.write_transact(query, update_params)
+
+    def get_archived(self) -> list[Business]:
+        query = """
+            match
+                $business isa business,
+                has id $id,
+                has name $name,
+                has description $description,
+                has imagePath $imagePath,
+                has location $location;
+            $business has archivedAt $archivedAt;
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'imagePath': $imagePath,
+                'location': $location
+            };
+        """
+        results = Db.read_transact(query)
+        return [self._map_to_model(result) for result in results]
+
+    def archive(self, business_id: str, archived_by: str) -> None:
+        """
+        Cascade archive: business -> projects -> tasks -> supervisors -> registrations
+        Sets archivedAt (now) and archivedBy on each, if not already set.
+        """
+        from datetime import datetime
+        ts = datetime.now()
+
+        # Archive business
+        query = """
+            match
+                $b isa business, has id ~business_id;
+            not { $b has archivedAt $x; };
+            update
+                $b has archivedAt ~ts;
+                $b has archivedBy ~by;
+        """
+        Db.write_transact(query, {"business_id": business_id, "ts": ts, "by": archived_by})
+
+        # Archive projects
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                $p isa project;
+            not { $p has archivedAt $x; };
+            update
+                $p has archivedAt ~ts;
+                $p has archivedBy ~by;
+        """
+        Db.write_transact(query, {"business_id": business_id, "ts": ts, "by": archived_by})
+
+        # Archive tasks
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                ($p, $t) isa containsTask;
+                $t isa task;
+            not { $t has archivedAt $x; };
+            update
+                $t has archivedAt ~ts;
+                $t has archivedBy ~by;
+        """
+        Db.write_transact(query, {"business_id": business_id, "ts": ts, "by": archived_by})
+
+        # Archive supervisors
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                $m isa manages (supervisor: $s, business: $b);
+                $s isa supervisor;
+            not { $s has archivedAt $x; };
+            update
+                $s has archivedAt ~ts;
+                $s has archivedBy ~by;
+        """
+        Db.write_transact(query, {"business_id": business_id, "ts": ts, "by": archived_by})
+
+        # Archive registrations
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                ($p, $t) isa containsTask;
+                $r isa registersForTask (task: $t, student: $stu);
+            not { $r has archivedAt $x; };
+            update
+                $r has archivedAt ~ts;
+                $r has archivedBy ~by;
+        """
+        Db.write_transact(query, {"business_id": business_id, "ts": ts, "by": archived_by})
+
+    def unarchive(self, business_id: str) -> None:
+        """
+        Teacher-only: cascade unarchive by removing archivedAt/archivedBy on
+        business -> projects -> tasks -> supervisors -> registrations
+        """
+        # Business
+        query = """
+            match
+                $b isa business, has id ~business_id, has archivedAt $ts;
+            delete
+                has $ts of $b;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+        query = """
+            match
+                $b isa business, has id ~business_id, has archivedBy $by;
+            delete
+                has $by of $b;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+
+        # Projects
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                $p has archivedAt $ts;
+            delete
+                has $ts of $p;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                $p has archivedBy $by;
+            delete
+                has $by of $p;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+
+        # Tasks
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                ($p, $t) isa containsTask;
+                $t has archivedAt $ts;
+            delete
+                has $ts of $t;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                ($p, $t) isa containsTask;
+                $t has archivedBy $by;
+            delete
+                has $by of $t;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+
+        # Supervisors
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                $m isa manages (supervisor: $s, business: $b);
+                $s has archivedAt $ts;
+            delete
+                has $ts of $s;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                $m isa manages (supervisor: $s, business: $b);
+                $s has archivedBy $by;
+            delete
+                has $by of $s;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+
+        # Registrations
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                ($p, $t) isa containsTask;
+                $r isa registersForTask (task: $t, student: $stu), has archivedAt $ts;
+            delete
+                has $ts of $r;
+        """
+        Db.write_transact(query, {"business_id": business_id})
+        query = """
+            match
+                $b isa business, has id ~business_id;
+                ($b, $p) isa hasProjects;
+                ($p, $t) isa containsTask;
+                $r isa registersForTask (task: $t, student: $stu), has archivedBy $by;
+            delete
+                has $by of $r;
+        """
+        Db.write_transact(query, {"business_id": business_id})

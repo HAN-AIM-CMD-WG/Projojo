@@ -15,6 +15,8 @@ class Project(BaseModel):
     )]
     business_id: str | None = None
     tasks: list[Task] | None = None
+    archived_at: datetime | None = None
+    archived_by: str | None = None
 
     class Config:
         from_attributes = True
