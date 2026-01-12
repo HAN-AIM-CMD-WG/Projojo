@@ -10,18 +10,15 @@ class TaskRepository(BaseRepository[Task]):
         super().__init__(Task, "task")
 
     def get_by_id(self, id: str) -> Task | None:
-        # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $task isa task,
-                has id "{escaped_id}",
+                has id ~id,
                 has name $name,
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
-            fetch {{
+            fetch {
                 'id': $task.id,
                 'name': $name,
                 'description': $description,
@@ -30,7 +27,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
-                    not {{ $registration has isAccepted $any_value; }};
+                    not { $registration has isAccepted $any_value; };
                     return count;
                 ),
                 'total_accepted': (
@@ -39,11 +36,11 @@ class TaskRepository(BaseRepository[Task]):
                         has isAccepted true;
                     return count;
                 )
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
-            raise ItemRetrievalException(Task, f"Task with ID {id} not found.")
+            raise ItemRetrievalException(Task, f"Taak met ID {id} niet gevonden")
 
         # Convert to Task using Pydantic's model_validate
         return Task.model_validate(results[0])
@@ -81,9 +78,11 @@ class TaskRepository(BaseRepository[Task]):
         return [Task.model_validate(result) for result in results]
 
     def get_tasks_by_project(self, project_id: str) -> list[Task]:
-        query = f"""
+        query = """
             match
-                $project isa project, has id "{project_id}";
+                $project isa project,
+                has id ~project_id,
+                has id $project_id;
                 $projectTask isa containsTask (project: $project, task: $task);
                 $task isa task,
                 has id $id,
@@ -91,17 +90,17 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
-            fetch {{
+            fetch {
                 'id': $id,
                 'name': $name,
                 'description': $description,
                 'total_needed': $totalNeeded,
                 'created_at': $createdAt,
-                'project_id': "{project_id}",
+                'project_id': $project_id,
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
-                    not {{ $registration has isAccepted $any_value; }};
+                    not { $registration has isAccepted $any_value; };
                     return count;
                 ),
                 'total_accepted': (
@@ -110,9 +109,9 @@ class TaskRepository(BaseRepository[Task]):
                         has isAccepted true;
                     return count;
                 )
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"project_id": project_id})
         tasks = [Task.model_validate(result) for result in results]
 
         return tasks
@@ -123,156 +122,211 @@ class TaskRepository(BaseRepository[Task]):
 
         id = generate_uuid()
         # Generate a creation timestamp
-        created_at = datetime.now().isoformat()
+        created_at = datetime.now()
 
-        # Escape any double quotes in strings
-        escaped_name = task.name.replace('"', '\\"')
-        escaped_description = task.description.replace('"', '\\"')
-        escaped_project_id = task.project_id.replace('"', '\\"')
-
-        validation_query = f"""
+        validation_query = """
             match
-                $project isa project, has id "{escaped_project_id}", has name $project_name;
-            fetch {{
+                $project isa project, has id ~project_id, has name $project_name;
+            fetch {
                 'exists': true,
                 'project_name': $project_name,
                 'duplicate_tasks': [
                     match
-                        $existingTask isa task, has name "{escaped_name}";
+                        $existingTask isa task, has name ~task_name;
                         $projectTask isa containsTask (project: $project, task: $existingTask);
-                    fetch {{ 'exists': true }};
+                    fetch { 'exists': true };
                 ]
-            }};
+            };
         """
-        validation_results = Db.read_transact(validation_query)
+        validation_results = Db.read_transact(validation_query, {
+            "project_id": task.project_id,
+            "task_name": task.name
+        })
 
         if not validation_results:
-            raise ItemRetrievalException("Project", f"Project with ID '{task.project_id}' not found.")
+            raise ItemRetrievalException("Project", f"Project met ID '{task.project_id}' niet gevonden.")
 
         # Check if duplicate tasks were found
         if validation_results[0].get('duplicate_tasks'):
             project_name = validation_results[0].get('project_name')
             raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{project_name}'.")
 
-        query = f"""
+        query = """
             match
-                $project isa project, has id "{escaped_project_id}";
+                $project isa project, has id ~project_id;
             insert
                 $task isa task,
-                has id "{id}",
-                has name "{escaped_name}",
-                has description "{escaped_description}",
-                has totalNeeded {task.total_needed},
-                has createdAt {created_at};
+                has id ~id,
+                has name ~name,
+                has description ~description,
+                has totalNeeded ~total_needed,
+                has createdAt ~created_at;
                 $projectTask isa containsTask (project: $project, task: $task);
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {
+            "project_id": task.project_id,
+            "id": id,
+            "name": task.name,
+            "description": task.description,
+            "total_needed": task.total_needed,
+            "created_at": created_at
+        })
 
         # Update the task with the generated ID and created_at
         task.id = id
-        task.created_at = datetime.fromisoformat(created_at)
+        task.created_at = created_at
         return task
-
-    def update(self, id: str, task: Task) -> Task | None:
-        # First delete the old task
-        # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
-        delete_query = f"""
-            match
-                $task isa task,
-                has id "{escaped_id}";
-            delete $task isa task;
-        """
-        Db.write_transact(delete_query)
-
-        # Then create a new one with updated values
-        return self.create(task)
-
-    def delete(self, id: str) -> bool:
-        # Escape any double quotes in the ID
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
-            match
-                $task isa task,
-                has id "{escaped_id}";
-            delete $task isa task;
-        """
-        Db.write_transact(query)
-        return True
 
     def get_registrations(self, task_id: str) -> list[dict]:
         """
         Get all registrations for a task with student details and skills
         """
-        escaped_task_id = task_id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $task isa task, has id "{escaped_task_id}";
+                $task isa task, has id ~task_id;
                 $student isa student, has id $student_id;
                 $registration isa registersForTask (student: $student, task: $task);
-            not {{ $registration has isAccepted $any_value; }};
-            fetch {{
+            not { $registration has isAccepted $any_value; };
+            fetch {
                 'reason': $registration.description,
-                'student': {{
+                'student': {
                     'id': $student_id,
                     'full_name': $student.fullName,
                     'skills': [
                         match
                             $hasSkill isa hasSkill (student: $student, skill: $skill);
-                        fetch {{
+                        fetch {
                             'id': $skill.id,
                             'name': $skill.name,
                             'is_pending': $skill.isPending,
                             'created_at': $skill.createdAt,
                             'description': $hasSkill.description
-                        }};
+                        };
                     ]
-                }}
-            }};
+                }
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"task_id": task_id})
         return results
 
     def create_registration(self, task_id: str, student_id: str, motivation: str) -> None:
         """
         Create a new registration for a student to a task
         """
-        escaped_task_id = task_id.replace('"', '\\"')
-        escaped_student_id = student_id.replace('"', '\\"')
-        escaped_motivation = motivation.replace('"', '\\"')
-        created_at = datetime.now().isoformat()
+        created_at = datetime.now()
 
-        query = f"""
+        query = """
             match
-                $task isa task, has id "{escaped_task_id}";
-                $student isa student, has id "{escaped_student_id}";
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
             insert
                 $registration isa registersForTask (student: $student, task: $task),
-                has description "{escaped_motivation}",
-                has createdAt {created_at};
+                has description ~motivation,
+                has createdAt ~created_at;
         """
 
-        Db.write_transact(query)
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+            "motivation": motivation,
+            "created_at": created_at
+        })
 
     def update_registration(self, task_id: str, student_id: str, accepted: bool, response: str = "") -> None:
         """
         Update a registration status (accept/reject) with optional response
         """
-        escaped_task_id = task_id.replace('"', '\\"')
-        escaped_student_id = student_id.replace('"', '\\"')
-        escaped_response = response.replace('"', '\\"')
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task);
+            update
+                $registration has isAccepted ~accepted;
+                $registration has response ~response;
+        """
+
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+            "accepted": accepted,
+            "response": response
+        })
+
+    def update(self, task_id: str, name: str, description: str, total_needed: int) -> Task:
+        # Get project info and check for duplicate task names
+        validation_query = """
+            match
+                $currentTask isa task, has id ~task_id;
+                $projectTask isa containsTask (project: $project, task: $currentTask);
+                $project isa project, has name $project_name, has id $project_id;
+            fetch {
+                'project_name': $project_name,
+                'project_id': $project_id,
+                'conflicting_tasks': [
+                    match
+                        $sameProject isa project, has id $project_id;
+                        $conflictTask isa task, has name ~task_name, has id $conflict_id;
+                        $containsConflict isa containsTask (project: $sameProject, task: $conflictTask);
+                    fetch { 'conflict_id': $conflict_id };
+                ]
+            };
+        """
+        validation_results = Db.read_transact(validation_query, {
+            "task_id": task_id,
+            "task_name": name
+        })
+        
+        if not validation_results:
+            raise ItemRetrievalException("Task", f"Taak met ID '{task_id}' niet gevonden.")
+            
+        result = validation_results[0]
+        project_name = result['project_name']
+        
+        # Check if any conflicting tasks found that are NOT the current task
+        for conflict in result.get('conflicting_tasks', []):
+            if conflict['conflict_id'] != task_id:
+                raise ValueError(f"Er bestaat al een taak met de naam '{name}' in project '{project_name}'.")
+
+        # Validate that total_needed is not less than current total_accepted
+        accepted_count_query = """
+            match
+                $task isa task, has id ~task_id;
+            fetch {
+                'total_accepted': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true;
+                    return count;
+                )
+            };
+        """
+        accepted_results = Db.read_transact(accepted_count_query, {"task_id": task_id})
+        current_accepted = accepted_results[0]['total_accepted'] if accepted_results else 0
+        
+        if total_needed < current_accepted:
+            raise ValueError(f"Het totaal aantal plekken ({total_needed}) kan niet lager zijn dan het aantal al geaccepteerde deelnemers ({current_accepted}).")
+
+        # Build the update query dynamically based on what needs to be updated
+        update_clauses = [
+            '$task has name ~name;',
+            '$task has description ~description;',
+            '$task has totalNeeded ~total_needed;',
+        ]
+        update_params = {
+            "task_id": task_id,
+            "name": name,
+            "description": description,
+            "total_needed": total_needed,
+        }
 
         query = f"""
             match
-                $task isa task, has id "{escaped_task_id}";
-                $student isa student, has id "{escaped_student_id}";
-                $registration isa registersForTask (student: $student, task: $task);
+                $task isa task, has id ~task_id;
             update
-                $registration has isAccepted {str(accepted).lower()};
-                $registration has response "{escaped_response}";
+                {' '.join(update_clauses)}
         """
 
-        Db.write_transact(query)
+        Db.write_transact(query, update_params)
+

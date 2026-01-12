@@ -11,25 +11,24 @@ class BusinessRepository(BaseRepository[Business]):
         super().__init__(Business, "business")
 
     def get_by_id(self, id: str) -> Business | None:
-        # Escape any double quotes in the ID
-
-        query = f"""
+        query = """
             match
                 $business isa business,
-                has id "{id}",
+                has id ~id,
+                has id $id,
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
-            fetch {{
-                'id': "{id}",
+            fetch {
+                'id': $id,
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
                 'location': $location
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             raise ItemRetrievalException(Business, f"Business with ID {id} not found.")
         return self._map_to_model(results[0])
@@ -75,22 +74,19 @@ class BusinessRepository(BaseRepository[Business]):
         )
 
     def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
-        # Escape any double quotes in the business ID
-        escaped_business_id = business_id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $business isa business, has id "{escaped_business_id}";
+                $business isa business, has id ~business_id;
                 $manages isa manages,
                     has location $location,
                     (supervisor: $supervisor, business: $business);
                 $supervisor isa supervisor, has id $supervisor_id;
-            fetch {{
+            fetch {
                 'id': $supervisor_id,
                 'location': $location
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"business_id": business_id})
 
         associations = []
         for result in results:
@@ -177,44 +173,44 @@ class BusinessRepository(BaseRepository[Business]):
 
     def create(self, name: str) -> Business:
         id = generate_uuid()
-        escaped_name = name.replace('"', '\\"')
 
-        query = f"""
+        query = """
             insert
                 $business isa business,
-                has id "{id}",
-                has name "{escaped_name}",
+                has id ~id,
+                has name ~name,
                 has description "",
                 has imagePath "default.png",
                 has location "";
         """
-        Db.write_transact(query)
+        Db.write_transact(query, {"id": id, "name": name})
         return Business(
             id=id, name=name, description="", image_path="default.png", location=""
         )
 
     def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None) -> Business:
-        escaped_business_id = business_id.replace('"', '\\"')
-        escaped_name = name.replace('"', '\\"')
-        escaped_description = description.replace('"', '\\"')
-        escaped_location = location.replace('"', '\\"')
-
         # Build the update query dynamically based on what needs to be updated
         update_clauses = [
-            f'$business has description "{escaped_description}";',
-            f'$business has name "{escaped_name}";',
-            f'$business has location "{escaped_location}";',
+            '$business has name ~name;',
+            '$business has description ~description;',
+            '$business has location ~location;',
         ]
-        
+        update_params = {
+            "business_id": business_id,
+            "name": name,
+            "description": description,
+            "location": location,
+        }
+
         # Only update imagePath if a new image filename is provided
         if image_filename is not None:
-            update_clauses.append(f'$business has imagePath "{image_filename}";')
-
+            update_clauses.append('$business has imagePath ~image_filename;')
+            update_params["image_filename"] = image_filename
         query = f"""
             match
-                $business isa business, has id "{escaped_business_id}";
+                $business isa business, has id ~business_id;
             update
                 {' '.join(update_clauses)}
         """
 
-        Db.write_transact(query)
+        Db.write_transact(query, update_params)

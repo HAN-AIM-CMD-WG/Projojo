@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Depends
 from typing import Annotated, Optional
 from datetime import datetime
-import traceback
+from auth.permissions import auth
 
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
@@ -14,6 +14,7 @@ router = APIRouter(prefix="/projects", tags=["Project Endpoints"])
 
 # Project endpoints
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_projects():
     """
     Get all projects for debugging purposes
@@ -21,37 +22,41 @@ async def get_all_projects():
     projects = project_repo.get_all()
     return projects
 
-@router.get("/{id}")
-async def get_project(id: str = Path(..., description="Project ID")):
+@router.get("/{project_id}")
+@auth(role="authenticated")
+async def get_project(project_id: str = Path(..., description="Project ID")):
     """
     Get a specific project by ID
     """
-    project = project_repo.get_by_id(id)
+    project = project_repo.get_by_id(project_id)
     return project
 
 
-@router.get("/{id}/complete")
-async def get_project_full(id: str = Path(..., description="Project ID")):
+@router.get("/{project_id}/complete")
+@auth(role="authenticated")
+async def get_project_full(project_id: str = Path(..., description="Project ID")):
     """
     Get a specific project by ID with all tasks and skills
     """
-    project = project_repo.get_by_id(id)
-    project.tasks = task_service.get_tasks_with_skills_by_project(id)
+    project = project_repo.get_by_id(project_id)
+    project.tasks = task_service.get_tasks_with_skills_by_project(project_id)
 
     project_dict = project.__dict__
-    project_dict["business"] = project_repo.get_business_by_project(id)
+    project_dict["business"] = project_repo.get_business_by_project(project_id)
     return project_dict
 
 
-@router.get("/{id}/tasks")
-async def get_project_tasks(id: str = Path(..., description="Project ID")):
+@router.get("/{project_id}/tasks")
+@auth(role="authenticated")
+async def get_project_tasks(project_id: str = Path(..., description="Project ID")):
     """
     Get all tasks for a project
     """
-    tasks = task_service.get_tasks_with_skills_by_project(id)
+    tasks = task_service.get_tasks_with_skills_by_project(project_id)
     return tasks
 
 @router.post("/", response_model=ProjectCreation, status_code=201)
+@auth(role="supervisor", owner_id_key="business_id")
 async def create_project(
     name: Annotated[str, Form(...)],
     description: Annotated[str, Form(...)],
@@ -138,5 +143,4 @@ async def update_project(
         return {"message": "Project succesvol bijgewerkt"}
     except Exception as e:
         # Log full traceback to console for debugging
-        traceback.print_exc()
         raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project: " + str(e))

@@ -40,7 +40,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                 <div className="flex flex-col min-[400px]:flex-row min-[400px]:justify-between  gap-2">
                     <h2 className="text-lg font-semibold text-gray-800">{skill.name}</h2>
                     {isOwnProfile && !isEditing && (
-                        <button className="btn-secondary py-1 px-3 self-start" onClick={() => setIsEditing(true)}>Onderbouwing ✏️</button>
+                        <button className="btn-secondary py-1 px-3 self-start" onClick={() => setIsEditing(true)}>Toelichting ✏️</button>
                     )}
                 </div>
                 {isOwnProfile && isEditing ? (
@@ -51,7 +51,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                             onChange={(e) => setDescription(e.target.value)}
                             className="w-full p-2 rounded-lg border border-gray-300 focus:ring-pink-300 focus:border-pink-300"
                             rows="3"
-                            placeholder="Ik beheers deze skill, omdat..." />
+                            placeholder="Beschrijf je ervaring met deze skill" />
                         <div className="flex gap-2 justify-end">
                             <button type="button" className="btn-secondary max-[340px]:px-2" onClick={handleClose}>Annuleren</button>
                             <button className="btn-primary max-[340px]:px-2" onClick={handleSubmit}>Opslaan</button>

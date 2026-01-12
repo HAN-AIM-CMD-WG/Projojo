@@ -7,8 +7,8 @@ export default function LoginPage() {
       <div className="flex flex-col gap-2 w-96 p-4 border border-gray-300 rounded-lg shadow-md">
 
         <h1 className="text-4xl text-center font-bold mb-3">
-          Projojo
-          {/* CMD Opdrachtenbox */}
+          {/* Projojo */}
+          HAN Opdrachtenbox
         </h1>
 
         <TestUserSelector />

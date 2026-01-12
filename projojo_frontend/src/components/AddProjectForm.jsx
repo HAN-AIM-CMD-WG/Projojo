@@ -90,7 +90,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     max={255}
                 />
                 <DragDrop
-                    accept="image/*"
+                    accept="image"
                     name="image"
                     label="Upload een projectafbeelding"
                     onFileChanged={handleImageChange}

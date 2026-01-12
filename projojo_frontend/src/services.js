@@ -71,50 +71,46 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
         .then(json => {
             if (errorStatus !== undefined) {
                 let message;
-                const jsonObj = JSON.parse(json);
                 try {
+                    const jsonObj = JSON.parse(json);
+                    // checks if detail field exists and is non-empty
                     if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
+                        // doesnt exist or is empty. Go to catch block
                         throw new Error();
                     }
                     message = jsonObj.detail;
                 } catch {
-
+                    // assign default message based on status code
                     switch (errorStatus) {
+                        case 400:
+                            message = "Ongeldig verzoek. Controleer je invoer.";
+                            break;
                         case 401:
-                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
+                            message = "Je moet ingelogd zijn om dit te doen.";
                             break;
                         case 403:
-                            message = message ?? "U bent niet geautoriseerd om dit te doen.";
+                            message = "Je hebt geen rechten voor deze actie.";
                             break;
                         case 404:
-                            message = message ?? "De url waar naar gezocht wordt kan niet gevonden worden.";
+                            message = "Dit konden we niet vinden.";
                             break;
                         case 409:
-                            message = message ?? "Er is een probleem opgetreden, mogelijk omdat de ingevoerde gegevens al bestaan in het systeem.";
+                            message = "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            break;
+                        case 429:
+                            message = "Te veel verzoeken. Probeer het later opnieuw.";
                             break;
                         default:
-                            message = message ?? "Er is een onverwachte fout opgetreden.";
+                            message = "Er is een onverwachte fout opgetreden.";
                             break;
                     }
                 }
 
-
+                // makes the error catchable in the calling code
                 throw new HttpError(message, errorStatus);
             }
             return json;
         })
-}
-
-/**
- * @param {Error} error
- * @param {Record<number, string>} mapper
- */
-export function createErrorMessage(error, mapper) {
-    let message = error?.message;
-    if (error instanceof HttpError) {
-        message = mapper[error.statusCode];
-    }
-    return message ?? "Er is een onverwachte fout opgetreden.";
 }
 
 /**
@@ -301,11 +297,10 @@ export function createTask(projectId, formDataObj) {
     const taskData = {
         name: formDataObj.title,
         description: formDataObj.description,
-        total_needed: formDataObj.totalNeeded,
-        project_id: projectId
+        total_needed: formDataObj.totalNeeded
     };
 
-    return fetchWithError(`${API_BASE_URL}tasks/`, {
+    return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {
         method: "POST",
         body: JSON.stringify(taskData),
     });
@@ -356,6 +351,18 @@ export function updateTaskSkills(taskId, taskSkills) {
  */
 export function updateBusiness(businessId, formData) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
+    }
+
+/**
+ * @param {string} taskId - The task ID to update
+ * @param {FormData} formData - The form data containing task information (name, description, total_needed)
+ * @returns {Promise<void>}
+ */
+export function updateTask(taskId, formData) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}`, {
         method: "PUT",
         body: formData,
     }, true);
@@ -500,6 +507,32 @@ export function getStudentEmailAddresses(selection, taskId) {
  * Get colleague email addresses (teachers and supervisors)
  * @returns {Promise<string[]>} Array of email addresses
  */
-export function getColleaguesEmailAddresses() {
-    return fetchWithError(`${API_BASE_URL}tasks/emails/colleagues`);
+export function getColleaguesEmailAddresses(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/emails/colleagues`);
+}
+
+/**
+ * Mark a skill as accepted/declined (both remove pending state)
+ * @param {string} skillId
+ * @param {boolean} accepted
+ * @returns {Promise<void>}
+ */
+export function updateSkillAcceptance(skillId, accepted) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}/acceptance`, {
+        method: "PATCH",
+        body: JSON.stringify({ accepted }),
+    }, true);
+}
+
+/**
+ * Rename a skill (teacher-only)
+ * @param {string} skillId
+ * @param {string} name
+ * @returns {Promise<void>}
+ */
+export function updateSkillName(skillId, name) {
+    return fetchWithError(`${API_BASE_URL}skills/${skillId}/name`, {
+        method: "PATCH",
+        body: JSON.stringify({ name }),
+    }, true);
 }

@@ -30,7 +30,7 @@ class UserRepository(BaseRepository[User]):
             return teacher
 
         if not supervisor and not student and not teacher:
-            raise ItemRetrievalException(User, f"User with ID {id} not found.")
+            raise ItemRetrievalException(User, f"Gebruiker met ID {id} niet gevonden")
         return None
 
     def get_all(self) -> list[User]:
@@ -42,43 +42,40 @@ class UserRepository(BaseRepository[User]):
         return users
 
     def get_supervisor_by_id(self, id: str) -> Supervisor | None :
-        # Escape any double quotes in the id
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $supervisor isa supervisor,
-                has id "{escaped_id}",
+                has id ~id,
                 has id $id,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath;
                 $business isa business;
                 $manages isa manages( $supervisor, $business );
-            fetch {{
+            fetch {
                 'id': $id,
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath,
                 'business_association_id': $business.id
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             return None
 
         # Get projects for this supervisor
-        project_query = f"""
+        project_query = """
             match
                 $supervisor isa supervisor,
-                has id "{escaped_id}";
+                has id ~id;
                 $project isa project;
                 $creates isa creates( $supervisor, $project);
-            fetch {{
+            fetch {
                 'created_project_id': $project.id
-            }};
+            };
         """
-        project_results = Db.read_transact(project_query)
+        project_results = Db.read_transact(project_query, {"id": id})
 
         # Merge project data with supervisor data
         merged_results = []
@@ -100,14 +97,11 @@ class UserRepository(BaseRepository[User]):
         return self._map_supervisor(next(iter(grouped.values())))
 
     def get_student_by_id(self, id: str) -> dict | None:
-        # Escape any double quotes in the id
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $student isa student,
-                has id "{escaped_id}";
-            fetch {{
+                has id ~id;
+            fetch {
                 'id': $student.id,
                 'email': $student.email,
                 'full_name': $student.fullName,
@@ -119,29 +113,29 @@ class UserRepository(BaseRepository[User]):
                     match
                         $task isa task;
                         $registration isa registersForTask( $student, $task );
-                    fetch {{ 'task_id': $task.id }};
+                    fetch { 'task_id': $task.id };
                 ],
                 'skill_ids': [
                     match
                         $skill isa skill;
                         $hasSkill isa hasSkill( $skill, $student );
-                    fetch {{ 'skill_id': $skill.id }};
+                    fetch { 'skill_id': $skill.id };
                 ],
                 'Skills': [
                     match
                         $skill isa skill;
                         $hasSkill isa hasSkill( $skill, $student );
-                    fetch {{
+                    fetch {
                         'id': $skill.id,
                         'name': $skill.name,
                         'is_pending': $skill.isPending,
                         'created_at': $skill.createdAt,
                         'description': $hasSkill.description
-                    }};
+                    };
                 ]
-            }};
+            };
         """
-        result = Db.read_transact(query)
+        result = Db.read_transact(query, {"id": id})
         if not result:
             return None
 
@@ -149,25 +143,22 @@ class UserRepository(BaseRepository[User]):
 
 
     def get_teacher_by_id(self, id: str) -> Teacher | None:
-        # Escape any double quotes in the id
-        escaped_id = id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $teacher isa teacher,
-                has id "{escaped_id}",
+                has id ~id,
                 has id $id,
                 has email $email,
                 has fullName $fullName,
                 has imagePath $imagePath;
-            fetch {{
+            fetch {
                 'id': $id,
                 'email': $email,
                 'fullName': $fullName,
                 'imagePath': $imagePath
-            }};
+            };
         """
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"id": id})
         if not results:
             return None
 
@@ -358,11 +349,9 @@ class UserRepository(BaseRepository[User]):
         """
         Get students by task and their application status
         """
-        escaped_task_id = task_id.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $task isa task, has id "{escaped_task_id}";
+                $task isa task, has id ~task_id;
                 $student isa student,
                 has id $id,
                 has email $email,
@@ -396,7 +385,7 @@ class UserRepository(BaseRepository[User]):
             };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"task_id": task_id})
         students = []
 
         for result in results:
@@ -415,18 +404,16 @@ class UserRepository(BaseRepository[User]):
         """
         Get all registrations for a student
         """
-        escaped_student_id = studentId.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
-                $student isa student, has id "{escaped_student_id}";
+                $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
-            fetch {{
+            fetch {
                 'id': $task.id,
-            }};
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"student_id": studentId})
         if not results:
             return []
 
@@ -434,86 +421,88 @@ class UserRepository(BaseRepository[User]):
         task_ids = [result['id'] for result in results]
         return task_ids
 
-    def get_colleagues(self, supervisor_id: str) -> list[User]:
+    def get_colleagues(self, task_id: str, excluded_id: str) -> list[str]:
         """
-        Get supervisors who work in the same business as the authenticated supervisor
-        """
-        # Escape the supervisor email to prevent injection
-        escaped_id = supervisor_id.replace('"', '\\"')
+        Get supervisors linked to the same business as the given task
 
-        query = f"""
+        Args:
+            task_id: The task ID
+            excluded_id: Supervisor ID to exclude from results (or teacher ID, but teachers wouldn't be included anyway)
+
+        Returns:
+            List of supervisor emails
+        """
+        query = """
             match
-                $auth_supervisor isa supervisor, has id "{escaped_id}";
-                $manages_auth isa manages (supervisor: $auth_supervisor, business: $business);
-                $manages_colleague isa manages (supervisor: $colleague, business: $business);
-                $colleague isa supervisor,
-                has email $email,
-                has fullName $fullName;
-            fetch {{
-                'id': $colleague.id,
-                'email': $email,
-                'full_name': $fullName,
-            }};
+                $task isa task, has id ~task_id;
+                $ct isa containsTask (project: $project, task: $task);
+                $hp isa hasProjects (business: $business, project: $project);
+                $m isa manages (supervisor: $supervisor, business: $business);
+                not { $supervisor has id ~excluded_id; };
+            fetch {
+                "email": $supervisor.email
+            };
         """
-
-        results = Db.read_transact(query)
-        return [User(**result) for result in results]
+        results = Db.read_transact(query, {
+            "task_id": task_id,
+            "excluded_id": excluded_id
+        })
+        if not results:
+            return []
+        return [result['email'] for result in results]
 
     def update_student(self, id: str, description: str | None = None, image_path: str | None = None, cv_path: str | None = None) -> None:
         """
         Update student profile information (description, profile picture, CV)
         """
-        escaped_id = id.replace('"', '\\"')
         # Build update statements for provided fields
         update_statements = []
+        params = {"id": id}
 
         if description is not None:
-            escaped_description = description.replace('"', '\\"').replace('\n', '\\n')
-            update_statements.append(f'$student has description "{escaped_description}";')
+            update_statements.append('$student has description ~description;')
+            params["description"] = description
 
         if image_path is not None:
-            escaped_image_path = image_path.replace('"', '\\"')
-            update_statements.append(f'$student has imagePath "{escaped_image_path}";')
+            update_statements.append('$student has imagePath ~image_path;')
+            params["image_path"] = image_path
 
         if cv_path is not None:
             if cv_path == "":
                 # Empty string means delete the CV
-                delete_query = f"""
+                delete_query = """
                     match
                         $student isa student,
-                        has id "{escaped_id}",
+                        has id ~id,
                         has cvPath $cvPath;
                     delete
                         has $cvPath of $student;
                 """
-                Db.write_transact(delete_query)
+                Db.write_transact(delete_query, {"id": id})
             else:
-                escaped_cv_path = cv_path.replace('"', '\\"')
-                update_statements.append(f'$student has cvPath "{escaped_cv_path}";')
+                update_statements.append('$student has cvPath ~cv_path;')
+                params["cv_path"] = cv_path
 
         # Only execute if there are updates to make
         if update_statements:
             update_query = f"""
                 match
-                    $student isa student, has id "{escaped_id}";
+                    $student isa student, has id ~id;
                 update
                     {' '.join(update_statements)}
             """
-            Db.write_transact(update_query)
+            Db.write_transact(update_query, params)
 
     def get_by_sub_and_provider(self, sub: str, provider: str) -> User | None:
         """Get user from database by OAuth sub (provider user ID) and provider"""
-        escaped_sub = sub.replace('"', '\\"')
-        escaped_provider = provider.replace('"', '\\"')
-
-        query = f"""
+        query = """
             match
                 $user isa user;
-                $provider isa oauthProvider, has name "{escaped_provider}";
+                $provider isa oauthProvider, has name ~provider_name;
                 $auth isa oauthAuthentication($user, $provider),
-                has oauthSub "{escaped_sub}";
+                has oauthSub ~oauth_sub;
                 $user isa $usertype;
-            fetch {{
+            fetch {
                 'id': $user.id,
                 'email': $user.email,
                 'fullName': $user.fullName,
@@ -523,15 +512,15 @@ class UserRepository(BaseRepository[User]):
                     match
                         $oauth_provider isa oauthProvider;
                         $oauth_auth isa oauthAuthentication($user, $oauth_provider);
-                    fetch {{
+                    fetch {
                         'provider_name': $oauth_provider.name,
                         'oauth_sub': $oauth_auth.oauthSub
-                    }};
+                    };
                 ]
-            }};
+            };
         """
 
-        results = Db.read_transact(query)
+        results = Db.read_transact(query, {"provider_name": provider, "oauth_sub": sub})
         if not results:
             return None
 
@@ -543,31 +532,29 @@ class UserRepository(BaseRepository[User]):
         # Currently always creates a student
 
         if not user.oauth_providers or len(user.oauth_providers) == 0:
-            raise ValueError("Cannot create user without OAuth provider information")
+            raise ValueError("OAuth-providerinformatie ontbreekt")
 
         if len(user.oauth_providers) > 1:
-            raise ValueError("Cannot create user with multiple OAuth providers. Users can only be created with a single OAuth provider.")
+            raise ValueError("Je kan maar met één provider een account aanmaken")
 
         # Get the OAuth provider
         oauth_provider = user.oauth_providers[0]
-        escaped_provider_name = oauth_provider.provider_name.replace('"', '\\"')
-        escaped_oauth_sub = oauth_provider.oauth_sub.replace('"', '\\"')
 
         # Check if OAuth provider exists (with case-insensitive match)
-        provider_query = f"""
+        provider_query = """
             match
                 $provider isa oauthProvider, has name $name;
-                $name like "(?i){escaped_provider_name}";
-            fetch {{ 'name': $provider.name }};
+                $name like ~provider_pattern;
+            fetch { 'name': $provider.name };
         """
-        provider_results = Db.read_transact(provider_query)
+        provider_results = Db.read_transact(provider_query, {
+            "provider_pattern": f"(?i){oauth_provider.provider_name}"
+        })
 
         if not provider_results:
-            raise ValueError(f"OAuth provider '{oauth_provider.provider_name}' is not configured.")
+            raise ValueError(f"We ondersteunen '{oauth_provider.provider_name}' nog niet")
 
         id = generate_uuid()
-        escaped_email = user.email.replace('"', '\\"')
-        escaped_full_name = user.full_name.replace('"', '\\"')
 
         # Handle image path - could be a URL (Google/GitHub) or already a filename (Microsoft)
         downloaded_image_name = ""
@@ -580,22 +567,27 @@ class UserRepository(BaseRepository[User]):
                 # It's already a filename or local path
                 downloaded_image_name = user.image_path
 
-        escaped_image_path = downloaded_image_name.replace('"', '\\"')
-
-        create_user_query = f"""
+        create_user_query = """
             match
-                $provider isa oauthProvider, has name "{escaped_provider_name}";
+                $provider isa oauthProvider, has name ~provider_name;
             insert
                 $student isa student,
-                has id "{id}",
-                has email "{escaped_email}",
-                has fullName "{escaped_full_name}",
-                has imagePath "{escaped_image_path}";
+                has id ~id,
+                has email ~email,
+                has fullName ~full_name,
+                has imagePath ~image_path;
                 $auth isa oauthAuthentication($student, $provider),
-                has oauthSub "{escaped_oauth_sub}";
+                has oauthSub ~oauth_sub;
         """
 
-        Db.write_transact(create_user_query)
+        Db.write_transact(create_user_query, {
+            "provider_name": oauth_provider.provider_name,
+            "id": id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "image_path": downloaded_image_name,
+            "oauth_sub": oauth_provider.oauth_sub
+        })
 
         # if user is a student, it returns a dict which needs to be mapped to Student model
         created_user = self.get_by_id(id)
@@ -605,3 +597,58 @@ class UserRepository(BaseRepository[User]):
         # Return the created user
         return created_user
 
+    async def get_supervisor_accessible_resources_with_id(self, supervisor_company_id: str, resource_id: str) -> dict:
+        """
+        Fetch all accessible resources (projects, tasks, users) for a supervisor's company by resource ID.
+        (should only have 1 result, but its technically possible to have multiple matches, though infinitely unlikely)
+
+        Args:
+            supervisor_company_id: The supervisor's business ID
+            resource_id: The resource ID to check against all resource types
+
+        Returns:
+            dict with keys 'projects', 'tasks', 'users' containing lists of matching resource IDs
+        """
+        query = """
+            match
+                $business isa business, has id ~business_id;
+            fetch {
+                'projects': [
+                    match
+                        $p1 isa project, has id ~project_id;
+                        $hp1 isa hasProjects(business: $business, project: $p1);
+                    fetch { 'project_id': $p1.id };
+                ],
+                'tasks': [
+                    match
+                        $p2 isa project;
+                        $hp2 isa hasProjects(business: $business, project: $p2);
+                        $t2 isa task, has id ~task_id;
+                        $ct2 isa containsTask(project: $p2, task: $t2);
+                    fetch { 'task_id': $t2.id };
+                ],
+                'users': [
+                    match
+                        $u3 isa supervisor, has id ~supervisor_id;
+                        $m3 isa manages(supervisor: $u3, business: $business);
+                    fetch { 'user_id': $u3.id };
+                ]
+            };
+        """
+
+        results = Db.read_transact(query, {
+            "business_id": supervisor_company_id,
+            "project_id": resource_id,
+            "task_id": resource_id,
+            "supervisor_id": resource_id
+        })
+
+        if not results:
+            return {'projects': [], 'tasks': [], 'users': []}
+
+        result = results[0]
+        return {
+            'projects': [item['project_id'] for item in result.get('projects', [])],
+            'tasks': [item['task_id'] for item in result.get('tasks', [])],
+            'users': [item['user_id'] for item in result.get('users', [])]
+        }
