@@ -48,7 +48,7 @@ export default function UpdateProjectPage() {
     }
 
     // Additional authorization check: supervisors only allowed if they created the project (server also enforces)
-    const isOwner = authData.type === "supervisor";
+    const isOwner = authData.type === "supervisor" && authData.businessId === projectData.business?.id;
     const allowed = authData.type === "teacher" || isOwner;
 
     if (!allowed) {
@@ -65,6 +65,13 @@ export default function UpdateProjectPage() {
         const photo = formData.get("image");
         if (photo instanceof File && photo.size === 0 && photo.name.length === 0) {
             formData.delete("image");
+        }
+
+        // Only send location if changed compared to current project value
+        const currentLocation = (formData.get("location") ?? "").toString();
+        const baselineLocation = (projectData.location ?? "");
+        if (currentLocation === baselineLocation) {
+            formData.delete("location");
         }
 
         formData.append("description", description);
@@ -116,11 +123,12 @@ export default function UpdateProjectPage() {
                     label="Locatie"
                     type="text"
                     name="location"
-                    initialValue={projectData.location ?? projectData.business?.location}
+                    placeholder={projectData.business?.location}
+                    initialValue={projectData.location ?? ""}
                     error={locationError}
                     setError={setLocationError}
                     max={255}
-                    required={true}
+                    required={false}
                 />
                 <DragDrop
                     name="image"

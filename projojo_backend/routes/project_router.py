@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Body, Depends
+from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Depends
 from typing import Annotated, Optional
 from datetime import datetime
 import traceback
@@ -57,6 +57,7 @@ async def create_project(
     description: Annotated[str, Form(...)],
     supervisor_id: Annotated[str, Form(...)],
     business_id: Annotated[str, Form(...)],
+    location: Optional[str] = Form(None),
     image: UploadFile = File(...)
 ):
     """
@@ -85,8 +86,9 @@ async def create_project(
         description=description,
         image_path=unique_filename,  # Use the unique filename
         created_at=datetime.now(),
-        supervisor_id=supervisor_id,
-        business_id=business_id
+        business_id=business_id,
+        location=location,
+        supervisor_id=supervisor_id
     )
 
     # Create the project in the database
@@ -98,7 +100,7 @@ async def update_project(
     id: str = Path(..., description="Project ID to update"),
     name: str = Form(...),
     description: str = Form(...),
-    location: str = Form(...),
+    location: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     payload: dict = Depends(get_token_payload)
 ):

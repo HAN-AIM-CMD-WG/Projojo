@@ -281,6 +281,9 @@ export function createProject(project_data) {
     formData.append("description", project_data.description);
     formData.append("supervisor_id", project_data.supervisor_id);
     formData.append("business_id", project_data.business_id);
+    if (project_data.location !== undefined) {
+        formData.append("location", project_data.location);
+    }
 
     // Add image file
     if (project_data.imageFile) {

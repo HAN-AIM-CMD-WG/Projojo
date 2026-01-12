@@ -9,6 +9,7 @@ import RichTextEditor from "./RichTextEditor";
 export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
     const [nameError, setNameError] = useState();
     const [descriptionError, setDescriptionError] = useState();
+    const [locationError, setLocationError] = useState();
     const { authData } = useAuth();
     const navigation = useNavigate();
 
@@ -23,7 +24,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
     const handleSubmit = event => {
         event.preventDefault();
-        if (nameError != undefined || descriptionError != undefined) {
+        if (nameError != undefined || descriptionError != undefined || locationError != undefined) {
             return;
         }
 
@@ -36,6 +37,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
         // Get the image file
         const imageFile = formData.get("image");
+        const location = (formData.get("location") ?? "").toString().trim() || undefined;
 
         // Create project data object for submission with file
         const projectData = {
@@ -44,7 +46,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
             description: description.trim(),
             supervisor_id: authData.userId,
             business_id: authData.businessId,
-            imageFile: imageFile // Pass the actual file object
+            imageFile: imageFile, // Pass the actual file object
+            location: location
         };
 
         // Submit both project data and image in a single call
@@ -76,6 +79,15 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     max={4000}
                     error={descriptionError}
                     setError={setDescriptionError}
+                />
+                <FormInput
+                    label="Locatie"
+                    placeholder="Locatie van het project (optioneel)"
+                    type="text"
+                    name="location"
+                    error={locationError}
+                    setError={setLocationError}
+                    max={255}
                 />
                 <DragDrop
                     accept="image/*"

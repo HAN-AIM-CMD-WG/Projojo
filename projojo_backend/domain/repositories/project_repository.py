@@ -29,7 +29,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'location': [$project.location],
+                'location': $project.location,
                 'createdAt': $createdAt,
                 'business': $business_id
             }};
@@ -55,7 +55,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'location': [$project.location],
+                'location': $project.location,
                 'createdAt': $createdAt,
                 'business': $business_id
             };
@@ -79,7 +79,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
-                'location': [$project.location],
+                'location': $project.location,
                 'createdAt': $createdAt,
                 'business': "{business_id}"
             }};
@@ -105,7 +105,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $business.name,
                 'description': $business.description,
                 'image_path': $business.imagePath,
-                'location': [$business.location],
+                'location': $business.location,
             }};
         """
         results = Db.read_transact(query)
@@ -120,9 +120,6 @@ class ProjectRepository(BaseRepository[Project]):
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
         location = result.get("location", "")
-        # handle if location came back as list like [$project.location]
-        if isinstance(location, list):
-            location = location[0] if len(location) > 0 else ""
         created_at_str = result.get("createdAt", "")
         business = result.get("business", "")
 
@@ -195,6 +192,8 @@ class ProjectRepository(BaseRepository[Project]):
         escaped_business_id = project.business_id.replace('"', '\\"')
         escaped_location = (project.location.replace('"', '\\"') if getattr(project, "location", None) else "")
 
+        location_clause = f',\n                has location "{escaped_location}"' if escaped_location != "" else ""
+
         query = f"""
             match
                 $business isa business,
@@ -204,8 +203,7 @@ class ProjectRepository(BaseRepository[Project]):
                 has id "{id}",
                 has name "{escaped_name}",
                 has description "{escaped_description}",
-                has imagePath "{escaped_image_path}",
-                has location "{escaped_location}",
+                has imagePath "{escaped_image_path}"{location_clause},
                 has createdAt {created_at};
                 $hasProjects isa hasProjects($business, $project);
         """
@@ -236,20 +234,22 @@ class ProjectRepository(BaseRepository[Project]):
             supervisor_id=project.supervisor_id,
         )
 
-    def update(self, project_id: str, name: str, description: str, location: str, image_filename: str = None) -> None:
+    def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str = None) -> None:
         """
         Update project attributes. image_filename is optional.
         """
         escaped_project_id = project_id.replace('"', '\\"')
         escaped_name = name.replace('"', '\\"')
         escaped_description = description.replace('"', '\\"')
-        escaped_location = location.replace('"', '\\"')
+        escaped_location = (location.replace('"', '\\"') if location is not None else None)
 
         update_clauses = [
             f'$project has name "{escaped_name}";',
             f'$project has description "{escaped_description}";',
-            f'$project has location "{escaped_location}";'
         ]
+
+        if escaped_location is not None:
+            update_clauses.append(f'$project has location "{escaped_location}";')
 
         if image_filename is not None:
             update_clauses.append(f'$project has imagePath "{image_filename}";')
