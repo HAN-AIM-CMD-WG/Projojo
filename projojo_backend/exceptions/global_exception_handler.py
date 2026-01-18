@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Request
+from fastapi import Request
 from fastapi.responses import JSONResponse
-from .exceptions import ItemRetrievalException
 
 async def generic_handler(request: Request, exc: Exception):
     class_name = exc.__class__.__name__

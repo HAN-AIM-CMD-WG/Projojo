@@ -12,10 +12,12 @@ import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import ProjectsAddPage from './pages/ProjectsAddPage';
 import UpdateStudentPage from "./pages/update_student_page/update_student_page";
 import UpdateBusinessPage from './pages/UpdateBusinessPage';
-import { getAuthorization } from './services';
+import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
+import UpdateTaskPage from "./pages/UpdateTaskPage";
+import { notification } from './components/notifications/NotifySystem.jsx';
 
 export default function App() {
   const { setAuthData } = useAuth();
@@ -23,11 +25,22 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let ignore = false;
+    const handleUnhandledRejection = (event) => {
+      if (event.reason instanceof HttpError) {
+        notification.error(event.reason.message || "Er is een onbekende fout opgetreden.");
+      } else {
+        // Log non-HttpError rejections for debugging and show a generic error to the user
+        console.error('Unhandled promise rejection:', event.reason);
+        notification.error("Er is een onverwachte fout opgetreden.");
+      }
+    };
 
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, []);
+
+  useEffect(() => {
     getAuthorization()
-
-
   }, [location, setAuthData]);
 
   return (
@@ -51,6 +64,9 @@ export default function App() {
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
+          <Route path="/tasks">
+            <Route path=":taskId/update" element={<UpdateTaskPage />} />
+          </Route>
           <Route path="/teacher" element={<TeacherPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -59,5 +75,3 @@ export default function App() {
     </>
   )
 }
-
-

@@ -78,7 +78,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     setError={setDescriptionError}
                 />
                 <DragDrop
-                    accept="image/*"
+                    accept="image"
                     name="image"
                     label="Upload een projectafbeelding"
                     onFileChanged={handleImageChange}

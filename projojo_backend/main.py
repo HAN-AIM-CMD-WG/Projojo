@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
+from auth.jwt_middleware import JWTMiddleware
 
 # ============================================================================
 # EMAIL TEST IMPORTS - REMOVE AFTER TESTING
@@ -66,6 +67,9 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Add JWT validation middleware
+app.add_middleware(JWTMiddleware)
+
 # Add session middleware (required by authlib for OAuth state)
 app.add_middleware(
     SessionMiddleware,
@@ -94,6 +98,7 @@ def get_db():
 
 app.mount("/image", StaticFiles(directory="static/images"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}
@@ -101,6 +106,9 @@ async def root():
 @app.get("/typedb/status")
 async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
     try:
         # Try to get database name to verify connection
         db_name = db.name  # dit kon wel eens slagen, ook als er geen verbinding is met de Db.
