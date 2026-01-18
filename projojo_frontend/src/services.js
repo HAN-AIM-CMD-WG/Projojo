@@ -351,6 +351,18 @@ export function updateBusiness(businessId, formData) {
         method: "PUT",
         body: formData,
     }, true);
+    }
+
+/**
+ * @param {string} taskId - The task ID to update
+ * @param {FormData} formData - The form data containing task information (name, description, total_needed)
+ * @returns {Promise<void>}
+ */
+export function updateTask(taskId, formData) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
 }
 
 /**
@@ -510,3 +522,23 @@ export function updateSkillName(skillId, name) {
         body: JSON.stringify({ name }),
     }, true);
 }
+
+// ============================================================================
+// EMAIL TEST FUNCTION - REMOVE AFTER TESTING
+// ============================================================================
+/**
+ * Send a test email to verify MailHog integration
+ * @param {string} recipientEmail - Email address to send the test email to
+ * @returns {Promise<{status: string, message: string}>}
+ *
+ * REMOVE THIS FUNCTION AFTER TESTING EMAIL FUNCTIONALITY
+ */
+export function sendTestEmail(recipientEmail) {
+    return fetchWithError(`${API_BASE_URL}test/email`, {
+        method: "POST",
+        body: JSON.stringify({ recipient_email: recipientEmail }),
+    });
+}
+// ============================================================================
+// END EMAIL TEST FUNCTION - REMOVE AFTER TESTING
+// ============================================================================

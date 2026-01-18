@@ -1,7 +1,31 @@
+import { useState } from "react";
 import TestUserSelector from "../components/TestUserSelector";
-import { API_BASE_URL } from "../services";
+import { API_BASE_URL, sendTestEmail } from "../services";
 
 export default function LoginPage() {
+  // ============================================================================
+  // EMAIL TEST STATE - REMOVE AFTER TESTING
+  // ============================================================================
+  const [testEmail, setTestEmail] = useState("test@example.com");
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSendTestEmail = async () => {
+    setIsLoading(true);
+    setEmailStatus(null);
+    try {
+      const result = await sendTestEmail(testEmail);
+      setEmailStatus({ type: result.status, message: result.message });
+    } catch (error) {
+      setEmailStatus({ type: "error", message: error.message || "Failed to send email" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // ============================================================================
+  // END EMAIL TEST STATE - REMOVE AFTER TESTING
+  // ============================================================================
+
   return (
     <div className="w-full min-h-dvh flex items-center justify-center bg-white">
       <div className="flex flex-col items-center gap-6 w-full max-w-4xl p-4">
@@ -53,6 +77,42 @@ export default function LoginPage() {
             Je wordt doorgestuurd om de authenticatie te voltooien
           </p>
         </div>
+
+        {/* ============================================================================ */}
+        {/* EMAIL TEST SECTION - REMOVE AFTER TESTING */}
+        {/* ============================================================================ */}
+        <div className="mt-4 pt-4 border-t border-dashed border-orange-300 bg-orange-50 p-3 rounded-lg">
+          <p className="text-xs text-orange-600 font-semibold mb-2">
+            EMAIL TEST (Development Only)
+          </p>
+          <div className="flex flex-col gap-2">
+            <input
+              type="email"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="test@example.com"
+              className="w-full px-3 py-2 border border-orange-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+            <button
+              onClick={handleSendTestEmail}
+              disabled={isLoading}
+              className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-orange-600 disabled:bg-orange-300 transition-colors duration-200 text-sm"
+            >
+              {isLoading ? "Sending..." : "Send Test Email"}
+            </button>
+            {emailStatus && (
+              <p className={`text-xs ${emailStatus.type === "success" ? "text-green-600" : "text-red-600"}`}>
+                {emailStatus.message}
+              </p>
+            )}
+            <p className="text-xs text-orange-500">
+              View emails at: <a href="http://localhost:8025" target="_blank" rel="noopener noreferrer" className="underline">http://localhost:8025</a>
+            </p>
+          </div>
+        </div>
+        {/* ============================================================================ */}
+        {/* END EMAIL TEST SECTION - REMOVE AFTER TESTING */}
+        {/* ============================================================================ */}
 
       </div>
     </div>

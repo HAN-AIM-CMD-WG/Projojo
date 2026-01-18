@@ -17,6 +17,7 @@ services:
     container_name: projojo_backend
     depends_on:
       - typedb
+      - mailhog
     build:
       context: ./projojo_backend
       dockerfile: Dockerfile # Could be changed to Dockerfile.dev or Dockerfile.prod for different environments
@@ -25,12 +26,29 @@ services:
     volumes:
       - ./projojo_backend:/app
       - /app/.venv # Anonymous volume to prevent host .venv from mounting
+    env_file:
+      - ./projojo_backend/.env # Load environment variables from .env file (OAuth, JWT, etc.)
     environment:
+      # These override values from .env file for Docker-specific settings
       - TYPEDB_SERVER_ADDR=typedb:1729
-      - TYPEDB_NAME=projojo_db
+      - TYPEDB_DB_NAME=projojo_db
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
+      # Email configuration is now read from .env file (can be MailHog or SMTP2GO)
+    networks:
+      - projojo-network
+
+  mailhog:
+    # MailHog - Email testing tool for development
+    # Web UI: http://localhost:8025
+    # SMTP: localhost:1025
+    container_name: projojo_mailhog
+    image: mailhog/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP server
+      - "8025:8025"   # Web UI
     networks:
       - projojo-network
 

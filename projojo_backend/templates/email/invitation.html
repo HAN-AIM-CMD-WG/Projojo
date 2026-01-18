@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Uitnodiging voor {{ project_name }}{% endblock %}
+
+{% block header_subtitle %}
+<p class="subtitle">Project Uitnodiging</p>
+{% endblock %}
+
+{% block content %}
+<h2>Hallo {{ user_name }}!</h2>
+
+<p>Je bent uitgenodigd om deel te nemen aan het project <strong>{{ project_name }}</strong>.</p>
+
+{% if inviter_name %}
+<p>Deze uitnodiging is verstuurd door {{ inviter_name }}.</p>
+{% endif %}
+
+{% if message %}
+<div class="info-box">
+    <p>{{ message }}</p>
+</div>
+{% endif %}
+
+{% if project_description %}
+<h3>Over het project</h3>
+<p>{{ project_description }}</p>
+{% endif %}
+
+<p style="text-align: center;">
+    <a href="{{ invite_link }}" class="button">Accepteer Uitnodiging</a>
+</p>
+
+<p class="link-text">
+    Of kopieer deze link: {{ invite_link }}
+</p>
+
+{% if expire_days %}
+<div class="warning-box">
+    <p>⏰ Let op: Deze uitnodiging verloopt over {{ expire_days }} {% if expire_days == 1 %}dag{% else %}dagen{% endif %}.</p>
+</div>
+{% endif %}
+
+<p>Heb je vragen? Neem contact op met de projectbegeleider of stuur een e-mail naar het Projojo team.</p>
+{% endblock %}
