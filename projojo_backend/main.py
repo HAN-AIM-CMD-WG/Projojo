@@ -131,6 +131,9 @@ async def send_test_email(request: TestEmailRequest):
     
     REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
     """
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
     result = await send_templated_email(
         recipient=request.recipient_email,
         subject="[TEST] Projojo Email Test - Invitation Template",
