@@ -109,9 +109,8 @@ async def create_registration(
         task_repo.create_registration(task_id, student_id, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
     except Exception as e:
-        if type(e) is not Exception:
-            status_code = getattr(e, 'status_code', 400)
-            raise HTTPException(status_code=status_code, detail=str(e))
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
         print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren.")
 
@@ -136,9 +135,8 @@ async def update_registration(
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
-        if type(e) is not Exception:
-            status_code = getattr(e, 'status_code', 400)
-            raise HTTPException(status_code=status_code, detail=str(e))
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
         print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie.")
 
@@ -164,9 +162,8 @@ async def create_task(
         created_task = task_repo.create(task)
         return created_task
     except Exception as e:
-        if type(e) is not Exception:
-            status_code = getattr(e, 'status_code', 400)
-            raise HTTPException(status_code=status_code, detail=str(e))
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
         print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
 

@@ -13,7 +13,7 @@ export default function LoginPage() {
 
         <TestUserSelector />
 
-        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden w-full flex flex-col md:flex-row">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden w-full flex flex-col md:flex-row">
           <div className="flex-1 p-8 md:p-12 flex flex-col items-center justify-start pt-12 border-b-2 md:border-b-0 md:border-r-2 border-gray-100">
             <h2 className="text-2xl font-semibold text-gray-800 mb-2">Studenten & Docenten</h2>
             <p className="text-gray-600 text-center mb-8">
@@ -24,6 +24,7 @@ export default function LoginPage() {
               <img src="/han_logo.png" alt="HAN Logo" className="h-6 mt-1" />
               Inloggen met HAN account
             </a>
+            <p className="text-sm text-orange-500 mt-2">Inloggen met SURF is nog niet geïmplementeerd.</p>
           </div>
 
           <div className="flex-1 p-8 md:p-12 flex flex-col items-center justify-start pt-12">

@@ -46,7 +46,7 @@ export default function App() {
 
   return (
     <>
-      {location.pathname !== "/" && location.pathname !== "/auth/callback" && !location.pathname.startsWith("/invite") && <Navbar />}
+      {location.pathname !== "/" && location.pathname !== "/auth/callback" && !location.pathname.startsWith("/invite/") && <Navbar />}
       <div className="max-w-7xl min-h-dvh px-4 mx-auto relative">
         <Routes>
           <Route path="/email-not-found" element={<EmailNotFound />} />
@@ -69,9 +69,7 @@ export default function App() {
             <Route path=":profileId" element={<ProfilePage />} />
             <Route path="update" element={<UpdateStudentPage />} />
           </Route>
-          <Route path="/tasks">
-            <Route path=":taskId/update" element={<UpdateTaskPage />} />
-          </Route>
+          <Route path="/tasks/:taskId/update" element={<UpdateTaskPage />} />
           <Route path="/teacher" element={<TeacherPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

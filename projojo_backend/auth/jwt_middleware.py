@@ -72,9 +72,8 @@ class JWTMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             if not only_unauthenticated_allowed:
                 print(f"JWT validation error: {e}")
-                if type(e) is not Exception:
-                    status_code = getattr(e, 'status_code', 400)
-                    return JSONResponse(status_code=status_code, content={"detail": str(e)})
+                if (hasattr(e, 'status_code')):
+                    return JSONResponse(status_code=e.status_code, content={"detail": str(e)})
                 return JSONResponse(status_code=401, content={"detail": "Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw."})
 
         # Proceed to the next middleware/route handler

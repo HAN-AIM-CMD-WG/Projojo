@@ -11,11 +11,12 @@ class FallbackStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope):
         try:
             response = await super().get_response(path, scope)
-            if response.status_code == 404:
-                raise StarletteHTTPException(status_code=404)
-            return response
         except StarletteHTTPException as e:
-            if e.status_code == 404:
-                if os.path.exists(self.default_file):
-                    return FileResponse(self.default_file)
+            if e.status_code == 404 and os.path.exists(self.default_file):
+                return FileResponse(self.default_file)
             raise e
+
+        if response.status_code == 404 and os.path.exists(self.default_file):
+            return FileResponse(self.default_file)
+
+        return response

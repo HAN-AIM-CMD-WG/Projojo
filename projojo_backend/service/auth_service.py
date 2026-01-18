@@ -213,7 +213,7 @@ class AuthService:
         else:
             # If no invite token, check if provider is one of the supervisor-only providers
             if oauth_provider.provider_name in ['google', 'microsoft', 'github']:
-                raise ValueError("Registratie als supervisor vereist een uitnodiging.")
+                raise ValueError("Registratie als supervisor vereist een uitnodiging. Studenten moeten inloggen met hun HAN-account.")
 
             # Create student
             new_user = self.user_repo.create_user(extracted_user, role="student")
