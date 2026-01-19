@@ -240,29 +240,24 @@ class ProjectRepository(BaseRepository[Project]):
         )
 
     def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None) -> None:
-        """
-        Update project attributes. image_filename is optional.
-        """
-        escaped_project_id = project_id.replace('"', '\\"')
-        escaped_name = name.replace('"', '\\"')
-        escaped_description = description.replace('"', '\\"')
-        escaped_location = (location.replace('"', '\\"') if location is not None else None)
-
         update_clauses = [
-            f'$project has name "{escaped_name}";',
-            f'$project has description "{escaped_description}";',
+            '$project has name ~name;',
+            '$project has description ~description;',
+            '$project has location ~location;',            
+            '$project has imagePath ~image_filename;',     
         ]
 
-        if escaped_location is not None:
-            update_clauses.append(f'$project has location "{escaped_location}";')
-
-        if image_filename is not None:
-            update_clauses.append(f'$project has imagePath "{image_filename}";')
-
-        query = f"""
+        query = f'''
             match
-                $project isa project, has id "{escaped_project_id}";
+                $project isa project, has id ~project_id;
             update
                 {' '.join(update_clauses)}
-        """
-        Db.write_transact(query)
+        '''
+
+        Db.write_transact(query, {
+            'project_id': project_id,
+            'name': name,
+            'description': description,
+            'location': location,
+            'image_filename': image_filename,
+        })
