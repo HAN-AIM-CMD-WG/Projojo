@@ -6,7 +6,6 @@ from auth.permissions import auth
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
-from auth.jwt_utils import get_token_payload
 
 project_repo = ProjectRepository()
 
