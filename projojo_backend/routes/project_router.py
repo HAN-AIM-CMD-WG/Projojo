@@ -62,7 +62,7 @@ async def create_project(
     description: Annotated[str, Form(...)],
     supervisor_id: Annotated[str, Form(...)],
     business_id: Annotated[str, Form(...)],
-    location: Optional[str] = Form(None),
+    location: str | None = Form(None),
     image: UploadFile = File(...)
 ):
     """
