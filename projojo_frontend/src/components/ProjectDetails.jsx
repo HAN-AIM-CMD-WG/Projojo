@@ -68,7 +68,16 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     <div className="w-full">
                         <h1 className="text-3xl font-semibold text-gray-800 tracking-wide leading-tight border-b-2 border-primary m-4 pb-2">
                             {project.name}
+                            
                         </h1>
+                        <h2 className="text-1xl font-semibold text-gray-800 tracking-wide leading-tight  m-4 pb-2">
+                        {project.location && project.location.trim().length > 0 && (
+                                            <div className="flex gap-1 items-center">
+                                                <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                                {project.location}
+                                            </div>
+                                        )}
+                                        </h2>
                         <div className="flex flex-row gap-4 ms-4">
                             {!isLoading && <>
                                 <Link to={`/business/${project.business.id}`} className="group">
@@ -85,11 +94,12 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                     >
                                         {project.business.name}
                                     </Link>
-                                    <p className="text-black-600 text-sm flex gap-1">
-                                        <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                        {project.business.location}
-                                        {/* {project.business.location.join(", ")} */}
-                                    </p>
+                                    <div className="text-black-600 text-sm flex flex-col gap-1">
+                                        <div className="flex gap-1 items-center">
+                                            <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                            {project.business.location}
+                                        </div>
+                                    </div>
                                 </div>
                             </>}
                         </div>
@@ -120,11 +130,18 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         </li>
                     ))}
                 </ul>
-                {isOwner && (
-                    <div className="w-fit p-4 pt-0 flex">
-                        <button className="btn-primary w-full border border-gray-400" onClick={handleOpenModal}>Taak toevoegen</button>
-                    </div>
-                )}
+                <div className="w-fit p-4 pt-0 flex gap-2">
+                    {(isOwner || (authData && authData.type === "teacher")) && (
+                        <Link to={`/projects/${project.id}/update`} className="btn-primary border border-gray-400 px-3 py-2 text-sm">
+                            Project aanpassen
+                        </Link>
+                    )}
+                    {isOwner && (
+                        <div>
+                            <button className="btn-primary border border-gray-400 px-3 py-2 text-sm" onClick={handleOpenModal}>Taak toevoegen</button>
+                        </div>
+                    )}
+                </div>
             </div>
             {isOwner && (
                 <Modal
