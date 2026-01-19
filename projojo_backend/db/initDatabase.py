@@ -44,7 +44,7 @@ class Db:
         except Exception as new_cred_error:
             print(f"⚠ New credentials failed: {new_cred_error} {Db.address}::{Db.username}:{Db.new_password}")
             # TODO: When introducing dev/test/preview/prod environments, this debug logging
-            # should be removed or restricted to development/test environments only.
+            # should be removed or restricted to development/test/preview environments only.
             # Printing all environment variables is a security risk as it may expose secrets.
             print("Loaded by environs:")
             for key in env.dump():

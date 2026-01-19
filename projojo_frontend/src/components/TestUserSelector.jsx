@@ -13,7 +13,7 @@ export default function TestUserSelector() {
 	const dropdownRef = useRef(null);
 
 	// Only show test functionality on localhost
-	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.endsWith("demopreview.nl");
+	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
 	// Fetch test users when component mounts (only on localhost)
 	useEffect(() => {
