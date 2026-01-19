@@ -238,15 +238,24 @@ class ProjectRepository(BaseRepository[Project]):
             location=project.location,
             supervisor_id=project.supervisor_id,
         )
-
     def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None) -> None:
         update_clauses = [
             '$project has name ~name;',
             '$project has description ~description;',
-            '$project has location ~location;',            
-            '$project has imagePath ~image_filename;',     
+            '$project has location ~location;',             
         ]
-
+        
+        params = {
+            'project_id': project_id,
+            'name': name,
+            'description': description,
+            'location': location,
+        }
+        
+        if image_filename:
+            update_clauses.append('$project has imagePath ~image_filename;')
+            params['image_filename'] = image_filename
+            
         query = f'''
             match
                 $project isa project, has id ~project_id;
@@ -254,10 +263,4 @@ class ProjectRepository(BaseRepository[Project]):
                 {' '.join(update_clauses)}
         '''
 
-        Db.write_transact(query, {
-            'project_id': project_id,
-            'name': name,
-            'description': description,
-            'location': location,
-            'image_filename': image_filename,
-        })
+        Db.write_transact(query, params)
