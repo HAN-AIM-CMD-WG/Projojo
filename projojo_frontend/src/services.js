@@ -408,19 +408,6 @@ export function getTaskSkills(taskId) {
 }
 
 /**
- * @param {Error} error
- * @param {Record<number, string>} mapper
- */
-export function createErrorMessage(error, mapper) {
-    let message = error?.message;
-    if (error instanceof HttpError) {
-        message = mapper[error.statusCode];
-    }
-    return message ?? "Er is een onverwachte fout opgetreden.";
-}
-
-
-/**
  *
  * @param {string} newBusinessName
  */

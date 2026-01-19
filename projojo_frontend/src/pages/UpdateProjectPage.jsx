@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { createErrorMessage, getProject, IMAGE_BASE_URL, updateProject } from '../services';
+import { getProject, IMAGE_BASE_URL, updateProject } from '../services';
 import useFetch from '../useFetch';
 import Loading from '../components/Loading';
 
@@ -40,7 +40,7 @@ export default function UpdateProjectPage() {
     }, [authData.isLoading, isLoading]);
 
     if (projectError) {
-        return <Alert text={createErrorMessage(projectError, {})} />;
+        return <Alert text={projectError?.message} />;
     }
 
     if (isLoading || !projectData) {
@@ -80,14 +80,7 @@ export default function UpdateProjectPage() {
             .then(() => {
                 navigation(`/projects/${projectId}`);
             }).catch(error =>
-                setError(createErrorMessage(
-                    error,
-                    {
-                        401: "De projectpagina kan niet aangepast worden als je niet bent ingelogd",
-                        403: "Je bent niet geautoriseerd om de projectpagina aan te passen",
-                        404: "De projectpagina kan niet gevonden worden",
-                    }
-                ))
+                setError(error.message || "Er is een onbekende fout opgetreden bij het bijwerken van het project.")
             );
     }
 

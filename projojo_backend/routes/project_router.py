@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Depends
-from typing import Annotated, Optional
+from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException
+from typing import Annotated
 from datetime import datetime
 from auth.permissions import auth
 
@@ -118,11 +118,16 @@ async def update_project(
         try:
             image_filename = save_image(image)
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
+            if hasattr(e, 'status_code'):
+                raise HTTPException(status_code=e.status_code, detail=e.detail)
+            print(f"Error saving image: {e}")
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
 
     try:
         project_repo.update(project_id, name, description, location, image_filename)
         return {"message": "Project succesvol bijgewerkt"}
     except Exception as e:
-        # Log full traceback to console for debugging
-        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project: " + str(e))
+        if hasattr(e, 'status_code'):
+            raise HTTPException(status_code=e.status_code, detail=e.detail)
+        print(f"Error updating project: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project")
