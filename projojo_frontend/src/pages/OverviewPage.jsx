@@ -55,10 +55,14 @@ export default function OverviewPage() {
                 (Array.isArray(business.location) ? business.location[0] : business.location) : ""
             },
             projects: business.projects.map(project => {
+              const normalizedProjectLocation = project.location && project.location.length > 0
+                ? (Array.isArray(project.location) ? project.location[0] : project.location)
+                : "";
               return {
                 ...project,
                 projectId: project.id,
                 title: project.name,
+                location: normalizedProjectLocation,
                 tasks: project.tasks.map(task => ({
                   ...task,
                   skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
@@ -103,12 +107,17 @@ export default function OverviewPage() {
 
     if (formattedSearch) {
       filteredData = filteredData.map(business => {
-        const filteredProjects = business.projects.filter(project => isSearchInString(formattedSearch, project.title));
+        const businessNameMatch = isSearchInString(formattedSearch, business.business.name);
+        const businessLocationMatch = isSearchInString(formattedSearch, business.business.location || "");
+        const filteredProjects = business.projects.filter(project =>
+          isSearchInString(formattedSearch, project.title) ||
+          isSearchInString(formattedSearch, project.location || "")
+        );
 
-        if (isSearchInString(formattedSearch, business.business.name) || filteredProjects.length > 0) {
+        if (businessNameMatch || businessLocationMatch || filteredProjects.length > 0) {
           return {
             ...business,
-            projects: isSearchInString(formattedSearch, business.business.name) ? business.projects : filteredProjects
+            projects: (businessNameMatch || businessLocationMatch) ? business.projects : filteredProjects
           };
         }
         return null;
@@ -150,6 +159,7 @@ export default function OverviewPage() {
       })
         .filter(business => business !== null);
     }
+
 
     if (filteredData.length === 0) {
       if (formattedSearch && selectedSkills.length > 0) {
