@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form
-from domain.repositories import TaskRepository, UserRepository
+from domain.repositories import TaskRepository, UserRepository, SkillRepository
 from auth.permissions import auth
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
@@ -80,32 +80,19 @@ async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     return skills
 
 @router.put("/{task_id}/skills")
+@auth(role="supervisor", owner_id_key="task_id")
 async def update_task_skills_endpoint(
     task_id: str = Path(..., description="Task ID"),
     body: list[str] = Body(..., description="Array of skill IDs"),
-    payload: dict = Depends(get_token_payload)
 ):
     """
     Update required skills for a task (set-based). Allowed for teachers or owning supervisors.
     """
-    role = payload.get("role")
-    if role not in ["teacher", "supervisor"]:
-        raise HTTPException(status_code=403, detail="Je bent niet geautoriseerd om skills te beheren")
-
     # Validate task exists
     try:
         task_repo.get_by_id(task_id)
     except Exception:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
-
-    # Ownership check for supervisors
-    if role == "supervisor":
-        supervisor = user_repo.get_supervisor_by_id(payload.get("sub"))
-        if not supervisor:
-            raise HTTPException(status_code=403, detail="Je bent niet geautoriseerd om skills te beheren")
-        task_business_id = task_repo.get_business_id_by_task(task_id)
-        if not task_business_id or str(supervisor.business_association_id) != str(task_business_id):
-            raise HTTPException(status_code=403, detail="Je bent niet geautoriseerd om deze taak te beheren")
 
     # Validate body
     if body is None or not isinstance(body, list):
@@ -132,7 +119,8 @@ async def update_task_skills_endpoint(
         return {"message": "Skills bijgewerkt"}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van de skills: " + str(e))
-
+    
+    
 @router.get("/{task_id}/registrations")
 @auth(role="supervisor", owner_id_key="task_id")
 async def get_registrations(task_id: str = Path(..., description="Task ID")):
