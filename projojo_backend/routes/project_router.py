@@ -100,36 +100,19 @@ async def create_project(
     created_project = project_repo.create(project_creation)
     return created_project
 
-@router.put("/{id}")
+@router.put("/{project_id}")
+@auth(role="supervisor", owner_id_key="project_id")
 async def update_project(
-    id: str = Path(..., description="Project ID to update"),
+    project_id: str = Path(..., description="Project ID to update"),
     name: str = Form(...),
     description: str = Form(...),
-    location: Optional[str] = Form(None),
-    image: Optional[UploadFile] = File(None),
-    payload: dict = Depends(get_token_payload)
+    location: str | None = Form(None),
+    image: UploadFile | None = File(None),
 ):
     """
     Update project information with optional photo upload.
     Only a teacher or a supervisor of the same business may update the project.
     """
-    # Verify project exists (and retrieve its business_id for authorization)
-    try:
-        existing = project_repo.get_by_id(id)
-    except Exception:
-        existing = None
-
-    if not existing:
-        raise HTTPException(status_code=404, detail="Project niet gevonden")
-
-    # Authorization: teacher or supervisor belonging to the same business
-    allowed = (
-        payload.get("role") == "teacher" or
-        (payload.get("role") == "supervisor" and payload.get("businessId") == existing.business_id)
-    )
-    if not allowed:
-        raise HTTPException(status_code=403, detail="Je bent niet bevoegd om het project bij te werken")
-
     # Handle photo upload if provided
     image_filename = None
     if image and image.filename:
@@ -139,7 +122,7 @@ async def update_project(
             raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
 
     try:
-        project_repo.update(id, name, description, location, image_filename)
+        project_repo.update(project_id, name, description, location, image_filename)
         return {"message": "Project succesvol bijgewerkt"}
     except Exception as e:
         # Log full traceback to console for debugging
