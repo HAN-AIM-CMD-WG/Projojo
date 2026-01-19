@@ -239,7 +239,7 @@ class ProjectRepository(BaseRepository[Project]):
             supervisor_id=project.supervisor_id,
         )
 
-    def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str = None) -> None:
+    def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None) -> None:
         """
         Update project attributes. image_filename is optional.
         """
