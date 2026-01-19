@@ -34,10 +34,10 @@ export default function UpdateProjectPage() {
     }, [projectData]);
 
     useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'teacher' && authData.type !== 'supervisor') {
-            navigation("/not-found");
+        if (projectError?.statusCode == 404 || (!authData.isLoading && authData.type !== 'teacher' && authData.type !== 'supervisor')) {
+            navigation("/not-found", { replace: true });
         }
-    }, [authData.isLoading]);
+    }, [authData.isLoading, isLoading]);
 
     if (projectError) {
         return <Alert text={createErrorMessage(projectError, {})} />;
