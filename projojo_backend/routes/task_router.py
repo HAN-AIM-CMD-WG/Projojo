@@ -1,6 +1,4 @@
-from fastapi import APIRouter, Path, Query, Body, HTTPException, Depends, Request
-from domain.repositories import TaskRepository, UserRepository, SkillRepository
-from auth.jwt_utils import get_token_payload
+from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form
 from domain.repositories import TaskRepository, UserRepository
 from auth.permissions import auth
 from service import task_service
@@ -223,3 +221,26 @@ async def create_task(
     except Exception as e:
         print(f"Error creating task for project {project_id}: {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
+
+@router.put("/{task_id}")
+@auth(role="supervisor", owner_id_key="task_id")
+async def update_task(
+    task_id: str = Path(..., description="Task ID to update"),
+    name: str = Form(...),
+    description: str = Form(...),
+    total_needed: int = Form(...),
+):
+    """
+    Update task information.
+    """
+    # Verify task exists
+    existing_task = task_repo.get_by_id(task_id)
+    if not existing_task:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden.")
+
+    try:        
+        task_repo.update(task_id, name, description, total_needed)
+        return {"message": "Taak succesvol bijgewerkt"}
+    except Exception as e:
+        print(f"Error updating task {task_id}: {e}")
+        raise HTTPException(status_code=400, detail="Er is een fout opgetreden bij het bijwerken van de taak.")
