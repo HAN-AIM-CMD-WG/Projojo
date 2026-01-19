@@ -132,7 +132,7 @@ export default function UpdateProjectPage() {
                 />
                 <DragDrop
                     name="image"
-                    accept="image/*"
+                    accept="image"
                     label="Projectafbeelding"
                     initialFilePath={IMAGE_BASE_URL + (projectData.image_path || projectData.image_path)}
                 />
