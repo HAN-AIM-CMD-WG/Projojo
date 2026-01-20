@@ -15,7 +15,8 @@ entity student sub user,
     owns description @card(0..1),
     owns cvPath @card(0..1),
     plays hasSkill:student @card(0..),
-    plays registersForTask:student @card(0..);
+    plays registersForTask:student @card(0..),
+    plays hasPortfolio:student @card(0..);
 
 entity teacher sub user;
 
@@ -44,6 +45,7 @@ entity project,
     owns description @card(1),
     owns imagePath @card(1),
     owns createdAt @card(1),
+    owns isArchived @card(0..1),
     plays hasProjects:project @card(1),
     plays containsTask:project @card(0..),
     plays creates:project @card(0..);
@@ -111,11 +113,27 @@ relation registersForTask,
     owns description @card(1),
     owns isAccepted @card(0..1),
     owns response @card(0..1),
-    owns createdAt @card(1);
+    owns createdAt @card(1),
+    owns requestedAt @card(0..1),
+    owns acceptedAt @card(0..1),
+    owns startedAt @card(0..1),
+    owns completedAt @card(0..1);
 
 relation businessInvite,
     relates business @card(1),
     relates key @card(1);
+
+entity portfolioItem,
+    owns id @key,
+    owns timelineSnapshot @card(1),
+    owns projectSnapshot @card(1),
+    owns taskSnapshot @card(1),
+    owns skillsSnapshot @card(1),
+    plays hasPortfolio:item @card(1);
+
+relation hasPortfolio,
+    relates student @card(1),
+    relates item @card(1);
 
 #Werkt helaas nog niet :(
 # TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
@@ -149,3 +167,11 @@ attribute sector value string;
 attribute companySize value string;
 attribute website value string;
 attribute isArchived value boolean;
+attribute requestedAt value datetime-tz;
+attribute acceptedAt value datetime-tz;
+attribute startedAt value datetime-tz;
+attribute completedAt value datetime-tz;
+attribute timelineSnapshot value string;
+attribute projectSnapshot value string;
+attribute taskSnapshot value string;
+attribute skillsSnapshot value string;

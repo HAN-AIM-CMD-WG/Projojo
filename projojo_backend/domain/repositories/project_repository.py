@@ -255,3 +255,271 @@ class ProjectRepository(BaseRepository[Project]):
             business_id=project.business_id,
             supervisor_id=project.supervisor_id,
         )
+
+    def check_project_owner(self, project_id: str, supervisor_id: str) -> bool:
+        """Check if a supervisor owns (created) a project."""
+        query = """
+            match
+                $project isa project, has id ~project_id;
+                $supervisor isa supervisor, has id ~supervisor_id;
+                $creates isa creates($supervisor, $project);
+            fetch {
+                'exists': true
+            };
+        """
+        results = Db.read_transact(query, {"project_id": project_id, "supervisor_id": supervisor_id})
+        return len(results) > 0
+
+    def get_students_by_project(self, project_id: str) -> list[dict]:
+        """Get all students with registrations for tasks of this project."""
+        query = """
+            match
+                $project isa project, has id ~project_id;
+                $containsTask isa containsTask(project: $project, task: $task);
+                $task has id $task_id, has name $task_name;
+                $registration isa registersForTask(student: $student, task: $task);
+                $student has id $student_id, 
+                    has fullName $student_name,
+                    has email $student_email;
+            fetch {
+                'student_id': $student_id,
+                'student_name': $student_name,
+                'student_email': $student_email,
+                'task_id': $task_id,
+                'task_name': $task_name,
+                'is_accepted': [$registration.isAccepted],
+                'completed_at': [$registration.completedAt]
+            };
+        """
+        results = Db.read_transact(query, {"project_id": project_id})
+        
+        students = []
+        for r in results:
+            is_accepted_list = r.get("is_accepted", [])
+            completed_at_list = r.get("completed_at", [])
+            students.append({
+                "student_id": r.get("student_id", ""),
+                "student_name": r.get("student_name", ""),
+                "student_email": r.get("student_email", ""),
+                "task_id": r.get("task_id", ""),
+                "task_name": r.get("task_name", ""),
+                "is_accepted": is_accepted_list[0] if is_accepted_list else None,
+                "is_completed": len(completed_at_list) > 0 and completed_at_list[0] is not None
+            })
+        return students
+
+    def get_completed_tasks_by_project(self, project_id: str) -> list[dict]:
+        """Get all completed task registrations for a project with full details for portfolio snapshots."""
+        query = """
+            match
+                $project isa project, has id ~project_id,
+                    has name $project_name,
+                    has description $project_description;
+                $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id,
+                    has name $business_name,
+                    has description $business_description,
+                    has location $business_location;
+                $containsTask isa containsTask(project: $project, task: $task);
+                $task has id $task_id, 
+                    has name $task_name,
+                    has description $task_description;
+                $registration isa registersForTask(student: $student, task: $task),
+                    has completedAt $completed_at;
+                $student has id $student_id,
+                    has fullName $student_name,
+                    has email $student_email;
+            fetch {
+                'student_id': $student_id,
+                'student_name': $student_name,
+                'student_email': $student_email,
+                'task_id': $task_id,
+                'task_name': $task_name,
+                'task_description': $task_description,
+                'project_id': ~project_id,
+                'project_name': $project_name,
+                'project_description': $project_description,
+                'business_id': $business_id,
+                'business_name': $business_name,
+                'business_description': $business_description,
+                'business_location': $business_location,
+                'completed_at': $completed_at,
+                'requested_at': [$registration.requestedAt],
+                'accepted_at': [$registration.acceptedAt],
+                'started_at': [$registration.startedAt],
+                'skills': [
+                    match
+                        $requiresSkill isa requiresSkill(task: $task, skill: $skill);
+                        $skill has name $skill_name;
+                    fetch {
+                        'name': $skill_name
+                    };
+                ]
+            };
+        """
+        results = Db.read_transact(query, {"project_id": project_id})
+        
+        completed_tasks = []
+        for r in results:
+            skills = [s.get("name", "") for s in r.get("skills", [])]
+            requested_at = r.get("requested_at", [])
+            accepted_at = r.get("accepted_at", [])
+            started_at = r.get("started_at", [])
+            
+            completed_tasks.append({
+                "student_id": r.get("student_id", ""),
+                "student_name": r.get("student_name", ""),
+                "student_email": r.get("student_email", ""),
+                "task_id": r.get("task_id", ""),
+                "task_name": r.get("task_name", ""),
+                "task_description": r.get("task_description", ""),
+                "project_id": r.get("project_id", ""),
+                "project_name": r.get("project_name", ""),
+                "project_description": r.get("project_description", ""),
+                "business_id": r.get("business_id", ""),
+                "business_name": r.get("business_name", ""),
+                "business_description": r.get("business_description", ""),
+                "business_location": r.get("business_location", ""),
+                "completed_at": r.get("completed_at", ""),
+                "requested_at": requested_at[0] if requested_at else None,
+                "accepted_at": accepted_at[0] if accepted_at else None,
+                "started_at": started_at[0] if started_at else None,
+                "skills": skills
+            })
+        return completed_tasks
+
+    def archive_project(self, project_id: str) -> None:
+        """Archive a project (set isArchived to true)."""
+        # First check if isArchived already exists and delete it
+        delete_query = """
+            match
+                $project isa project, has id ~project_id, has isArchived $val;
+            delete
+                $project has $val;
+        """
+        try:
+            Db.write_transact(delete_query, {"project_id": project_id})
+        except Exception:
+            pass  # No existing isArchived attribute
+
+        # Now insert isArchived = true
+        insert_query = """
+            match
+                $project isa project, has id ~project_id;
+            insert
+                $project has isArchived true;
+        """
+        Db.write_transact(insert_query, {"project_id": project_id})
+
+    def restore_project(self, project_id: str) -> None:
+        """Restore an archived project (remove isArchived attribute)."""
+        delete_query = """
+            match
+                $project isa project, has id ~project_id, has isArchived $val;
+            delete
+                $project has $val;
+        """
+        Db.write_transact(delete_query, {"project_id": project_id})
+
+    def delete_project(self, project_id: str) -> None:
+        """
+        Hard delete a project and all its associated data.
+        Order: registrations -> tasks -> creates relation -> hasProjects relation -> project
+        """
+        # 1. Delete all registrations for tasks in this project
+        delete_registrations = """
+            match
+                $project isa project, has id ~project_id;
+                $containsTask isa containsTask(project: $project, task: $task);
+                $registration isa registersForTask(task: $task);
+            delete
+                $registration isa registersForTask;
+        """
+        try:
+            Db.write_transact(delete_registrations, {"project_id": project_id})
+        except Exception:
+            pass  # No registrations
+
+        # 2. Delete all requiresSkill relations for tasks
+        delete_requires_skill = """
+            match
+                $project isa project, has id ~project_id;
+                $containsTask isa containsTask(project: $project, task: $task);
+                $requiresSkill isa requiresSkill(task: $task);
+            delete
+                $requiresSkill isa requiresSkill;
+        """
+        try:
+            Db.write_transact(delete_requires_skill, {"project_id": project_id})
+        except Exception:
+            pass  # No skills
+
+        # 3. Delete containsTask relations and tasks
+        delete_contains_task = """
+            match
+                $project isa project, has id ~project_id;
+                $containsTask isa containsTask(project: $project, task: $task);
+            delete
+                $containsTask isa containsTask;
+        """
+        try:
+            Db.write_transact(delete_contains_task, {"project_id": project_id})
+        except Exception:
+            pass  # No tasks
+
+        # 4. Delete tasks themselves
+        delete_tasks = """
+            match
+                $project isa project, has id ~project_id;
+                $containsTask isa containsTask(project: $project, task: $task);
+            delete
+                $task isa task;
+        """
+        try:
+            Db.write_transact(delete_tasks, {"project_id": project_id})
+        except Exception:
+            pass  # No tasks
+
+        # 5. Delete creates relation
+        delete_creates = """
+            match
+                $project isa project, has id ~project_id;
+                $creates isa creates(project: $project);
+            delete
+                $creates isa creates;
+        """
+        try:
+            Db.write_transact(delete_creates, {"project_id": project_id})
+        except Exception:
+            pass  # No creates relation
+
+        # 6. Delete hasProjects relation
+        delete_has_projects = """
+            match
+                $project isa project, has id ~project_id;
+                $hasProjects isa hasProjects(project: $project);
+            delete
+                $hasProjects isa hasProjects;
+        """
+        Db.write_transact(delete_has_projects, {"project_id": project_id})
+
+        # 7. Finally delete the project itself
+        delete_project = """
+            match
+                $project isa project, has id ~project_id;
+            delete
+                $project isa project;
+        """
+        Db.write_transact(delete_project, {"project_id": project_id})
+
+    def is_archived(self, project_id: str) -> bool:
+        """Check if a project is archived."""
+        query = """
+            match
+                $project isa project, has id ~project_id, has isArchived true;
+            fetch {
+                'archived': true
+            };
+        """
+        results = Db.read_transact(query, {"project_id": project_id})
+        return len(results) > 0

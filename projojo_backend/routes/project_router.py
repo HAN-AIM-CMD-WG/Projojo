@@ -1,12 +1,28 @@
-from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException
-from typing import Annotated
+from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Depends, Query
+from typing import Annotated, Optional
 from datetime import datetime
+from pydantic import BaseModel
 
-from domain.repositories import ProjectRepository
+from domain.repositories import ProjectRepository, PortfolioRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
+from auth.jwt_utils import get_token_payload
 
 project_repo = ProjectRepository()
+portfolio_repo = PortfolioRepository()
+
+
+class ProjectActionWarning(BaseModel):
+    """Response model when action requires confirmation due to affected students."""
+    message: str
+    affected_students: list[dict]
+    requires_confirmation: bool = True
+
+
+class ProjectActionResponse(BaseModel):
+    """Response model for successful project actions."""
+    message: str
+    notified_count: int = 0
 
 router = APIRouter(prefix="/projects", tags=["Project Endpoints"])
 
@@ -90,3 +106,192 @@ async def create_project(
     # Create the project in the database
     created_project = project_repo.create(project_creation)
     return created_project
+
+
+@router.get("/{project_id}/students")
+async def get_project_students(
+    project_id: str = Path(..., description="Project ID"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Get all students with registrations for tasks of this project.
+    Accessible by teachers and the project's supervisor.
+    """
+    role = payload.get("role")
+    user_id = payload.get("sub")
+    
+    # Check authorization
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten hebben geen toegang tot deze informatie")
+    
+    if role == "supervisor" and not project_repo.check_project_owner(project_id, user_id):
+        raise HTTPException(status_code=403, detail="Je hebt alleen toegang tot je eigen projecten")
+    
+    students = project_repo.get_students_by_project(project_id)
+    return students
+
+
+@router.patch("/{project_id}/archive")
+async def archive_project(
+    project_id: str = Path(..., description="Project ID"),
+    confirm: bool = Query(False, description="Confirm action despite affected students"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Archive a project.
+    - Supervisor: only their own projects
+    - Teacher: all projects
+    
+    Returns 409 Conflict with student list if there are registrations and confirm=False.
+    With confirm=True: sends notifications and archives the project.
+    """
+    role = payload.get("role")
+    user_id = payload.get("sub")
+    
+    # Check authorization
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten kunnen geen projecten archiveren")
+    
+    if role == "supervisor":
+        if not project_repo.check_project_owner(project_id, user_id):
+            raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten archiveren")
+    elif role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen projecten archiveren")
+    
+    # Check if already archived
+    if project_repo.is_archived(project_id):
+        raise HTTPException(status_code=400, detail="Dit project is al gearchiveerd")
+    
+    # Check for affected students
+    affected_students = project_repo.get_students_by_project(project_id)
+    
+    if affected_students and not confirm:
+        return ProjectActionWarning(
+            message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Weet je zeker dat je wilt archiveren?",
+            affected_students=affected_students,
+            requires_confirmation=True
+        )
+    
+    # Archive the project
+    project_repo.archive_project(project_id)
+    
+    # TODO: Send notifications to affected students and teacher
+    notified_count = len(affected_students) if affected_students else 0
+    
+    return ProjectActionResponse(
+        message="Project succesvol gearchiveerd",
+        notified_count=notified_count
+    )
+
+
+@router.patch("/{project_id}/restore")
+async def restore_project(
+    project_id: str = Path(..., description="Project ID"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Restore an archived project.
+    - Supervisor: only their own projects
+    - Teacher: all projects
+    """
+    role = payload.get("role")
+    user_id = payload.get("sub")
+    
+    # Check authorization
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten kunnen geen projecten herstellen")
+    
+    if role == "supervisor":
+        if not project_repo.check_project_owner(project_id, user_id):
+            raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten herstellen")
+    elif role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen projecten herstellen")
+    
+    # Check if actually archived
+    if not project_repo.is_archived(project_id):
+        raise HTTPException(status_code=400, detail="Dit project is niet gearchiveerd")
+    
+    # Restore the project
+    project_repo.restore_project(project_id)
+    
+    return {"message": "Project succesvol hersteld"}
+
+
+@router.delete("/{project_id}")
+async def delete_project(
+    project_id: str = Path(..., description="Project ID"),
+    confirm: bool = Query(False, description="Confirm action despite affected students"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Permanently delete a project. Only accessible by teachers.
+    
+    Before deletion:
+    - Creates portfolio snapshots for students with completed tasks
+    - Sends notifications to affected students
+    
+    Returns 409 Conflict with student list if there are registrations and confirm=False.
+    """
+    role = payload.get("role")
+    
+    # Only teachers can hard delete
+    if role != "teacher":
+        raise HTTPException(
+            status_code=403, 
+            detail="Alleen docenten kunnen projecten permanent verwijderen"
+        )
+    
+    # Check for affected students
+    affected_students = project_repo.get_students_by_project(project_id)
+    
+    if affected_students and not confirm:
+        return ProjectActionWarning(
+            message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Deze actie is onomkeerbaar!",
+            affected_students=affected_students,
+            requires_confirmation=True
+        )
+    
+    # Create portfolio snapshots for completed tasks before deletion
+    completed_tasks = project_repo.get_completed_tasks_by_project(project_id)
+    snapshots_created = 0
+    
+    for task_data in completed_tasks:
+        try:
+            portfolio_repo.create_snapshot(
+                student_id=task_data["student_id"],
+                project_data={
+                    "project_id": task_data["project_id"],
+                    "project_name": task_data["project_name"],
+                    "project_description": task_data["project_description"],
+                    "business_id": task_data["business_id"],
+                    "business_name": task_data["business_name"],
+                    "business_description": task_data["business_description"],
+                    "business_location": task_data["business_location"],
+                },
+                task_data={
+                    "task_id": task_data["task_id"],
+                    "task_name": task_data["task_name"],
+                    "task_description": task_data["task_description"],
+                },
+                skills=task_data["skills"],
+                timeline={
+                    "requested_at": task_data["requested_at"],
+                    "accepted_at": task_data["accepted_at"],
+                    "started_at": task_data["started_at"],
+                    "completed_at": task_data["completed_at"],
+                }
+            )
+            snapshots_created += 1
+        except Exception as e:
+            print(f"Failed to create portfolio snapshot: {e}")
+    
+    # TODO: Send notifications to affected students and teacher
+    
+    # Delete the project
+    project_repo.delete_project(project_id)
+    
+    return {
+        "message": "Project succesvol verwijderd",
+        "snapshots_created": snapshots_created,
+        "notified_count": len(affected_students) if affected_students else 0
+    }

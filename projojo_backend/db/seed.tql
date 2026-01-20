@@ -1291,44 +1291,161 @@ insert
         has description "Stage gelopen bij melkveehouderij";
 
     # Task registrations (various acceptance statuses)
+    # ============================================
+    # Emma's COMPLETED projects for portfolio/Gantt (10 total)
+    # ============================================
+    
+    # 1. IoT Sensor Specialist @ De Gouden Akker (Jul-Oct 2025)
     $tr1 isa registersForTask (student: $u2, task: $t1),
         has description "Ik heb ervaring met IoT sensoren en wil graag bijdragen aan duurzame landbouw",
         has isAccepted true,
         has response "Je profiel past perfect bij wat we zoeken! Welkom bij het team.",
-        has createdAt 2025-02-22T09:00:00+0000;
+        has createdAt 2025-07-01T09:00:00+0000,
+        has requestedAt 2025-07-01T09:00:00+0000,
+        has acceptedAt 2025-07-05T14:30:00+0000,
+        has startedAt 2025-07-10T09:00:00+0000,
+        has completedAt 2025-10-15T16:00:00+0000;
 
+    # 2. Data Analytics Developer @ De Gouden Akker (Aug-Nov 2025)
     $tr2 isa registersForTask (student: $u2, task: $t2),
         has description "Mijn data analytics ervaring kan goed van pas komen bij dit dashboard project",
-        has createdAt 2025-02-22T09:30:00+0000;
+        has isAccepted true,
+        has response "Uitstekend, je analytics achtergrond is precies wat we zoeken!",
+        has createdAt 2025-08-01T09:30:00+0000,
+        has requestedAt 2025-08-01T09:30:00+0000,
+        has acceptedAt 2025-08-03T11:00:00+0000,
+        has startedAt 2025-08-08T09:00:00+0000,
+        has completedAt 2025-11-20T15:30:00+0000;
 
+    # 3. Soil Health Data Analyst @ De Gouden Akker (Sep-Dec 2025)
+    $tr_emma3 isa registersForTask (student: $u2, task: $t36),
+        has description "Bodemgezondheid analyse past bij mijn interesse in duurzame landbouw",
+        has isAccepted true,
+        has response "Je combinatie van data skills en bodemkennis is perfect!",
+        has createdAt 2025-09-01T10:00:00+0000,
+        has requestedAt 2025-09-01T10:00:00+0000,
+        has acceptedAt 2025-09-04T09:30:00+0000,
+        has startedAt 2025-09-10T09:00:00+0000,
+        has completedAt 2025-12-01T14:00:00+0000;
+
+    # 4. Machine Learning Engineer @ Veeteelt Groep (Oct-Dec 2025)
+    $tr_emma4 isa registersForTask (student: $u2, task: $t6),
+        has description "ML voor melkproductie optimalisatie is een interessante uitdaging",
+        has isAccepted true,
+        has response "Je ML ervaring is waardevol voor ons project, welkom!",
+        has createdAt 2025-10-01T08:00:00+0000,
+        has requestedAt 2025-10-01T08:00:00+0000,
+        has acceptedAt 2025-10-03T16:00:00+0000,
+        has startedAt 2025-10-07T09:00:00+0000,
+        has completedAt 2025-12-20T17:00:00+0000;
+
+    # 5. Farm Dashboard Developer @ SmartFarm Solutions (Aug-Sep 2025)
+    $tr_emma5 isa registersForTask (student: $u2, task: $t12),
+        has description "Dashboard ontwikkeling is mijn specialiteit",
+        has isAccepted true,
+        has response "Je portfolio laat mooie dashboards zien, perfect fit!",
+        has createdAt 2025-08-15T11:00:00+0000,
+        has requestedAt 2025-08-15T11:00:00+0000,
+        has acceptedAt 2025-08-17T10:00:00+0000,
+        has startedAt 2025-08-20T09:00:00+0000,
+        has completedAt 2025-09-30T16:30:00+0000;
+
+    # 6. Climate AI Specialist @ Groene Kassen (Nov 2025-Jan 2026)
+    $tr_emma6 isa registersForTask (student: $u2, task: $t15),
+        has description "AI voor klimaatbeheersing combineert mijn passie voor duurzaamheid met tech",
+        has isAccepted true,
+        has response "Je enthousiasme voor duurzaamheid is precies wat we zoeken!",
+        has createdAt 2025-11-01T09:00:00+0000,
+        has requestedAt 2025-11-01T09:00:00+0000,
+        has acceptedAt 2025-11-04T14:00:00+0000,
+        has startedAt 2025-11-08T09:00:00+0000,
+        has completedAt 2026-01-10T15:00:00+0000;
+
+    # 7. Irrigation System Engineer @ SmartFarm Solutions (Sep-Oct 2025)
+    $tr_emma7 isa registersForTask (student: $u2, task: $t11),
+        has description "IoT sensoren voor irrigatie is een praktische toepassing van mijn skills",
+        has isAccepted true,
+        has response "Je IoT ervaring is waardevol voor dit irrigatie project!",
+        has createdAt 2025-09-05T08:30:00+0000,
+        has requestedAt 2025-09-05T08:30:00+0000,
+        has acceptedAt 2025-09-08T11:00:00+0000,
+        has startedAt 2025-09-12T09:00:00+0000,
+        has completedAt 2025-10-25T16:00:00+0000;
+
+    # 8. Lab Data Manager @ Bodemexperts (Oct-Nov 2025)
+    $tr_emma8 isa registersForTask (student: $u2, task: $t19),
+        has description "Bodemanalyse digitaliseren past bij mijn achtergrond",
+        has isAccepted true,
+        has response "Je kennis van bodemanalyse én data management is ideaal!",
+        has createdAt 2025-10-10T09:00:00+0000,
+        has requestedAt 2025-10-10T09:00:00+0000,
+        has acceptedAt 2025-10-12T15:30:00+0000,
+        has startedAt 2025-10-16T09:00:00+0000,
+        has completedAt 2025-11-28T14:00:00+0000;
+
+    # 9. Water Quality Monitor @ AquaCultuur Innovatie (Nov-Dec 2025)
+    $tr_emma9 isa registersForTask (student: $u2, task: $t21),
+        has description "Waterkwaliteit monitoring met IoT sensoren is interessant",
+        has isAccepted true,
+        has response "Je sensor ervaring is perfect voor ons aquacultuur project!",
+        has createdAt 2025-11-05T10:00:00+0000,
+        has requestedAt 2025-11-05T10:00:00+0000,
+        has acceptedAt 2025-11-07T09:00:00+0000,
+        has startedAt 2025-11-11T09:00:00+0000,
+        has completedAt 2025-12-15T16:30:00+0000;
+
+    # 10. Harvest Prediction Analyst @ SmartFarm Solutions (Dec 2025-Jan 2026)
+    $tr_emma10 isa registersForTask (student: $u2, task: $t14),
+        has description "Machine learning voor oogstvoorspellingen is een mooie uitdaging",
+        has isAccepted true,
+        has response "Je ML achtergrond is precies wat we nodig hebben!",
+        has createdAt 2025-12-01T08:00:00+0000,
+        has requestedAt 2025-12-01T08:00:00+0000,
+        has acceptedAt 2025-12-03T14:00:00+0000,
+        has startedAt 2025-12-08T09:00:00+0000,
+        has completedAt 2026-01-05T17:00:00+0000;
+
+    # ============================================
+    # Other students' registrations
+    # ============================================
+    
     $tr3 isa registersForTask (student: $u3, task: $t9),
         has description "Ik ben gecertificeerd dronepiloot en heb ervaring met gewasanalyse",
         has isAccepted true,
         has response "Uitstekend! Je drone certificaat en gewaskennis zijn precies wat we nodig hebben.",
-        has createdAt 2025-02-22T10:15:00+0000;
+        has createdAt 2025-02-22T10:15:00+0000,
+        has requestedAt 2025-02-22T10:15:00+0000,
+        has acceptedAt 2025-02-24T11:00:00+0000;
 
     $tr4 isa registersForTask (student: $u3, task: $t24),
         has description "Computer vision voor fruitkwaliteit ligt in lijn met mijn interesse in fruitteelt",
-        has createdAt 2025-02-22T11:00:00+0000;
+        has createdAt 2025-02-22T11:00:00+0000,
+        has requestedAt 2025-02-22T11:00:00+0000;
 
     $tr5 isa registersForTask (student: $u4, task: $t17),
         has description "Hydroponic systemen zijn mijn specialiteit, ik zou graag willen bijdragen",
         has isAccepted false,
         has response "We zoeken iemand met meer commerciële ervaring voor dit project",
-        has createdAt 2025-02-22T13:30:00+0000;
+        has createdAt 2025-02-22T13:30:00+0000,
+        has requestedAt 2025-02-22T13:30:00+0000;
 
     $tr6 isa registersForTask (student: $u4, task: $t22),
         has description "Mijn scriptie ging over aquaponics, dit project sluit perfect aan",
         has isAccepted true,
         has response "Je scriptie hebben we gelezen, indrukwekkend werk! Je bent aangenomen.",
-        has createdAt 2025-02-22T14:15:00+0000;
+        has createdAt 2025-02-22T14:15:00+0000,
+        has requestedAt 2025-02-22T14:15:00+0000,
+        has acceptedAt 2025-02-25T09:30:00+0000;
 
     $tr7 isa registersForTask (student: $u5, task: $t28),
         has description "Fleet management voor landbouwmachines combineert mijn technische en logistieke interesse",
-        has createdAt 2025-02-22T15:45:00+0000;
+        has createdAt 2025-02-22T15:45:00+0000,
+        has requestedAt 2025-02-22T15:45:00+0000;
 
     $tr8 isa registersForTask (student: $u5, task: $t33),
         has description "Supply chain optimalisatie is iets waar ik me in wil specialiseren",
         has isAccepted true,
         has response "Je achtergrond in zowel techniek als logistiek maakt je de ideale kandidaat!",
-        has createdAt 2025-02-22T16:20:00+0000;
+        has createdAt 2025-02-22T16:20:00+0000,
+        has requestedAt 2025-02-22T16:20:00+0000,
+        has acceptedAt 2025-02-24T10:00:00+0000;

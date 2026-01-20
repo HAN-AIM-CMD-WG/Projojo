@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { createTask, IMAGE_BASE_URL } from "../services";
+import { Link, useNavigate } from "react-router-dom";
+import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, deleteProject } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
 import FormInput from "./FormInput";
@@ -10,15 +10,24 @@ import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import Alert from "./Alert";
+import ProjectActionModal from "./ProjectActionModal";
 
 export default function ProjectDetails({ project, businessId, refreshData }) {
     const isLoading = !project;
+    const navigate = useNavigate();
     const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+    const [actionType, setActionType] = useState(null); // "archive" | "delete"
+    const [affectedStudents, setAffectedStudents] = useState([]);
+    const [isActionLoading, setIsActionLoading] = useState(false);
     const { authData } = useAuth();
     const { studentSkills } = useStudentSkills();
     const studentSkillIds = new Set(studentSkills.map(s => s.id));
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
+    const isTeacher = authData.type === "teacher";
+    const canManageProject = isOwner || isTeacher;
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [formKey, setFormKey] = useState(0);
 
@@ -43,6 +52,93 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
         setIsModalOpen(false);
         setNewTaskDescription("");
         setFormKey(prev => prev + 1); // Force form remount by changing key
+    };
+
+    // Project action handlers (archive/delete)
+    const handleArchiveClick = async () => {
+        setActionType("archive");
+        setIsActionLoading(true);
+        try {
+            // First call without confirm to get affected students
+            const result = await archiveProject(project.id, false);
+            if (result.requires_confirmation) {
+                setAffectedStudents(result.affected_students || []);
+                setIsActionModalOpen(true);
+            } else {
+                // No students affected, archived directly
+                setSuccessMessage(result.message);
+                refreshData?.();
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleRestoreClick = async () => {
+        setIsActionLoading(true);
+        try {
+            const result = await restoreProject(project.id);
+            setSuccessMessage(result.message);
+            refreshData?.();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleDeleteClick = async () => {
+        setActionType("delete");
+        setIsActionLoading(true);
+        try {
+            // First call without confirm to get affected students
+            const result = await deleteProject(project.id, false);
+            if (result.requires_confirmation) {
+                setAffectedStudents(result.affected_students || []);
+                setIsActionModalOpen(true);
+            } else {
+                // No students affected, deleted directly
+                setSuccessMessage(result.message);
+                // Navigate back to business page after delete
+                if (businessId) {
+                    navigate(`/business/${businessId}`);
+                } else {
+                    navigate('/');
+                }
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsActionLoading(false);
+        }
+    };
+
+    const handleConfirmAction = async () => {
+        setIsActionLoading(true);
+        try {
+            let result;
+            if (actionType === "archive") {
+                result = await archiveProject(project.id, true);
+                setSuccessMessage(result.message);
+                refreshData?.();
+            } else if (actionType === "delete") {
+                result = await deleteProject(project.id, true);
+                setSuccessMessage(result.message);
+                // Navigate back after delete
+                if (businessId) {
+                    navigate(`/business/${businessId}`);
+                } else {
+                    navigate('/');
+                }
+            }
+            setIsActionModalOpen(false);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsActionLoading(false);
+        }
     };
 
     if (isLoading) {
@@ -128,6 +224,21 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     </div>
                 )}
 
+                {/* Success/Error messages */}
+                {successMessage && (
+                    <Alert 
+                        text={successMessage} 
+                        type="success" 
+                        onClose={() => setSuccessMessage("")} 
+                    />
+                )}
+                {error && (
+                    <Alert 
+                        text={error} 
+                        onClose={() => setError("")} 
+                    />
+                )}
+
                 {/* Skills section */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
@@ -163,6 +274,55 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         </button>
                     )}
                 </div>
+
+                {/* Project management buttons (for owner/teacher) */}
+                {canManageProject && !isLoading && (
+                    <div className="mt-6 pt-6 border-t border-[var(--neu-border)]">
+                        <p className="neu-label mb-3">Projectbeheer</p>
+                        <div className="flex flex-wrap gap-3">
+                            {/* Archive/Restore button */}
+                            {project.is_archived ? (
+                                <button 
+                                    className="neu-btn flex items-center gap-2 text-green-600 hover:text-green-700"
+                                    onClick={handleRestoreClick}
+                                    disabled={isActionLoading}
+                                >
+                                    <span className="material-symbols-outlined text-lg">unarchive</span>
+                                    Herstellen
+                                </button>
+                            ) : (
+                                <button 
+                                    className="neu-btn flex items-center gap-2 text-amber-600 hover:text-amber-700"
+                                    onClick={handleArchiveClick}
+                                    disabled={isActionLoading}
+                                >
+                                    <span className="material-symbols-outlined text-lg">archive</span>
+                                    Archiveren
+                                </button>
+                            )}
+                            
+                            {/* Delete button (teacher only) */}
+                            {isTeacher && (
+                                <button 
+                                    className="neu-btn flex items-center gap-2 text-red-600 hover:text-red-700"
+                                    onClick={handleDeleteClick}
+                                    disabled={isActionLoading}
+                                >
+                                    <span className="material-symbols-outlined text-lg">delete_forever</span>
+                                    Verwijderen
+                                </button>
+                            )}
+                        </div>
+                        
+                        {/* Archived badge */}
+                        {project.is_archived && (
+                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-sm">
+                                <span className="material-symbols-outlined text-base">inventory_2</span>
+                                Dit project is gearchiveerd
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Location Map */}
                 {!isLoading && project.business?.location && (
@@ -216,6 +376,20 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     </form>
                 </Modal>
             )}
+
+            {/* Project Action Modal (Archive/Delete confirmation) */}
+            <ProjectActionModal
+                isOpen={isActionModalOpen}
+                onClose={() => {
+                    setIsActionModalOpen(false);
+                    setAffectedStudents([]);
+                }}
+                onConfirm={handleConfirmAction}
+                action={actionType}
+                projectName={project?.name || ""}
+                affectedStudents={affectedStudents}
+                isLoading={isActionLoading}
+            />
         </div>
     )
 }

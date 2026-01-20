@@ -566,3 +566,99 @@ export function updateSkillName(skillId, name) {
         body: JSON.stringify({ name }),
     }, true);
 }
+
+// ============================================
+// Project Archive/Delete Functions
+// ============================================
+
+/**
+ * Get all students registered for tasks in a project
+ * @param {string} projectId
+ * @returns {Promise<Array<{student_id: string, student_name: string, student_email: string, task_id: string, task_name: string, is_accepted: boolean, is_completed: boolean}>>}
+ */
+export function getProjectStudents(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/students`);
+}
+
+/**
+ * Archive a project (supervisor: own projects, teacher: all)
+ * @param {string} projectId
+ * @param {boolean} confirm - Set to true to confirm despite affected students
+ * @returns {Promise<{message: string, notified_count?: number} | {message: string, affected_students: Array, requires_confirmation: boolean}>}
+ */
+export function archiveProject(projectId, confirm = false) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/archive?confirm=${confirm}`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Restore an archived project (supervisor: own projects, teacher: all)
+ * @param {string} projectId
+ * @returns {Promise<{message: string}>}
+ */
+export function restoreProject(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/restore`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Permanently delete a project (teacher only)
+ * Creates portfolio snapshots for completed tasks before deletion
+ * @param {string} projectId
+ * @param {boolean} confirm - Set to true to confirm despite affected students
+ * @returns {Promise<{message: string, snapshots_created?: number, notified_count?: number} | {message: string, affected_students: Array, requires_confirmation: boolean}>}
+ */
+export function deleteProject(projectId, confirm = false) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}?confirm=${confirm}`, {
+        method: "DELETE",
+    });
+}
+
+/**
+ * Get student portfolio (completed tasks + snapshots)
+ * @param {string} studentId
+ * @returns {Promise<{student_id: string, student_name: string, items: Array, total_count: number, live_count: number, snapshot_count: number}>}
+ */
+export function getStudentPortfolio(studentId) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/portfolio`);
+}
+
+// ============================================
+// Task Timeline Functions
+// ============================================
+
+/**
+ * Mark a task registration as started
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{message: string}>}
+ */
+export function markTaskStarted(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/start`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Mark a task registration as completed (supervisor/teacher only)
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{message: string}>}
+ */
+export function markTaskCompleted(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/complete`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Get the timeline for a task registration
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{requested_at: string, accepted_at: string, started_at: string, completed_at: string, is_accepted: boolean}>}
+ */
+export function getRegistrationTimeline(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/timeline`);
+}

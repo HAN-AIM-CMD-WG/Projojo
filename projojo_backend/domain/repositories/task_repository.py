@@ -241,9 +241,10 @@ class TaskRepository(BaseRepository[Task]):
 
     def create_registration(self, task_id: str, student_id: str, motivation: str) -> None:
         """
-        Create a new registration for a student to a task
+        Create a new registration for a student to a task.
+        Sets both createdAt and requestedAt to track the full timeline.
         """
-        created_at = datetime.now()
+        now = datetime.now()
 
         query = """
             match
@@ -252,20 +253,26 @@ class TaskRepository(BaseRepository[Task]):
             insert
                 $registration isa registersForTask (student: $student, task: $task),
                 has description ~motivation,
-                has createdAt ~created_at;
+                has createdAt ~created_at,
+                has requestedAt ~requested_at;
         """
 
         Db.write_transact(query, {
             "task_id": task_id,
             "student_id": student_id,
             "motivation": motivation,
-            "created_at": created_at
+            "created_at": now,
+            "requested_at": now
         })
 
     def update_registration(self, task_id: str, student_id: str, accepted: bool, response: str = "") -> None:
         """
-        Update a registration status (accept/reject) with optional response
+        Update a registration status (accept/reject) with optional response.
+        Sets acceptedAt timestamp when accepted for timeline tracking.
         """
+        accepted_at = datetime.now() if accepted else None
+        
+        # Base query for updating isAccepted and response
         query = """
             match
                 $task isa task, has id ~task_id;
@@ -282,6 +289,25 @@ class TaskRepository(BaseRepository[Task]):
             "accepted": accepted,
             "response": response
         })
+        
+        # If accepted, also set the acceptedAt timestamp
+        if accepted and accepted_at:
+            accept_time_query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $student isa student, has id ~student_id;
+                    $registration isa registersForTask (student: $student, task: $task);
+                update
+                    $registration has acceptedAt ~accepted_at;
+            """
+            try:
+                Db.write_transact(accept_time_query, {
+                    "task_id": task_id,
+                    "student_id": student_id,
+                    "accepted_at": accepted_at
+                })
+            except Exception:
+                pass  # Non-critical if timestamp fails
 
     def delete_registration(self, task_id: str, student_id: str) -> bool:
         """
@@ -395,3 +421,84 @@ class TaskRepository(BaseRepository[Task]):
         """
         results = Db.read_transact(query, {"business_id": business_id})
         return results if results else []
+
+    def mark_registration_started(self, task_id: str, student_id: str) -> None:
+        """
+        Mark a registration as started (student begins working on the task).
+        Sets the startedAt timestamp for timeline tracking.
+        """
+        started_at = datetime.now()
+        
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has isAccepted true;
+            update
+                $registration has startedAt ~started_at;
+        """
+        
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+            "started_at": started_at
+        })
+
+    def mark_registration_completed(self, task_id: str, student_id: str) -> None:
+        """
+        Mark a registration as completed (student finished the task).
+        Sets the completedAt timestamp for portfolio and timeline tracking.
+        """
+        completed_at = datetime.now()
+        
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has isAccepted true;
+            update
+                $registration has completedAt ~completed_at;
+        """
+        
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+            "completed_at": completed_at
+        })
+
+    def get_registration_timeline(self, task_id: str, student_id: str) -> dict | None:
+        """
+        Get the full timeline for a registration.
+        """
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task);
+            fetch {
+                'requested_at': [$registration.requestedAt],
+                'accepted_at': [$registration.acceptedAt],
+                'started_at': [$registration.startedAt],
+                'completed_at': [$registration.completedAt],
+                'is_accepted': [$registration.isAccepted]
+            };
+        """
+        
+        results = Db.read_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id
+        })
+        
+        if not results:
+            return None
+        
+        r = results[0]
+        return {
+            "requested_at": r.get("requested_at", [None])[0],
+            "accepted_at": r.get("accepted_at", [None])[0],
+            "started_at": r.get("started_at", [None])[0],
+            "completed_at": r.get("completed_at", [None])[0],
+            "is_accepted": r.get("is_accepted", [None])[0],
+        }

@@ -202,3 +202,89 @@ async def create_task(
         return created_task
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Er is iets misgegaan bij het aanmaken van de taak: {str(e)}")
+
+
+@router.patch("/{task_id}/registrations/{student_id}/start")
+async def mark_registration_started(
+    task_id: str = Path(..., description="Task ID"),
+    student_id: str = Path(..., description="Student ID"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Mark a registration as started (student begins working on the task).
+    
+    Can be called by:
+    - The student themselves
+    - A supervisor (for their business's tasks)
+    - A teacher
+    """
+    role = payload["role"]
+    user_id = payload["sub"]
+    
+    # Authorization: student can mark their own, supervisor/teacher can mark any
+    if role == "student" and user_id != student_id:
+        raise HTTPException(status_code=403, detail="Je kunt alleen je eigen taak als gestart markeren")
+    
+    if role not in ["student", "supervisor", "teacher"]:
+        raise HTTPException(status_code=403, detail="Geen toegang tot deze actie")
+    
+    try:
+        task_repo.mark_registration_started(task_id, student_id)
+        return {"message": "Taak gemarkeerd als gestart"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Kon taak niet als gestart markeren: {str(e)}")
+
+
+@router.patch("/{task_id}/registrations/{student_id}/complete")
+async def mark_registration_completed(
+    task_id: str = Path(..., description="Task ID"),
+    student_id: str = Path(..., description="Student ID"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Mark a registration as completed (student finished the task).
+    This adds the task to the student's portfolio.
+    
+    Can be called by:
+    - A supervisor (for their business's tasks)
+    - A teacher
+    
+    Note: Students cannot mark their own tasks as completed - must be verified by supervisor/teacher.
+    """
+    role = payload["role"]
+    
+    # Only supervisor or teacher can mark as completed
+    if role not in ["supervisor", "teacher"]:
+        raise HTTPException(
+            status_code=403, 
+            detail="Alleen supervisors of docenten kunnen taken als voltooid markeren"
+        )
+    
+    try:
+        task_repo.mark_registration_completed(task_id, student_id)
+        return {"message": "Taak gemarkeerd als voltooid en toegevoegd aan portfolio"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Kon taak niet als voltooid markeren: {str(e)}")
+
+
+@router.get("/{task_id}/registrations/{student_id}/timeline")
+async def get_registration_timeline(
+    task_id: str = Path(..., description="Task ID"),
+    student_id: str = Path(..., description="Student ID"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Get the full timeline for a registration.
+    
+    Returns timestamps for:
+    - requested_at: When student applied
+    - accepted_at: When supervisor accepted
+    - started_at: When student started working
+    - completed_at: When task was marked complete
+    """
+    timeline = task_repo.get_registration_timeline(task_id, student_id)
+    
+    if not timeline:
+        raise HTTPException(status_code=404, detail="Registratie niet gevonden")
+    
+    return timeline

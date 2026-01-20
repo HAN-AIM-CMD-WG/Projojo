@@ -6,16 +6,22 @@ import { getStudentRegistrations, getTaskSkills, cancelRegistration, IMAGE_BASE_
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
+import StudentPortfolio from '../components/StudentPortfolio';
 
 /**
  * Student Dashboard - Shows active tasks, registrations and deadlines
  */
+// Pagination constants
+const TASKS_PER_PAGE = 5;
+
 export default function StudentDashboard() {
     const { authData } = useAuth();
     const { studentName } = useStudentSkills();
     const [registrations, setRegistrations] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [visibleActiveTasks, setVisibleActiveTasks] = useState(TASKS_PER_PAGE);
+    const [visiblePendingTasks, setVisiblePendingTasks] = useState(TASKS_PER_PAGE);
 
     // Get time-based greeting
     const getGreeting = () => {
@@ -85,9 +91,10 @@ export default function StudentDashboard() {
         };
     }, [authData.isLoading, authData.type]);
 
-    // Separate active (accepted), pending, and rejected registrations
+    // Separate active (accepted but not completed), pending, and rejected registrations
     // is_accepted: true = accepted, false = rejected, null/undefined = pending
-    const activeTasks = registrations.filter(t => t.is_accepted === true);
+    // completed_at: set when task is finished (should only show in portfolio, not active tasks)
+    const activeTasks = registrations.filter(t => t.is_accepted === true && !t.completed_at);
     const pendingRegistrations = registrations.filter(t => t.is_accepted === null || t.is_accepted === undefined);
     const rejectedRegistrations = registrations.filter(t => t.is_accepted === false);
 
@@ -171,9 +178,18 @@ export default function StudentDashboard() {
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        {activeTasks.map((task) => (
+                                        {activeTasks.slice(0, visibleActiveTasks).map((task) => (
                                             <TaskCard key={task.id} task={task} status="active" />
                                         ))}
+                                        {activeTasks.length > visibleActiveTasks && (
+                                            <button
+                                                onClick={() => setVisibleActiveTasks(v => v + TASKS_PER_PAGE)}
+                                                className="neu-btn w-full justify-center gap-2 text-sm"
+                                            >
+                                                <span className="material-symbols-outlined text-base">expand_more</span>
+                                                Toon meer ({activeTasks.length - visibleActiveTasks} resterend)
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </section>
@@ -199,7 +215,7 @@ export default function StudentDashboard() {
                                     </div>
                                 ) : (
                                     <div className="space-y-3">
-                                        {pendingRegistrations.map((task) => (
+                                        {pendingRegistrations.slice(0, visiblePendingTasks).map((task) => (
                                             <TaskCard 
                                                 key={task.id} 
                                                 task={task} 
@@ -207,6 +223,15 @@ export default function StudentDashboard() {
                                                 onCancel={handleCancelRegistration}
                                             />
                                         ))}
+                                        {pendingRegistrations.length > visiblePendingTasks && (
+                                            <button
+                                                onClick={() => setVisiblePendingTasks(v => v + TASKS_PER_PAGE)}
+                                                className="neu-btn w-full justify-center gap-2 text-sm"
+                                            >
+                                                <span className="material-symbols-outlined text-base">expand_more</span>
+                                                Toon meer ({pendingRegistrations.length - visiblePendingTasks} resterend)
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </section>
@@ -274,6 +299,17 @@ export default function StudentDashboard() {
                             </div>
                         </section>
                     </div>
+                </div>
+            )}
+
+            {/* Portfolio Section - Full width below the grid */}
+            {!isLoading && authData.type === 'student' && (
+                <div className="mt-6">
+                    <StudentPortfolio 
+                        studentId={authData.userId} 
+                        studentName={studentName}
+                        isOwnProfile={true}
+                    />
                 </div>
             )}
         </div>

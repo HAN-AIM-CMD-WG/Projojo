@@ -446,6 +446,7 @@ class UserRepository(BaseRepository[User]):
                 'business_name': $business_name,
                 'business_image': $business_image,
                 'is_accepted': $registration.isAccepted,
+                'completed_at': $registration.completedAt,
             };
         """
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import StudentProfile from "../components/StudentProfile";
+import StudentPortfolio from "../components/StudentPortfolio";
 import { getSkillsFromStudent } from "../services";
 import NotFound from "./NotFound";
 import { useAuth } from "../auth/AuthProvider";
@@ -70,6 +71,15 @@ export default function ProfilePage() {
             </div>
 
             <StudentProfile student={student} setFetchAmount={setFetchAmount} />
+
+            {/* Portfolio Section */}
+            <div className="mt-8">
+                <StudentPortfolio 
+                    studentId={profileId} 
+                    studentName={student.full_name}
+                    isOwnProfile={isOwnProfile}
+                />
+            </div>
         </>
     )
 }
