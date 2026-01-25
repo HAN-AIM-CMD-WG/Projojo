@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Any
 from urllib.parse import urlparse
+from fastapi import HTTPException
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -501,7 +502,7 @@ class UserRepository(BaseRepository[User]):
                 $provider isa oauthProvider, has name ~provider_name;
                 $auth isa oauthAuthentication($user, $provider),
                 has oauthSub ~oauth_sub;
-                $user isa $usertype;
+                $user isa! $usertype;
             fetch {
                 'id': $user.id,
                 'email': $user.email,
@@ -526,16 +527,14 @@ class UserRepository(BaseRepository[User]):
 
         return self._map_to_model(results[0])
 
-    def create_user(self, user: User) -> User:
+    def create_user(self, user: User, role: str, business_id: str | None = None) -> User:
         """Create a new user in database with OAuth provider"""
-        # TODO: still need to determine the user type (probably based on email domain)
-        # Currently always creates a student
 
         if not user.oauth_providers or len(user.oauth_providers) == 0:
-            raise ValueError("OAuth-providerinformatie ontbreekt")
+            raise HTTPException(400, "OAuth-providerinformatie ontbreekt")
 
         if len(user.oauth_providers) > 1:
-            raise ValueError("Je kan maar met één provider een account aanmaken")
+            raise HTTPException(400, "Je kan maar met één provider een account aanmaken")
 
         # Get the OAuth provider
         oauth_provider = user.oauth_providers[0]
@@ -552,7 +551,7 @@ class UserRepository(BaseRepository[User]):
         })
 
         if not provider_results:
-            raise ValueError(f"We ondersteunen '{oauth_provider.provider_name}' nog niet")
+            raise HTTPException(400, f"We ondersteunen '{oauth_provider.provider_name}' nog niet")
 
         id = generate_uuid()
 
@@ -567,35 +566,85 @@ class UserRepository(BaseRepository[User]):
                 # It's already a filename or local path
                 downloaded_image_name = user.image_path
 
-        create_user_query = """
-            match
-                $provider isa oauthProvider, has name ~provider_name;
-            insert
-                $student isa student,
-                has id ~id,
-                has email ~email,
-                has fullName ~full_name,
-                has imagePath ~image_path;
-                $auth isa oauthAuthentication($student, $provider),
-                has oauthSub ~oauth_sub;
-        """
+        if role == "teacher":
+            # TODO: still need to determine if the user is student/teacher (probably based on email domain)
+            # Currently only supports supervisor and student creation
+            raise HTTPException(501, "Leraar aanmaken via OAuth wordt momenteel niet ondersteund")
 
-        Db.write_transact(create_user_query, {
-            "provider_name": oauth_provider.provider_name,
-            "id": id,
-            "email": user.email,
-            "full_name": user.full_name,
-            "image_path": downloaded_image_name,
-            "oauth_sub": oauth_provider.oauth_sub
-        })
+        elif role == "supervisor":
+            if not business_id:
+                raise HTTPException(400, "Business ID is vereist voor het aanmaken van een supervisor")
 
-        # if user is a student, it returns a dict which needs to be mapped to Student model
-        created_user = self.get_by_id(id)
-        if isinstance(created_user, dict):
-            created_user = self._map_student(created_user)
+            location_query = "match $business isa business, has id ~id; fetch { 'location': $business.location };"
+            location_results = Db.read_transact(location_query, {"id": business_id})
 
-        # Return the created user
-        return created_user
+            if not location_results:
+                raise HTTPException(404, "Business niet gevonden of heeft geen locatie")
+
+            location_value = location_results[0]['location']
+
+            create_user_query = """
+                match
+                    $provider isa oauthProvider, has name ~provider_name;
+                    $business isa business, has id ~business_id;
+                insert
+                    $supervisor isa supervisor,
+                    has id ~id,
+                    has email ~email,
+                    has fullName ~full_name,
+                    has imagePath ~image_path;
+                    $auth isa oauthAuthentication($supervisor, $provider),
+                    has oauthSub ~oauth_sub;
+                    (supervisor: $supervisor, business: $business) isa manages, has location ~location;
+            """
+            Db.write_transact(create_user_query, {
+                "provider_name": oauth_provider.provider_name,
+                "business_id": business_id,
+                "id": id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "image_path": downloaded_image_name,
+                "oauth_sub": oauth_provider.oauth_sub,
+                "location": location_value
+            })
+
+            # Return the created supervisor
+            return self.get_supervisor_by_id(id)
+
+        elif role == "student":
+            # Default to student
+            create_user_query = """
+                match
+                    $provider isa oauthProvider, has name ~provider_name;
+                insert
+                    $student isa student,
+                    has id ~id,
+                    has email ~email,
+                    has fullName ~full_name,
+                    has imagePath ~image_path;
+                    $auth isa oauthAuthentication($student, $provider),
+                    has oauthSub ~oauth_sub;
+            """
+
+            Db.write_transact(create_user_query, {
+                "provider_name": oauth_provider.provider_name,
+                "id": id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "image_path": downloaded_image_name,
+                "oauth_sub": oauth_provider.oauth_sub
+            })
+
+            # if user is a student, it returns a dict which needs to be mapped to Student model
+            created_user = self.get_by_id(id)
+            if isinstance(created_user, dict):
+                created_user = self._map_student(created_user)
+
+            # Return the created user
+            return created_user
+
+        else:
+            raise HTTPException(400, f"Onbekende rol '{role}' bij het aanmaken van gebruiker")
 
     async def get_supervisor_accessible_resources_with_id(self, supervisor_company_id: str, resource_id: str) -> dict:
         """

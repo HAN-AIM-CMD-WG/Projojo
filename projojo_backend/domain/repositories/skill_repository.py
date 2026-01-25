@@ -30,7 +30,7 @@ class SkillRepository(BaseRepository[Skill]):
         """
         results = Db.read_transact(query, {"id": id})
         if not results:
-            raise ItemRetrievalException(Skill, f"Skill with ID {id} not found.")
+            raise ItemRetrievalException(Skill, "Deze skill kon niet worden gevonden.")
         return self._map_to_model(results[0])
 
     def get_all(self) -> list[Skill]:

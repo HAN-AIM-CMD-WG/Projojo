@@ -64,8 +64,8 @@ entity skill,
 
 entity inviteKey,
     owns key @key,
-    owns inviteType @card(1),
-    owns isUsed @card(1),
+    owns usedAt @card(0..1),
+    owns expiresAt @card(1),
     owns createdAt @card(1),
     plays businessInvite:key @card(0..1);
 
@@ -138,5 +138,5 @@ attribute totalNeeded value integer;
 attribute isAccepted value boolean;
 attribute response value string;
 attribute key value string;
-attribute inviteType value string @values("business", "teacher");
-attribute isUsed value boolean;
+attribute usedAt value datetime-tz;
+attribute expiresAt value datetime-tz;

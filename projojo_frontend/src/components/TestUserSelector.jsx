@@ -76,11 +76,11 @@ export default function TestUserSelector() {
 				}
 			});
 
+			const data = await response.json();
 			if (!response.ok) {
-				throw new Error('Kan testtoken niet genereren');
+				throw new Error(`${data.detail || 'Fout bij inloggen met testgebruiker'}`);
 			}
 
-			const data = await response.json();
 			const token = data.access_token;
 
 			// Store the token in localStorage
@@ -89,8 +89,8 @@ export default function TestUserSelector() {
 			navigate('/home');
 
 		} catch (error) {
-			console.error("Error logging in with test user:", error);
-			notification.error("Fout bij inloggen met testgebruiker");
+			console.error(error);
+			notification.error(error.message || "Fout bij inloggen met testgebruiker");
 		} finally {
 			setIsLoggingIn(false);
 		}
@@ -101,9 +101,9 @@ export default function TestUserSelector() {
 		return null;
 	}
 
-	return (<div className="mb-6 p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
+	return (<div className="w-full max-w-md p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
 		<h3 className="font-bold text-orange-700 mb-2">
-			TEST GEBRUIKERS
+			TEST GEBRUIKERS (Development Only)
 		</h3>
 		<div>
 			<label className="block text-sm font-medium text-orange-700 mb-1">

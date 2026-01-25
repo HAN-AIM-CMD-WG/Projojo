@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
+import urllib
 from domain.repositories.user_repository import UserRepository
 from auth.oauth_config import oauth_client
 from auth.jwt_utils import create_jwt_token
@@ -39,7 +40,8 @@ def get_frontend_url_from_login(request: Request) -> str:
 @auth(role="unauthenticated")
 async def auth_login(
     request: Request,
-    provider: str
+    provider: str,
+    invite_token: str | None = None
 ):
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
@@ -47,6 +49,10 @@ async def auth_login(
     # Get frontend URL from the request and store it in the session
     frontend_url = get_frontend_url_from_login(request)
     request.session['frontend_url'] = frontend_url
+
+    # Store invite token in session if present
+    if invite_token:
+        request.session['invite_token'] = invite_token
 
     # Get the OAuth client for the specified provider
     client = getattr(oauth_client, provider, None)
@@ -58,7 +64,6 @@ async def auth_login(
     # Authlib will handle the state parameter for CSRF protection
     return await client.authorize_redirect(request, redirect_uri)
 
-
 @router.get("/callback/{provider}")
 @auth(role="unauthenticated")
 async def auth_callback(
@@ -69,22 +74,32 @@ async def auth_callback(
     """Step 2: Handle callback from OAuth provider with authorization code"""
     # Retrieve frontend URL from session (stored during login)
     frontend_url = request.session.get('frontend_url', DEFAULT_FRONTEND_URL)
+    invite_token = request.session.get('invite_token')
+
+    invite_token_query = f"&invite_token={URL_safe(invite_token)}" if invite_token else ""
 
     try:
-        jwt_token, is_new_user = await auth_service.handle_oauth_callback(request, provider)
+        jwt_token, is_new_user = await auth_service.handle_oauth_callback(request, provider, invite_token)
+
+        # Clear the entire session as the OAuth flow is complete
+        request.session.clear()
 
         # Redirect with token and new user flag
-        redirect_url = f"{frontend_url}/auth/callback?access_token={jwt_token}&is_new_user={str(is_new_user).lower()}"
+        redirect_url = f"{frontend_url}/auth/callback?access_token={URL_safe(jwt_token)}&is_new_user={str(is_new_user).lower()}"
         return RedirectResponse(url=redirect_url)
 
     except ValueError as e:
+        # Clear session on error too
+        request.session.clear()
         # Redirect to frontend auth callback with error
         print(f"ValueError - OAuth callback handling failed for {provider}: {e}")
-        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
+        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed&message=" + URL_safe(str(e)) + invite_token_query)
     except Exception as e:
+        # Clear session on error too
+        request.session.clear()
         # Redirect to frontend auth callback with error for any other exception
         print(f"Exception - OAuth callback handling failed for {provider}: {e}")
-        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed")
+        return RedirectResponse(url=f"{frontend_url}/auth/callback?error=auth_failed" + invite_token_query)
 
 @router.post("/test/login/{user_id}")
 @auth(role="unauthenticated")
@@ -137,3 +152,7 @@ async def test_login(user_id: str, request: Request):
             "type": user_type
         }
     }
+
+def URL_safe(message: str) -> str:
+    """Convert a message to a URL-safe format by replacing spaces with %20"""
+    return urllib.parse.quote(message)
