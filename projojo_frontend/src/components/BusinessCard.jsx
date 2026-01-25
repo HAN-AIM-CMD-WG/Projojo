@@ -68,9 +68,9 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                 <h2 className="mb-1 text-4xl font-bold tracking-tight text-gray-900">{name}</h2>
                 <h3 className="mb-1 text-xl font-bold tracking-tight text-gray-900 flex gap-1">
                     <svg className="w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                    {location && location.length > 0 ?
-                        (Array.isArray(location) ? location[0] : location) :
-                        <p className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</p>
+                    {location && location.trim().length > 0
+                        ? location
+                        : <span className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</span>
                     }
                 </h3>
                 {showDescription && <div className="mb-1 tracking-tight text-gray-900 "><RichTextViewer text={description} /></div>}

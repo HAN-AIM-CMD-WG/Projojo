@@ -61,6 +61,7 @@ async def create_project(
     description: Annotated[str, Form(...)],
     supervisor_id: Annotated[str, Form(...)],
     business_id: Annotated[str, Form(...)],
+    location: str | None = Form(None),
     image: UploadFile = File(...)
 ):
     """
@@ -89,10 +90,44 @@ async def create_project(
         description=description,
         image_path=unique_filename,  # Use the unique filename
         created_at=datetime.now(),
-        supervisor_id=supervisor_id,
-        business_id=business_id
+        business_id=business_id,
+        location=location,
+        supervisor_id=supervisor_id
     )
 
     # Create the project in the database
     created_project = project_repo.create(project_creation)
     return created_project
+
+@router.put("/{project_id}")
+@auth(role="supervisor", owner_id_key="project_id")
+async def update_project(
+    project_id: str = Path(..., description="Project ID to update"),
+    name: str = Form(...),
+    description: str = Form(...),
+    location: str | None = Form(None),
+    image: UploadFile | None = File(None),
+):
+    """
+    Update project information with optional photo upload.
+    Only a teacher or a supervisor of the same business may update the project.
+    """
+    # Handle photo upload if provided
+    image_filename = None
+    if image and image.filename:
+        try:
+            image_filename = save_image(image)
+        except Exception as e:
+            if hasattr(e, 'status_code'):
+                raise HTTPException(status_code=e.status_code, detail=e.detail)
+            print(f"Error saving image: {e}")
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
+
+    try:
+        project_repo.update(project_id, name, description, location, image_filename)
+        return {"message": "Project succesvol bijgewerkt"}
+    except Exception as e:
+        if hasattr(e, 'status_code'):
+            raise HTTPException(status_code=e.status_code, detail=e.detail)
+        print(f"Error updating project: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project")
