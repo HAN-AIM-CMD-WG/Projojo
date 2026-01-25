@@ -16,6 +16,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const { authData } = useAuth();
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const [newTaskDescription, setNewTaskDescription] = useState("");
+    const [descriptionError, setDescriptionError] = useState();
     const [formKey, setFormKey] = useState(0);
 
     const formDataObj = {};
@@ -38,6 +39,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setNewTaskDescription("");
+        setDescriptionError(undefined);
         setFormKey(prev => prev + 1); // Force form remount by changing key
     };
 
@@ -154,6 +156,9 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         className="p-4 md:p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
+                            if (descriptionError !== undefined) {
+                                return;
+                            }
                             const formData = new FormData(e.target);
                             formData.append("description", newTaskDescription);
                             handleSubmit(formData);
@@ -168,6 +173,8 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 required
                                 max={4000}
                                 defaultText={newTaskDescription}
+                                error={descriptionError}
+                                setError={setDescriptionError}
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
                         </div>

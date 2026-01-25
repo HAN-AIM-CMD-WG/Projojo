@@ -77,7 +77,7 @@ export default function UpdateTaskPage() {
                 <FormInput
                     label="Aantal plekken"
                     type="number"
-                    name="total_needed" 
+                    name="total_needed"
                     initialValue={task?.total_needed}
                     error={totalNeededError}
                     setError={setTotalNeededError}

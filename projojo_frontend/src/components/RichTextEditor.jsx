@@ -10,9 +10,9 @@ import Alert from './Alert';
 import Modal from './Modal';
 import RichTextEditorButton from './RichTextEditorButton';
 
-export default function RichTextEditor({ onSave, error = '', defaultText = '', required = false, label, max = 4000, className, setCanSubmit = () => { } }) {
+export default function RichTextEditor({ onSave, error = '', defaultText = '', required = false, label, max = 4000, className, setError = () => { } }) {
     const editorRef = useRef(null);
-    const [charCount, setCharCount] = useState(defaultText.length);
+    const [charCount, setCharCount] = useState(0);
     const [internalError, setInternalError] = useState('');
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
@@ -59,13 +59,6 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
         const content = editor.getHTML();
         const markdownContent = turndownService.turndown(content);
 
-        if (editor.getText().length > max) {
-            setInternalError('Je tekst is te lang.');
-            setCanSubmit(false);
-        } else {
-            setInternalError('');
-            setCanSubmit(true);
-        }
         onSave(markdownContent);
     };
 
@@ -124,13 +117,27 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
         }
 
         if (editor) {
+            // Set initial character count from editor's plain text
+            setCharCount(editor.getText().length);
+
             editor.on('update', () => {
                 const content = editor.getText();
                 setCharCount(content.length);
+
+                // Validate character limit and update error state
+                if (content.length > max) {
+                    const errorMsg = 'Deze tekst mag maximaal ' + max + ' tekens bevatten.';
+                    setInternalError(errorMsg);
+                    setError(errorMsg);
+                } else {
+                    setInternalError('');
+                    setError(undefined);
+                }
+
                 handleSave();
             });
         }
-    }, [editor]);
+    }, [editor, max]);
 
     if (!editor) {
         return null;
@@ -231,7 +238,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     title="Editor content"
                     className="rounded border border-gray-300 border-solid [&>*]:outline-none [&>div]:min-h-[4.1rem] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:p-2 [&_ul]:list-disc [&_ul]:pl-10 [&_ol]:list-decimal [&_ol]:pl-10 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-2xl [&_h2]:font-semibold [&_pre]:bg-gray-200 [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:shadow-md [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-2 [&_a]:text-[#0000EE] [&_a]:underline [&_a:visited]:text-[#551A8B] [&_a]:cursor-pointer"
                 />
-                <div className={`text-right text-sm text-gray-500 ${error ? 'text-red-600' : ''}`}>
+                <div className={`text-right text-sm ${charCount > max ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
                     {charCount}/{max} karakters
                 </div>
             </div>
