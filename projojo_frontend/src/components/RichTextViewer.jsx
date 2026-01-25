@@ -12,6 +12,7 @@ export default function RichTextViewer({ text='', flatten=false }) {
     return (
         <div
             className={`
+                break-words w-full
                 [&_ul]:list-disc [&_ul]:pl-10
                 [&_ol]:list-decimal [&_ol]:pl-10
                 [&_h1]:font-semibold [&_h2]:font-semibold
