@@ -57,7 +57,7 @@ export default function UpdateTaskPage() {
                     initialValue={task?.name}
                     error={nameError}
                     setError={setNameError}
-                    max={50}
+                    max={100}
                     required={true}
                 />
                 {description !== undefined

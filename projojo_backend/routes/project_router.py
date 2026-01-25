@@ -6,6 +6,7 @@ from auth.permissions import auth
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
+from service.validation_service import strip_markdown
 
 project_repo = ProjectRepository()
 
@@ -67,6 +68,25 @@ async def create_project(
     """
     Create a new project with image upload
     """
+    if len(name) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Naam mag maximaal 100 tekens bevatten."
+        )
+
+    if location and len(location) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Locatie mag maximaal 100 tekens bevatten."
+        )
+
+    stripped_description = strip_markdown(description)
+    if len(stripped_description) > 4000:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+        )
+
     # Validate required fields
     if not image or not image.filename:
         raise HTTPException(
@@ -112,6 +132,25 @@ async def update_project(
     Update project information with optional photo upload.
     Only a teacher or a supervisor of the same business may update the project.
     """
+    if len(name) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Naam mag maximaal 100 tekens bevatten."
+        )
+
+    if location and len(location) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Locatie mag maximaal 100 tekens bevatten."
+        )
+
+    stripped_description = strip_markdown(description)
+    if len(stripped_description) > 4000:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+        )
+
     # Handle photo upload if provided
     image_filename = None
     if image and image.filename:

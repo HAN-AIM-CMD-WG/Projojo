@@ -242,20 +242,20 @@ class ProjectRepository(BaseRepository[Project]):
         update_clauses = [
             '$project has name ~name;',
             '$project has description ~description;',
-            '$project has location ~location;',             
+            '$project has location ~location;',
         ]
-        
+
         params = {
             'project_id': project_id,
             'name': name,
             'description': description,
             'location': location,
         }
-        
+
         if image_filename:
             update_clauses.append('$project has imagePath ~image_filename;')
             params['image_filename'] = image_filename
-            
+
         query = f'''
             match
                 $project isa project, has id ~project_id;

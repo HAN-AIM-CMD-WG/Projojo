@@ -11,6 +11,7 @@ from domain.repositories import (
 
 from domain.models import Business
 from service import save_image
+from service.validation_service import strip_markdown
 
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
@@ -77,6 +78,12 @@ async def create_business(name: str = Body(...)):
     """
     Create a new business with the given name.
     """
+    if len(name) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Naam mag maximaal 100 tekens bevatten."
+        )
+
     try:
         created_business = business_repo.create(name)
         return created_business
@@ -108,6 +115,25 @@ async def update_business(
     existing_business = business_repo.get_by_id(business_id)
     if not existing_business:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
+    if len(name) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Naam mag maximaal 100 tekens bevatten."
+        )
+
+    if location and len(location) > 100:
+        raise HTTPException(
+            status_code=400,
+            detail="Locatie mag maximaal 100 tekens bevatten."
+        )
+
+    stripped_description = strip_markdown(description)
+    if len(stripped_description) > 4000:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+        )
 
     # Handle photo upload if provided
     image_filename = None

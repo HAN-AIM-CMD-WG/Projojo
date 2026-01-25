@@ -140,7 +140,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                         type="text"
                         placeholder="Zoek naar een skill"
                         value={search}
-                        maxLength={50}
+                        maxLength={100}
                         onChange={(e) => setSearch(e.target.value)}
                         className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 placeholder:text-gray-400 sm:text-sm sm:leading-6 p-3"
                     />
