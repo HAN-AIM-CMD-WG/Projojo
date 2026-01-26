@@ -16,8 +16,25 @@ def strip_markdown(text: str) -> str:
     # Remove blockquotes
     text = re.sub(r'^>\s+', '', text, flags=re.MULTILINE)
     # Remove list markers
-    text = re.sub(r'^[\*\-]\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^(?:[\*\-]|\d+\.)\s+', '', text, flags=re.MULTILINE)
     # Remove bold/italic/code markers
     text = re.sub(r'[*_`]', '', text)
 
     return text.strip()
+
+def is_valid_length(text: str, max_length: int, strip_md: bool = False) -> bool:
+    """
+    Check if text is a minimum of 1 character and maximum of max_length characters.
+
+    Optionally strips markdown before counting length.
+    """
+    if not text:
+        return False
+
+    if strip_md:
+        text = strip_markdown(text)
+
+    if not text.strip():
+        return False
+
+    return 1 <= len(text.strip()) <= max_length

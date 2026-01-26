@@ -137,7 +137,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                 handleSave();
             });
         }
-    }, [editor, max]);
+    }, [editor, max, required, setError, handleSave, setInternalError]);
 
     if (!editor) {
         return null;

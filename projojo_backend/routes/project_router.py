@@ -6,7 +6,7 @@ from auth.permissions import auth
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
-from service.validation_service import strip_markdown
+from service.validation_service import is_valid_length
 
 project_repo = ProjectRepository()
 
@@ -68,23 +68,22 @@ async def create_project(
     """
     Create a new project with image upload
     """
-    if len(name) > 100:
+    if not is_valid_length(name, 100):
         raise HTTPException(
             status_code=400,
-            detail="Naam mag maximaal 100 tekens bevatten."
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
-    if location and len(location) > 100:
+    if location and not is_valid_length(location, 255):
         raise HTTPException(
             status_code=400,
-            detail="Locatie mag maximaal 100 tekens bevatten."
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
         )
 
-    stripped_description = strip_markdown(description)
-    if len(stripped_description) > 4000:
+    if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
             status_code=400,
-            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Validate required fields
@@ -132,23 +131,22 @@ async def update_project(
     Update project information with optional photo upload.
     Only a teacher or a supervisor of the same business may update the project.
     """
-    if len(name) > 100:
+    if not is_valid_length(name, 100):
         raise HTTPException(
             status_code=400,
-            detail="Naam mag maximaal 100 tekens bevatten."
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
-    if location and len(location) > 100:
+    if location and not is_valid_length(location, 255):
         raise HTTPException(
             status_code=400,
-            detail="Locatie mag maximaal 100 tekens bevatten."
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
         )
 
-    stripped_description = strip_markdown(description)
-    if len(stripped_description) > 4000:
+    if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
             status_code=400,
-            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Handle photo upload if provided

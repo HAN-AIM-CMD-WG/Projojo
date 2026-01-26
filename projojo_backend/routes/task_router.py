@@ -3,7 +3,7 @@ from domain.repositories import TaskRepository, UserRepository
 from auth.permissions import auth
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
-from service.validation_service import strip_markdown
+from service.validation_service import is_valid_length
 from datetime import datetime
 
 task_repo = TaskRepository()
@@ -146,17 +146,16 @@ async def create_task(
     """
     Create a new task
     """
-    if len(task_create.name) > 100:
+    if not is_valid_length(task_create.name, 100):
         raise HTTPException(
             status_code=400,
-            detail="Naam mag maximaal 100 tekens bevatten."
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
-    stripped_description = strip_markdown(task_create.description)
-    if len(stripped_description) > 4000:
+    if not is_valid_length(task_create.description, 4000, strip_md=True):
         raise HTTPException(
-            status_code=400,
-            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+             status_code=400,
+             detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     try:
@@ -186,17 +185,16 @@ async def update_task(
     """
     Update task information.
     """
-    if len(name) > 100:
+    if not is_valid_length(name, 100):
         raise HTTPException(
             status_code=400,
-            detail="Naam mag maximaal 100 tekens bevatten."
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
-    stripped_description = strip_markdown(description)
-    if len(stripped_description) > 4000:
+    if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
-            status_code=400,
-            detail=f"Beschrijving mag maximaal 4000 tekens bevatten (huidig: {len(stripped_description)})."
+             status_code=400,
+             detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Verify task exists
