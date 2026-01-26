@@ -64,7 +64,7 @@ export default function UpdateBusinessPage() {
                     initialValue={business?.name}
                     error={nameError}
                     setError={setNameError}
-                    max={50}
+                    max={100}
                     required={true}
                 />
                 {description !== undefined

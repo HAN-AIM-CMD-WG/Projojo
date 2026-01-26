@@ -16,6 +16,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const { authData } = useAuth();
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const [newTaskDescription, setNewTaskDescription] = useState("");
+    const [descriptionError, setDescriptionError] = useState();
     const [formKey, setFormKey] = useState(0);
 
     const formDataObj = {};
@@ -38,6 +39,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setNewTaskDescription("");
+        setDescriptionError(undefined);
         setFormKey(prev => prev + 1); // Force form remount by changing key
     };
 
@@ -68,16 +70,16 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     <div className="w-full">
                         <h1 className="text-3xl font-semibold text-gray-800 tracking-wide leading-tight border-b-2 border-primary m-4 pb-2">
                             {project.name}
-                            
+
                         </h1>
                         <h2 className="text-1xl font-semibold text-gray-800 tracking-wide leading-tight  m-4 pb-2">
-                        {project.location && project.location.trim().length > 0 && (
-                                            <div className="flex gap-1 items-center">
-                                                <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                                {project.location}
-                                            </div>
-                                        )}
-                                        </h2>
+                            {project.location && project.location.trim().length > 0 && (
+                                <div className="flex gap-1 items-center">
+                                    <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                    {project.location}
+                                </div>
+                            )}
+                        </h2>
                         <div className="flex flex-row gap-4 ms-4">
                             {!isLoading && <>
                                 <Link to={`/business/${project.business.id}`} className="group">
@@ -107,7 +109,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                 </div>
                 <div className="flex flex-row">
                     {project.description &&
-                        <div className="flex flex-col w-full m-4">
+                        <div className="flex flex-col flex-1 min-w-0 m-4">
                             <div className="mt-2 rounded-lg w-full bg-gray-100 shadow-lg">
                                 <p className="text-black text-sm tracking-wider font-semibold p-4 pt-3 pb-3 border-b border-gray-300 border-solid">Beschrijving</p>
                                 <div className="p-4 pt-3">
@@ -154,6 +156,9 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         className="p-4 md:p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
+                            if (descriptionError != undefined) {
+                                return;
+                            }
                             const formData = new FormData(e.target);
                             formData.append("description", newTaskDescription);
                             handleSubmit(formData);
@@ -168,6 +173,8 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 required
                                 max={4000}
                                 defaultText={newTaskDescription}
+                                error={descriptionError}
+                                setError={setDescriptionError}
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
                         </div>

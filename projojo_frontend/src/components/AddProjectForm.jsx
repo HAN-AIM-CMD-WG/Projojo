@@ -68,7 +68,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     name="name"
                     error={nameError}
                     setError={setNameError}
-                    max={50}
+                    max={100}
                     required
                 />
                 <RichTextEditor

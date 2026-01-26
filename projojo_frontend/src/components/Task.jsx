@@ -22,7 +22,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [registrations, setRegistrations] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [motivation, setMotivation] = useState("");
-    const [canSubmit, setCanSubmit] = useState(true);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
@@ -31,7 +30,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!canSubmit) {
+        if (error) {
             return;
         }
 
@@ -192,7 +191,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             <RichTextEditor
                                 label="Motivatiebrief"
                                 onSave={setMotivation}
-                                setCanSubmit={setCanSubmit}
+                                setError={setError}
                             />
                             <div className="col-span-2">
                             </div>
