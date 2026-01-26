@@ -9,6 +9,7 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
+import { filterVisibleSkillsForUser } from "../utils/skills";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
 
@@ -28,7 +29,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
     const isFull = task.total_accepted >= task.total_needed;
-    const visibleTaskSkills = (authData.type === "student" ? (task.skills || []).filter(s => !(s.isPending ?? s.is_pending)) : (task.skills || []));
+    const visibleTaskSkills = filterVisibleSkillsForUser(authData, task.skills || []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
