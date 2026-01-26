@@ -7,7 +7,6 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
-import { useAuth } from "../auth/AuthProvider";
 import { filterVisibleSkillsForUser } from "../utils/skills";
 import Alert from "./Alert";
 
