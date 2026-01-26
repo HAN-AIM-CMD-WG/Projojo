@@ -1,7 +1,11 @@
 import InfoBox from './InfoBox';
 import SkillBadge from './SkillBadge';
+import { useAuth } from '../auth/AuthProvider';
+import { filterVisibleSkillsForUser } from '../utils/skills';
 
 export default function TaskCard({ task }) {
+    const { authData } = useAuth();
+    const visibleSkills = filterVisibleSkillsForUser(authData, task.skills || []);
     return (
         <div className="max-w-sm bg-slate-100 border border-gray-200 rounded-lg shadow-lg hover:rounded-lg hover:ring-4 hover:ring-pink-300 transition-all duration-300 ease-in-out">
             <div className="flex flex-col gap-3 p-4">
@@ -17,10 +21,10 @@ export default function TaskCard({ task }) {
                         </>
                     )}
                 </InfoBox>
-                {task.skills.length > 0 && (
+                {visibleSkills.length > 0 && (
                     <div className="flex flex-wrap items-center gap-3">
                         <span className="text-lg font-semibold text-slate-700">Skills:</span>
-                        {task.skills.map((skill) => (
+                        {visibleSkills.map((skill) => (
                             <SkillBadge
                                 key={skill.skillId || skill.id}
                                 skillName={skill.name}

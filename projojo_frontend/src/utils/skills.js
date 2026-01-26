@@ -51,3 +51,20 @@ export function normalizeSkill(s) {
 export function normalizeSkills(arr = []) {
   return (arr || []).map(normalizeSkill).filter(Boolean);
 }
+
+/**
+ * Returns a normalized, visibility-filtered list of skills for a given user context.
+ * - Students should not see pending skills
+ * - Supervisors/teachers see all
+ *
+ * @param {{ type?: string }} authData
+ * @param {any[]} skills
+ * @returns {{ skillId: string|number|undefined, name: string, isPending: boolean }[]}
+ */
+export function filterVisibleSkillsForUser(authData = {}, skills = []) {
+  const normalized = normalizeSkills(skills);
+  if ((authData?.type || "") === "student") {
+    return normalized.filter((s) => !s.isPending);
+  }
+  return normalized;
+}

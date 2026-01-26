@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form
-from domain.repositories import TaskRepository, UserRepository
+from domain.repositories import TaskRepository, UserRepository, SkillRepository
 from auth.permissions import auth
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
@@ -7,6 +7,7 @@ from datetime import datetime
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
+skill_repo = SkillRepository()
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -69,9 +70,57 @@ async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     """
     Get all skills required for a task
     """
-    task_skills = task_service.get_task_with_skills(task_id)
-    return task_skills
+    # Ensure task exists
+    try:
+        task_repo.get_by_id(task_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
+    skills = skill_repo.get_task_skills(task_id)
+    return skills
+
+@router.put("/{task_id}/skills")
+@auth(role="supervisor", owner_id_key="task_id")
+async def update_task_skills_endpoint(
+    task_id: str = Path(..., description="Task ID"),
+    body: list[str] = Body(..., description="Array of skill IDs"),
+):
+    """
+    Update required skills for a task (set-based). Allowed for teachers or owning supervisors.
+    """
+    # Validate task exists
+    try:
+        task_repo.get_by_id(task_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    # Validate body
+    if body is None or not isinstance(body, list):
+        raise HTTPException(status_code=400, detail="Ongeldige invoer: verwacht een lijst met skill-IDs")
+
+    # Deduplicate and normalize to string IDs; allow empty list to clear all skills
+    try:
+        unique_ids = list(dict.fromkeys([str(sid) for sid in body]))
+    except Exception:
+        raise HTTPException(status_code=400, detail="Ongeldige invoer: kan skill-IDs niet verwerken")
+
+    # Verify that all skill IDs exist
+    missing: list[str] = []
+    for sid in unique_ids:
+        try:
+            skill_repo.get_by_id(sid)
+        except Exception:
+            missing.append(sid)
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Onbekende skill IDs: {', '.join(missing)}")
+
+    try:
+        skill_repo.update_task_skills(task_id, unique_ids)
+        return {"message": "Skills bijgewerkt"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van de skills: " + str(e))
+    
+    
 @router.get("/{task_id}/registrations")
 @auth(role="supervisor", owner_id_key="task_id")
 async def get_registrations(task_id: str = Path(..., description="Task ID")):

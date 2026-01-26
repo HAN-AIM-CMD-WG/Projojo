@@ -7,6 +7,7 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
+import { filterVisibleSkillsForUser } from "../utils/skills";
 import Alert from "./Alert";
 
 export default function ProjectDetails({ project, businessId, refreshData }) {
@@ -124,7 +125,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             </h2>
             <div className="flex flex-row justify-between">
                 <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
-                    {project.topSkills?.map((skill) => (
+                    {filterVisibleSkillsForUser(authData, project.topSkills || []).map((skill) => (
                         <li key={skill.skillId}>
                             <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                         </li>
