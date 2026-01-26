@@ -48,6 +48,31 @@ class SkillRepository(BaseRepository[Skill]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
 
+    def get_by_name_case_insensitive(self, name: str) -> Skill | None:
+        """
+        Return a skill by exact name (case-insensitive) if it exists, otherwise None.
+        Uses TypeQL 'like' with a case-insensitive anchored regex.
+        """
+        query = """
+            match
+                $skill isa skill,
+                has name $n,
+                has id $id,
+                has isPending $isPending,
+                has createdAt $createdAt;
+                $n like ~pattern;
+            fetch {
+                'id': $id,
+                'name': $n,
+                'isPending': $isPending,
+                'createdAt': $createdAt
+            };
+        """
+        results = Db.read_transact(query, {"pattern": f"(?i)^{name}$"})
+        if not results:
+            return None
+        return self._map_to_model(results[0])
+
     def get_student_skills(self, student_id: str) -> list[Skill | StudentSkill]:
         query = """
             match
@@ -275,3 +300,37 @@ class SkillRepository(BaseRepository[Skill]):
                 $skill;
         """
         Db.write_transact(query, {"skill_id": skill_id})
+
+    def delete_with_cascade(self, skill_id: str) -> None:
+        """
+        Remove all relations that reference the given skill, then delete the skill.
+        This avoids cardinality/relates constraint violations when the skill is in use.
+        """
+        # 1) Remove requiresSkill relations from tasks
+        query1 = """
+            match
+                $skill isa skill, has id ~skill_id;
+                $rel isa requiresSkill (task: $task, skill: $skill);
+            delete
+                $rel;
+        """
+        Db.write_transact(query1, {"skill_id": skill_id})
+
+        # 2) Remove hasSkill relations from students
+        query2 = """
+            match
+                $skill isa skill, has id ~skill_id;
+                $rel isa hasSkill (student: $student, skill: $skill);
+            delete
+                $rel;
+        """
+        Db.write_transact(query2, {"skill_id": skill_id})
+
+        # 3) Delete the skill itself
+        query3 = """
+            match
+                $skill isa skill, has id ~skill_id;
+            delete
+                $skill;
+        """
+        Db.write_transact(query3, {"skill_id": skill_id})
