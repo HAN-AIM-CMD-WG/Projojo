@@ -122,7 +122,7 @@ async def update_business(
             detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
-    if location and not is_valid_length(location, 255):
+    if not is_valid_length(location, 255):
         raise HTTPException(
             status_code=400,
             detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."

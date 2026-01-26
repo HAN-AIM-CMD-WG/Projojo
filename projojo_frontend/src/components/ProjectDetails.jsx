@@ -156,7 +156,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         className="p-4 md:p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
-                            if (descriptionError !== undefined) {
+                            if (descriptionError != undefined) {
                                 return;
                             }
                             const formData = new FormData(e.target);

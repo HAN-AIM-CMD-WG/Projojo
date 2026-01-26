@@ -12,13 +12,13 @@ def strip_markdown(text: str) -> str:
     # Remove links, keep text
     text = re.sub(r'\[([^\]]+)\]\(.*?\)', r'\1', text)
     # Remove headers
-    text = re.sub(r'^#+\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^\s*#+\s+', '', text, flags=re.MULTILINE)
     # Remove blockquotes
-    text = re.sub(r'^>\s+', '', text, flags=re.MULTILINE)
+    text = re.sub(r'^\s*>\s+', '', text, flags=re.MULTILINE)
     # Remove list markers
-    text = re.sub(r'^(?:[\*\-]|\d+\.)\s+', '', text, flags=re.MULTILINE)
-    # Remove bold/italic/code markers
-    text = re.sub(r'[*_`]', '', text)
+    text = re.sub(r'^\s*(?:[\*\-]|\d+\.)\s+', '', text, flags=re.MULTILINE)
+    # Remove bold/italic/code/strikethrough markers
+    text = re.sub(r'[*_`~]', '', text)
 
     return text.strip()
 

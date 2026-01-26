@@ -154,8 +154,8 @@ async def create_task(
 
     if not is_valid_length(task_create.description, 4000, strip_md=True):
         raise HTTPException(
-             status_code=400,
-             detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     try:
@@ -193,8 +193,8 @@ async def update_task(
 
     if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
-             status_code=400,
-             detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Verify task exists
