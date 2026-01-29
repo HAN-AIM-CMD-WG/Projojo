@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form
+from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form, Depends
 from domain.repositories import TaskRepository, UserRepository
 from auth.permissions import auth
+from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate

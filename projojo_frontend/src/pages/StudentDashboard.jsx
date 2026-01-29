@@ -321,7 +321,7 @@ export default function StudentDashboard() {
  */
 function TaskCard({ task, status, onCancel }) {
     const { studentSkills } = useStudentSkills();
-    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const [isCancelling, setIsCancelling] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [cancelError, setCancelError] = useState(null);

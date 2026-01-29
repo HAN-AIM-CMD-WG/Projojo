@@ -24,7 +24,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const [isActionLoading, setIsActionLoading] = useState(false);
     const { authData } = useAuth();
     const { studentSkills } = useStudentSkills();
-    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
     const isTeacher = authData.type === "teacher";
     const canManageProject = isOwner || isTeacher;
@@ -210,15 +210,15 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         <div className="flex-1">
                             <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Aangeboden door</span>
                             <p className="font-bold text-lg text-[var(--text-primary)] group-hover:text-primary transition">
-                                        {project.business.name}
-                                    </Link>
-                                    <div className="text-black-600 text-sm flex flex-col gap-1">
-                                        <div className="flex gap-1 items-center">
-                                            <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                            {project.business.location}
-                                        </div>
-                                    </div>
+                                {project.business.name}
+                            </p>
+                            <div className="text-[var(--text-muted)] text-sm flex flex-col gap-1">
+                                <div className="flex gap-1 items-center">
+                                    <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                    {project.business.location}
                                 </div>
+                            </div>
+                        </div>
                         <span className="material-symbols-outlined text-gray-300 group-hover:text-primary transition">
                             chevron_right
                         </span>

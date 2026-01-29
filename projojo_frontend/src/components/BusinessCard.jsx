@@ -119,7 +119,7 @@ export default function BusinessCard({
     };
 
     // Calculate skill match with student
-    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const matchingSkills = topSkills?.filter(s => studentSkillIds.has(s.skillId)) || [];
     const otherSkills = topSkills?.filter(s => !studentSkillIds.has(s.skillId)) || [];
     

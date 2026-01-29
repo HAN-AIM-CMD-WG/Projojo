@@ -82,9 +82,9 @@ export default function ProjectCard({ project, index = 0 }) {
   });
 
   // Calculate skill match with student
-  const studentSkillIds = new Set(studentSkills.map(s => s.id));
-  const matchingSkills = projectSkills.filter(s => studentSkillIds.has(s.id));
-  const missingSkills = projectSkills.filter(s => !studentSkillIds.has(s.id));
+  const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
+  const matchingSkills = projectSkills.filter(s => studentSkillIds.has(s.skillId || s.id));
+  const missingSkills = projectSkills.filter(s => !studentSkillIds.has(s.skillId || s.id));
   
   // Count positions that match student skills
   const matchingPositions = project.tasks?.reduce((sum, task) => {
@@ -162,7 +162,7 @@ export default function ProjectCard({ project, index = 0 }) {
               <div className="flex flex-wrap gap-1.5">
                 {matchingSkills.slice(0, 3).map(skill => (
                   <span 
-                    key={skill.id} 
+                    key={skill.skillId || skill.id} 
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[#156064] dark:text-[#00C49A] border border-[#156064] dark:border-[#00C49A] bg-[var(--neu-bg)]/50"
                     title={`Je hebt deze skill: ${skill.name}`}
                   >
@@ -172,7 +172,7 @@ export default function ProjectCard({ project, index = 0 }) {
                 ))}
                 {missingSkills.slice(0, 2).map(skill => (
                   <span 
-                    key={skill.id} 
+                    key={skill.skillId || skill.id} 
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[var(--text-muted)] border border-[var(--gray-300)] bg-[var(--neu-bg)]/50"
                     title={`Gevraagde skill: ${skill.name}`}
                   >

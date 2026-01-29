@@ -362,7 +362,7 @@ function RegistrationCard({ registration, onUpdate }) {
                             <div className="flex flex-wrap gap-1 mt-2">
                                 {registration.student_skills.slice(0, 3).map((skill) => (
                                     <SkillBadge 
-                                        key={skill.id} 
+                                        key={skill.skillId || skill.id} 
                                         skillName={skill.name}
                                     />
                                 ))}

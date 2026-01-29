@@ -16,7 +16,7 @@ import CreateBusinessEmail from "./CreateBusinessEmail";
 export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
     const { authData } = useAuth();
     const { studentSkills } = useStudentSkills();
-    const studentSkillIds = new Set(studentSkills.map(s => s.id));
+    const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
     const [registrationErrors, setRegistrationErrors] = useState([]);
@@ -237,6 +237,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     </>
                     )}
                 </div>
+            </div>
             </div>
             {/* Registration modal for students */}
             {!(studentAlreadyRegistered || isFull) && (

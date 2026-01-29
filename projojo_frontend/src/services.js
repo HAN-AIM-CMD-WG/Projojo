@@ -216,7 +216,8 @@ export function updateStudentSkills(studentId, skillIds) {
 }
 
 export function updateStudentSkillDescription(studentId, skill) {
-    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills/${skill.id}`, {
+    const skillId = skill.skillId || skill.id;
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills/${skillId}`, {
         method: "PATCH",
         body: JSON.stringify(skill),
     });

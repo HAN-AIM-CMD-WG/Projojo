@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form
+from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form, Depends
 from auth.permissions import auth
+from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository, PortfolioRepository
 from domain.models.skill import StudentSkill

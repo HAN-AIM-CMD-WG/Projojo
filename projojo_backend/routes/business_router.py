@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form, Depends
 from typing import Optional
 from auth.permissions import auth
+from auth.jwt_utils import get_token_payload
 
 from domain.repositories import (
     BusinessRepository,

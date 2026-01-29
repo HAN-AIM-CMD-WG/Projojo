@@ -222,7 +222,7 @@ export default function OverviewPage() {
   };
 
   // Count OPEN POSITIONS that match student skills (marketplace model)
-  const studentSkillIds = new Set(studentSkills.map(s => s.id));
+  const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
   
   const { totalOpenPositions, matchingOpenPositions } = shownBusinesses.reduce((acc, business) => {
     business.projects.forEach(project => {

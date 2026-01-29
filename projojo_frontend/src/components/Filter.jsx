@@ -35,8 +35,9 @@ export default function Filter({ onFilter, businesses = [] }) {
     const [showLocationPanel, setShowLocationPanel] = useState(false);
     
     // Create set of student skill IDs for matching
+    // Use skillId for consistent matching with normalized project/task skills
     const studentSkillIds = useMemo(() => 
-        new Set(studentSkills.map(s => s.id)), 
+        new Set(studentSkills.map(s => s.skillId).filter(Boolean)), 
         [studentSkills]
     );
 

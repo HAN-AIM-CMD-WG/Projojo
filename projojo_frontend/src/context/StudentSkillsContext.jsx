@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
 import { getUser } from "../services";
+import { normalizeSkill } from "../utils/skills";
 
 const StudentSkillsContext = createContext();
 
@@ -42,19 +43,15 @@ export function StudentSkillsProvider({ children }) {
                 }
                 
                 // Handle different API response formats
+                // Use normalizeSkill to ensure consistent format with skillId property
                 let skills = [];
                 if (data.Skills && Array.isArray(data.Skills)) {
-                    skills = data.Skills.map(s => ({
-                        id: s.id || s.skillId,
-                        name: s.name,
-                        isPending: s.is_pending || s.isPending || false
-                    }));
+                    skills = data.Skills.map(normalizeSkill).filter(Boolean);
                 } else if (data.skill_ids && Array.isArray(data.skill_ids)) {
-                    skills = data.skill_ids.map(s => ({
+                    skills = data.skill_ids.map(s => normalizeSkill({
                         id: s.skill_id,
-                        name: s.name || '',
-                        isPending: false
-                    }));
+                        name: s.name || ''
+                    })).filter(Boolean);
                 }
                 
                 setStudentSkills(skills);
@@ -82,7 +79,7 @@ export function StudentSkillsProvider({ children }) {
 
 /**
  * Hook to access the student's skills and name
- * @returns {{ studentSkills: {id: string, name: string, isPending: boolean}[], studentName: string, isLoading: boolean }}
+ * @returns {{ studentSkills: {skillId: string, name: string, isPending: boolean}[], studentName: string, isLoading: boolean }}
  */
 export function useStudentSkills() {
     const context = useContext(StudentSkillsContext);
