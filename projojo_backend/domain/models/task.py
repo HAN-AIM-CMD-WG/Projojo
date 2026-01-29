@@ -39,4 +39,3 @@ class TaskCreate(BaseModel):
     name: str
     description: str
     total_needed: int
-    project_id: str

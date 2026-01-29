@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { IMAGE_BASE_URL, getUser, getBusinessById } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import ThemeToggle from "./ThemeToggle";
@@ -10,6 +10,8 @@ export default function Navbar() {
     const [businessData, setBusinessData] = useState(null);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
+    const navRef = useRef(null);
 
     const routes = [];
 
@@ -75,6 +77,21 @@ export default function Navbar() {
         }
     }, [authData])
 
+    useEffect(() => {
+        setIsCollapsed(true);
+    }, [location])
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (navRef.current && !navRef.current.contains(event.target)) {
+                setIsCollapsed(true);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
+
     const signOut = () => {
         logout();
         navigate("/");
@@ -89,7 +106,7 @@ export default function Navbar() {
 
     return (
         <header>
-            <nav className="bg-[var(--neu-bg)] fixed w-full z-40 top-0 start-0 border-b border-[var(--neu-border)]" style={{ boxShadow: '0 4px 20px var(--neu-shadow-dark)' }}>
+            <nav ref={navRef} className="bg-[var(--neu-bg)] fixed w-full z-40 top-0 start-0 border-b border-[var(--neu-border)]" style={{ boxShadow: '0 4px 20px var(--neu-shadow-dark)' }}>
                 <div className="max-w-7xl flex flex-wrap items-center justify-between mx-auto px-6 h-20">
                     {/* Logo */}
                     <Link to="/home" className="flex items-center gap-3 group" aria-label="Projojo - Ga naar home">

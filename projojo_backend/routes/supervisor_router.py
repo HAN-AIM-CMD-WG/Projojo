@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from auth.jwt_utils import get_token_payload
 from domain.repositories import UserRepository, ProjectRepository, TaskRepository
+from auth.permissions import auth
 
 user_repo = UserRepository()
 project_repo = ProjectRepository()
@@ -10,6 +11,7 @@ task_repo = TaskRepository()
 router = APIRouter(prefix="/supervisors", tags=["Supervisor Endpoints"])
 
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_supervisors():
     """
     Get all supervisors for debugging purposes

@@ -28,6 +28,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
+                'location': $project.location,
                 'createdAt': $createdAt,
                 'business': $business_id
             };
@@ -53,6 +54,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
+                'location': $project.location,
                 'createdAt': $createdAt,
                 'business': $business_id
             };
@@ -78,6 +80,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $name,
                 'description': $description,
                 'imagePath': $imagePath,
+                'location': $project.location,
                 'createdAt': $createdAt,
                 'business': $business_id,
                 'tasks': [
@@ -112,7 +115,7 @@ class ProjectRepository(BaseRepository[Project]):
                 'name': $business.name,
                 'description': $business.description,
                 'image_path': $business.imagePath,
-                'location': [$business.location],
+                'location': $business.location,
             };
         """
         results = Db.read_transact(query, {"project_id": project_id})
@@ -126,6 +129,7 @@ class ProjectRepository(BaseRepository[Project]):
         name = result.get("name", "")
         description = result.get("description", "")
         image_path = result.get("imagePath", "")
+        location = result.get("location", "")
         created_at_str = result.get("createdAt", "")
         business = result.get("business", "")
         tasks_data = result.get("tasks", [])
@@ -156,6 +160,7 @@ class ProjectRepository(BaseRepository[Project]):
             name=name,
             description=description,
             image_path=image_path,
+            location=location,
             created_at=created_at,
             business_id=business,
             tasks=tasks,
@@ -207,6 +212,8 @@ class ProjectRepository(BaseRepository[Project]):
     def create(self, project: ProjectCreation) -> ProjectCreation:
         id = generate_uuid()
         created_at = datetime.now()
+        # Optional location: None removes clause via build_query
+        location_value = project.location.strip() if getattr(project, "location", None) else None
 
         query = """
             match
@@ -218,6 +225,7 @@ class ProjectRepository(BaseRepository[Project]):
                 has name ~name,
                 has description ~description,
                 has imagePath ~image_path,
+                has location ~location,
                 has createdAt ~created_at;
                 $hasProjects isa hasProjects($business, $project);
         """
@@ -227,6 +235,7 @@ class ProjectRepository(BaseRepository[Project]):
             "name": project.name,
             "description": project.description,
             "image_path": project.image_path,
+            "location": location_value,
             "created_at": created_at
         })
 
@@ -253,8 +262,35 @@ class ProjectRepository(BaseRepository[Project]):
             image_path=project.image_path,
             created_at=created_at,
             business_id=project.business_id,
+            location=project.location,
             supervisor_id=project.supervisor_id,
         )
+    def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None) -> None:
+        update_clauses = [
+            '$project has name ~name;',
+            '$project has description ~description;',
+            '$project has location ~location;',             
+        ]
+        
+        params = {
+            'project_id': project_id,
+            'name': name,
+            'description': description,
+            'location': location,
+        }
+        
+        if image_filename:
+            update_clauses.append('$project has imagePath ~image_filename;')
+            params['image_filename'] = image_filename
+            
+        query = f'''
+            match
+                $project isa project, has id ~project_id;
+            update
+                {' '.join(update_clauses)}
+        '''
+
+        Db.write_transact(query, params)
 
     def check_project_owner(self, project_id: str, supervisor_id: str) -> bool:
         """Check if a supervisor owns (created) a project."""

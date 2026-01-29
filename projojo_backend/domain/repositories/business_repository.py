@@ -200,6 +200,7 @@ class BusinessRepository(BaseRepository[Business]):
                     "description": $project.description,
                     "image_path": $project.imagePath,
                     "created_at": $project.createdAt,
+                    "location": $project.location,
                     "tasks": [
                         match
                             ($project, $task) isa containsTask;

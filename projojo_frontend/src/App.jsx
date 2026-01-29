@@ -15,10 +15,13 @@ import ProjectDetailsPage from './pages/ProjectDetailsPage';
 import ProjectsAddPage from './pages/ProjectsAddPage';
 import UpdateStudentPage from "./pages/update_student_page/update_student_page";
 import UpdateBusinessPage from './pages/UpdateBusinessPage';
-import { getAuthorization } from './services';
+import UpdateProjectPage from './pages/UpdateProjectPage';
+import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
+import UpdateTaskPage from "./pages/UpdateTaskPage";
+import { notification } from './components/notifications/NotifySystem.jsx';
 import StudentDashboard from "./pages/StudentDashboard";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import DesignDemoPage from "./pages/DesignDemoPage";
@@ -48,11 +51,22 @@ export default function App() {
   }, [location.pathname]);
 
   useEffect(() => {
-    let ignore = false;
+    const handleUnhandledRejection = (event) => {
+      if (event.reason instanceof HttpError) {
+        notification.error(event.reason.message || "Er is een onbekende fout opgetreden.");
+      } else {
+        // Log non-HttpError rejections for debugging and show a generic error to the user
+        console.error('Unhandled promise rejection:', event.reason);
+        notification.error("Er is een onverwachte fout opgetreden.");
+      }
+    };
 
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, []);
+
+  useEffect(() => {
     getAuthorization()
-
-
   }, [location, setAuthData]);
 
   // Pages without navbar/footer (landing, login, auth callback, design demo)
@@ -85,8 +99,11 @@ export default function App() {
             <Route path="/ontdek" element={<OverviewPage />} />
             <Route path="/projects">
               <Route path="add" element={<ProjectsAddPage />} />
-              <Route path=":projectId" element={<ProjectDetailsPage />} />
+              <Route path=":projectId">
+              <Route index element={<ProjectDetailsPage />} />
+                <Route path="update" element={<UpdateProjectPage />} />
             </Route>
+          </Route>
             <Route path="/business">
               <Route path=":businessId" element={<BusinessPage />} />
               <Route path=":businessId/update" element={<UpdateBusinessPage />} />
@@ -96,7 +113,10 @@ export default function App() {
               <Route path=":profileId" element={<ProfilePage />} />
               <Route path="update" element={<UpdateStudentPage />} />
             </Route>
-            <Route path="/teacher" element={<TeacherPage />} />
+            <Route path="/tasks">
+            <Route path=":taskId/update" element={<UpdateTaskPage />} />
+          </Route>
+          <Route path="/teacher" element={<TeacherPage />} />
             <Route path="/design-demo" element={<DesignDemoPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -107,5 +127,3 @@ export default function App() {
     </ThemeProvider>
   )
 }
-
-

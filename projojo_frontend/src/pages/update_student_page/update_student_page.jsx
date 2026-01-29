@@ -3,15 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import RichTextEditor from "../../components/RichTextEditor";
 import PdfPreview from "../../components/PdfPreview";
-import { createErrorMessage, getUser, updateStudent } from "../../services";
+import { getUser, updateStudent } from "../../services";
 import useFetch from "../../useFetch";
 import { IMAGE_BASE_URL, PDF_BASE_URL } from "../../services";
 import { notification } from "../../components/notifications/NotifySystem";
-
-const authErrorMessages = {
-    401: "Je bent niet ingelogd. Log opnieuw in.",
-    403: "Je bent niet ingelogd als student. Log opnieuw in.",
-}
 
 /**
  * Single-page profile editor with neumorphic design
@@ -62,10 +57,7 @@ export default function UpdateStudentPage() {
 
     useEffect(() => {
         if (error !== undefined && serverError === undefined) {
-            setServerError(createErrorMessage(error, {
-                ...authErrorMessages,
-                404: "Je account is niet gevonden? Probeer opnieuw in te loggen",
-            }));
+            setServerError(error.message);
         }
     }, [error, serverError]);
 

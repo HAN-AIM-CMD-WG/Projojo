@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { createErrorMessage, getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
+import { getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
 import useFetch from '../useFetch';
 
 /**

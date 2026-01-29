@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -9,6 +9,16 @@ from dotenv import load_dotenv
 
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
+from auth.jwt_middleware import JWTMiddleware
+
+# ============================================================================
+# EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
+from service.email_service import send_templated_email
+from pydantic import BaseModel
+# ============================================================================
+# END EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
 
 # Import routers
 from routes.auth_router import router as auth_router
@@ -57,6 +67,9 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+# Add JWT validation middleware
+app.add_middleware(JWTMiddleware)
+
 # Add session middleware (required by authlib for OAuth state)
 app.add_middleware(
     SessionMiddleware,
@@ -85,6 +98,7 @@ def get_db():
 
 app.mount("/image", StaticFiles(directory="static/images"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to Projojo Backend API"}
@@ -92,6 +106,9 @@ async def root():
 @app.get("/typedb/status")
 async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
     try:
         # Try to get database name to verify connection
         db_name = db.name  # dit kon wel eens slagen, ook als er geen verbinding is met de Db.
@@ -105,6 +122,54 @@ async def typedb_status(db=Depends(get_db)):
             "status": "error",
             "message": str(e)
         }
+
+
+# ============================================================================
+# EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+class TestEmailRequest(BaseModel):
+    """Request model for test email endpoint - REMOVE AFTER TESTING"""
+    recipient_email: str
+
+@app.post("/test/email")
+async def send_test_email(request: TestEmailRequest):
+    """
+    TEST ENDPOINT - Send a test email using the invitation template.
+    This endpoint is for development testing only.
+    
+    REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
+    """
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
+    result = await send_templated_email(
+        recipient=request.recipient_email,
+        subject="[TEST] Projojo Email Test - Invitation Template",
+        template_name="invitation.html",
+        context={
+            "user_name": "Test User",
+            "project_name": "Test Project",
+            "business_name": "Test Business B.V.",
+            "task_name": "Test Task",
+            "invite_link": "https://projojo.nl/invite/test123",
+            "message": "This is a test email to verify the email service is working correctly. If you received this, the mail integration is functioning!",
+        }
+    )
+    
+    if result.success:
+        return {
+            "status": "success",
+            "message": f"Test email sent to {request.recipient_email}. Check your mailbox."
+        }
+    else:
+        return {
+            "status": "error",
+            "message": result.error
+        }
+# ============================================================================
+# END EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

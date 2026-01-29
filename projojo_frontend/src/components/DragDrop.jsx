@@ -7,20 +7,28 @@ import PdfPreview from './PdfPreview';
  * @param {Object} props
  * @param {function} props.onFileChanged - Callback function when files are added or removed
  * @param {boolean} [props.multiple=false] - Whether to allow multiple file selection
- * @param {string} [props.accept="image/*"] - Accepted file types (MIME types), comma-separated for multiple types
+ * @param {"image"|"pdf"} [props.accept="image"] - Accepted file types ("image" or "pdf")
  * @param {string} [props.name] - Name attribute for the file input
  * @param {boolean} [props.required=true] - Whether the file input is required
  * @param {string} [props.initialFilePath] - Initial file path for preview
  * @param {string} [props.label] - Label for the file input
  * @returns JSX.Element
  */
-export default function DragDrop({ onFileChanged, multiple = false, accept = "image/*", name, required = true, initialFilePath, label }) {
+export default function DragDrop({ onFileChanged, multiple = false, accept = "image", name, required = true, initialFilePath, label }) {
     const fileInput = useRef();
     const [files, setFiles] = useState([]);
     const [error, setError] = useState(null);
     const [initialPreview, setInitialPreview] = useState(null);
     const [isDeleted, setIsDeleted] = useState(false);
     const id = name ? `${name}-file-input` : 'file-input';
+
+    // Map simple accept values to actual MIME types
+    const acceptedMimeTypes = {
+        "image": "image/png, image/jpeg, image/jpg, image/webp",
+        "pdf": "application/pdf"
+    };
+
+    const inputAccept = acceptedMimeTypes[accept] || accept;
 
     useEffect(() => {
         // Set initial preview if a file path is provided
@@ -62,7 +70,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
 
     function validateFileType(file) {
         // Parse the accept prop to get allowed types
-        const acceptedTypes = accept.split(',').map(type => type.trim());
+        const acceptedTypes = inputAccept.split(',').map(type => type.trim());
 
         for (const acceptedType of acceptedTypes) {
             if (acceptedType.endsWith('/*')) {
@@ -81,6 +89,20 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
         return false;
     }
 
+    function restorePreviousFiles() {
+        if (files.length > 0) {
+            try {
+                const dataTransfer = new DataTransfer();
+                files.forEach(file => dataTransfer.items.add(file));
+                fileInput.current.files = dataTransfer.files;
+            } catch { /* File restoration failed, but state remains consistent */ }
+        } else {
+            if (fileInput.current) {
+                fileInput.current.value = '';
+            }
+        }
+    }
+
     function onFilesAdded(newFiles) {
         let fileArray = convertFileListToArray(newFiles);
         if (!multiple) {
@@ -89,41 +111,30 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
 
         // If no files were selected (user cancelled), restore previous files to the input
         if (fileArray.length === 0) {
-            // Restore the previous files to the file input if they exist
-            if (files.length > 0) {
-                try {
-                    const dataTransfer = new DataTransfer();
-                    files.forEach(file => dataTransfer.items.add(file));
-                    fileInput.current.files = dataTransfer.files;
-                } catch { /* File restoration failed, but state remains consistent */ }
-            }
+            restorePreviousFiles();
             return;
         }
 
         // Validate file types
         const invalidFiles = fileArray.filter(file => !validateFileType(file));
         if (invalidFiles.length > 0) {
-            if (accept.includes('image')) {
-                setError('Alleen afbeeldingen zijn toegestaan');
-            } else if (accept.includes('pdf')) {
+            if (accept === 'image') {
+                setError('Alleen afbeeldingen (PNG, JPG, JPEG, WebP) zijn toegestaan');
+            } else if (accept === 'pdf') {
                 setError('Alleen PDF-bestanden zijn toegestaan');
             } else {
                 setError('Dit bestandstype wordt niet ondersteund');
             }
+            restorePreviousFiles();
+            return;
+        }
 
-            // Restore previous files if validation fails
-            if (files.length > 0) {
-                try {
-                    const dataTransfer = new DataTransfer();
-                    files.forEach(file => dataTransfer.items.add(file));
-                    fileInput.current.files = dataTransfer.files;
-                } catch { /* File restoration failed, but state remains consistent */ }
-            } else {
-                // If no previous files but there's an initial preview, clear the file input
-                if (fileInput.current) {
-                    fileInput.current.value = '';
-                }
-            }
+        // Validate file size
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        const tooLargeFiles = fileArray.filter(file => file.size > MAX_FILE_SIZE);
+        if (tooLargeFiles.length > 0) {
+            setError(`Bestand is te groot. De maximale grootte is ${MAX_FILE_SIZE / (1024 * 1024)}MB.`);
+            restorePreviousFiles();
             return;
         }
 
@@ -198,7 +209,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
             )}
             </div>
 
-            <input ref={fileInput} hidden type="file" id={id} name={name} multiple={multiple} accept={accept} onInput={onFileInput} onInvalid={() => setError("Dit bestand is verplicht")} data-testid="fileinput" required={required && !initialPreview} />
+            <input ref={fileInput} hidden type="file" id={id} name={name} multiple={multiple} accept={inputAccept} onInput={onFileInput} onInvalid={() => setError("Dit bestand is verplicht")} data-testid="fileinput" required={required && !initialPreview} />
 
             {/* Show newly added files */}
             {files.length > 0 && (
@@ -211,7 +222,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                         ) : file.type.startsWith("image/") ? (
                             <img
                                 src={URL.createObjectURL(file)}
-                                className="w-48 h-48"
+                                className="w-48 h-48 object-cover rounded"
                                 alt="Toegevoegde foto"
                                 key={index}
                             />
@@ -233,13 +244,13 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
             {files.length === 0 && initialPreview && (
                 <div className='flex flex-col items-center gap-4'>
                     <div className='flex justify-center w-full'>
-                        {accept.includes("image") ? (
+                        {accept === "image" ? (
                             <img
                                 src={initialPreview}
                                 className="w-48 h-48 object-cover rounded"
                                 alt="Huidige afbeelding"
                             />
-                        ) : accept.includes("pdf") ? (
+                        ) : accept === "pdf" ? (
                             <div className="w-full">
                                 <PdfPreview url={initialPreview} className='h-[25rem]' />
                             </div>
@@ -264,7 +275,7 @@ export default function DragDrop({ onFileChanged, multiple = false, accept = "im
                                 onClick={handleDelete}
                                 className="btn-primary text-sm px-4 py-2"
                             >
-                                Verwijder {accept.includes("image") ? "afbeelding" : accept.includes("pdf") ? "PDF" : "bestand"}
+                                Verwijder {accept === "image" ? "afbeelding" : accept === "pdf" ? "PDF" : "bestand"}
                             </button>
                         </div>
                     )}

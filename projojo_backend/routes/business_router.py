@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form, Depends
+from fastapi import APIRouter, Path, Body, HTTPException, File, UploadFile, Form
 from typing import Optional
-from auth.jwt_utils import get_token_payload
+from auth.permissions import auth
 
 from domain.repositories import (
     BusinessRepository,
@@ -23,6 +23,7 @@ router = APIRouter(prefix="/businesses", tags=["Business Endpoints"])
 
 # Business endpoints
 @router.get("/")
+@auth(role="authenticated")
 async def get_all_businesses_with_projects():
     """
     Get all businesses for debugging purposes
@@ -35,6 +36,7 @@ async def get_all_businesses_with_projects():
 
 
 @router.get("/basic", response_model=list[Business])
+@auth(role="authenticated")
 async def get_all_businesses_basic():
     """
     Get all businesses without projects
@@ -43,6 +45,7 @@ async def get_all_businesses_basic():
 
 
 @router.get("/complete")
+@auth(role="authenticated")
 async def get_all_businesses_with_full_nesting():
     """
     Get all businesses with projects, tasks, and skills nested.
@@ -61,24 +64,27 @@ async def get_archived_businesses(payload: dict = Depends(get_token_payload)):
     return business_repo.get_archived()
 
 
-@router.get("/{id}")
-async def get_business(id: str = Path(..., description="Business ID")):
+@router.get("/{business_id}")
+@auth(role="authenticated")
+async def get_business(business_id: str = Path(..., description="Business ID")):
     """
     Get a specific business by ID
     """
-    business = business_repo.get_by_id(id)
+    business = business_repo.get_by_id(business_id)
     return business
 
-@router.get("/{id}/projects")
-async def get_business_projects(id: str = Path(..., description="Business ID")):
+@router.get("/{business_id}/projects")
+@auth(role="authenticated")
+async def get_business_projects(business_id: str = Path(..., description="Business ID")):
     """
     Get all projects for a business
     """
-    projects = project_repo.get_projects_by_business(id)
+    projects = project_repo.get_projects_by_business(business_id)
     return projects
 
 
 @router.post("/", response_model=Business)
+@auth(role="teacher")
 async def create_business(name: str = Body(...), as_draft: bool = Body(False)):
     """
     Create a new business with the given name.
@@ -93,12 +99,14 @@ async def create_business(name: str = Body(...), as_draft: bool = Body(False)):
                 status_code=409,
                 detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
             )
+        print(f"Error creating business with name {name}: {e}")
         raise HTTPException(
             status_code=500,
             detail="Er is een fout opgetreden bij het aanmaken van het bedrijf",
         )
 
 @router.put("/{business_id}")
+@auth(role="supervisor", owner_id_key="business_id")
 async def update_business(
     business_id: str = Path(..., description="Business ID to update"),
     name: str = Form(...),
@@ -114,13 +122,6 @@ async def update_business(
     """
     Update business information with optional photo upload.
     """
-    allowed = (
-        payload.get("role") == "teacher"
-        or (payload.get("role") == "supervisor" and payload.get("businessId") == business_id)
-        )
-    if not allowed:
-        raise HTTPException(status_code=403, detail="Je bent niet bevoegd om de bedrijfspagina bij te werken")
-    
     # Verify business exists
     existing_business = business_repo.get_by_id(business_id)
     if not existing_business:
@@ -130,18 +131,76 @@ async def update_business(
     image_filename = None
     if image and image.filename:
         try:
-        # Save the image with a random filename
+            # Save the image with a random filename
             image_filename = save_image(image)
+        except HTTPException:
+            raise
         except Exception as e:
-            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding" + str(e))
+            print(f"Error saving image for business {business_id}: {e}")
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
 
-    try:        
+    try:
         business_repo.update(business_id, name, description, location, image_filename, country, sector, company_size, website)
         return {"message": "Bedrijf succesvol bijgewerkt"}
     except Exception as e:
+        print(f"Error updating business {business_id}: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." + str(e)
+            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." 
+        )
+
+
+@router.patch("/{business_id}/archive")
+async def archive_business(
+    business_id: str = Path(..., description="Business ID to archive"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Archive a business. Only accessible by teachers.
+    Archived businesses are hidden from students and supervisors.
+    """
+    if payload.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven archiveren")
+    
+    # Verify business exists
+    existing_business = business_repo.get_by_id(business_id)
+    if not existing_business:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    try:
+        business_repo.archive_business(business_id)
+        return {"message": "Bedrijf succesvol gearchiveerd"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het archiveren van het bedrijf: " + str(e)
+        )
+
+
+@router.patch("/{business_id}/restore")
+async def restore_business(
+    business_id: str = Path(..., description="Business ID to restore"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Restore an archived business. Only accessible by teachers.
+    """
+    if payload.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven herstellen")
+    
+    # Verify business exists
+    existing_business = business_repo.get_by_id(business_id)
+    if not existing_business:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    try:
+        business_repo.restore_business(business_id)
+        return {"message": "Bedrijf succesvol hersteld"}
+    except Exception as e:
+        print(f"Error updating business {business_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het herstellen van het bedrijf: " + str(e)
         )
 
 
@@ -194,5 +253,5 @@ async def restore_business(
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail="Er is een fout opgetreden bij het herstellen van het bedrijf: " + str(e)
+            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." + str(e)
         )
