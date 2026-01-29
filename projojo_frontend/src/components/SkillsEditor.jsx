@@ -21,7 +21,7 @@ import SkillBadge from "./SkillBadge";
  *  }} props
  * @returns {JSX.Element}
  */
-export default function SkillsEditor({ children, allSkills, initialSkills, isEditing, onSave, onCancel, setError, isAllowedToAddSkill = false, isAbsolute = true, maxSkillsDisplayed = 20, showOwnSkillsOption = false, hideSelectedSkills = false, instantApply = false }) {
+export default function SkillsEditor({ children, allSkills, initialSkills, isEditing, onSave, onCancel, setError, isAllowedToAddSkill = false, isAbsolute = true, maxSkillsDisplayed = 20, showOwnSkillsOption = false, hideSelectedSkills = false, instantApply = false, embedded = false }) {
     const { authData } = useAuth();
     const [search, setSearch] = useState('')
     const [selectedSkills, setSelectedSkills] = useState(initialSkills)
@@ -218,14 +218,18 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                 </div>
             )}
             <div 
-                className={`${isAbsolute ? 'absolute bottom-0 translate-y-full -mb-2 z-30' : ''} flex flex-col gap-3 p-4 bg-[var(--neu-bg)] border border-[var(--neu-border)] rounded-3xl min-w-full sm:min-w-[400px] md:min-w-[480px] transition-all duration-200 ease-out origin-top ${
+                className={`${isAbsolute ? 'absolute bottom-0 translate-y-full -mb-2 z-30' : ''} flex flex-col gap-3 ${
+                    embedded 
+                        ? '' 
+                        : 'p-4 bg-[var(--neu-bg)] border border-[var(--neu-border)] rounded-3xl min-w-full sm:min-w-[400px] md:min-w-[480px]'
+                } transition-all duration-200 ease-out origin-top ${
                     isAnimating 
                         ? 'opacity-100 scale-100' 
                         : 'opacity-0 scale-95 -translate-y-2'
                 }`} 
-                style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)' }}
-                role="dialog" 
-                aria-label="Skill editor dialog"
+                style={embedded ? {} : { boxShadow: '0 10px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.15)' }}
+                role={embedded ? undefined : "dialog"}
+                aria-label={embedded ? undefined : "Skill editor dialog"}
             >
                 {/* Selected skills indicator - subtle bar at top */}
                 {instantApply && selectedSkills.length > 0 && (

@@ -1,14 +1,16 @@
 from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form, Depends
-from domain.repositories import TaskRepository, UserRepository
+from domain.repositories import TaskRepository, UserRepository, SkillRepository
 from auth.permissions import auth
 from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
 from datetime import datetime
+from typing import List
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
+skill_repo = SkillRepository()
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -73,6 +75,41 @@ async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     """
     task_skills = task_service.get_task_with_skills(task_id)
     return task_skills
+
+@router.put("/{task_id}/skills")
+@auth(role="supervisor", owner_id_key="task_id")
+async def update_task_skills(
+    task_id: str = Path(..., description="Task ID"),
+    skill_ids: List[str] = Body(..., description="List of skill IDs to set for this task")
+):
+    """
+    Update skills for a task.
+    
+    - Adding skills: always allowed
+    - Removing skills: only allowed if no students have registered for the task
+    
+    Returns information about what was added, removed, and any locked skills.
+    """
+    try:
+        # Verify task exists
+        task = task_repo.get_by_id(task_id)
+        if not task:
+            raise HTTPException(status_code=404, detail="Taak niet gevonden")
+        
+        result = skill_repo.update_task_skills(task_id, skill_ids)
+        
+        # If some skills were locked, include a warning message
+        if result.get("locked"):
+            result["message"] = "Sommige skills konden niet worden verwijderd omdat er al aanmeldingen zijn voor deze taak."
+        else:
+            result["message"] = "Skills succesvol bijgewerkt"
+        
+        return result
+    except ItemRetrievalException:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+    except Exception as e:
+        print(f"Error updating skills for task {task_id}: {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de skills")
 
 @router.get("/{task_id}/registrations")
 @auth(role="supervisor", owner_id_key="task_id")

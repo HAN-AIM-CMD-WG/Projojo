@@ -240,3 +240,88 @@ class SkillRepository(BaseRepository[Skill]):
                 $skill;
         """
         Db.write_transact(query, {"skill_id": skill_id})
+
+    def has_task_registrations(self, task_id: str) -> bool:
+        """
+        Check if a task has any registrations (pending, accepted, or rejected).
+        Used to determine if skills can be removed from the task.
+        """
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $registration isa registersForTask (task: $task, student: $student);
+            fetch {
+                'exists': true
+            };
+        """
+        results = Db.read_transact(query, {"task_id": task_id})
+        return len(results) > 0
+
+    def update_task_skills(self, task_id: str, skill_ids: list[str]) -> dict:
+        """
+        Update skills for a task.
+        - If registrations exist: skills are completely locked (no add, no remove)
+        - If no registrations: full editing allowed
+        
+        Returns:
+            dict with 'success', 'added', 'removed', 'locked', 'has_registrations'
+        """
+        # Get current skills
+        current_skills = self.get_task_skills(task_id)
+        current_skill_ids = {skill.id for skill in current_skills}
+        new_skill_ids = set(skill_ids)
+
+        to_add = new_skill_ids - current_skill_ids
+        to_remove = current_skill_ids - new_skill_ids
+
+        # Check if task has registrations
+        has_registrations = self.has_task_registrations(task_id)
+        
+        # If there are registrations, block ALL skill changes
+        if has_registrations:
+            return {
+                "success": False,
+                "added": [],
+                "removed": [],
+                "locked": True,
+                "has_registrations": True,
+                "message": "Skills kunnen niet worden gewijzigd omdat er al aanmeldingen zijn voor deze taak."
+            }
+
+        # No registrations - allow full editing
+        # Add new skills
+        for skill_id in to_add:
+            add_query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
+                insert
+                    $requiresSkill isa requiresSkill (task: $task, skill: $skill);
+            """
+            try:
+                Db.write_transact(add_query, {"task_id": task_id, "skill_id": skill_id})
+            except Exception as e:
+                print(f"Error adding skill {skill_id} to task {task_id}: {e}")
+
+        # Remove skills
+        for skill_id in to_remove:
+            remove_query = """
+                match
+                    $task isa task, has id ~task_id;
+                    $skill isa skill, has id ~skill_id;
+                    $requiresSkill isa requiresSkill (task: $task, skill: $skill);
+                delete
+                    $requiresSkill;
+            """
+            try:
+                Db.write_transact(remove_query, {"task_id": task_id, "skill_id": skill_id})
+            except Exception as e:
+                print(f"Error removing skill {skill_id} from task {task_id}: {e}")
+
+        return {
+            "success": True,
+            "added": list(to_add),
+            "removed": list(to_remove),
+            "locked": False,
+            "has_registrations": False
+        }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills } from "../services";
+import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills, updateTask } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
@@ -26,10 +26,21 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isEditing, setIsEditing] = useState(false);
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
+    
+    // Task editing state
+    const [isSpotsModalOpen, setIsSpotsModalOpen] = useState(false);
+    const [newTotalNeeded, setNewTotalNeeded] = useState(task.total_needed);
+    const [newName, setNewName] = useState(task.name);
+    const [newDescription, setNewDescription] = useState(task.description);
+    const [spotsError, setSpotsError] = useState("");
+    const [isSavingTask, setIsSavingTask] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
     const isFull = task.total_accepted >= task.total_needed;
+    
+    // Skills are locked (can't be removed) if there are any registrations
+    const hasRegistrations = (task.total_registered > 0) || (task.total_accepted > 0);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -109,13 +120,80 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         const skillIds = skills.map((skill) => skill.skillId || skill.id);
 
         setTaskSkillsError("");
+        setSpotsError("");
+
+        // Validation
+        if (!newName || newName.trim() === '') {
+            setSpotsError("Taaknaam is verplicht");
+            return;
+        }
+
+        if (newTotalNeeded < task.total_accepted) {
+            setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
+            return;
+        }
 
         try {
-            await updateTaskSkills(task.id, skillIds);
-            setIsEditing(false)
+            // Save skills first
+            const result = await updateTaskSkills(task.id, skillIds);
+            
+            if (result.locked) {
+                setTaskSkillsError("Skills konden niet worden gewijzigd omdat er al aanmeldingen zijn.");
+                return;
+            }
+            
+            // Save task details (name, description, spots)
+            const formData = new FormData();
+            formData.append('name', newName.trim());
+            formData.append('description', newDescription || '');
+            formData.append('total_needed', newTotalNeeded);
+            await updateTask(task.id, formData);
+            
+            setIsEditing(false);
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
             setTaskSkillsError(error.message);
+        }
+    };
+
+    const handleSaveTask = async () => {
+        // Validation
+        if (!newName || newName.trim() === '') {
+            setSpotsError("Taaknaam is verplicht");
+            return;
+        }
+        
+        if (newTotalNeeded < task.total_accepted) {
+            setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
+            return;
+        }
+        
+        // Check if anything changed
+        const hasChanges = newName !== task.name || 
+                          newDescription !== task.description || 
+                          newTotalNeeded !== task.total_needed;
+        
+        if (!hasChanges) {
+            setIsSpotsModalOpen(false);
+            return;
+        }
+
+        setIsSavingTask(true);
+        setSpotsError("");
+
+        try {
+            const formData = new FormData();
+            formData.append('name', newName.trim());
+            formData.append('description', newDescription || '');
+            formData.append('total_needed', newTotalNeeded);
+            
+            await updateTask(task.id, formData);
+            setIsSpotsModalOpen(false);
+            setFetchAmount((currentAmount) => currentAmount + 1);
+        } catch (error) {
+            setSpotsError(error.message);
+        } finally {
+            setIsSavingTask(false);
         }
     };
 
@@ -148,39 +226,68 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         
                         {/* Skills */}
                         <div>
-                            <p className="neu-label mb-2">Vereiste skills</p>
-                    <SkillsEditor
-                        allSkills={allSkills}
-                        initialSkills={task.skills}
-                        isEditing={isEditing && isOwner}
-                        onSave={handleSave}
-                        onCancel={() => setIsEditing(false)}
-                        setError={setTaskSkillsError}
-                        isAllowedToAddSkill={isOwner}
-                    >
-                        <div className="flex flex-wrap gap-2 items-center">
-                                    {task.skills && task.skills.length === 0 && (
-                                        <span className="text-[var(--text-muted)] text-sm">Geen specifieke skills vereist</span>
-                                    )}
-                            {task.skills && task.skills.map((skill) => {
-                                const skillId = skill.skillId ?? skill.id;
-                                const isMatch = studentSkillIds.has(skillId);
-                                return (
-                                    <SkillBadge
-                                        key={skillId}
-                                        skillName={skill.name}
-                                        isPending={skill.isPending ?? skill.is_pending}
-                                        isOwn={isMatch}
+                            <div className="flex items-center justify-between mb-2">
+                                <p className="neu-label">Vereiste skills</p>
+                                {isOwner && !hasRegistrations && (
+                                    <button 
+                                        className="neu-btn !py-1 !px-2.5 text-xs"
+                                        onClick={() => {
+                                            setNewName(task.name);
+                                            setNewDescription(task.description);
+                                            setNewTotalNeeded(task.total_needed);
+                                            setSpotsError("");
+                                            setTaskSkillsError("");
+                                            setIsEditing(true);
+                                        }}
+                                        aria-label="Taak bewerken"
                                     >
-                                        {isMatch && (
-                                            <span className="material-symbols-outlined text-xs mr-1">check</span>
-                                        )}
-                                    </SkillBadge>
-                                );
-                            })}
+                                        <span className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">edit</span>
+                                            <span className="font-bold">Bewerken</span>
+                                        </span>
+                                    </button>
+                                )}
+                                {isOwner && hasRegistrations && (
+                                    <button 
+                                        className="neu-btn !py-1 !px-2.5 text-xs"
+                                        onClick={() => {
+                                            setNewName(task.name);
+                                            setNewDescription(task.description);
+                                            setNewTotalNeeded(task.total_needed);
+                                            setSpotsError("");
+                                            setIsSpotsModalOpen(true);
+                                        }}
+                                        title="Skills zijn vergrendeld, maar je kunt de taak aanpassen"
+                                    >
+                                        <span className="flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">lock</span>
+                                            <span className="font-bold">Bewerken</span>
+                                        </span>
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap gap-2 items-center">
+                                {task.skills && task.skills.length === 0 && (
+                                    <span className="text-[var(--text-muted)] text-sm">Geen specifieke skills vereist</span>
+                                )}
+                                {task.skills && task.skills.map((skill) => {
+                                    const skillId = skill.skillId ?? skill.id;
+                                    const isMatch = studentSkillIds.has(skillId);
+                                    return (
+                                        <SkillBadge
+                                            key={skillId}
+                                            skillName={skill.name}
+                                            isPending={skill.isPending ?? skill.is_pending}
+                                            isOwn={isMatch}
+                                        >
+                                            {isMatch && (
+                                                <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                            )}
+                                        </SkillBadge>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    </SkillsEditor>
-                </div>
                     </div>
 
                     {/* Sidebar with stats and actions */}
@@ -230,12 +337,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         Aanmeldingen ({task.total_registered})
                                     </span>
                                 </button>
-                        <Link to={`/tasks/${task.id}/update`} className="btn-primary w-full text-center">
-                            <p>Taak aanpassen</p>
-                        </Link>
-                        <CreateBusinessEmail taskId={task.id} />
-                    </>
-                    )}
+                                <CreateBusinessEmail taskId={task.id} />
+                            </>
+                        )}
                 </div>
             </div>
             </div>
@@ -462,6 +566,179 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         >
                             Sluiten
                         </button>
+                    </div>
+                </Modal>
+            )}
+
+            {/* Task editing modal for owners */}
+            {isOwner && (
+                <Modal
+                    modalHeader="Taak aanpassen"
+                    modalSubtitle={newName || task.name}
+                    modalIcon="edit"
+                    isModalOpen={hasRegistrations ? isSpotsModalOpen : isEditing}
+                    setIsModalOpen={hasRegistrations ? setIsSpotsModalOpen : setIsEditing}
+                    maxWidth="max-w-xl"
+                >
+                    <div className="flex flex-col gap-4 max-h-[50vh] overflow-y-auto pr-1 pb-4">
+                        {/* Info about locked task when there are registrations */}
+                        {hasRegistrations && (
+                            <InfoBox type="info">
+                                <span className="font-semibold">Taak vergrendeld:</span> Er zijn al aanmeldingen. Je kunt alleen extra plekken toevoegen.
+                            </InfoBox>
+                        )}
+
+                        {/* Row 1: Name and Spots side by side */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {/* Task name - takes 2 columns */}
+                            <div className="sm:col-span-2">
+                                <label className="neu-label mb-1.5 block" htmlFor="task-name">
+                                    Taaknaam
+                                    {hasRegistrations && <span className="material-symbols-outlined text-xs align-middle ml-1 text-[var(--text-muted)]">lock</span>}
+                                </label>
+                                {hasRegistrations ? (
+                                    <p className="text-[var(--text-primary)] font-medium py-2">{task.name}</p>
+                                ) : (
+                                    <input
+                                        id="task-name"
+                                        type="text"
+                                        value={newName}
+                                        onChange={(e) => setNewName(e.target.value)}
+                                        className="neu-input w-full"
+                                        maxLength={50}
+                                        required
+                                    />
+                                )}
+                            </div>
+
+                            {/* Spots adjustment - takes 1 column */}
+                            <div>
+                                <p className="neu-label mb-1.5">Plekken</p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        className="neu-btn !p-1.5"
+                                        onClick={() => setNewTotalNeeded(Math.max(task.total_accepted || 1, newTotalNeeded - 1))}
+                                        disabled={newTotalNeeded <= (task.total_accepted || 1)}
+                                        aria-label="Verlaag"
+                                    >
+                                        <span className="material-symbols-outlined text-base">remove</span>
+                                    </button>
+                                    <div className="neu-pressed px-4 py-1.5 rounded-lg min-w-[50px] text-center">
+                                        <span className="text-xl font-bold text-[var(--text-primary)]">{newTotalNeeded}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="neu-btn !p-1.5"
+                                        onClick={() => setNewTotalNeeded(newTotalNeeded + 1)}
+                                        aria-label="Verhoog"
+                                    >
+                                        <span className="material-symbols-outlined text-base">add</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Task description */}
+                        <div>
+                            <label className="neu-label mb-1.5 block">
+                                Beschrijving
+                                {hasRegistrations && <span className="material-symbols-outlined text-xs align-middle ml-1 text-[var(--text-muted)]">lock</span>}
+                            </label>
+                            {hasRegistrations ? (
+                                <div className="text-[var(--text-secondary)] text-sm neu-pressed p-3 rounded-xl max-h-20 overflow-y-auto">
+                                    <RichTextViewer text={task.description} />
+                                </div>
+                            ) : (
+                                <RichTextEditor
+                                    defaultText={newDescription}
+                                    onSave={setNewDescription}
+                                    max={4000}
+                                />
+                            )}
+                        </div>
+
+                        {/* Skills section */}
+                        <div className="pt-3 border-t border-[var(--neu-border)]">
+                            <p className="neu-label mb-2">
+                                Vereiste skills
+                                {hasRegistrations && <span className="material-symbols-outlined text-xs align-middle ml-1 text-[var(--text-muted)]">lock</span>}
+                            </p>
+                            
+                            {hasRegistrations ? (
+                                // Locked skills display
+                                <div className="flex flex-wrap gap-1.5">
+                                    {task.skills && task.skills.length === 0 && (
+                                        <span className="text-[var(--text-muted)] text-sm">Geen skills</span>
+                                    )}
+                                    {task.skills && task.skills.map((skill) => (
+                                        <SkillBadge
+                                            key={skill.skillId ?? skill.id}
+                                            skillName={skill.name}
+                                            isPending={skill.isPending ?? skill.is_pending}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                // Editable skills
+                                <SkillsEditor
+                                    allSkills={allSkills}
+                                    initialSkills={task.skills}
+                                    isEditing={true}
+                                    onSave={handleSave}
+                                    onCancel={() => setIsEditing(false)}
+                                    setError={setTaskSkillsError}
+                                    isAllowedToAddSkill={true}
+                                    isAbsolute={false}
+                                    hideSelectedSkills={false}
+                                    instantApply={false}
+                                    embedded={true}
+                                    maxSkillsDisplayed={12}
+                                >
+                                    <></>
+                                </SkillsEditor>
+                            )}
+                        </div>
+
+                    </div>
+
+                    {/* Footer - always visible outside scroll area */}
+                    <div className="pt-4 pb-2 border-t border-[var(--neu-border)] mt-4">
+                        <Alert text={spotsError} onClose={() => setSpotsError("")} />
+                        <Alert text={taskSkillsError} onClose={() => setTaskSkillsError("")} />
+
+                        {/* Actions */}
+                        {hasRegistrations ? (
+                            <div className="flex items-center justify-between gap-4 pt-2">
+                                <button 
+                                    type="button" 
+                                    className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2"
+                                    onClick={() => setIsSpotsModalOpen(false)}
+                                >
+                                    Annuleren
+                                </button>
+                                <button 
+                                    type="button"
+                                    className="neu-btn-primary"
+                                    onClick={handleSaveTask}
+                                    disabled={isSavingTask}
+                                >
+                                    <span className="flex items-center gap-2">
+                                        {isSavingTask ? (
+                                            <>
+                                                <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                                Opslaan...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined">save</span>
+                                                Opslaan
+                                            </>
+                                        )}
+                                    </span>
+                                </button>
+                            </div>
+                        ) : null}
                     </div>
                 </Modal>
             )}
