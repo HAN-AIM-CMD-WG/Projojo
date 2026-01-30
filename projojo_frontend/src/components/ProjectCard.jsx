@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { IMAGE_BASE_URL } from '../services';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import RichTextViewer from "./RichTextViewer";
+import { getCountdownText, formatDateShort } from "../utils/dates";
 
 // Status mapping - Clean, small badges
 // Green = available (universal), others only for special cases
@@ -154,6 +155,14 @@ export default function ProjectCard({ project, index = 0 }) {
               )}
               </div>
           </div>
+
+          {/* Deadline countdown - only show if we have valid date text */}
+          {project.end_date && getCountdownText(project.end_date) && (
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-4">
+              <span className="material-symbols-outlined text-sm">schedule</span>
+              <span>{getCountdownText(project.end_date)} • deadline {formatDateShort(project.end_date)}</span>
+            </div>
+          )}
 
           {/* Skills match indicator - Outline style for visual harmony */}
           {projectSkills.length > 0 && (

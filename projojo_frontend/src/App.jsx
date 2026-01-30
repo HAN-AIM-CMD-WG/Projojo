@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthProvider';
 import { StudentSkillsProvider } from './context/StudentSkillsContext';
@@ -45,10 +45,12 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Scroll to top on route change
+  // Disable browser's native scroll restoration - we handle it ourselves
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
 
   useEffect(() => {
     const handleUnhandledRejection = (event) => {
@@ -68,6 +70,143 @@ export default function App() {
   useEffect(() => {
     getAuthorization()
   }, [location, setAuthData]);
+
+  // List pages where scroll position should be saved/restored
+  const scrollRestorationPaths = ['/ontdek', '/home', '/teacher'];
+  
+  // Track scroll position continuously for list pages
+  const scrollTimeoutRef = useRef(null);
+  const mutationObserverRef = useRef(null);
+  const scrollIntervalRef = useRef(null);
+  
+  useEffect(() => {
+    const isListPage = scrollRestorationPaths.some(path => 
+      location.pathname === path || location.pathname.startsWith(path + '/')
+    );
+    
+    const scrollKey = `scrollPos_${location.pathname}`;
+    
+    if (isListPage) {
+      // Restore scroll position for list pages
+      const savedPosition = sessionStorage.getItem(scrollKey);
+      if (savedPosition) {
+        const targetPosition = parseInt(savedPosition, 10);
+        let restored = false;
+        const startTime = Date.now();
+        const maxDuration = 10000; // Try for up to 10 seconds
+        
+        // Function to attempt scroll restoration
+        const tryRestoreScroll = () => {
+          if (restored) return true;
+          
+          const currentMaxScroll = document.documentElement.scrollHeight - window.innerHeight;
+          const elapsed = Date.now() - startTime;
+          
+          // Stop trying after maxDuration
+          if (elapsed > maxDuration) {
+            cleanup();
+            // Final attempt - scroll to whatever position we can
+            if (targetPosition > 0) {
+              window.scrollTo(0, Math.min(targetPosition, currentMaxScroll));
+            }
+            return true;
+          }
+          
+          if (targetPosition <= currentMaxScroll && targetPosition > 0) {
+            // Page is tall enough, restore scroll
+            window.scrollTo(0, targetPosition);
+            
+            // Verify scroll was successful (within 50px tolerance)
+            requestAnimationFrame(() => {
+              if (Math.abs(window.scrollY - targetPosition) < 50) {
+                restored = true;
+                cleanup();
+              }
+            });
+          }
+          
+          return restored;
+        };
+        
+        const cleanup = () => {
+          if (mutationObserverRef.current) {
+            mutationObserverRef.current.disconnect();
+            mutationObserverRef.current = null;
+          }
+          if (scrollIntervalRef.current) {
+            clearInterval(scrollIntervalRef.current);
+            scrollIntervalRef.current = null;
+          }
+        };
+        
+        // Use MutationObserver to detect when content is added to the page
+        mutationObserverRef.current = new MutationObserver(() => {
+          tryRestoreScroll();
+        });
+        
+        // Observe the main content area for changes
+        const mainContent = document.getElementById('main-content') || document.body;
+        mutationObserverRef.current.observe(mainContent, {
+          childList: true,
+          subtree: true
+        });
+        
+        // Also poll regularly in case MutationObserver misses something
+        scrollIntervalRef.current = setInterval(() => {
+          if (tryRestoreScroll()) {
+            cleanup();
+          }
+        }, 200);
+        
+        // Initial attempts
+        tryRestoreScroll();
+      }
+      
+      // Save scroll position on every scroll (debounced)
+      const handleScroll = () => {
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        scrollTimeoutRef.current = setTimeout(() => {
+          sessionStorage.setItem(scrollKey, window.scrollY.toString());
+        }, 100);
+      };
+      
+      // Save scroll position immediately when any link is clicked (before navigation)
+      const handleLinkClick = (e) => {
+        // Only save if we're clicking a link that will navigate away
+        const link = e.target.closest('a');
+        if (link && link.href && !link.href.startsWith('javascript:')) {
+          const currentScrollY = window.scrollY;
+          if (currentScrollY > 0) {
+            sessionStorage.setItem(scrollKey, currentScrollY.toString());
+          }
+        }
+      };
+      
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      document.addEventListener('click', handleLinkClick, { capture: true });
+      
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+        document.removeEventListener('click', handleLinkClick, { capture: true });
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        if (mutationObserverRef.current) {
+          mutationObserverRef.current.disconnect();
+          mutationObserverRef.current = null;
+        }
+        if (scrollIntervalRef.current) {
+          clearInterval(scrollIntervalRef.current);
+          scrollIntervalRef.current = null;
+        }
+      };
+    } else {
+      // Scroll to top for non-list pages
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   // Pages without navbar/footer (landing, login, auth callback, design demo)
   const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo";

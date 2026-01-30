@@ -228,6 +228,24 @@ export default function Filter({ onFilter, businesses = [] }) {
             <div className="neu-flat p-5 sm:p-6">
                 {/* Quick filter chips - inside the search bar container */}
                 <div className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b border-[var(--neu-border)]" onClick={(e) => e.stopPropagation()}>
+                    {/* Map toggle button - standalone coral filled */}
+                    {businesses.length > 0 && (
+                        <button 
+                            type="button"
+                            className={`flex items-center gap-2 !py-2 !px-3 text-sm font-bold rounded-xl transition-all ${
+                                showMap 
+                                    ? 'neu-pressed text-primary' 
+                                    : 'neu-btn-primary'
+                            }`}
+                            onClick={() => setShowMap(!showMap)}
+                            aria-expanded={showMap}
+                            aria-label={showMap ? 'Verberg kaart' : 'Toon kaart'}
+                        >
+                            <span className="material-symbols-outlined text-base" aria-hidden="true">map</span>
+                            <span className="hidden sm:inline">Kaart</span>
+                        </button>
+                    )}
+
                     {/* Location dropdown button with panel */}
                     <div className="relative">
                         <button
@@ -320,24 +338,6 @@ export default function Filter({ onFilter, businesses = [] }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Map toggle button - standalone coral filled */}
-                    {businesses.length > 0 && (
-                        <button 
-                            type="button"
-                            className={`flex items-center gap-2 !py-2 !px-3 text-sm font-bold rounded-xl transition-all ${
-                                showMap 
-                                    ? 'neu-pressed text-primary' 
-                                    : 'neu-btn-primary'
-                            }`}
-                            onClick={() => setShowMap(!showMap)}
-                            aria-expanded={showMap}
-                            aria-label={showMap ? 'Verberg kaart' : 'Toon kaart'}
-                        >
-                            <span className="material-symbols-outlined text-base" aria-hidden="true">map</span>
-                            <span className="hidden sm:inline">Kaart</span>
-                        </button>
-                    )}
 
                     {/* Business filters - separate group */}
                     <div className="flex items-center gap-2">

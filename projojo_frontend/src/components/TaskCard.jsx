@@ -1,4 +1,5 @@
 import SkillBadge from './SkillBadge';
+import { getCountdownText, formatDateShort } from "../utils/dates";
 
 // Status labels in Dutch
 const statusLabels = {
@@ -19,9 +20,17 @@ export default function TaskCard({ task, compact = false }) {
                 <span className="material-symbols-outlined text-primary">assignment</span>
                 <div className="flex-1 min-w-0">
                     <span className="block truncate font-bold text-[var(--text-secondary)]">{task.name}</span>
-                    <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">
-                        {spotsAvailable > 0 ? `${spotsAvailable} plekken beschikbaar` : 'Geen plekken'}
-                    </span>
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
+                        <span className="uppercase tracking-wide">
+                            {spotsAvailable > 0 ? `${spotsAvailable} plekken` : 'Vol'}
+                        </span>
+                        {task.end_date && getCountdownText(task.end_date) && (
+                            <>
+                                <span>•</span>
+                                <span>{getCountdownText(task.end_date)}</span>
+                            </>
+                        )}
+                    </div>
                 </div>
                 {task.status && (
                     <span className={`shrink-0 ${
@@ -58,6 +67,12 @@ export default function TaskCard({ task, compact = false }) {
                                 {task.name}
                             </h5>
                             <span className="neu-label">Taak</span>
+                            {task.end_date && getCountdownText(task.end_date) && (
+                                <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] mt-1">
+                                    <span className="material-symbols-outlined text-xs">schedule</span>
+                                    <span>{getCountdownText(task.end_date)} • {formatDateShort(task.end_date)}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                     {task.status && (

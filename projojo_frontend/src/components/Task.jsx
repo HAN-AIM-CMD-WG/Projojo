@@ -12,6 +12,7 @@ import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
+import { formatDate, getCountdownText } from "../utils/dates";
 
 export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
     const { authData } = useAuth();
@@ -38,6 +39,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [newEndDate, setNewEndDate] = useState(task.end_date ? task.end_date.split('T')[0] : '');
     const [spotsError, setSpotsError] = useState("");
     const [isSavingTask, setIsSavingTask] = useState(false);
+    const [taskSkillsState, setTaskSkillsState] = useState(task.skills || []);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
@@ -155,46 +157,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
-    const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId || skill.id);
-
-        setTaskSkillsError("");
-        setSpotsError("");
-
-        // Validation
-        if (!newName || newName.trim() === '') {
-            setSpotsError("Taaknaam is verplicht");
-            return;
-        }
-
-        if (newTotalNeeded < task.total_accepted) {
-            setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
-            return;
-        }
-
-        try {
-            // Save skills first
-            const result = await updateTaskSkills(task.id, skillIds);
-            
-            if (result.locked) {
-                setTaskSkillsError("Skills konden niet worden gewijzigd omdat er al aanmeldingen zijn.");
-                return;
-            }
-            
-            // Save task details (name, description, spots)
-            const formData = new FormData();
-            formData.append('name', newName.trim());
-            formData.append('description', newDescription || '');
-            formData.append('total_needed', newTotalNeeded);
-            await updateTask(task.id, formData);
-            
-            setIsEditing(false);
-            setFetchAmount((currentAmount) => currentAmount + 1);
-        } catch (error) {
-            setTaskSkillsError(error.message);
-        }
-    };
-
     const handleSaveTask = async () => {
         // Validation
         if (!newName || newName.trim() === '') {
@@ -204,16 +166,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         
         if (newTotalNeeded < task.total_accepted) {
             setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
-            return;
-        }
-        
-        // Check if anything changed
-        const hasChanges = newName !== task.name || 
-                          newDescription !== task.description || 
-                          newTotalNeeded !== task.total_needed;
-        
-        if (!hasChanges) {
-            setIsSpotsModalOpen(false);
             return;
         }
 
@@ -236,6 +188,57 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             
             await updateTask(task.id, formData);
             setIsSpotsModalOpen(false);
+            setFetchAmount((currentAmount) => currentAmount + 1);
+        } catch (error) {
+            setSpotsError(error.message);
+        } finally {
+            setIsSavingTask(false);
+        }
+    };
+
+    // Save task with skills (when no registrations exist)
+    const handleSaveTaskWithSkills = async () => {
+        // Validation
+        if (!newName || newName.trim() === '') {
+            setSpotsError("Taaknaam is verplicht");
+            return;
+        }
+        
+        if (newTotalNeeded < task.total_accepted) {
+            setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
+            return;
+        }
+
+        // Validate dates
+        if (newStartDate && newEndDate && new Date(newStartDate) > new Date(newEndDate)) {
+            setSpotsError("Startdatum kan niet na de einddatum liggen");
+            return;
+        }
+
+        setIsSavingTask(true);
+        setSpotsError("");
+        setTaskSkillsError("");
+
+        try {
+            // Save skills first
+            const skillIds = taskSkillsState.map((skill) => skill.skillId || skill.id);
+            const result = await updateTaskSkills(task.id, skillIds);
+            
+            if (result.locked) {
+                setTaskSkillsError("Skills konden niet worden gewijzigd omdat er al aanmeldingen zijn.");
+                return;
+            }
+            
+            // Save task details
+            const formData = new FormData();
+            formData.append('name', newName.trim());
+            formData.append('description', newDescription || '');
+            formData.append('total_needed', newTotalNeeded);
+            if (newStartDate) formData.append('start_date', newStartDate);
+            if (newEndDate) formData.append('end_date', newEndDate);
+            
+            await updateTask(task.id, formData);
+            setIsEditing(false);
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
             setSpotsError(error.message);
@@ -282,6 +285,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                             setNewName(task.name);
                                             setNewDescription(task.description);
                                             setNewTotalNeeded(task.total_needed);
+                                            setNewStartDate(task.start_date ? task.start_date.split('T')[0] : '');
+                                            setNewEndDate(task.end_date ? task.end_date.split('T')[0] : '');
+                                            setTaskSkillsState(task.skills || []);
                                             setSpotsError("");
                                             setTaskSkillsError("");
                                             setIsEditing(true);
@@ -301,6 +307,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                             setNewName(task.name);
                                             setNewDescription(task.description);
                                             setNewTotalNeeded(task.total_needed);
+                                            setNewStartDate(task.start_date ? task.start_date.split('T')[0] : '');
+                                            setNewEndDate(task.end_date ? task.end_date.split('T')[0] : '');
                                             setSpotsError("");
                                             setIsSpotsModalOpen(true);
                                         }}
@@ -398,16 +406,19 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Planning</span>
                                     </div>
                                     <div className="space-y-1.5 text-xs">
-                                        {task.start_date && (
+                                        {task.start_date && formatDate(task.start_date) && (
                                             <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                                                 <span className="material-symbols-outlined text-sm text-primary">calendar_today</span>
-                                                <span>Start: <span className="font-medium">{new Date(task.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}</span></span>
+                                                <span>Start: <span className="font-medium">{formatDate(task.start_date)}</span></span>
                                             </div>
                                         )}
-                                        {task.end_date && (
+                                        {task.end_date && formatDate(task.end_date) && (
                                             <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                                                 <span className="material-symbols-outlined text-sm text-orange-500">event</span>
-                                                <span>Deadline: <span className="font-medium">{new Date(task.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}</span></span>
+                                                <span>Deadline: <span className="font-medium">{formatDate(task.end_date)}</span></span>
+                                                {getCountdownText(task.end_date) && (
+                                                    <span className="text-[var(--text-muted)]">({getCountdownText(task.end_date)})</span>
+                                                )}
                                             </div>
                                         )}
                                     </div>
@@ -506,18 +517,17 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             />
 
                             {/* Footer buttons */}
-                            <div className="flex items-center justify-between gap-4 pt-2 border-t border-[var(--neu-border)]">
+                            <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--neu-border)]">
                                 <button 
                                     type="button" 
-                                    className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2"
+                                    className="neu-btn"
                                     onClick={() => setIsModalOpen(false)}
                                 >
                                     Annuleren
                                 </button>
                                 <button 
                                     type="submit" 
-                                    className="group relative overflow-hidden rounded-xl px-6 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-primary to-orange-600"
-                                    style={{ boxShadow: '0 4px 14px rgba(255, 127, 80, 0.3)' }}
+                                    className="neu-btn-primary"
                                 >
                                     <span className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-lg">send</span>
@@ -921,19 +931,23 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     ))}
                                 </div>
                             ) : (
-                                // Editable skills
+                                // Editable skills - instantApply so buttons are in footer
                                 <SkillsEditor
                                     allSkills={allSkills}
                                     initialSkills={task.skills}
                                     isEditing={true}
-                                    onSave={handleSave}
+                                    onSave={(skills) => {
+                                        // Just update the local state, actual save happens in footer button
+                                        setTaskSkillsState(skills);
+                                    }}
                                     onCancel={() => setIsEditing(false)}
                                     setError={setTaskSkillsError}
                                     isAllowedToAddSkill={true}
                                     isAbsolute={false}
                                     hideSelectedSkills={false}
-                                    instantApply={false}
+                                    instantApply={true}
                                     embedded={true}
+                                    hideButtons={true}
                                     maxSkillsDisplayed={12}
                                 >
                                     <></>
@@ -944,42 +958,46 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     </div>
 
                     {/* Footer - always visible outside scroll area */}
-                    <div className="pt-4 pb-2 border-t border-[var(--neu-border)] mt-4">
+                    <div className="pt-4 border-t border-[var(--neu-border)]">
                         <Alert text={spotsError} onClose={() => setSpotsError("")} />
                         <Alert text={taskSkillsError} onClose={() => setTaskSkillsError("")} />
 
-                        {/* Actions */}
-                        {hasRegistrations ? (
-                            <div className="flex items-center justify-between gap-4 pt-2">
-                                <button 
-                                    type="button" 
-                                    className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors py-2"
-                                    onClick={() => setIsSpotsModalOpen(false)}
-                                >
-                                    Annuleren
-                                </button>
-                                <button 
-                                    type="button"
-                                    className="neu-btn-primary"
-                                    onClick={handleSaveTask}
-                                    disabled={isSavingTask}
-                                >
-                                    <span className="flex items-center gap-2">
-                                        {isSavingTask ? (
-                                            <>
-                                                <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                                                Opslaan...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span className="material-symbols-outlined">save</span>
-                                                Opslaan
-                                            </>
-                                        )}
-                                    </span>
-                                </button>
-                            </div>
-                        ) : null}
+                        {/* Actions - always visible */}
+                        <div className="flex items-center justify-end gap-3 pt-2">
+                            <button 
+                                type="button" 
+                                className="neu-btn"
+                                onClick={() => {
+                                    if (hasRegistrations) {
+                                        setIsSpotsModalOpen(false);
+                                    } else {
+                                        setIsEditing(false);
+                                    }
+                                }}
+                            >
+                                Annuleren
+                            </button>
+                            <button 
+                                type="button"
+                                className="neu-btn-primary"
+                                onClick={hasRegistrations ? handleSaveTask : handleSaveTaskWithSkills}
+                                disabled={isSavingTask}
+                            >
+                                <span className="flex items-center gap-2">
+                                    {isSavingTask ? (
+                                        <>
+                                            <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                                            Opslaan...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined">save</span>
+                                            Opslaan
+                                        </>
+                                    )}
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </Modal>
             )}

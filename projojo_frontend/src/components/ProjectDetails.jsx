@@ -11,6 +11,7 @@ import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import Alert from "./Alert";
 import ProjectActionModal from "./ProjectActionModal";
+import { getCountdownText, calculateProgress, formatDate } from "../utils/dates";
 
 export default function ProjectDetails({ project, businessId, refreshData }) {
     const isLoading = !project;
@@ -223,6 +224,44 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                             chevron_right
                         </span>
                     </Link>
+                )}
+
+                {/* Project Timeline / Planning */}
+                {!isLoading && (project.start_date || project.end_date) && (
+                    <div className="neu-pressed p-4 rounded-xl mb-6">
+                        <p className="neu-label mb-3 flex items-center gap-2">
+                            <span className="material-symbols-outlined text-sm text-primary">schedule</span>
+                            Project Planning
+                        </p>
+                        <div className="flex justify-between text-sm mb-3">
+                            <div className="text-[var(--text-secondary)]">
+                                <span className="text-[var(--text-muted)]">Start:</span>{' '}
+                                <span className="font-medium">{formatDate(project.start_date)}</span>
+                            </div>
+                            <div className="text-[var(--text-secondary)]">
+                                <span className="text-[var(--text-muted)]">Deadline:</span>{' '}
+                                <span className="font-medium">{formatDate(project.end_date)}</span>
+                            </div>
+                        </div>
+                        {project.start_date && project.end_date && (
+                            <>
+                                <div className="h-2.5 bg-[var(--gray-200)] rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-primary to-orange-500 rounded-full transition-all duration-500"
+                                        style={{ width: `${calculateProgress(project.start_date, project.end_date)}%` }}
+                                    />
+                                </div>
+                                <div className="flex justify-between items-center mt-2">
+                                    <span className="text-xs text-[var(--text-muted)]">
+                                        {calculateProgress(project.start_date, project.end_date)}% voortgang
+                                    </span>
+                                    <span className="text-xs font-medium text-[var(--text-secondary)]">
+                                        {getCountdownText(project.end_date)}
+                                    </span>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 )}
 
                 {/* Description */}

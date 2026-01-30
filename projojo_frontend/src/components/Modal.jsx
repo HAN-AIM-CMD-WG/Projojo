@@ -14,10 +14,10 @@ export default function Modal({
     const previousActiveElement = useRef(null);
     const titleId = useId();
 
-    const handleClickOutside = (event) => {
-        if (!modalRef.current.contains(event.target)) {
-            setIsModalOpen(false);
-        }
+    const handleClickOutside = () => {
+        // This handler only fires for clicks on the backdrop
+        // Clicks inside the modal are stopped by stopPropagation on the modal content
+        setIsModalOpen(false);
     };
 
     // Handle ESC key to close modal
@@ -87,19 +87,20 @@ export default function Modal({
     return (
             <div 
             className="overflow-y-auto overflow-x-hidden fixed inset-0 z-50 flex justify-center items-center px-4 py-12 bg-black/40 backdrop-blur-md"
-                onClick={handleClickOutside} 
+                onMouseDown={handleClickOutside} 
             >
                 <div className={`relative w-full ${maxWidth} max-h-full`}>
-                    <div 
-                        ref={modalRef} 
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby={titleId}
-                    className="rounded-3xl overflow-hidden bg-[var(--neu-bg)] border border-[var(--neu-border)]"
-                        style={{ 
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.2)'
-                        }}
-                    >
+                <div 
+                    ref={modalRef} 
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                className="rounded-3xl overflow-hidden bg-[var(--neu-bg)] border border-[var(--neu-border)]"
+                    style={{ 
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.2)'
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                >
                         {/* Header met gradient accent */}
                         <div 
                         className="px-6 py-5 border-b border-[var(--neu-border)]"
@@ -141,7 +142,7 @@ export default function Modal({
                             {children}
                         </div>
                     </div>
-                    <div className="h-12" onClick={handleClickOutside}></div>
+                    <div className="h-12" onMouseDown={handleClickOutside}></div>
             </div>
         </div>
     );

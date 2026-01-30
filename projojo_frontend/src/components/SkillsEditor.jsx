@@ -21,7 +21,7 @@ import SkillBadge from "./SkillBadge";
  *  }} props
  * @returns {JSX.Element}
  */
-export default function SkillsEditor({ children, allSkills, initialSkills, isEditing, onSave, onCancel, setError, isAllowedToAddSkill = false, isAbsolute = true, maxSkillsDisplayed = 20, showOwnSkillsOption = false, hideSelectedSkills = false, instantApply = false, embedded = false }) {
+export default function SkillsEditor({ children, allSkills, initialSkills, isEditing, onSave, onCancel, setError, isAllowedToAddSkill = false, isAbsolute = true, maxSkillsDisplayed = 20, showOwnSkillsOption = false, hideSelectedSkills = false, instantApply = false, embedded = false, hideButtons = false }) {
     const { authData } = useAuth();
     const [search, setSearch] = useState('')
     const [selectedSkills, setSelectedSkills] = useState(initialSkills)
@@ -357,21 +357,23 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     )}
                 </div>
                 {/* Buttons: show close only for instant apply, save/cancel for normal mode */}
-                <div className="flex flex-wrap justify-end gap-3 pt-2">
-                    {instantApply ? (
-                        <button className="neu-btn" onClick={onCancel}>
-                            <span className="flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm">check</span>
-                                Sluiten
-                            </span>
-                        </button>
-                    ) : (
-                        <>
-                            <button className="neu-btn" onClick={handleCancel}>Annuleren</button>
-                            <button className="neu-btn-primary" onClick={handleSave}>Opslaan</button>
-                        </>
-                    )}
-                </div>
+                {!hideButtons && (
+                    <div className="flex flex-wrap justify-end gap-3 pt-2">
+                        {instantApply ? (
+                            <button className="neu-btn" onClick={onCancel}>
+                                <span className="flex items-center gap-1">
+                                    <span className="material-symbols-outlined text-sm">check</span>
+                                    Sluiten
+                                </span>
+                            </button>
+                        ) : (
+                            <>
+                                <button className="neu-btn" onClick={handleCancel}>Annuleren</button>
+                                <button className="neu-btn-primary" onClick={handleSave}>Opslaan</button>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )
