@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createRegistration, getRegistrations, updateRegistration, updateTaskSkills, updateTask } from "../services";
+import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted } from "../services";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
@@ -22,16 +22,20 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [registrationErrors, setRegistrationErrors] = useState([]);
     const [taskSkillsError, setTaskSkillsError] = useState("");
     const [isRegistrationsModalOpen, setIsRegistrationsModalOpen] = useState(false);
-    const [registrations, setRegistrations] = useState([]);
+    const [pendingRegistrations, setPendingRegistrations] = useState([]);
+    const [acceptedRegistrations, setAcceptedRegistrations] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
+    const [progressLoading, setProgressLoading] = useState({});
     
     // Task editing state
     const [isSpotsModalOpen, setIsSpotsModalOpen] = useState(false);
     const [newTotalNeeded, setNewTotalNeeded] = useState(task.total_needed);
     const [newName, setNewName] = useState(task.name);
     const [newDescription, setNewDescription] = useState(task.description);
+    const [newStartDate, setNewStartDate] = useState(task.start_date ? task.start_date.split('T')[0] : '');
+    const [newEndDate, setNewEndDate] = useState(task.end_date ? task.end_date.split('T')[0] : '');
     const [spotsError, setSpotsError] = useState("");
     const [isSavingTask, setIsSavingTask] = useState(false);
 
@@ -71,10 +75,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
         let ignore = false;
 
-        getRegistrations(task.id)
+        getAllRegistrations(task.id)
             .then(data => {
                 if (ignore) return;
-                setRegistrations(data);
+                setPendingRegistrations(data.pending || []);
+                setAcceptedRegistrations(data.accepted || []);
             })
             .catch(error => {
                 if (ignore) return;
@@ -85,6 +90,16 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             ignore = true;
         };
     }, [isOwner, task.id]);
+
+    // Refetch registrations helper
+    const refetchRegistrations = () => {
+        getAllRegistrations(task.id)
+            .then(data => {
+                setPendingRegistrations(data.pending || []);
+                setAcceptedRegistrations(data.accepted || []);
+            })
+            .catch(() => {});
+    };
 
     const handleRegistrationResponse = (e) => {
         e.preventDefault();
@@ -104,17 +119,41 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             response,
         })
             .then(() => {
-                setRegistrations((currentRegistrations) => {
-                    return currentRegistrations.filter((registration) => {
-                        return registration.student.id !== userId;
-                    });
-                });
+                // Refetch to get updated lists (accepted registration moves from pending to accepted)
+                refetchRegistrations();
                 setFetchAmount((currentAmount) => currentAmount + 1);
             })
             .catch((error) => {
                 setRegistrationErrors((currentErrors) => [...currentErrors, { userId, error: error.message }]);
             });
-    }
+    };
+
+    // Handle marking a task as started
+    const handleMarkStarted = async (studentId) => {
+        setProgressLoading(prev => ({ ...prev, [studentId]: 'starting' }));
+        try {
+            await markTaskStarted(task.id, studentId);
+            refetchRegistrations();
+        } catch (error) {
+            setRegistrationErrors(prev => [...prev, { userId: studentId, error: error.message }]);
+        } finally {
+            setProgressLoading(prev => ({ ...prev, [studentId]: null }));
+        }
+    };
+
+    // Handle marking a task as completed
+    const handleMarkCompleted = async (studentId) => {
+        setProgressLoading(prev => ({ ...prev, [studentId]: 'completing' }));
+        try {
+            await markTaskCompleted(task.id, studentId);
+            refetchRegistrations();
+            setFetchAmount((currentAmount) => currentAmount + 1);
+        } catch (error) {
+            setRegistrationErrors(prev => [...prev, { userId: studentId, error: error.message }]);
+        } finally {
+            setProgressLoading(prev => ({ ...prev, [studentId]: null }));
+        }
+    };
 
     const handleSave = async (skills) => {
         const skillIds = skills.map((skill) => skill.skillId || skill.id);
@@ -178,6 +217,12 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             return;
         }
 
+        // Validate dates
+        if (newStartDate && newEndDate && new Date(newStartDate) > new Date(newEndDate)) {
+            setSpotsError("Startdatum kan niet na de einddatum liggen");
+            return;
+        }
+
         setIsSavingTask(true);
         setSpotsError("");
 
@@ -186,6 +231,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             formData.append('name', newName.trim());
             formData.append('description', newDescription || '');
             formData.append('total_needed', newTotalNeeded);
+            if (newStartDate) formData.append('start_date', newStartDate);
+            if (newEndDate) formData.append('end_date', newEndDate);
             
             await updateTask(task.id, formData);
             setIsSpotsModalOpen(false);
@@ -306,12 +353,66 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     )}
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-amber-500">pending</span>
-                                <span className="text-sm text-[var(--text-secondary)]">
-                                    <span className="font-bold text-amber-600">{task.total_registered}</span> aanmeldingen
-                                </span>
-                            </div>
+                            {task.total_registered > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-amber-500">pending</span>
+                                    <span className="text-sm text-[var(--text-secondary)]">
+                                        <span className="font-bold text-amber-600">{task.total_registered}</span> wachtend
+                                    </span>
+                                </div>
+                            )}
+                            
+                            {/* Progress indicator */}
+                            {task.total_accepted > 0 && (
+                                <div className="pt-2 border-t border-[var(--neu-border)]">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Voortgang</span>
+                                    </div>
+                                    <div className="flex gap-3 text-xs">
+                                        {task.total_completed > 0 && (
+                                            <span className="flex items-center gap-1 text-blue-600">
+                                                <span className="material-symbols-outlined text-sm">task_alt</span>
+                                                <span className="font-bold">{task.total_completed}</span> afgerond
+                                            </span>
+                                        )}
+                                        {(task.total_started - (task.total_completed || 0)) > 0 && (
+                                            <span className="flex items-center gap-1 text-amber-600">
+                                                <span className="material-symbols-outlined text-sm">play_circle</span>
+                                                <span className="font-bold">{task.total_started - (task.total_completed || 0)}</span> bezig
+                                            </span>
+                                        )}
+                                        {(task.total_accepted - (task.total_started || 0)) > 0 && (
+                                            <span className="flex items-center gap-1 text-emerald-600">
+                                                <span className="material-symbols-outlined text-sm">schedule</span>
+                                                <span className="font-bold">{task.total_accepted - (task.total_started || 0)}</span> wacht
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Date display */}
+                            {(task.start_date || task.end_date) && (
+                                <div className="pt-2 border-t border-[var(--neu-border)]">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Planning</span>
+                                    </div>
+                                    <div className="space-y-1.5 text-xs">
+                                        {task.start_date && (
+                                            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                                                <span className="material-symbols-outlined text-sm text-primary">calendar_today</span>
+                                                <span>Start: <span className="font-medium">{new Date(task.start_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}</span></span>
+                                            </div>
+                                        )}
+                                        {task.end_date && (
+                                            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                                                <span className="material-symbols-outlined text-sm text-orange-500">event</span>
+                                                <span>Deadline: <span className="font-medium">{new Date(task.end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}</span></span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Action buttons */}
@@ -433,129 +534,239 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             {isOwner && (
                 <Modal 
                     maxWidth="max-w-2xl" 
-                    modalHeader="Aanmeldingen bekijken"
+                    modalHeader="Aanmeldingen beheren"
                     modalSubtitle={task.name}
                     modalIcon="group"
                     isModalOpen={isRegistrationsModalOpen} 
                     setIsModalOpen={setIsRegistrationsModalOpen}
                 >
-                    <div className="flex flex-col gap-4">
-                        {registrations.length === 0 && (
+                    <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-1">
+                        {/* Empty state */}
+                        {pendingRegistrations.length === 0 && acceptedRegistrations.length === 0 && (
                             <div className="text-center py-8">
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--gray-200)] flex items-center justify-center">
                                     <span className="material-symbols-outlined text-3xl text-[var(--text-muted)]">inbox</span>
                                 </div>
-                                <p className="text-[var(--text-muted)] font-medium">Er zijn geen open aanmeldingen voor deze taak</p>
+                                <p className="text-[var(--text-muted)] font-medium">Er zijn geen aanmeldingen voor deze taak</p>
                             </div>
                         )}
-                        {isFull && (
-                            <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
-                        )}
-                        {registrations.map((registration) => {
-                            const taskSkillIds = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
-                            const matchingSkills = registration.student.skills.filter(s => taskSkillIds.has(s.skillId ?? s.id)).length;
-                            
-                            return (
-                                <div 
-                                    key={registration.student.id} 
-                                    className="rounded-2xl overflow-hidden border border-[var(--neu-border)] bg-[var(--neu-bg)]"
-                                >
-                                    {/* Student header */}
-                                    <div className="p-5 border-b border-[var(--neu-border)]" style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-orange-400/20 flex items-center justify-center">
-                                                    <span className="material-symbols-outlined text-primary text-xl">person</span>
-                                                </div>
-                                                <div>
-                                                    <Link 
-                                                        to={`/student/${registration.student.id}`} 
-                                                        className="text-lg font-bold text-[var(--text-primary)] hover:text-primary transition" 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        {registration.student.full_name}
-                                                    </Link>
-                                                    <p className="text-xs text-[var(--text-muted)]">
-                                                        <span className="font-semibold text-primary">{matchingSkills}</span> van {task.skills?.length || 0} skills match
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    {/* Motivation */}
-                                    <div className="p-5 space-y-4">
-                                        <div>
-                                            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">Motivatie</span>
-                                            <div className="text-[var(--text-secondary)] text-sm bg-[var(--gray-200)]/50 p-4 rounded-xl">
-                                                <RichTextViewer text={registration.reason} />
-                                            </div>
-                                        </div>
-
-                                        {/* Skills */}
-                                        <div>
-                                            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 block">Skills</span>
-                                            <div className="flex flex-wrap gap-2">
-                                                {registration.student.skills.map((skill) => {
-                                                    const skillId = skill.skillId ?? skill.id;
-                                                    const matchesTask = taskSkillIds.has(skillId);
-                                                    return (
-                                                        <SkillBadge
-                                                            key={skillId}
-                                                            skillName={skill.name}
-                                                            isPending={skill.isPending ?? skill.is_pending}
-                                                            isOwn={matchesTask}
-                                                        >
-                                                            {matchesTask && (
-                                                                <span className="material-symbols-outlined text-xs mr-1">check</span>
-                                                            )}
-                                                        </SkillBadge>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-
-                                        <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
+                        {/* Accepted Registrations - Progress Tracking */}
+                        {acceptedRegistrations.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-emerald-500">check_circle</span>
+                                    Geaccepteerd ({acceptedRegistrations.length})
+                                </h3>
+                                <div className="space-y-3">
+                                    {acceptedRegistrations.map((registration) => {
+                                        const isStarted = !!registration.started_at;
+                                        const isCompleted = !!registration.completed_at;
+                                        const isLoading = progressLoading[registration.student.id];
                                         
-                                        {/* Response form */}
-                                        <form onSubmit={handleRegistrationResponse} className="pt-2 border-t border-[var(--neu-border)]">
-                                            <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
-                                            <input type="hidden" name="userId" value={registration.student.id} />
-                                            <div className="flex gap-3 mt-4">
-                                                <button 
-                                                    type="submit" 
-                                                    value={true} 
-                                                    disabled={isFull} 
-                                                    className={`flex-1 rounded-xl py-3 font-bold transition-all ${
-                                                        isFull 
-                                                            ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" 
-                                                            : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"
-                                                    }`}
-                                                    style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}
-                                                >
-                                                    <span className="flex items-center justify-center gap-2">
-                                                        <span className="material-symbols-outlined">check</span>
-                                                        Accepteren
-                                                    </span>
-                                                </button>
-                                                <button 
-                                                    type="submit" 
-                                                    value={false} 
-                                                    className="flex-1 rounded-xl py-3 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all"
-                                                    style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
-                                                >
-                                                    <span className="flex items-center justify-center gap-2">
-                                                        <span className="material-symbols-outlined">close</span>
-                                                        Weigeren
-                                                    </span>
-                                                </button>
+                                        // Determine status
+                                        let status = 'accepted';
+                                        let statusColor = 'text-emerald-600 bg-emerald-100';
+                                        let statusIcon = 'schedule';
+                                        let statusText = 'Wacht op start';
+                                        
+                                        if (isCompleted) {
+                                            status = 'completed';
+                                            statusColor = 'text-blue-600 bg-blue-100';
+                                            statusIcon = 'task_alt';
+                                            statusText = 'Afgerond';
+                                        } else if (isStarted) {
+                                            status = 'started';
+                                            statusColor = 'text-amber-600 bg-amber-100';
+                                            statusIcon = 'play_circle';
+                                            statusText = 'Bezig';
+                                        }
+                                        
+                                        return (
+                                            <div 
+                                                key={registration.student.id} 
+                                                className="rounded-xl border border-[var(--neu-border)] bg-[var(--neu-bg)] p-4"
+                                            >
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-400/20 flex items-center justify-center flex-shrink-0">
+                                                            <span className="material-symbols-outlined text-emerald-600">person</span>
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <Link 
+                                                                to={`/student/${registration.student.id}`} 
+                                                                className="font-bold text-[var(--text-primary)] hover:text-primary transition truncate block" 
+                                                                target="_blank"
+                                                            >
+                                                                {registration.student.full_name}
+                                                            </Link>
+                                                            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
+                                                                <span className="material-symbols-outlined text-sm">{statusIcon}</span>
+                                                                {statusText}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Progress buttons */}
+                                                    <div className="flex gap-2 flex-shrink-0">
+                                                        {!isStarted && !isCompleted && (
+                                                            <button
+                                                                onClick={() => handleMarkStarted(registration.student.id)}
+                                                                disabled={isLoading}
+                                                                className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors"
+                                                                title="Markeer als gestart"
+                                                            >
+                                                                {isLoading === 'starting' ? (
+                                                                    <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                                                                ) : (
+                                                                    <span className="material-symbols-outlined text-base">play_arrow</span>
+                                                                )}
+                                                                Start
+                                                            </button>
+                                                        )}
+                                                        {isStarted && !isCompleted && (
+                                                            <button
+                                                                onClick={() => handleMarkCompleted(registration.student.id)}
+                                                                disabled={isLoading}
+                                                                className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5"
+                                                                title="Markeer als afgerond"
+                                                            >
+                                                                {isLoading === 'completing' ? (
+                                                                    <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                                                                ) : (
+                                                                    <span className="material-symbols-outlined text-base">check_circle</span>
+                                                                )}
+                                                                Afronden
+                                                            </button>
+                                                        )}
+                                                        {isCompleted && (
+                                                            <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                                                                <span className="material-symbols-outlined text-blue-500">verified</span>
+                                                                In portfolio
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
                                             </div>
-                                        </form>
-                                    </div>
+                                        );
+                                    })}
                                 </div>
-                            );
-                        })}
+                            </div>
+                        )}
+
+                        {/* Pending Registrations - Accept/Reject */}
+                        {pendingRegistrations.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-amber-500">pending</span>
+                                    Wachtend op beslissing ({pendingRegistrations.length})
+                                </h3>
+                                {isFull && (
+                                    <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
+                                )}
+                                <div className="space-y-4">
+                                    {pendingRegistrations.map((registration) => {
+                                        const taskSkillIds = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
+                                        const matchingSkills = registration.student.skills.filter(s => taskSkillIds.has(s.skillId ?? s.id)).length;
+                                        
+                                        return (
+                                            <div 
+                                                key={registration.student.id} 
+                                                className="rounded-2xl overflow-hidden border border-[var(--neu-border)] bg-[var(--neu-bg)]"
+                                            >
+                                                {/* Student header */}
+                                                <div className="p-4 border-b border-[var(--neu-border)]" style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-orange-400/20 flex items-center justify-center">
+                                                            <span className="material-symbols-outlined text-primary">person</span>
+                                                        </div>
+                                                        <div>
+                                                            <Link 
+                                                                to={`/student/${registration.student.id}`} 
+                                                                className="font-bold text-[var(--text-primary)] hover:text-primary transition" 
+                                                                target="_blank"
+                                                            >
+                                                                {registration.student.full_name}
+                                                            </Link>
+                                                            <p className="text-xs text-[var(--text-muted)]">
+                                                                <span className="font-semibold text-primary">{matchingSkills}</span> van {task.skills?.length || 0} skills match
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Motivation & Actions */}
+                                                <div className="p-4 space-y-3">
+                                                    <div>
+                                                        <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Motivatie</span>
+                                                        <div className="text-[var(--text-secondary)] text-sm bg-[var(--gray-200)]/50 p-3 rounded-lg">
+                                                            <RichTextViewer text={registration.reason} />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Skills (collapsed) */}
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {registration.student.skills.slice(0, 5).map((skill) => {
+                                                            const skillId = skill.skillId ?? skill.id;
+                                                            const matchesTask = taskSkillIds.has(skillId);
+                                                            return (
+                                                                <SkillBadge
+                                                                    key={skillId}
+                                                                    skillName={skill.name}
+                                                                    isPending={skill.isPending ?? skill.is_pending}
+                                                                    isOwn={matchesTask}
+                                                                />
+                                                            );
+                                                        })}
+                                                        {registration.student.skills.length > 5 && (
+                                                            <span className="text-xs text-[var(--text-muted)] self-center">+{registration.student.skills.length - 5} meer</span>
+                                                        )}
+                                                    </div>
+
+                                                    <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
+                                                    
+                                                    {/* Response form */}
+                                                    <form onSubmit={handleRegistrationResponse} className="pt-2 border-t border-[var(--neu-border)]">
+                                                        <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
+                                                        <input type="hidden" name="userId" value={registration.student.id} />
+                                                        <div className="flex gap-3 mt-3">
+                                                            <button 
+                                                                type="submit" 
+                                                                value={true} 
+                                                                disabled={isFull} 
+                                                                className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${
+                                                                    isFull 
+                                                                        ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" 
+                                                                        : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"
+                                                                }`}
+                                                                style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}
+                                                            >
+                                                                <span className="flex items-center justify-center gap-2">
+                                                                    <span className="material-symbols-outlined text-lg">check</span>
+                                                                    Accepteren
+                                                                </span>
+                                                            </button>
+                                                            <button 
+                                                                type="submit" 
+                                                                value={false} 
+                                                                className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm"
+                                                                style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+                                                            >
+                                                                <span className="flex items-center justify-center gap-2">
+                                                                    <span className="material-symbols-outlined text-lg">close</span>
+                                                                    Weigeren
+                                                                </span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                     
                     {/* Footer */}
@@ -656,6 +867,36 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     max={4000}
                                 />
                             )}
+                        </div>
+
+                        {/* Date fields */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="neu-label mb-1.5 block" htmlFor="task-start-date">
+                                    <span className="material-symbols-outlined text-xs align-middle mr-1">calendar_today</span>
+                                    Startdatum
+                                </label>
+                                <input
+                                    id="task-start-date"
+                                    type="date"
+                                    value={newStartDate}
+                                    onChange={(e) => setNewStartDate(e.target.value)}
+                                    className="neu-input w-full"
+                                />
+                            </div>
+                            <div>
+                                <label className="neu-label mb-1.5 block" htmlFor="task-end-date">
+                                    <span className="material-symbols-outlined text-xs align-middle mr-1">event</span>
+                                    Einddatum (deadline)
+                                </label>
+                                <input
+                                    id="task-end-date"
+                                    type="date"
+                                    value={newEndDate}
+                                    onChange={(e) => setNewEndDate(e.target.value)}
+                                    className="neu-input w-full"
+                                />
+                            </div>
                         </div>
 
                         {/* Skills section */}

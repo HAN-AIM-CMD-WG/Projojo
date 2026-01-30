@@ -38,7 +38,21 @@ class TaskRepository(BaseRepository[Task]):
                         $registration isa registersForTask (task: $task, student: $student),
                         has isAccepted true;
                     return count;
-                )
+                ),
+                'total_started': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true, has startedAt $started;
+                    return count;
+                ),
+                'total_completed': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true, has completedAt $completed;
+                    return count;
+                ),
+                'start_date': [$task.startDate],
+                'end_date': [$task.endDate]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -77,7 +91,21 @@ class TaskRepository(BaseRepository[Task]):
                         $registration isa registersForTask (task: $task, student: $student),
                         has isAccepted true;
                     return count;
-                )
+                ),
+                'total_started': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true, has startedAt $started;
+                    return count;
+                ),
+                'total_completed': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true, has completedAt $completed;
+                    return count;
+                ),
+                'start_date': [$task.startDate],
+                'end_date': [$task.endDate]
             };
         """
         results = Db.read_transact(query)
@@ -114,7 +142,21 @@ class TaskRepository(BaseRepository[Task]):
                         $registration isa registersForTask (task: $task, student: $student),
                         has isAccepted true;
                     return count;
-                )
+                ),
+                'total_started': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true, has startedAt $started;
+                    return count;
+                ),
+                'total_completed': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true, has completedAt $completed;
+                    return count;
+                ),
+                'start_date': [$task.startDate],
+                'end_date': [$task.endDate]
             };
         """
         results = Db.read_transact(query, {"project_id": project_id})
@@ -157,7 +199,25 @@ class TaskRepository(BaseRepository[Task]):
             project_name = validation_results[0].get('project_name')
             raise ValueError(f"Er bestaat al een taak met de naam '{task.name}' in project '{project_name}'.")
 
-        query = """
+        # Build insert query with optional date fields
+        date_clauses = ""
+        params = {
+            "project_id": task.project_id,
+            "id": id,
+            "name": task.name,
+            "description": task.description,
+            "total_needed": task.total_needed,
+            "created_at": created_at
+        }
+        
+        if task.start_date:
+            date_clauses += ", has startDate ~start_date"
+            params["start_date"] = task.start_date
+        if task.end_date:
+            date_clauses += ", has endDate ~end_date"
+            params["end_date"] = task.end_date
+        
+        query = f"""
             match
                 $project isa project, has id ~project_id;
             insert
@@ -166,17 +226,10 @@ class TaskRepository(BaseRepository[Task]):
                 has name ~name,
                 has description ~description,
                 has totalNeeded ~total_needed,
-                has createdAt ~created_at;
+                has createdAt ~created_at{date_clauses};
                 $projectTask isa containsTask (project: $project, task: $task);
         """
-        Db.write_transact(query, {
-            "project_id": task.project_id,
-            "id": id,
-            "name": task.name,
-            "description": task.description,
-            "total_needed": task.total_needed,
-            "created_at": created_at
-        })
+        Db.write_transact(query, params)
 
         # Update the task with the generated ID and created_at
         task.id = id
@@ -215,6 +268,103 @@ class TaskRepository(BaseRepository[Task]):
 
         results = Db.read_transact(query, {"task_id": task_id})
         return results
+
+    def get_all_registrations(self, task_id: str) -> dict:
+        """
+        Get all registrations for a task (pending, accepted, rejected) with student details,
+        skills, and full timeline information for progress tracking.
+        Returns separate lists for pending and accepted registrations.
+        """
+        # Get pending registrations (no isAccepted set)
+        pending_query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id $student_id;
+                $registration isa registersForTask (student: $student, task: $task);
+            not { $registration has isAccepted $any_value; };
+            fetch {
+                'reason': $registration.description,
+                'requested_at': [$registration.requestedAt],
+                'student': {
+                    'id': $student_id,
+                    'full_name': $student.fullName,
+                    'skills': [
+                        match
+                            $hasSkill isa hasSkill (student: $student, skill: $skill);
+                        fetch {
+                            'id': $skill.id,
+                            'name': $skill.name,
+                            'is_pending': $skill.isPending,
+                            'description': $hasSkill.description
+                        };
+                    ]
+                }
+            };
+        """
+        
+        # Get accepted registrations (isAccepted = true) with full timeline
+        accepted_query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id $student_id;
+                $registration isa registersForTask (student: $student, task: $task);
+                $registration has isAccepted true;
+            fetch {
+                'reason': $registration.description,
+                'requested_at': [$registration.requestedAt],
+                'accepted_at': [$registration.acceptedAt],
+                'started_at': [$registration.startedAt],
+                'completed_at': [$registration.completedAt],
+                'student': {
+                    'id': $student_id,
+                    'full_name': $student.fullName,
+                    'skills': [
+                        match
+                            $hasSkill isa hasSkill (student: $student, skill: $skill);
+                        fetch {
+                            'id': $skill.id,
+                            'name': $skill.name,
+                            'is_pending': $skill.isPending,
+                            'description': $hasSkill.description
+                        };
+                    ]
+                }
+            };
+        """
+        
+        pending_results = Db.read_transact(pending_query, {"task_id": task_id})
+        accepted_results = Db.read_transact(accepted_query, {"task_id": task_id})
+        
+        # Process accepted registrations to extract timeline from arrays
+        # Handle empty arrays for optional fields (TypeDB returns [] when field doesn't exist)
+        def extract_first_or_none(arr):
+            """Safely extract first element or return None for empty arrays."""
+            return arr[0] if arr else None
+        
+        processed_accepted = []
+        for r in accepted_results:
+            processed_accepted.append({
+                'reason': r.get('reason'),
+                'requested_at': extract_first_or_none(r.get('requested_at', [])),
+                'accepted_at': extract_first_or_none(r.get('accepted_at', [])),
+                'started_at': extract_first_or_none(r.get('started_at', [])),
+                'completed_at': extract_first_or_none(r.get('completed_at', [])),
+                'student': r.get('student')
+            })
+        
+        # Process pending registrations
+        processed_pending = []
+        for r in pending_results:
+            processed_pending.append({
+                'reason': r.get('reason'),
+                'requested_at': extract_first_or_none(r.get('requested_at', [])),
+                'student': r.get('student')
+            })
+        
+        return {
+            'pending': processed_pending,
+            'accepted': processed_accepted
+        }
 
     def create_registration(self, task_id: str, student_id: str, motivation: str) -> None:
         """
@@ -480,7 +630,7 @@ class TaskRepository(BaseRepository[Task]):
             "is_accepted": r.get("is_accepted", [None])[0],
         }
 
-    def update(self, task_id: str, name: str, description: str, total_needed: int) -> Task:
+    def update(self, task_id: str, name: str, description: str, total_needed: int, start_date: str | None = None, end_date: str | None = None) -> Task:
         # Get project info and check for duplicate task names
         validation_query = """
             match
@@ -546,6 +696,14 @@ class TaskRepository(BaseRepository[Task]):
             "description": description,
             "total_needed": total_needed,
         }
+        
+        # Add date fields if provided
+        if start_date is not None:
+            update_clauses.append('$task has startDate ~start_date;')
+            update_params["start_date"] = start_date
+        if end_date is not None:
+            update_clauses.append('$task has endDate ~end_date;')
+            update_params["end_date"] = end_date
 
         query = f"""
             match

@@ -377,6 +377,34 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                 defaultText={newTaskDescription}
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
+                            
+                            {/* Task dates - auto-inherit from project */}
+                            <div className="pt-3 border-t border-[var(--neu-border)]">
+                                <p className="neu-label mb-3 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-sm text-primary">schedule</span>
+                                    Planning (optioneel)
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <FormInput 
+                                        type="date" 
+                                        label="Startdatum" 
+                                        name="start_date" 
+                                        initialValue={project?.start_date?.split('T')[0] || ''}
+                                    />
+                                    <FormInput 
+                                        type="date" 
+                                        label="Einddatum (deadline)" 
+                                        name="end_date"
+                                        initialValue={project?.end_date?.split('T')[0] || ''}
+                                    />
+                                </div>
+                                {(project?.start_date || project?.end_date) && (
+                                    <p className="text-xs text-[var(--text-muted)] mt-2">
+                                        <span className="material-symbols-outlined text-xs align-middle mr-1">info</span>
+                                        Datums zijn overgenomen van het project
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <button type="submit" name="Taak Toevoegen" className="neu-btn-primary w-full">
                             <span className="flex items-center justify-center gap-2">

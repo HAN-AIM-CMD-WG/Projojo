@@ -40,6 +40,14 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
         // Get the image file
         const imageFile = formData.get("image");
         const location = (formData.get("location") ?? "").toString().trim() || undefined;
+        const startDate = formData.get("start_date") || undefined;
+        const endDate = formData.get("end_date") || undefined;
+
+        // Validate dates
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            setIsSubmitting(false);
+            return;
+        }
 
         // Create project data object for submission with file
         const projectData = {
@@ -49,7 +57,9 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
             supervisor_id: authData.userId,
             business_id: authData.businessId,
             imageFile: imageFile, // Pass the actual file object
-            location: location
+            location: location,
+            start_date: startDate,
+            end_date: endDate
         };
 
         // Submit both project data and image in a single call
@@ -121,6 +131,30 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                             setError={setDescriptionError}
                         />
                     </div>
+                </div>
+
+                {/* Project Planning Section */}
+                <div className="neu-flat rounded-2xl p-6 mb-6">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">calendar_month</span>
+                        Planning
+                        <span className="text-sm font-normal text-[var(--text-muted)] ml-2">(optioneel)</span>
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <FormInput
+                            label="Startdatum"
+                            type="date"
+                            name="start_date"
+                        />
+                        <FormInput
+                            label="Einddatum / Deadline"
+                            type="date"
+                            name="end_date"
+                        />
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] mt-2">
+                        Deze datums helpen studenten om de planning te begrijpen. Taken moeten binnen deze periode vallen.
+                    </p>
                 </div>
 
                 {/* Info Box */}

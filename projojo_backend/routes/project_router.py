@@ -78,6 +78,8 @@ async def create_project(
     supervisor_id: Annotated[str, Form(...)],
     business_id: Annotated[str, Form(...)],
     location: str | None = Form(None),
+    start_date: str | None = Form(None),
+    end_date: str | None = Form(None),
     image: UploadFile = File(...)
 ):
     """
@@ -96,6 +98,17 @@ async def create_project(
             detail=f"Project met de naam '{name}' bestaat al binnen dit bedrijf."
         )
 
+    # Parse optional date fields
+    parsed_start_date = datetime.fromisoformat(start_date) if start_date else None
+    parsed_end_date = datetime.fromisoformat(end_date) if end_date else None
+    
+    # Validate dates if both provided
+    if parsed_start_date and parsed_end_date and parsed_start_date > parsed_end_date:
+        raise HTTPException(
+            status_code=400,
+            detail="De startdatum mag niet na de einddatum liggen."
+        )
+
     # Save the image with a random filename
     unique_filename = save_image(image)
 
@@ -108,7 +121,9 @@ async def create_project(
         created_at=datetime.now(),
         business_id=business_id,
         location=location,
-        supervisor_id=supervisor_id
+        supervisor_id=supervisor_id,
+        start_date=parsed_start_date,
+        end_date=parsed_end_date
     )
 
     # Create the project in the database
@@ -122,12 +137,25 @@ async def update_project(
     name: str = Form(...),
     description: str = Form(...),
     location: str | None = Form(None),
+    start_date: str | None = Form(None),
+    end_date: str | None = Form(None),
     image: UploadFile | None = File(None),
 ):
     """
     Update project information with optional photo upload.
     Only a teacher or a supervisor of the same business may update the project.
     """
+    # Parse optional date fields
+    parsed_start_date = datetime.fromisoformat(start_date) if start_date else None
+    parsed_end_date = datetime.fromisoformat(end_date) if end_date else None
+    
+    # Validate dates if both provided
+    if parsed_start_date and parsed_end_date and parsed_start_date > parsed_end_date:
+        raise HTTPException(
+            status_code=400,
+            detail="De startdatum mag niet na de einddatum liggen."
+        )
+
     # Handle photo upload if provided
     image_filename = None
     if image and image.filename:
@@ -140,7 +168,7 @@ async def update_project(
             raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
 
     try:
-        project_repo.update(project_id, name, description, location, image_filename)
+        project_repo.update(project_id, name, description, location, image_filename, parsed_start_date, parsed_end_date)
         return {"message": "Project succesvol bijgewerkt"}
     except Exception as e:
         if hasattr(e, 'status_code'):

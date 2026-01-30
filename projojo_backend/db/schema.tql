@@ -47,6 +47,8 @@ entity project,
     owns createdAt @card(1),
     owns location @card(0..1),
     owns isArchived @card(0..1),
+    owns startDate @card(0..1),
+    owns endDate @card(0..1),
     plays hasProjects:project @card(1),
     plays containsTask:project @card(0..),
     plays creates:project @card(0..);
@@ -57,6 +59,8 @@ entity task,
     owns description @card(1),
     owns totalNeeded @card(1),
     owns createdAt @card(1),
+    owns startDate @card(0..1),
+    owns endDate @card(0..1),
     plays containsTask:task @card(1),
     plays requiresSkill:task @card(0..),
     plays registersForTask:task @card(0..);
@@ -176,3 +180,5 @@ attribute timelineSnapshot value string;
 attribute projectSnapshot value string;
 attribute taskSnapshot value string;
 attribute skillsSnapshot value string;
+attribute startDate value datetime-tz;
+attribute endDate value datetime-tz;

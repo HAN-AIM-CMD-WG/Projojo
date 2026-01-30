@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from datetime import datetime
 
 from .skill import Skill
@@ -14,6 +14,18 @@ class Task(BaseModel):
     skills: list[Skill] | None = None
     total_registered: int | None = None
     total_accepted: int | None = None
+    total_started: int | None = None
+    total_completed: int | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+
+    # Handle TypeDB returning empty arrays for optional fields
+    @field_validator('start_date', 'end_date', mode='before')
+    @classmethod
+    def extract_from_array(cls, v):
+        if isinstance(v, list):
+            return v[0] if v else None
+        return v
 
     class Config:
         from_attributes = True
@@ -39,3 +51,5 @@ class TaskCreate(BaseModel):
     name: str
     description: str
     total_needed: int
+    start_date: datetime | None = None
+    end_date: datetime | None = None

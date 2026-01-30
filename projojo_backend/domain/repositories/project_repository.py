@@ -30,7 +30,9 @@ class ProjectRepository(BaseRepository[Project]):
                 'imagePath': $imagePath,
                 'location': $project.location,
                 'createdAt': $createdAt,
-                'business': $business_id
+                'business': $business_id,
+                'start_date': [$project.startDate],
+                'end_date': [$project.endDate]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -56,7 +58,9 @@ class ProjectRepository(BaseRepository[Project]):
                 'imagePath': $imagePath,
                 'location': $project.location,
                 'createdAt': $createdAt,
-                'business': $business_id
+                'business': $business_id,
+                'start_date': [$project.startDate],
+                'end_date': [$project.endDate]
             };
         """
         results = Db.read_transact(query)
@@ -83,6 +87,8 @@ class ProjectRepository(BaseRepository[Project]):
                 'location': $project.location,
                 'createdAt': $createdAt,
                 'business': $business_id,
+                'start_date': [$project.startDate],
+                'end_date': [$project.endDate],
                 'tasks': [
                     match
                         $containsTask isa containsTask (project: $project, task: $task);
@@ -133,6 +139,12 @@ class ProjectRepository(BaseRepository[Project]):
         created_at_str = result.get("createdAt", "")
         business = result.get("business", "")
         tasks_data = result.get("tasks", [])
+        
+        # Extract optional date fields (returned as arrays)
+        start_date_list = result.get("start_date", [])
+        end_date_list = result.get("end_date", [])
+        start_date = start_date_list[0] if start_date_list else None
+        end_date = end_date_list[0] if end_date_list else None
 
         # Convert createdAt string to datetime
         created_at = (
@@ -164,6 +176,8 @@ class ProjectRepository(BaseRepository[Project]):
             created_at=created_at,
             business_id=business,
             tasks=tasks,
+            start_date=start_date,
+            end_date=end_date,
         )
 
     def check_project_exists(self, project_name: str, business_id: str) -> bool:
@@ -214,6 +228,8 @@ class ProjectRepository(BaseRepository[Project]):
         created_at = datetime.now()
         # Optional location: None removes clause via build_query
         location_value = project.location.strip() if getattr(project, "location", None) else None
+        start_date = getattr(project, "start_date", None)
+        end_date = getattr(project, "end_date", None)
 
         query = """
             match
@@ -226,7 +242,9 @@ class ProjectRepository(BaseRepository[Project]):
                 has description ~description,
                 has imagePath ~image_path,
                 has location ~location,
-                has createdAt ~created_at;
+                has createdAt ~created_at,
+                has startDate ~start_date,
+                has endDate ~end_date;
                 $hasProjects isa hasProjects($business, $project);
         """
         Db.write_transact(query, {
@@ -236,7 +254,9 @@ class ProjectRepository(BaseRepository[Project]):
             "description": project.description,
             "image_path": project.image_path,
             "location": location_value,
-            "created_at": created_at
+            "created_at": created_at,
+            "start_date": start_date,
+            "end_date": end_date
         })
 
         # Create the relationship with the supervisor
@@ -264,8 +284,10 @@ class ProjectRepository(BaseRepository[Project]):
             business_id=project.business_id,
             location=project.location,
             supervisor_id=project.supervisor_id,
+            start_date=start_date,
+            end_date=end_date,
         )
-    def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None) -> None:
+    def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None, start_date: datetime | None = None, end_date: datetime | None = None) -> None:
         update_clauses = [
             '$project has name ~name;',
             '$project has description ~description;',
@@ -282,6 +304,15 @@ class ProjectRepository(BaseRepository[Project]):
         if image_filename:
             update_clauses.append('$project has imagePath ~image_filename;')
             params['image_filename'] = image_filename
+        
+        # Handle optional date fields
+        if start_date is not None:
+            update_clauses.append('$project has startDate ~start_date;')
+            params['start_date'] = start_date
+            
+        if end_date is not None:
+            update_clauses.append('$project has endDate ~end_date;')
+            params['end_date'] = end_date
             
         query = f'''
             match

@@ -201,6 +201,8 @@ class BusinessRepository(BaseRepository[Business]):
                     "image_path": $project.imagePath,
                     "created_at": $project.createdAt,
                     "location": $project.location,
+                    "start_date": [$project.startDate],
+                    "end_date": [$project.endDate],
                     "tasks": [
                         match
                             ($project, $task) isa containsTask;
@@ -224,6 +226,20 @@ class BusinessRepository(BaseRepository[Business]):
                                     has isAccepted true;
                                 return count;
                             ),
+                            "total_started": (
+                                match
+                                    $registration isa registersForTask (task: $task, student: $student),
+                                    has isAccepted true, has startedAt $started;
+                                return count;
+                            ),
+                            "total_completed": (
+                                match
+                                    $registration isa registersForTask (task: $task, student: $student),
+                                    has isAccepted true, has completedAt $completed;
+                                return count;
+                            ),
+                            "start_date": [$task.startDate],
+                            "end_date": [$task.endDate],
                             "skills": [
                                 match
                                     ($task, $skill) isa requiresSkill;

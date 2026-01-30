@@ -245,6 +245,19 @@ export function getRegistrations(taskId) {
 }
 
 /**
+ * Get all registrations for a task (pending and accepted) with full timeline.
+ * Used for task progress management UI.
+ * @param {string} taskId
+ * @returns {Promise<{
+ *   pending: Array<{student: {id: string, full_name: string, skills: Array}, reason: string, requested_at: string}>,
+ *   accepted: Array<{student: {id: string, full_name: string, skills: Array}, reason: string, requested_at: string, accepted_at: string, started_at: string|null, completed_at: string|null}>
+ * }>}
+ */
+export function getAllRegistrations(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/all`);
+}
+
+/**
  * @returns {Promise<string[]>}
  */
 export function getStudentRegistrations() {
@@ -281,6 +294,14 @@ export function createProject(project_data) {
     if (project_data.location !== undefined) {
         formData.append("location", project_data.location);
     }
+    
+    // Add date fields (as ISO strings)
+    if (project_data.start_date) {
+        formData.append("start_date", project_data.start_date);
+    }
+    if (project_data.end_date) {
+        formData.append("end_date", project_data.end_date);
+    }
 
     // Add image file
     if (project_data.imageFile) {
@@ -298,7 +319,9 @@ export function createTask(projectId, formDataObj) {
     const taskData = {
         name: formDataObj.title,
         description: formDataObj.description,
-        total_needed: formDataObj.totalNeeded
+        total_needed: formDataObj.totalNeeded,
+        start_date: formDataObj.start_date || null,
+        end_date: formDataObj.end_date || null
     };
 
     return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {

@@ -16,6 +16,8 @@ class Project(BaseModel):
     business_id: str | None = None
     location: str | None = None
     tasks: list[Task] | None = None
+    start_date: datetime | None = None
+    end_date: datetime | None = None
 
     class Config:
         from_attributes = True
