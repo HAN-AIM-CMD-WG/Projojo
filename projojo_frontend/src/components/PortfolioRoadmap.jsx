@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -16,6 +16,7 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
     const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
     const [timeScale, setTimeScale] = useState("months"); // months, weeks
     const containerRef = useRef(null);
+    const scrollContainerRef = useRef(null);
     const hideTimeoutRef = useRef(null);
 
     // Month width based on scale
@@ -37,65 +38,110 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
         }, 150); // Small delay to allow moving to tooltip
     };
 
+    // Maximum visible rows before scrolling
+    const MAX_VISIBLE_ROWS = 6;
+    const ROW_HEIGHT = 52; // h-12 (48px) + mb-1 (4px)
+
     // Calculate timeline bounds and generate months
     const { months, minDate, maxDate, timelineWidth } = useMemo(() => {
         if (items.length === 0) return { months: [], minDate: null, maxDate: null, timelineWidth: 0 };
 
-        // Find the date range from all items
+        // Find the date range from all items (including task periods)
         let earliest = null;
         let latest = null;
         const now = new Date();
 
         items.forEach(item => {
             const timeline = item.timeline || {};
-            const startDate = timeline.accepted_at || timeline.requested_at || timeline.created_at;
-            // Use completed_at if available, otherwise use now for active items
-            const endDate = timeline.completed_at || now;
+            
+            // Consider both work period and task period for timeline bounds
+            const workStart = timeline.accepted_at || timeline.requested_at || timeline.created_at;
+            const workEnd = timeline.completed_at || now;
+            const taskStart = item.task_start_date;
+            const taskEnd = item.task_end_date;
 
-            if (startDate) {
-                const start = new Date(startDate);
-                if (!earliest || start < earliest) earliest = start;
-            }
-            if (endDate) {
-                const end = new Date(endDate);
-                if (!latest || end > latest) latest = end;
-            }
+            // Find earliest date (consider task start if earlier than work start)
+            const dates = [workStart, taskStart].filter(Boolean).map(d => new Date(d));
+            dates.forEach(date => {
+                if (!earliest || date < earliest) earliest = date;
+            });
+
+            // Find latest date (consider task end if later than work end)
+            const endDates = [workEnd, taskEnd].filter(Boolean).map(d => new Date(d));
+            endDates.forEach(date => {
+                if (!latest || date > latest) latest = date;
+            });
         });
+
+        // Also ensure "today" is visible if it's after all items
+        if (now > latest) latest = now;
 
         // If no dates found, use current month range
         if (!earliest) earliest = new Date(now.getFullYear(), now.getMonth() - 3, 1);
         if (!latest) latest = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-        // Add padding: 1 month before and after
-        const minDate = new Date(earliest);
-        minDate.setMonth(minDate.getMonth() - 1);
-        minDate.setDate(1);
+        // Add padding: 1 month before and after, aligned to month start
+        const minDate = new Date(earliest.getFullYear(), earliest.getMonth() - 1, 1);
+        const maxDate = new Date(latest.getFullYear(), latest.getMonth() + 2, 0); // End of month after
 
-        const maxDate = new Date(latest);
-        maxDate.setMonth(maxDate.getMonth() + 2);
-        maxDate.setDate(0);
-
-        // Generate month labels
+        // Generate month labels with cumulative day positions for accurate alignment
         const months = [];
         const current = new Date(minDate);
+        let cumulativeDays = 0;
+        const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
+        
         while (current <= maxDate) {
+            const monthStart = new Date(current);
+            const nextMonth = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+            const daysInMonth = Math.min(
+                Math.ceil((nextMonth - monthStart) / (1000 * 60 * 60 * 24)),
+                Math.ceil((maxDate - monthStart) / (1000 * 60 * 60 * 24)) + 1
+            );
+            
             months.push({
                 date: new Date(current),
                 label: current.toLocaleDateString('nl-NL', { month: 'short' }),
                 year: current.getFullYear(),
-                isYearStart: current.getMonth() === 0
+                isYearStart: current.getMonth() === 0,
+                startPercent: (cumulativeDays / totalDays) * 100,
+                daysInMonth: daysInMonth
             });
+            
+            cumulativeDays += daysInMonth;
             current.setMonth(current.getMonth() + 1);
         }
 
         return { months, minDate, maxDate, timelineWidth: months.length * monthWidth };
     }, [items, monthWidth]);
 
-    // Calculate position and width for each item bar
+    // Calculate position and width for each item bar using pixel positions
     const itemBars = useMemo(() => {
-        if (!minDate || !maxDate) return [];
+        if (!minDate || !maxDate || months.length === 0) return [];
 
-        const totalDays = (maxDate - minDate) / (1000 * 60 * 60 * 24);
+        // Calculate pixel position based on month grid
+        const getPixelPosition = (date) => {
+            const d = new Date(date);
+            let pixels = 0;
+            
+            for (const month of months) {
+                const monthStart = month.date;
+                const nextMonth = new Date(month.date.getFullYear(), month.date.getMonth() + 1, 1);
+                
+                if (d < monthStart) {
+                    break;
+                } else if (d < nextMonth) {
+                    // Date is within this month
+                    const daysInMonth = (nextMonth - monthStart) / (1000 * 60 * 60 * 24);
+                    const dayOfMonth = (d - monthStart) / (1000 * 60 * 60 * 24);
+                    pixels += (dayOfMonth / daysInMonth) * monthWidth;
+                    break;
+                } else {
+                    // Date is after this month
+                    pixels += monthWidth;
+                }
+            }
+            return pixels;
+        };
 
         return items.map(item => {
             const timeline = item.timeline || {};
@@ -104,26 +150,95 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
 
             if (!startStr) return null;
 
-            const start = new Date(startStr);
-            const end = endStr ? new Date(endStr) : new Date();
+            // Work period (when student actually worked)
+            const workStart = new Date(startStr);
+            const workEnd = endStr ? new Date(endStr) : new Date();
 
-            const startOffset = (start - minDate) / (1000 * 60 * 60 * 24);
-            const duration = Math.max((end - start) / (1000 * 60 * 60 * 24), 7); // Minimum 7 days width
+            const leftPixels = getPixelPosition(workStart);
+            const rightPixels = getPixelPosition(workEnd);
+            const widthPixels = Math.max(rightPixels - leftPixels, 120); // Minimum 120px
 
-            const leftPercent = (startOffset / totalDays) * 100;
-            const widthPercent = Math.max((duration / totalDays) * 100, 3); // Minimum 3% width
+            // Task period (official task duration) - for background bar
+            let taskLeftPixels = null;
+            let taskWidthPixels = null;
+            let daysEarly = 0;
+
+            if (item.task_start_date && item.task_end_date) {
+                const taskStart = new Date(item.task_start_date);
+                const taskEnd = new Date(item.task_end_date);
+                
+                taskLeftPixels = getPixelPosition(taskStart);
+                const taskRightPixels = getPixelPosition(taskEnd);
+                taskWidthPixels = Math.max(taskRightPixels - taskLeftPixels, 40);
+
+                // Calculate days early (if completed before task end date)
+                if (endStr) {
+                    const completedDate = new Date(endStr);
+                    if (completedDate < taskEnd) {
+                        daysEarly = Math.floor((taskEnd - completedDate) / (1000 * 60 * 60 * 24));
+                    }
+                }
+            }
 
             return {
                 ...item,
-                leftPercent,
-                widthPercent,
+                leftPixels,
+                widthPixels,
+                taskLeftPixels,
+                taskWidthPixels,
+                daysEarly,
                 isCompleted: !!timeline.completed_at,
                 isActive: !timeline.completed_at && (timeline.accepted_at || timeline.started_at),
             };
         }).filter(Boolean);
-    }, [items, minDate, maxDate]);
+    }, [items, minDate, maxDate, months, monthWidth]);
 
-    // Group items by whether they overlap
+    // Calculate "Today" position on timeline (in pixels)
+    const todayPixelPosition = useMemo(() => {
+        if (!minDate || !maxDate || months.length === 0) return null;
+        const now = new Date();
+        // Only show if today is within the timeline range
+        if (now < minDate || now > maxDate) return null;
+        
+        // Calculate pixel position based on month grid
+        let pixels = 0;
+        for (const month of months) {
+            const monthStart = month.date;
+            const nextMonth = new Date(month.date.getFullYear(), month.date.getMonth() + 1, 1);
+            
+            if (now < monthStart) {
+                break;
+            } else if (now < nextMonth) {
+                // Today is within this month
+                const daysInMonth = (nextMonth - monthStart) / (1000 * 60 * 60 * 24);
+                const dayOfMonth = (now - monthStart) / (1000 * 60 * 60 * 24);
+                pixels += (dayOfMonth / daysInMonth) * monthWidth;
+                break;
+            } else {
+                // Today is after this month
+                pixels += monthWidth;
+            }
+        }
+        return pixels;
+    }, [minDate, maxDate, months, monthWidth]);
+
+    // Auto-scroll to "Today" when component mounts or timeline changes
+    useEffect(() => {
+        if (scrollContainerRef.current && todayPixelPosition !== null && timelineWidth > 0) {
+            const container = scrollContainerRef.current;
+            const containerWidth = container.clientWidth;
+            // Calculate scroll position to center "today" in view
+            const scrollTarget = Math.max(0, todayPixelPosition - containerWidth / 2);
+            
+            // Smooth scroll to position
+            container.scrollTo({
+                left: scrollTarget,
+                behavior: 'smooth'
+            });
+        }
+    }, [todayPixelPosition, timelineWidth]);
+
+    // Group items by whether they overlap (using pixel positions)
     const itemRows = useMemo(() => {
         const rows = [];
         
@@ -132,9 +247,10 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
             let placed = false;
             for (const row of rows) {
                 const overlaps = row.some(existing => {
-                    const existingEnd = existing.leftPercent + existing.widthPercent;
-                    const itemEnd = item.leftPercent + item.widthPercent;
-                    return !(item.leftPercent >= existingEnd || itemEnd <= existing.leftPercent);
+                    const existingEnd = existing.leftPixels + existing.widthPixels;
+                    const itemEnd = item.leftPixels + item.widthPixels;
+                    // Add small gap (8px) between items
+                    return !(item.leftPixels >= existingEnd + 8 || itemEnd + 8 <= existing.leftPixels);
                 });
                 
                 if (!overlaps) {
@@ -248,32 +364,28 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                 </div>
             </div>
 
-            {/* Legend */}
-            <div className="flex flex-wrap items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-green-500" />
+            {/* Legend - cleaner */}
+            <div className="flex flex-wrap items-center gap-5 text-xs">
+                <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
                     <span className="text-[var(--text-muted)]">Voltooid</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-blue-500 text-sm animate-pulse">pending</span>
                     <span className="text-[var(--text-muted)]">Actief</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-amber-500" />
                     <span className="text-[var(--text-muted)]">Gearchiveerd</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-gray-400" />
-                    <span className="text-[var(--text-muted)]">Archief</span>
                 </div>
             </div>
 
             {/* Timeline container */}
             <div className="neu-flat rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
+                <div ref={scrollContainerRef} className="overflow-x-auto">
                     <div style={{ minWidth: Math.max(timelineWidth, 600) }}>
-                        {/* Month headers */}
-                        <div className="flex border-b border-[var(--neu-border)] bg-[var(--gray-100)]/30">
+                        {/* Month headers - using fixed width for simplicity */}
+                        <div className="flex border-b border-[var(--neu-border)] bg-[var(--gray-100)]/30 sticky top-0 z-10">
                             {months.map((month, idx) => (
                                 <div 
                                     key={idx}
@@ -294,48 +406,78 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                             ))}
                         </div>
 
-                        {/* Task bars */}
-                        <div className="relative py-4 px-2">
+                        {/* Task bars - with vertical scroll when many rows */}
+                        <div 
+                            className="relative py-4 px-2"
+                            style={{ 
+                                maxHeight: itemRows.length > MAX_VISIBLE_ROWS ? `${MAX_VISIBLE_ROWS * ROW_HEIGHT + 32}px` : 'auto',
+                                overflowY: itemRows.length > MAX_VISIBLE_ROWS ? 'auto' : 'visible'
+                            }}
+                        >
+                            {/* Today indicator line - using pixel position */}
+                            {todayPixelPosition !== null && (
+                                <div 
+                                    className="absolute top-0 bottom-0 w-0.5 bg-primary z-20 pointer-events-none"
+                                    style={{ left: `${todayPixelPosition}px` }}
+                                >
+                                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded whitespace-nowrap shadow-md">
+                                        Vandaag
+                                    </div>
+                                </div>
+                            )}
+                            
                             {itemRows.map((row, rowIdx) => (
-                                <div key={rowIdx} className="relative h-14 mb-2">
+                                <div key={rowIdx} className="relative h-12 mb-1">
                                     {row.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className={`absolute top-1 h-12 rounded-xl cursor-pointer transition-all hover:scale-[1.02] hover:z-10 hover:shadow-lg ${getStatusBgColor(item)} border border-[var(--neu-border)]`}
-                                            style={{
-                                                left: `${item.leftPercent}%`,
-                                                width: `${item.widthPercent}%`,
-                                                minWidth: '100px'
-                                            }}
-                                            onClick={() => handleItemClick(item)}
-                                            onMouseEnter={(e) => handleMouseEnter(e, item)}
-                                            onMouseLeave={() => scheduleHide()}
-                                        >
-                                            {/* Bar content */}
-                                            <div className="flex items-center h-full px-3 gap-2 overflow-hidden">
-                                                {/* Status dot */}
-                                                <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusColor(item)}`} />
-                                                
-                                                {/* Text content */}
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                                        <div key={item.id} className="contents">
+                                            {/* Task period background bar - very subtle, only shows on hover */}
+                                            {item.taskLeftPixels !== null && item.taskWidthPixels !== null && (
+                                                <div
+                                                    className="absolute top-0.5 h-10 rounded-lg bg-gray-300/20 dark:bg-gray-600/15 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    style={{
+                                                        left: `${item.taskLeftPixels}px`,
+                                                        width: `${item.taskWidthPixels}px`,
+                                                    }}
+                                                />
+                                            )}
+                                            
+                                            {/* Work period foreground bar - clean design */}
+                                            <div
+                                                className={`group absolute top-0.5 h-10 rounded-lg cursor-pointer transition-all hover:scale-[1.02] hover:z-10 hover:shadow-lg ${
+                                                    item.isActive 
+                                                        ? 'bg-blue-500/25 border-2 border-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.3)]' 
+                                                        : item.isCompleted 
+                                                            ? 'bg-green-500/20 border border-green-500/30' 
+                                                            : getStatusBgColor(item) + ' border border-[var(--neu-border)]'
+                                                }`}
+                                                style={{
+                                                    left: `${item.leftPixels}px`,
+                                                    width: `${item.widthPixels}px`,
+                                                }}
+                                                onClick={() => handleItemClick(item)}
+                                                onMouseEnter={(e) => handleMouseEnter(e, item)}
+                                                onMouseLeave={() => scheduleHide()}
+                                            >
+                                                {/* Bar content - cleaner layout */}
+                                                <div className="flex items-center h-full px-3 gap-2 overflow-hidden">
+                                                    {/* Status icon - larger, at start */}
+                                                    {item.isCompleted ? (
+                                                        <span className="material-symbols-outlined text-green-600 text-base shrink-0">
+                                                            check_circle
+                                                        </span>
+                                                    ) : item.isActive ? (
+                                                        <span className="material-symbols-outlined text-blue-500 text-base shrink-0 animate-pulse">
+                                                            pending
+                                                        </span>
+                                                    ) : (
+                                                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${getStatusColor(item)}`} />
+                                                    )}
+                                                    
+                                                    {/* Task name only - clean */}
+                                                    <p className="text-sm font-medium text-[var(--text-primary)] truncate flex-1">
                                                         {item.task_name}
                                                     </p>
-                                                    <p className="text-xs text-[var(--text-muted)] truncate">
-                                                        {item.business_name}
-                                                    </p>
                                                 </div>
-
-                                                {/* Status icon */}
-                                                {item.isCompleted ? (
-                                                    <span className="material-symbols-outlined text-green-500 text-sm shrink-0">
-                                                        check_circle
-                                                    </span>
-                                                ) : item.isActive && (
-                                                    <span className="material-symbols-outlined text-blue-500 text-sm shrink-0 animate-pulse">
-                                                        pending
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -344,98 +486,151 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                         </div>
                     </div>
                 </div>
+                
+                {/* Scroll indicator when there are many rows */}
+                {itemRows.length > MAX_VISIBLE_ROWS && (
+                    <div className="px-4 py-2 border-t border-[var(--neu-border)] bg-[var(--gray-100)]/30 flex items-center justify-between text-xs text-[var(--text-muted)]">
+                        <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">layers</span>
+                            {itemRows.length} rijen • scroll omlaag voor meer
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">unfold_more</span>
+                        </span>
+                    </div>
+                )}
             </div>
 
-            {/* Tooltip - FIXED position so it appears above everything */}
+            {/* Tooltip - Enhanced with better structure */}
             {hoveredItem && (
                 <div 
-                    className="portfolio-tooltip fixed z-[9999] bg-[var(--neu-bg)] rounded-xl shadow-2xl border border-[var(--neu-border)] p-4 w-72"
+                    className="portfolio-tooltip fixed z-[9999] bg-[var(--neu-bg)] rounded-2xl shadow-2xl border border-[var(--neu-border)] p-4 w-80"
                     style={{
-                        // Position above and to the right of cursor, but keep on screen
-                        left: Math.min(tooltipPos.x, window.innerWidth - 300),
-                        top: Math.max(tooltipPos.y - 280, 10), // Position ABOVE the cursor
+                        left: Math.min(tooltipPos.x, window.innerWidth - 340),
+                        top: Math.max(tooltipPos.y - 320, 10),
                     }}
                     onMouseEnter={clearHideTimeout}
                     onMouseLeave={() => scheduleHide()}
                 >
-                    <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${getStatusBgColor(hoveredItem)}`}>
-                            <span className="material-symbols-outlined text-[var(--text-primary)]">
-                                {hoveredItem.isCompleted ? 'task_alt' : 'schedule'}
+                    {/* Header with status */}
+                    <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
+                            hoveredItem.isActive ? 'bg-blue-500/20' : hoveredItem.isCompleted ? 'bg-green-500/20' : getStatusBgColor(hoveredItem)
+                        }`}>
+                            <span className={`material-symbols-outlined text-xl ${
+                                hoveredItem.isActive ? 'text-blue-500' : hoveredItem.isCompleted ? 'text-green-600' : 'text-[var(--text-primary)]'
+                            }`}>
+                                {hoveredItem.isCompleted ? 'task_alt' : hoveredItem.isActive ? 'pending' : 'schedule'}
                             </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-[var(--text-primary)]">
+                            <p className="font-bold text-[var(--text-primary)] leading-tight">
                                 {hoveredItem.task_name}
                             </p>
-                            <p className="text-sm text-[var(--text-muted)]">
+                            <p className="text-sm text-[var(--text-muted)] flex items-center gap-1 mt-0.5">
+                                <span className="material-symbols-outlined text-xs">business</span>
                                 {hoveredItem.business_name}
                             </p>
-                            
-                            {/* Project name */}
                             {hoveredItem.project_name && (
-                                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                                    <span className="material-symbols-outlined text-xs align-middle mr-1">folder</span>
+                                <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1 mt-0.5">
+                                    <span className="material-symbols-outlined text-xs">folder</span>
                                     {hoveredItem.project_name}
-                                </p>
-                            )}
-                            
-                            {/* Skills */}
-                            {hoveredItem.skills && hoveredItem.skills.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                    {hoveredItem.skills.slice(0, 3).map((skill, idx) => (
-                                        <span 
-                                            key={idx}
-                                            className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary"
-                                        >
-                                            {skill}
-                                        </span>
-                                    ))}
-                                    {hoveredItem.skills.length > 3 && (
-                                        <span className="text-xs text-[var(--text-muted)]">
-                                            +{hoveredItem.skills.length - 3}
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Timeline info */}
-                            <div className="flex flex-col gap-1 mt-2 text-xs text-[var(--text-muted)]">
-                                {hoveredItem.timeline?.accepted_at && (
-                                    <span className="flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-xs text-blue-500">play_arrow</span>
-                                        Start: {new Date(hoveredItem.timeline.accepted_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </span>
-                                )}
-                                {hoveredItem.timeline?.completed_at ? (
-                                    <span className="flex items-center gap-1 text-green-600">
-                                        <span className="material-symbols-outlined text-xs">check_circle</span>
-                                        Voltooid: {new Date(hoveredItem.timeline.completed_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center gap-1 text-blue-600">
-                                        <span className="material-symbols-outlined text-xs">pending</span>
-                                        Nog actief
-                                    </span>
-                                )}
-                            </div>
-
-                            {/* Action button */}
-                            {(hoveredItem.source_project_id || hoveredItem.project_id) ? (
-                                <button
-                                    onClick={() => handleItemClick(hoveredItem)}
-                                    className="mt-3 w-full neu-btn-primary text-xs py-2 rounded-lg flex items-center justify-center gap-1"
-                                >
-                                    <span className="material-symbols-outlined text-sm">open_in_new</span>
-                                    Bekijk project
-                                </button>
-                            ) : (
-                                <p className="mt-3 text-xs text-[var(--text-muted)] text-center italic">
-                                    Project niet meer beschikbaar
                                 </p>
                             )}
                         </div>
                     </div>
+
+                    {/* Days early celebration - prominent */}
+                    {hoveredItem.daysEarly > 0 && (
+                        <div className="mb-3 p-2 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2">
+                            <span className="material-symbols-outlined text-green-600">emoji_events</span>
+                            <span className="text-sm font-semibold text-green-700 dark:text-green-400">
+                                {hoveredItem.daysEarly} dagen eerder afgerond!
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Timeline section - clearer labels */}
+                    <div className="space-y-2 mb-3">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)]">Tijdlijn</p>
+                        <div className="space-y-1.5 text-xs">
+                            {/* Start date */}
+                            {hoveredItem.timeline?.accepted_at && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[var(--text-muted)] flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs text-blue-500">play_arrow</span>
+                                        Gestart
+                                    </span>
+                                    <span className="text-[var(--text-secondary)] font-medium">
+                                        {new Date(hoveredItem.timeline.accepted_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
+                                </div>
+                            )}
+                            {/* Completion or status */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-[var(--text-muted)] flex items-center gap-1">
+                                    <span className={`material-symbols-outlined text-xs ${hoveredItem.isCompleted ? 'text-green-600' : 'text-blue-500'}`}>
+                                        {hoveredItem.isCompleted ? 'check_circle' : 'pending'}
+                                    </span>
+                                    {hoveredItem.isCompleted ? 'Voltooid' : 'Status'}
+                                </span>
+                                <span className={`font-medium ${hoveredItem.isCompleted ? 'text-green-600' : 'text-blue-600'}`}>
+                                    {hoveredItem.timeline?.completed_at 
+                                        ? new Date(hoveredItem.timeline.completed_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
+                                        : 'Actief'}
+                                </span>
+                            </div>
+                            {/* Deadline */}
+                            {hoveredItem.task_end_date && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[var(--text-muted)] flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-xs text-orange-500">event</span>
+                                        Deadline
+                                    </span>
+                                    <span className="text-orange-600 font-medium">
+                                        {new Date(hoveredItem.task_end_date).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Skills */}
+                    {hoveredItem.skills && hoveredItem.skills.length > 0 && (
+                        <div className="mb-3">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] mb-1.5">Skills</p>
+                            <div className="flex flex-wrap gap-1">
+                                {hoveredItem.skills.slice(0, 4).map((skill, idx) => (
+                                    <span 
+                                        key={idx}
+                                        className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary"
+                                    >
+                                        {skill}
+                                    </span>
+                                ))}
+                                {hoveredItem.skills.length > 4 && (
+                                    <span className="text-xs text-[var(--text-muted)] self-center">
+                                        +{hoveredItem.skills.length - 4}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Action button */}
+                    {(hoveredItem.source_project_id || hoveredItem.project_id) ? (
+                        <button
+                            onClick={() => handleItemClick(hoveredItem)}
+                            className="w-full neu-btn-primary text-xs py-2.5 rounded-xl flex items-center justify-center gap-1.5 font-medium"
+                        >
+                            <span className="material-symbols-outlined text-sm">open_in_new</span>
+                            Bekijk project
+                        </button>
+                    ) : (
+                        <p className="text-xs text-[var(--text-muted)] text-center italic py-2">
+                            Project niet meer beschikbaar
+                        </p>
+                    )}
                 </div>
             )}
 

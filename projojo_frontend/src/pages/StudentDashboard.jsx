@@ -150,6 +150,17 @@ export default function StudentDashboard() {
 
             <Alert text={error} />
 
+            {/* Portfolio/Gantt Chart - At the top for quick overview */}
+            {!isLoading && authData.type === 'student' && (
+                <div className="mb-6">
+                    <StudentPortfolio 
+                        studentId={authData.userId} 
+                        studentName={studentName}
+                        isOwnProfile={true}
+                    />
+                </div>
+            )}
+
             {isLoading ? (
                 <Loading />
             ) : (
@@ -302,16 +313,6 @@ export default function StudentDashboard() {
                 </div>
             )}
 
-            {/* Portfolio Section - Full width below the grid */}
-            {!isLoading && authData.type === 'student' && (
-                <div className="mt-6">
-                    <StudentPortfolio 
-                        studentId={authData.userId} 
-                        studentName={studentName}
-                        isOwnProfile={true}
-                    />
-                </div>
-            )}
         </div>
     );
 }

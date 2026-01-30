@@ -203,8 +203,11 @@ async def get_student_portfolio(
         "student_name": student.get("full_name", ""),
         "items": portfolio,
         "total_count": len(portfolio),
-        "live_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
+        "completed_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
+        "active_count": sum(1 for item in portfolio if item.get("source_type") == "active"),
         "snapshot_count": sum(1 for item in portfolio if item.get("source_type") == "snapshot"),
+        # Legacy fields for backwards compatibility
+        "live_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
     }
 
 

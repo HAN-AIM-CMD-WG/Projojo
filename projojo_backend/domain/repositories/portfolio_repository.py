@@ -156,6 +156,8 @@ class PortfolioRepository:
                 'task_id': $task_id,
                 'task_name': $task_name,
                 'task_description': $task_description,
+                'task_start_date': [$task.startDate],
+                'task_end_date': [$task.endDate],
                 'project_id': $project_id,
                 'project_name': $project_name,
                 'project_description': $project_description,
@@ -187,6 +189,8 @@ class PortfolioRepository:
             requested_at = r.get("requested_at", [])
             accepted_at = r.get("accepted_at", [])
             started_at = r.get("started_at", [])
+            task_start_date = r.get("task_start_date", [])
+            task_end_date = r.get("task_end_date", [])
             
             items.append({
                 "id": f"live-{r.get('task_id', '')}",
@@ -199,6 +203,8 @@ class PortfolioRepository:
                 "business_location": r.get("business_location", ""),
                 "task_name": r.get("task_name", ""),
                 "task_description": r.get("task_description", ""),
+                "task_start_date": task_start_date[0] if task_start_date else None,
+                "task_end_date": task_end_date[0] if task_end_date else None,
                 "skills": skills,
                 "timeline": {
                     "requested_at": requested_at[0] if requested_at else None,
@@ -211,34 +217,136 @@ class PortfolioRepository:
         
         return items
 
+    def get_active_portfolio_items(self, student_id: str) -> list[dict]:
+        """
+        Get active portfolio items (accepted/started tasks that are not yet completed).
+        These are tasks the student is currently working on.
+        """
+        query = """
+            match
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask(student: $student, task: $task),
+                    has isAccepted true;
+                not { $registration has completedAt $any_completed; };
+                $task has id $task_id,
+                    has name $task_name,
+                    has description $task_description;
+                $containsTask isa containsTask(project: $project, task: $task);
+                $project has id $project_id,
+                    has name $project_name,
+                    has description $project_description;
+                $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id,
+                    has name $business_name,
+                    has description $business_description,
+                    has location $business_location;
+            fetch {
+                'task_id': $task_id,
+                'task_name': $task_name,
+                'task_description': $task_description,
+                'task_start_date': [$task.startDate],
+                'task_end_date': [$task.endDate],
+                'project_id': $project_id,
+                'project_name': $project_name,
+                'project_description': $project_description,
+                'project_archived': [$project.isArchived],
+                'business_id': $business_id,
+                'business_name': $business_name,
+                'business_description': $business_description,
+                'business_location': $business_location,
+                'requested_at': [$registration.requestedAt],
+                'accepted_at': [$registration.acceptedAt],
+                'started_at': [$registration.startedAt],
+                'skills': [
+                    match
+                        $requiresSkill isa requiresSkill(task: $task, skill: $skill);
+                        $skill has name $skill_name;
+                    fetch {
+                        'name': $skill_name
+                    };
+                ]
+            };
+        """
+        results = Db.read_transact(query, {"student_id": student_id})
+        
+        items = []
+        for r in results:
+            skills = [s.get("name", "") for s in r.get("skills", [])]
+            project_archived = r.get("project_archived", [])
+            requested_at = r.get("requested_at", [])
+            accepted_at = r.get("accepted_at", [])
+            started_at = r.get("started_at", [])
+            task_start_date = r.get("task_start_date", [])
+            task_end_date = r.get("task_end_date", [])
+            
+            items.append({
+                "id": f"active-{r.get('task_id', '')}",
+                "source_type": "active",
+                "is_archived": project_archived[0] if project_archived else False,
+                "project_name": r.get("project_name", ""),
+                "project_description": r.get("project_description", ""),
+                "business_name": r.get("business_name", ""),
+                "business_description": r.get("business_description", ""),
+                "business_location": r.get("business_location", ""),
+                "task_name": r.get("task_name", ""),
+                "task_description": r.get("task_description", ""),
+                "task_start_date": task_start_date[0] if task_start_date else None,
+                "task_end_date": task_end_date[0] if task_end_date else None,
+                "skills": skills,
+                "timeline": {
+                    "requested_at": requested_at[0] if requested_at else None,
+                    "accepted_at": accepted_at[0] if accepted_at else None,
+                    "started_at": started_at[0] if started_at else None,
+                    "completed_at": None,  # Not completed yet
+                },
+                "source_project_id": r.get("project_id", ""),
+            })
+        
+        return items
+
     def get_student_portfolio(self, student_id: str) -> list[dict]:
         """
-        Get unified portfolio combining live items and snapshots.
+        Get unified portfolio combining active items, completed live items, and snapshots.
         
         Returns a list of portfolio items with:
-        - source_type: "live" | "snapshot"
+        - source_type: "active" | "live" | "snapshot"
         - is_archived: bool (for live items)
         - All project, task, business, and skills data
         """
-        # Get both live and snapshot items
+        # Get active, completed live, and snapshot items
+        active_items = self.get_active_portfolio_items(student_id)
         live_items = self.get_live_portfolio_items(student_id)
         snapshot_items = self.get_snapshots_by_student(student_id)
         
-        # Combine and sort by completion date (most recent first)
-        all_items = live_items + snapshot_items
+        # Combine all items
+        all_items = active_items + live_items + snapshot_items
         
-        # Sort by completed_at (handle different formats)
-        def get_completion_date(item):
+        # Sort: active items first (by started_at), then completed items (by completed_at)
+        def get_sort_date(item):
             timeline = item.get("timeline", {})
+            source_type = item.get("source_type", "")
+            
+            # Active items come first, sorted by started_at
+            if source_type == "active":
+                started_at = timeline.get("started_at", "") or timeline.get("accepted_at", "")
+                if isinstance(started_at, str) and started_at:
+                    try:
+                        # Return a tuple: (0 for active, date)
+                        return (0, datetime.fromisoformat(started_at.replace("Z", "+00:00")))
+                    except ValueError:
+                        return (0, datetime.min)
+                return (0, datetime.min)
+            
+            # Completed items come after, sorted by completed_at
             completed_at = timeline.get("completed_at", "")
             if isinstance(completed_at, str) and completed_at:
                 try:
-                    return datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+                    return (1, datetime.fromisoformat(completed_at.replace("Z", "+00:00")))
                 except ValueError:
-                    return datetime.min
-            return datetime.min
+                    return (1, datetime.min)
+            return (1, datetime.min)
         
-        all_items.sort(key=get_completion_date, reverse=True)
+        all_items.sort(key=get_sort_date, reverse=True)
         
         return all_items
 

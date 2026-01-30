@@ -1573,6 +1573,40 @@ insert
         has completedAt 2026-01-05T17:00:00+0000;
 
     # ============================================
+    # Emma's ACTIVE tasks (started but not completed)
+    # ============================================
+    
+    # 11. Computer Vision Fruit Analyst @ Fruitboomgaarden Van Dijk (Jan 2026 - ongoing)
+    $tr_emma_active1 isa registersForTask (student: $u2, task: $t24),
+        has description "Computer vision voor fruit analyse sluit aan bij mijn ML ervaring",
+        has isAccepted true,
+        has response "Welkom! Je ML achtergrond is perfect voor dit project.",
+        has createdAt 2026-01-10T09:00:00+0000,
+        has requestedAt 2026-01-10T09:00:00+0000,
+        has acceptedAt 2026-01-12T14:00:00+0000,
+        has startedAt 2026-01-15T09:00:00+0000;
+
+    # 12. Biodiversity Data Scientist @ Biodynamische Boerderij (Jan 2026 - ongoing)
+    $tr_emma_active2 isa registersForTask (student: $u2, task: $t30),
+        has description "Biodiversiteit monitoring past bij mijn interesse in duurzaamheid",
+        has isAccepted true,
+        has response "Je combinatie van data skills en ecologie is waardevol!",
+        has createdAt 2026-01-08T10:00:00+0000,
+        has requestedAt 2026-01-08T10:00:00+0000,
+        has acceptedAt 2026-01-10T11:00:00+0000,
+        has startedAt 2026-01-12T09:00:00+0000;
+
+    # 13. Smart Greenhouse Controller @ Groene Kassen (Jan 2026 - ongoing)
+    $tr_emma_active3 isa registersForTask (student: $u2, task: $t42),
+        has description "Slimme kasbeheersing combineert mijn IoT en AI interesse",
+        has isAccepted true,
+        has response "Je ervaring met IoT en AI is perfect voor dit project!",
+        has createdAt 2026-01-20T08:00:00+0000,
+        has requestedAt 2026-01-20T08:00:00+0000,
+        has acceptedAt 2026-01-22T10:00:00+0000,
+        has startedAt 2026-01-25T09:00:00+0000;
+
+    # ============================================
     # Other students' registrations
     # ============================================
     
