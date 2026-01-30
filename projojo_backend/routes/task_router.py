@@ -130,12 +130,11 @@ async def create_registration(
     """
     Create a new registration for a student to a task
     """
-    # Check if user is a student
-    if payload["role"] != "student":
+    # Check if user is a student (already enforced by @auth decorator, but double-check)
+    if request.state.user_role != "student":
         raise HTTPException(status_code=403, detail="Alleen studenten kunnen zich registreren voor taken")
 
-    student_id = payload["sub"]  # Extract user ID from JWT
-    #student_id = request.state.user_id # Extract user ID from request state
+    student_id = request.state.user_id  # Extract user ID from request state
 
     try:
         task = task_repo.get_by_id(task_id)
