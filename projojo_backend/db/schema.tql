@@ -140,6 +140,45 @@ relation hasPortfolio,
     relates student @card(1),
     relates item @card(1);
 
+# Deeltaken Systeem (Subtasks)
+# UI toont "Deeltaak" - toegankelijk voor alle disciplines
+entity subtask,
+    owns id @key,
+    owns title @card(1),
+    owns subtaskWhat @card(0..1),      # WAT: Wat moet er gebeuren?
+    owns subtaskWhy @card(0..1),       # WAAROM: Context en reden
+    owns subtaskHow @card(0..1),       # HOE: Aanpak/stappen
+    owns subtaskCriteria @card(0..1),  # CRITERIA: Waar moet het aan voldoen?
+    owns subtaskStatus @card(1),       # "open" | "in_progress" | "done"
+    owns createdAt @card(1),
+    owns completedAt @card(0..1),
+    plays belongsToTask:subtask @card(1),
+    plays claimedBy:subtask @card(0..1);
+
+# Templates voor veelvoorkomende deeltaken
+entity subtaskTemplate,
+    owns id @key,
+    owns templateName @card(1),
+    owns title @card(0..1),
+    owns subtaskWhat @card(0..1),
+    owns subtaskWhy @card(0..1),
+    owns subtaskHow @card(0..1),
+    owns subtaskCriteria @card(0..1),
+    owns createdAt @card(1),
+    plays belongsToBusiness:template @card(1);
+
+relation belongsToTask,
+    relates task @card(1),
+    relates subtask @card(0..);
+
+relation claimedBy,
+    relates subtask @card(1),
+    relates student @card(0..1);
+
+relation belongsToBusiness,
+    relates business @card(1),
+    relates template @card(0..);
+
 #Werkt helaas nog niet :(
 # TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
 # nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
@@ -182,3 +221,10 @@ attribute taskSnapshot value string;
 attribute skillsSnapshot value string;
 attribute startDate value datetime-tz;
 attribute endDate value datetime-tz;
+attribute title value string;
+attribute subtaskWhat value string;
+attribute subtaskWhy value string;
+attribute subtaskHow value string;
+attribute subtaskCriteria value string;
+attribute subtaskStatus value string @values("open", "in_progress", "done");
+attribute templateName value string;

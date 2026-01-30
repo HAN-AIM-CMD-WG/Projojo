@@ -727,3 +727,143 @@ export function markTaskCompleted(taskId, studentId) {
 export function getRegistrationTimeline(taskId, studentId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/timeline`);
 }
+
+// ============================================
+// Deeltaken (Subtasks) Functions
+// ============================================
+
+/**
+ * Get all subtasks for a task
+ * @param {string} taskId
+ * @returns {Promise<Array<{id: string, title: string, what: string, why: string, how: string, criteria: string, status: string, created_at: string, completed_at: string, task_id: string, claimed_by_id: string, claimed_by_name: string}>>}
+ */
+export function getSubtasksByTask(taskId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/tasks/${taskId}`);
+}
+
+/**
+ * Get a specific subtask by ID
+ * @param {string} subtaskId
+ * @returns {Promise<{id: string, title: string, what: string, why: string, how: string, criteria: string, status: string, created_at: string, completed_at: string, task_id: string, claimed_by_id: string, claimed_by_name: string}>}
+ */
+export function getSubtask(subtaskId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/${subtaskId}`);
+}
+
+/**
+ * Create a new subtask for a task (supervisor only)
+ * @param {string} taskId
+ * @param {Object} subtaskData
+ * @param {string} subtaskData.title - Title of the subtask
+ * @param {string} [subtaskData.what] - What needs to be done
+ * @param {string} [subtaskData.why] - Why this is needed
+ * @param {string} [subtaskData.how] - How to approach this
+ * @param {string} [subtaskData.criteria] - Acceptance criteria
+ * @returns {Promise<{id: string, title: string, what: string, why: string, how: string, criteria: string, status: string, created_at: string, task_id: string}>}
+ */
+export function createSubtask(taskId, subtaskData) {
+    return fetchWithError(`${API_BASE_URL}subtasks/tasks/${taskId}`, {
+        method: "POST",
+        body: JSON.stringify(subtaskData),
+    });
+}
+
+/**
+ * Claim a subtask (student says "I'll take this one")
+ * @param {string} subtaskId
+ * @returns {Promise<{message: string}>}
+ */
+export function claimSubtask(subtaskId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/${subtaskId}/claim`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Unclaim a subtask (student releases it)
+ * @param {string} subtaskId
+ * @returns {Promise<{message: string}>}
+ */
+export function unclaimSubtask(subtaskId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/${subtaskId}/unclaim`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Complete a subtask (student marks it as done)
+ * @param {string} subtaskId
+ * @returns {Promise<{message: string}>}
+ */
+export function completeSubtask(subtaskId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/${subtaskId}/complete`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Delete a subtask (supervisor only, only if not claimed)
+ * @param {string} subtaskId
+ * @returns {Promise<{message: string}>}
+ */
+export function deleteSubtask(subtaskId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/${subtaskId}`, {
+        method: "DELETE",
+    });
+}
+
+// ============================================
+// Deeltaak Templates Functions
+// ============================================
+
+/**
+ * Get all subtask templates for a business
+ * @param {string} businessId
+ * @returns {Promise<Array<{id: string, template_name: string, title: string, what: string, why: string, how: string, criteria: string, created_at: string, business_id: string}>>}
+ */
+export function getSubtaskTemplates(businessId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/templates/business/${businessId}`);
+}
+
+/**
+ * Create a new subtask template for a business (supervisor only)
+ * @param {string} businessId
+ * @param {Object} templateData
+ * @param {string} templateData.template_name - Name of the template
+ * @param {string} [templateData.title] - Default title
+ * @param {string} [templateData.what] - Default "what" content
+ * @param {string} [templateData.why] - Default "why" content
+ * @param {string} [templateData.how] - Default "how" content
+ * @param {string} [templateData.criteria] - Default acceptance criteria
+ * @returns {Promise<{id: string, template_name: string, title: string, what: string, why: string, how: string, criteria: string, created_at: string, business_id: string}>}
+ */
+export function createSubtaskTemplate(businessId, templateData) {
+    return fetchWithError(`${API_BASE_URL}subtasks/templates/business/${businessId}`, {
+        method: "POST",
+        body: JSON.stringify(templateData),
+    });
+}
+
+/**
+ * Update a subtask template
+ * @param {string} templateId
+ * @param {Object} templateData
+ * @returns {Promise<{message: string}>}
+ */
+export function updateSubtaskTemplate(templateId, templateData) {
+    return fetchWithError(`${API_BASE_URL}subtasks/templates/${templateId}`, {
+        method: "PUT",
+        body: JSON.stringify(templateData),
+    });
+}
+
+/**
+ * Delete a subtask template
+ * @param {string} templateId
+ * @returns {Promise<{message: string}>}
+ */
+export function deleteSubtaskTemplate(templateId) {
+    return fetchWithError(`${API_BASE_URL}subtasks/templates/${templateId}`, {
+        method: "DELETE",
+    });
+}

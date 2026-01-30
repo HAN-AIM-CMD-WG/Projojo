@@ -12,10 +12,11 @@ import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
+import TaskSubtasks from "./TaskSubtasks";
 import { formatDate, getCountdownText } from "../utils/dates";
 
 export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
-    const { authData } = useAuth();
+    const { authData, user } = useAuth();
     const { studentSkills } = useStudentSkills();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,6 +43,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [taskSkillsState, setTaskSkillsState] = useState(task.skills || []);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
+    
+    // Check if current student is accepted for this task (for subtasks visibility)
+    const isAcceptedStudent = authData.type === "student" && 
+        acceptedRegistrations.some(reg => reg.student?.id === user?.id);
 
     const isFull = task.total_accepted >= task.total_needed;
     
@@ -343,6 +348,18 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 })}
                             </div>
                         </div>
+                        
+                        {/* Deeltaken (Subtasks) - alleen voor geaccepteerde studenten en supervisors */}
+                        {(isAcceptedStudent || isOwner) && (
+                            <div className="mt-6 pt-4 border-t border-[var(--neu-border)]">
+                                <TaskSubtasks 
+                                    taskId={task.id}
+                                    businessId={businessId}
+                                    isAcceptedStudent={isAcceptedStudent}
+                                    isSupervisor={isOwner}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Sidebar with stats and actions */}
