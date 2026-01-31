@@ -21,7 +21,7 @@ import {
  * - Add/delete actions for supervisors
  * - Shows who is working on what
  */
-export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = false, isSupervisor = false }) {
+export default function TaskSubtasks({ taskId, taskName = '', businessId, isAcceptedStudent = false, isSupervisor = false, embedded = false }) {
     const { user } = useAuth();
     const [subtasks, setSubtasks] = useState([]);
     const [templates, setTemplates] = useState([]);
@@ -170,9 +170,12 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
         done: subtasks.filter(s => s.status === 'done').length,
     };
 
+    // Wrapper class depends on whether component is embedded (in a tab) or standalone
+    const wrapperClass = embedded ? "" : "neu-flat p-6 rounded-2xl";
+
     if (loading) {
         return (
-            <div className="neu-flat p-6 rounded-2xl">
+            <div className={wrapperClass || "py-2"}>
                 <div className="flex items-center gap-3 text-[var(--text-muted)]">
                     <span className="material-symbols-outlined animate-spin">progress_activity</span>
                     <span>Deeltaken laden...</span>
@@ -182,16 +185,16 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
     }
 
     return (
-        <div className="neu-flat p-6 rounded-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-primary text-2xl">checklist</span>
+        <div className={wrapperClass}>
+            {/* Header - compact when embedded */}
+            <div className={`flex items-center justify-between ${embedded ? 'mb-3' : 'mb-4'}`}>
+                <div className="flex items-center gap-2">
+                    {!embedded && <span className="material-symbols-outlined text-primary text-2xl">checklist</span>}
                     <div>
-                        <h3 className="font-bold text-[var(--text-primary)]">Deeltaken</h3>
-                        <p className="text-xs text-[var(--text-muted)]">
+                        {!embedded && <h3 className="font-bold text-[var(--text-primary)]">Deeltaken</h3>}
+                        <p className={`text-[var(--text-muted)] ${embedded ? 'text-sm font-medium' : 'text-xs'}`}>
                             {stats.done}/{stats.total} voltooid
-                            {stats.inProgress > 0 && ` • ${stats.inProgress} in behandeling`}
+                            {stats.inProgress > 0 && ` • ${stats.inProgress} bezig`}
                         </p>
                     </div>
                 </div>
@@ -200,10 +203,10 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
                 {isSupervisor && (
                     <button
                         onClick={() => setShowAddModal(true)}
-                        className="neu-btn-primary !py-2 !px-3 text-sm"
+                        className={`neu-btn-primary ${embedded ? '!py-1.5 !px-2.5 text-xs' : '!py-2 !px-3 text-sm'}`}
                     >
-                        <span className="material-symbols-outlined text-base">add</span>
-                        Toevoegen
+                        <span className={`material-symbols-outlined ${embedded ? 'text-sm' : 'text-base'}`}>add</span>
+                        {!embedded && 'Toevoegen'}
                     </button>
                 )}
             </div>
@@ -221,8 +224,8 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
 
             {/* Progress bar */}
             {stats.total > 0 && (
-                <div className="mb-4">
-                    <div className="h-2 bg-[var(--gray-200)] rounded-full overflow-hidden">
+                <div className={embedded ? 'mb-3' : 'mb-4'}>
+                    <div className={`bg-[var(--gray-200)] rounded-full overflow-hidden ${embedded ? 'h-1.5' : 'h-2'}`}>
                         <div 
                             className="h-full bg-green-500 transition-all duration-300"
                             style={{ width: `${(stats.done / stats.total) * 100}%` }}
@@ -233,15 +236,15 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
 
             {/* Subtasks list */}
             {subtasks.length === 0 ? (
-                <div className="text-center py-8 text-[var(--text-muted)]">
-                    <span className="material-symbols-outlined text-4xl mb-2 block opacity-50">task_alt</span>
-                    <p>Nog geen deeltaken</p>
-                    {isSupervisor && (
+                <div className={`text-center text-[var(--text-muted)] ${embedded ? 'py-4' : 'py-8'}`}>
+                    <span className={`material-symbols-outlined mb-2 block opacity-50 ${embedded ? 'text-2xl' : 'text-4xl'}`}>task_alt</span>
+                    <p className={embedded ? 'text-sm' : ''}>Nog geen deeltaken</p>
+                    {isSupervisor && !embedded && (
                         <p className="text-sm mt-1">Voeg deeltaken toe zodat studenten kunnen beginnen</p>
                     )}
                 </div>
             ) : (
-                <div className="space-y-2">
+                <div className={embedded ? 'space-y-1.5' : 'space-y-2'}>
                     {subtasks.map((subtask) => {
                         const style = getStatusStyle(subtask.status);
                         const isExpanded = expandedSubtaskId === subtask.id;
@@ -251,11 +254,11 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
                         return (
                             <div 
                                 key={subtask.id}
-                                className={`rounded-xl border ${style.border} ${style.bg} transition-all`}
+                                className={`border ${style.border} ${style.bg} transition-all ${embedded ? 'rounded-lg' : 'rounded-xl'}`}
                             >
                                 {/* Main row */}
                                 <div 
-                                    className="flex items-center gap-3 p-3 cursor-pointer"
+                                    className={`flex items-center gap-2 cursor-pointer ${embedded ? 'p-2' : 'p-3 gap-3'}`}
                                     onClick={() => setExpandedSubtaskId(isExpanded ? null : subtask.id)}
                                 >
                                     {/* Status icon */}
@@ -329,12 +332,12 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
                                                 )}
                                             </>
                                         )}
-
-                                        {/* Expand indicator */}
-                                        <span className={`material-symbols-outlined text-[var(--text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                                            expand_more
-                                        </span>
                                     </div>
+
+                                    {/* Expand indicator - outside stopPropagation div */}
+                                    <span className={`material-symbols-outlined text-[var(--text-muted)] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                                        expand_more
+                                    </span>
                                 </div>
 
                                 {/* Expanded details */}
@@ -398,19 +401,21 @@ export default function TaskSubtasks({ taskId, businessId, isAcceptedStudent = f
             )}
 
             {/* Add subtask modal */}
-            {showAddModal && (
-                <Modal
-                    title="Deeltaak toevoegen"
-                    onClose={() => setShowAddModal(false)}
-                >
-                    <SubtaskForm
-                        onSubmit={handleCreateSubtask}
-                        onCancel={() => setShowAddModal(false)}
-                        templates={templates}
-                        isLoading={actionLoading === 'create'}
-                    />
-                </Modal>
-            )}
+            <Modal
+                isModalOpen={showAddModal}
+                setIsModalOpen={setShowAddModal}
+                modalHeader="Deeltaak toevoegen"
+                modalSubtitle={taskName ? `Voor taak: ${taskName}` : "Voeg een nieuwe deeltaak toe"}
+                modalIcon="add_task"
+                maxWidth="max-w-lg"
+            >
+                <SubtaskForm
+                    onSubmit={handleCreateSubtask}
+                    onCancel={() => setShowAddModal(false)}
+                    templates={templates}
+                    isLoading={actionLoading === 'create'}
+                />
+            </Modal>
         </div>
     );
 }

@@ -1060,6 +1060,69 @@
         background: var(--primary-color);
         color: white;
     }
+
+    /* --- Scrollbar Utilities --- */
+    .scrollbar-none {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE/Edge */
+    }
+    
+    .scrollbar-none::-webkit-scrollbar {
+        display: none; /* Chrome/Safari/Opera */
+    }
+
+    /* --- Tab Navigation Styling --- */
+    .neu-tabs {
+        @apply flex bg-[var(--gray-100)] overflow-x-auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .neu-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .neu-tab {
+        @apply flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors relative;
+        color: var(--text-muted);
+    }
+    
+    .neu-tab:hover {
+        color: var(--text-secondary);
+    }
+    
+    .neu-tab.active {
+        color: var(--primary-color);
+    }
+    
+    .neu-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+        border-radius: 2px 2px 0 0;
+    }
+
+    .neu-tab-badge {
+        @apply ml-1 px-1.5 py-0.5 text-xs font-bold rounded-full;
+        background: rgba(255, 127, 80, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .neu-tab-badge.warning {
+        @apply bg-amber-500 text-white;
+    }
+
+    /* --- Compact Card Variant --- */
+    .neu-flat-compact {
+        background: var(--neu-bg);
+        border-radius: 1.25rem;
+        box-shadow: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border);
+    }
 }
 
 /* ===========================================

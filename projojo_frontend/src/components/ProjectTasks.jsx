@@ -74,14 +74,9 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
     return (
         <div className="p-6 pt-0">
             {/* Section header */}
-            <div className="flex items-center gap-3 mb-6">
-                <div className="neu-icon-container text-primary">
-                    <span className="material-symbols-outlined">list_alt</span>
-                </div>
-                <div>
-                    <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Beschikbare taken</h2>
-                    <span className="text-sm text-[var(--text-muted)]">{tasks?.length || 0} {tasks?.length === 1 ? 'taak' : 'taken'}</span>
-                </div>
+            <div className="mb-6">
+                <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Beschikbare taken</h2>
+                <span className="text-sm text-[var(--text-muted)]">{tasks?.length || 0} {tasks?.length === 1 ? 'taak' : 'taken'}</span>
             </div>
 
             <Alert text={error} />

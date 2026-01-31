@@ -19,6 +19,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const { authData, user } = useAuth();
     const { studentSkills } = useStudentSkills();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
+    
+    // Tab state
+    const [activeTab, setActiveTab] = useState('details');
+    
+    // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
     const [registrationErrors, setRegistrationErrors] = useState([]);
@@ -52,14 +57,30 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     
     // Skills are locked (can't be removed) if there are any registrations
     const hasRegistrations = (task.total_registered > 0) || (task.total_accepted > 0);
+    
+    // Calculate available spots
+    const spotsAvailable = task.total_needed - task.total_accepted;
+
+    // Deadline status for color coding
+    const getDeadlineStatus = () => {
+        if (!task.end_date) return null;
+        const now = new Date();
+        const deadline = new Date(task.end_date);
+        const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+        
+        if (daysLeft < 0) return { color: 'text-red-600 bg-red-100', text: 'Verlopen', icon: 'error' };
+        if (daysLeft <= 3) return { color: 'text-orange-600 bg-orange-100', text: `${daysLeft}d`, icon: 'warning' };
+        if (daysLeft <= 7) return { color: 'text-amber-600 bg-amber-100', text: `${daysLeft}d`, icon: 'schedule' };
+        return { color: 'text-emerald-600 bg-emerald-100', text: `${daysLeft}d`, icon: 'event_available' };
+    };
+
+    const deadlineStatus = getDeadlineStatus();
+
+    // === HANDLERS (unchanged from original) ===
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!canSubmit) {
-            return;
-        }
-
+        if (!canSubmit) return;
         setError("");
 
         try {
@@ -77,9 +98,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     };
 
     useEffect(() => {
-        if (!isOwner) {
-            return;
-        }
+        if (!isOwner) return;
         let ignore = false;
 
         getAllRegistrations(task.id)
@@ -93,12 +112,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 setRegistrationErrors((currentErrors) => [...currentErrors, error.message]);
             });
 
-        return () => {
-            ignore = true;
-        };
+        return () => { ignore = true; };
     }, [isOwner, task.id]);
 
-    // Refetch registrations helper
     const refetchRegistrations = () => {
         getAllRegistrations(task.id)
             .then(data => {
@@ -115,18 +131,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         const response = formData.get("response").trim();
         const accepted = e.nativeEvent.submitter.value === "true";
 
-        setRegistrationErrors((currentErrors) => currentErrors.filter((errorObj) => {
-            return errorObj.userId !== userId;
-        }));
+        setRegistrationErrors((currentErrors) => currentErrors.filter((errorObj) => errorObj.userId !== userId));
 
-        updateRegistration({
-            taskId: task.id,
-            userId: userId,
-            accepted,
-            response,
-        })
+        updateRegistration({ taskId: task.id, userId, accepted, response })
             .then(() => {
-                // Refetch to get updated lists (accepted registration moves from pending to accepted)
                 refetchRegistrations();
                 setFetchAmount((currentAmount) => currentAmount + 1);
             })
@@ -135,7 +143,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             });
     };
 
-    // Handle marking a task as started
     const handleMarkStarted = async (studentId) => {
         setProgressLoading(prev => ({ ...prev, [studentId]: 'starting' }));
         try {
@@ -148,7 +155,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
-    // Handle marking a task as completed
     const handleMarkCompleted = async (studentId) => {
         setProgressLoading(prev => ({ ...prev, [studentId]: 'completing' }));
         try {
@@ -163,18 +169,14 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     };
 
     const handleSaveTask = async () => {
-        // Validation
         if (!newName || newName.trim() === '') {
             setSpotsError("Taaknaam is verplicht");
             return;
         }
-        
         if (newTotalNeeded < task.total_accepted) {
             setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
             return;
         }
-
-        // Validate dates
         if (newStartDate && newEndDate && new Date(newStartDate) > new Date(newEndDate)) {
             setSpotsError("Startdatum kan niet na de einddatum liggen");
             return;
@@ -201,20 +203,15 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
-    // Save task with skills (when no registrations exist)
     const handleSaveTaskWithSkills = async () => {
-        // Validation
         if (!newName || newName.trim() === '') {
             setSpotsError("Taaknaam is verplicht");
             return;
         }
-        
         if (newTotalNeeded < task.total_accepted) {
             setSpotsError(`Aantal plekken kan niet lager zijn dan ${task.total_accepted} (al geaccepteerd)`);
             return;
         }
-
-        // Validate dates
         if (newStartDate && newEndDate && new Date(newStartDate) > new Date(newEndDate)) {
             setSpotsError("Startdatum kan niet na de einddatum liggen");
             return;
@@ -225,7 +222,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         setTaskSkillsError("");
 
         try {
-            // Save skills first
             const skillIds = taskSkillsState.map((skill) => skill.skillId || skill.id);
             const result = await updateTaskSkills(task.id, skillIds);
             
@@ -234,7 +230,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 return;
             }
             
-            // Save task details
             const formData = new FormData();
             formData.append('name', newName.trim());
             formData.append('description', newDescription || '');
@@ -252,226 +247,350 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
-    // Calculate available spots
-    const spotsAvailable = task.total_needed - task.total_accepted;
+    const openEditModal = () => {
+        setNewName(task.name);
+        setNewDescription(task.description);
+        setNewTotalNeeded(task.total_needed);
+        setNewStartDate(task.start_date ? task.start_date.split('T')[0] : '');
+        setNewEndDate(task.end_date ? task.end_date.split('T')[0] : '');
+        setTaskSkillsState(task.skills || []);
+        setSpotsError("");
+        setTaskSkillsError("");
+        if (hasRegistrations) {
+            setIsSpotsModalOpen(true);
+        } else {
+            setIsEditing(true);
+        }
+    };
+
+    // === TAB DEFINITIONS ===
+    const tabs = [
+        { id: 'details', label: 'Details', icon: 'info' },
+        { 
+            id: 'subtasks', 
+            label: 'Deeltaken', 
+            icon: 'checklist',
+            badge: task.subtask_count > 0 ? `${task.subtask_done || 0}/${task.subtask_count}` : null,
+            hidden: !isAcceptedStudent && !isOwner
+        },
+        { 
+            id: 'team', 
+            label: 'Team', 
+            icon: 'group',
+            badge: pendingRegistrations.length > 0 ? pendingRegistrations.length : null,
+            badgeColor: 'bg-amber-500',
+            hidden: !isOwner
+        },
+    ].filter(tab => !tab.hidden);
 
     return (
         <div id={`task-${task.id}`} className="group h-full">
-            <div className="target neu-flat p-6 h-full flex flex-col">
-                <div className="flex flex-col lg:flex-row gap-6 flex-grow">
-                    {/* Main content */}
-                    <div className="flex-grow space-y-4">
-                        <div className="flex items-start gap-3">
-                            <div className="neu-icon-container text-primary shrink-0">
-                                <span className="material-symbols-outlined">assignment</span>
+            <div className="neu-flat rounded-2xl h-full flex flex-col overflow-hidden transition-shadow duration-200 hover:shadow-lg">
+                
+                {/* === COMPACT HEADER === */}
+                <div className="p-3 sm:p-4 border-b border-[var(--neu-border)]">
+                    <div className="flex items-start justify-between gap-2 sm:gap-3">
+                        {/* Left: Icon + Title */}
+                        <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
+                            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-primary/20 to-orange-400/20 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-primary text-xl sm:text-2xl">assignment</span>
                             </div>
-                            <div>
-                                <h2 className="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                        {task.name}
-                    </h2>
-                                <span className="neu-label">Taak</span>
-                            </div>
-                        </div>
-
-                        <div className="text-[var(--text-secondary)] text-sm">
-                            <RichTextViewer text={task.description} />
-                        </div>
-
-                    <Alert text={taskSkillsError} onClose={() => { setTaskSkillsError("") }} />
-                        
-                        {/* Skills */}
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="neu-label">Vereiste skills</p>
-                                {isOwner && !hasRegistrations && (
-                                    <button 
-                                        className="neu-btn !py-1 !px-2.5 text-xs"
-                                        onClick={() => {
-                                            setNewName(task.name);
-                                            setNewDescription(task.description);
-                                            setNewTotalNeeded(task.total_needed);
-                                            setNewStartDate(task.start_date ? task.start_date.split('T')[0] : '');
-                                            setNewEndDate(task.end_date ? task.end_date.split('T')[0] : '');
-                                            setTaskSkillsState(task.skills || []);
-                                            setSpotsError("");
-                                            setTaskSkillsError("");
-                                            setIsEditing(true);
-                                        }}
-                                        aria-label="Taak bewerken"
-                                    >
-                                        <span className="flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">edit</span>
-                                            <span className="font-bold">Bewerken</span>
+                            <div className="min-w-0">
+                                <h2 className="text-base font-bold text-[var(--text-primary)] leading-tight line-clamp-2">
+                                    {task.name}
+                                </h2>
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    {/* Spots badge */}
+                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                                        spotsAvailable > 0 
+                                            ? 'text-emerald-700 bg-emerald-100' 
+                                            : 'text-red-700 bg-red-100'
+                                    }`}>
+                                        <span className="material-symbols-outlined text-sm">
+                                            {spotsAvailable > 0 ? 'check_circle' : 'cancel'}
                                         </span>
-                                    </button>
-                                )}
-                                {isOwner && hasRegistrations && (
-                                    <button 
-                                        className="neu-btn !py-1 !px-2.5 text-xs"
-                                        onClick={() => {
-                                            setNewName(task.name);
-                                            setNewDescription(task.description);
-                                            setNewTotalNeeded(task.total_needed);
-                                            setNewStartDate(task.start_date ? task.start_date.split('T')[0] : '');
-                                            setNewEndDate(task.end_date ? task.end_date.split('T')[0] : '');
-                                            setSpotsError("");
-                                            setIsSpotsModalOpen(true);
-                                        }}
-                                        title="Skills zijn vergrendeld, maar je kunt de taak aanpassen"
-                                    >
-                                        <span className="flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-sm">lock</span>
-                                            <span className="font-bold">Bewerken</span>
+                                        {spotsAvailable > 0 ? `${task.total_accepted}/${task.total_needed}` : 'Vol'}
+                                    </span>
+                                    
+                                    {/* Deadline badge */}
+                                    {deadlineStatus && (
+                                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${deadlineStatus.color}`}>
+                                            <span className="material-symbols-outlined text-sm">{deadlineStatus.icon}</span>
+                                            {deadlineStatus.text}
                                         </span>
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap gap-2 items-center">
-                                {task.skills && task.skills.length === 0 && (
-                                    <span className="text-[var(--text-muted)] text-sm">Geen specifieke skills vereist</span>
-                                )}
-                                {task.skills && task.skills.map((skill) => {
-                                    const skillId = skill.skillId ?? skill.id;
-                                    const isMatch = studentSkillIds.has(skillId);
-                                    return (
-                                        <SkillBadge
-                                            key={skillId}
-                                            skillName={skill.name}
-                                            isPending={skill.isPending ?? skill.is_pending}
-                                            isOwn={isMatch}
-                                        >
-                                            {isMatch && (
-                                                <span className="material-symbols-outlined text-xs mr-1">check</span>
-                                            )}
-                                        </SkillBadge>
-                                    );
-                                })}
+                                    )}
+                                    
+                                    {/* Pending registrations indicator */}
+                                    {isOwner && task.total_registered > 0 && (
+                                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full text-amber-700 bg-amber-100">
+                                            <span className="material-symbols-outlined text-sm">pending</span>
+                                            {task.total_registered}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                         
-                        {/* Deeltaken (Subtasks) - alleen voor geaccepteerde studenten en supervisors */}
-                        {(isAcceptedStudent || isOwner) && (
-                            <div className="mt-6 pt-4 border-t border-[var(--neu-border)]">
-                                <TaskSubtasks 
-                                    taskId={task.id}
-                                    businessId={businessId}
-                                    isAcceptedStudent={isAcceptedStudent}
-                                    isSupervisor={isOwner}
-                                />
-                            </div>
+                        {/* Right: Edit button (owner only) */}
+                        {isOwner && (
+                            <button 
+                                onClick={openEditModal}
+                                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-primary hover:bg-[var(--gray-200)] transition-colors shrink-0"
+                                title="Taak bewerken"
+                            >
+                                <span className="material-symbols-outlined text-lg">{hasRegistrations ? 'lock' : 'edit'}</span>
+                            </button>
                         )}
                     </div>
+                </div>
 
-                    {/* Sidebar with stats and actions */}
-                    <div className="lg:w-64 shrink-0 flex flex-col gap-3 lg:justify-between">
-                        {/* Stats */}
-                        <div className="neu-pressed p-4 rounded-xl space-y-3">
-                            <div className="flex items-center gap-2">
-                                <span className={`material-symbols-outlined ${spotsAvailable > 0 ? 'text-emerald-600' : 'text-[var(--text-muted)]'}`}>
-                                    {spotsAvailable > 0 ? 'check_circle' : 'cancel'}
+                {/* === TAB NAVIGATION === */}
+                <div className="flex border-b border-[var(--neu-border)] bg-[var(--gray-100)] overflow-x-auto scrollbar-none">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors relative ${
+                                activeTab === tab.id
+                                    ? 'text-primary'
+                                    : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                            }`}
+                        >
+                            <span className="material-symbols-outlined text-base sm:text-lg">{tab.icon}</span>
+                            <span>{tab.label}</span>
+                            {tab.badge && (
+                                <span className={`ml-1 px-1.5 py-0.5 text-xs font-bold rounded-full ${
+                                    tab.badgeColor || 'bg-primary/10 text-primary'
+                                } ${tab.badgeColor ? 'text-white' : ''}`}>
+                                    {tab.badge}
                                 </span>
-                                <span className="text-sm font-bold text-[var(--text-primary)]">
-                                    {spotsAvailable > 0 ? (
-                                        <><span className="text-emerald-600">{spotsAvailable}</span> van {task.total_needed} plekken</>
-                                    ) : (
-                                        'Taak is vol'
-                                    )}
-                                </span>
+                            )}
+                            {/* Active indicator */}
+                            {activeTab === tab.id && (
+                                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* === TAB CONTENT === */}
+                <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-[160px] sm:min-h-[180px] max-h-[250px] sm:max-h-[300px]">
+                    
+                    {/* Details Tab */}
+                    {activeTab === 'details' && (
+                        <div className="space-y-4">
+                            {/* Description */}
+                            <div>
+                                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">Beschrijving</p>
+                                <div className="text-sm text-[var(--text-secondary)] line-clamp-4">
+                                    <RichTextViewer text={task.description} />
+                                </div>
                             </div>
-                            {task.total_registered > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-amber-500">pending</span>
-                                    <span className="text-sm text-[var(--text-secondary)]">
-                                        <span className="font-bold text-amber-600">{task.total_registered}</span> wachtend
-                                    </span>
-                                </div>
-                            )}
                             
-                            {/* Progress indicator */}
-                            {task.total_accepted > 0 && (
-                                <div className="pt-2 border-t border-[var(--neu-border)]">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Voortgang</span>
-                                    </div>
-                                    <div className="flex gap-3 text-xs">
-                                        {task.total_completed > 0 && (
-                                            <span className="flex items-center gap-1 text-blue-600">
-                                                <span className="material-symbols-outlined text-sm">task_alt</span>
-                                                <span className="font-bold">{task.total_completed}</span> afgerond
-                                            </span>
-                                        )}
-                                        {(task.total_started - (task.total_completed || 0)) > 0 && (
-                                            <span className="flex items-center gap-1 text-amber-600">
-                                                <span className="material-symbols-outlined text-sm">play_circle</span>
-                                                <span className="font-bold">{task.total_started - (task.total_completed || 0)}</span> bezig
-                                            </span>
-                                        )}
-                                        {(task.total_accepted - (task.total_started || 0)) > 0 && (
-                                            <span className="flex items-center gap-1 text-emerald-600">
-                                                <span className="material-symbols-outlined text-sm">schedule</span>
-                                                <span className="font-bold">{task.total_accepted - (task.total_started || 0)}</span> wacht
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+                            <Alert text={taskSkillsError} onClose={() => setTaskSkillsError("")} />
                             
-                            {/* Date display */}
+                            {/* Skills */}
+                            <div>
+                                <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Vereiste skills</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {(!task.skills || task.skills.length === 0) && (
+                                        <span className="text-[var(--text-muted)] text-sm">Geen specifieke skills vereist</span>
+                                    )}
+                                    {task.skills && task.skills.slice(0, 6).map((skill) => {
+                                        const skillId = skill.skillId ?? skill.id;
+                                        const isMatch = studentSkillIds.has(skillId);
+                                        return (
+                                            <SkillBadge
+                                                key={skillId}
+                                                skillName={skill.name}
+                                                isPending={skill.isPending ?? skill.is_pending}
+                                                isOwn={isMatch}
+                                            />
+                                        );
+                                    })}
+                                    {task.skills && task.skills.length > 6 && (
+                                        <span className="text-xs text-[var(--text-muted)] self-center">
+                                            +{task.skills.length - 6} meer
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            {/* Planning */}
                             {(task.start_date || task.end_date) && (
-                                <div className="pt-2 border-t border-[var(--neu-border)]">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Planning</span>
-                                    </div>
-                                    <div className="space-y-1.5 text-xs">
+                                <div>
+                                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Planning</p>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                                         {task.start_date && formatDate(task.start_date) && (
-                                            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                                            <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
                                                 <span className="material-symbols-outlined text-sm text-primary">calendar_today</span>
-                                                <span>Start: <span className="font-medium">{formatDate(task.start_date)}</span></span>
-                                            </div>
+                                                Start: {formatDate(task.start_date)}
+                                            </span>
                                         )}
                                         {task.end_date && formatDate(task.end_date) && (
-                                            <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+                                            <span className="flex items-center gap-1.5 text-[var(--text-secondary)]">
                                                 <span className="material-symbols-outlined text-sm text-orange-500">event</span>
-                                                <span>Deadline: <span className="font-medium">{formatDate(task.end_date)}</span></span>
+                                                Deadline: {formatDate(task.end_date)}
                                                 {getCountdownText(task.end_date) && (
                                                     <span className="text-[var(--text-muted)]">({getCountdownText(task.end_date)})</span>
                                                 )}
-                                            </div>
+                                            </span>
                                         )}
                                     </div>
                                 </div>
                             )}
                         </div>
+                    )}
 
-                        {/* Action buttons */}
+                    {/* Subtasks Tab */}
+                    {activeTab === 'subtasks' && (isAcceptedStudent || isOwner) && (
+                        <TaskSubtasks 
+                            taskId={task.id}
+                            taskName={task.name}
+                            businessId={businessId}
+                            isAcceptedStudent={isAcceptedStudent}
+                            isSupervisor={isOwner}
+                            embedded={true}
+                        />
+                    )}
+
+                    {/* Team Tab */}
+                    {activeTab === 'team' && isOwner && (
+                        <div className="space-y-4">
+                            {/* Accepted members */}
+                            {acceptedRegistrations.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm text-emerald-500">check_circle</span>
+                                        Geaccepteerd ({acceptedRegistrations.length})
+                                    </p>
+                                    <div className="space-y-2">
+                                        {acceptedRegistrations.map((reg) => {
+                                            const isStarted = !!reg.started_at;
+                                            const isCompleted = !!reg.completed_at;
+                                            const isLoading = progressLoading[reg.student.id];
+                                            
+                                            let statusBadge = { color: 'bg-gray-100 text-gray-600', text: 'Wacht' };
+                                            if (isCompleted) statusBadge = { color: 'bg-blue-100 text-blue-600', text: 'Klaar' };
+                                            else if (isStarted) statusBadge = { color: 'bg-amber-100 text-amber-600', text: 'Bezig' };
+                                            
+                                            return (
+                                                <div key={reg.student.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--gray-100)] hover:bg-[var(--gray-200)] transition-colors">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <Link 
+                                                            to={`/student/${reg.student.id}`}
+                                                            className="text-sm font-medium text-[var(--text-primary)] hover:text-primary truncate"
+                                                            target="_blank"
+                                                        >
+                                                            {reg.student.full_name}
+                                                        </Link>
+                                                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${statusBadge.color}`}>
+                                                            {statusBadge.text}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex gap-1 shrink-0">
+                                                        {!isStarted && !isCompleted && (
+                                                            <button
+                                                                onClick={() => handleMarkStarted(reg.student.id)}
+                                                                disabled={isLoading}
+                                                                className="p-1.5 rounded text-amber-600 hover:bg-amber-100 transition-colors"
+                                                                title="Start"
+                                                            >
+                                                                {isLoading === 'starting' 
+                                                                    ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                                                    : <span className="material-symbols-outlined text-sm">play_arrow</span>
+                                                                }
+                                                            </button>
+                                                        )}
+                                                        {isStarted && !isCompleted && (
+                                                            <button
+                                                                onClick={() => handleMarkCompleted(reg.student.id)}
+                                                                disabled={isLoading}
+                                                                className="p-1.5 rounded text-emerald-600 hover:bg-emerald-100 transition-colors"
+                                                                title="Afronden"
+                                                            >
+                                                                {isLoading === 'completing'
+                                                                    ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                                                                    : <span className="material-symbols-outlined text-sm">check_circle</span>
+                                                                }
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Pending registrations preview */}
+                            {pendingRegistrations.length > 0 && (
+                                <div>
+                                    <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm text-amber-500">pending</span>
+                                        Wachtend ({pendingRegistrations.length})
+                                    </p>
+                                    <button
+                                        onClick={() => setIsRegistrationsModalOpen(true)}
+                                        className="w-full p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium hover:bg-amber-100 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">inbox</span>
+                                        Bekijk {pendingRegistrations.length} aanmelding{pendingRegistrations.length !== 1 ? 'en' : ''}
+                                    </button>
+                                </div>
+                            )}
+                            
+                            {/* Empty state */}
+                            {acceptedRegistrations.length === 0 && pendingRegistrations.length === 0 && (
+                                <div className="text-center py-6 text-[var(--text-muted)]">
+                                    <span className="material-symbols-outlined text-3xl mb-2 block opacity-50">group_off</span>
+                                    <p className="text-sm">Nog geen teamleden</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* === FOOTER ACTIONS === */}
+                <div className="p-2.5 sm:p-3 border-t border-[var(--neu-border)] bg-[var(--gray-50)]">
                     {authData.type === "student" && (
+                        <button 
+                            className={`neu-btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "opacity-50 cursor-not-allowed" : ""}`} 
+                            disabled={(studentAlreadyRegistered || isFull)} 
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            <span className="flex items-center justify-center gap-2">
+                                <span className="material-symbols-outlined text-lg">
+                                    {studentAlreadyRegistered ? 'check' : isFull ? 'block' : 'send'}
+                                </span>
+                                {studentAlreadyRegistered ? "Aangemeld" : isFull ? "Vol" : "Aanmelden"}
+                            </span>
+                        </button>
+                    )}
+                    {isOwner && (
+                        <div className="flex gap-2">
                             <button 
-                                className={`neu-btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "opacity-50 cursor-not-allowed" : ""}`} 
-                                disabled={(studentAlreadyRegistered || isFull)} 
-                                onClick={() => setIsModalOpen(true)}
+                                className="neu-btn flex-1" 
+                                onClick={() => setIsRegistrationsModalOpen(true)}
                             >
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="material-symbols-outlined">
-                                        {studentAlreadyRegistered ? 'check' : isFull ? 'block' : 'send'}
-                                    </span>
-                                    {studentAlreadyRegistered ? "Aangemeld" : isFull ? "Vol" : "Aanmelden"}
+                                <span className="flex items-center justify-center gap-1.5">
+                                    <span className="material-symbols-outlined text-lg">group</span>
+                                    <span className="hidden sm:inline">Aanmeldingen</span>
+                                    {task.total_registered > 0 && (
+                                        <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+                                            {task.total_registered}
+                                        </span>
+                                    )}
                                 </span>
                             </button>
+                            <CreateBusinessEmail taskId={task.id} compact />
+                        </div>
                     )}
-                        {isOwner && (
-                            <>
-                                <button className="neu-btn w-full" onClick={() => setIsRegistrationsModalOpen(true)}>
-                                    <span className="flex items-center justify-center gap-2">
-                                        <span className="material-symbols-outlined">group</span>
-                                        Aanmeldingen ({task.total_registered})
-                                    </span>
-                                </button>
-                                <CreateBusinessEmail taskId={task.id} />
-                            </>
-                        )}
                 </div>
             </div>
-            </div>
+
+            {/* === MODALS (unchanged structure) === */}
+            
             {/* Registration modal for students */}
             {!(studentAlreadyRegistered || isFull) && (
                 <Modal
@@ -483,7 +602,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 >
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col gap-5">
-                            {/* Info banner */}
                             <div 
                                 className="flex items-start gap-3 p-4 rounded-xl"
                                 style={{ background: 'rgba(255, 127, 80, 0.05)', border: '1px solid rgba(255, 127, 80, 0.15)' }}
@@ -496,7 +614,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
                             <Alert text={error} />
 
-                            {/* Skills match indicator */}
                             {task.skills && task.skills.length > 0 && (
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
@@ -513,9 +630,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                 <span 
                                                     key={skillId}
                                                     className={`px-3 py-1.5 text-xs font-bold rounded-lg ${
-                                                        isMatch 
-                                                            ? 'bg-primary text-white' 
-                                                            : 'bg-[var(--gray-200)] text-[var(--text-muted)]'
+                                                        isMatch ? 'bg-primary text-white' : 'bg-[var(--gray-200)] text-[var(--text-muted)]'
                                                     }`}
                                                 >
                                                     {isMatch && '✓ '}{skill.name}
@@ -526,26 +641,17 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 </div>
                             )}
 
-                            {/* Motivation editor */}
                             <RichTextEditor
                                 label="Jouw motivatie"
                                 onSave={setMotivation}
                                 setCanSubmit={setCanSubmit}
                             />
 
-                            {/* Footer buttons */}
                             <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--neu-border)]">
-                                <button 
-                                    type="button" 
-                                    className="neu-btn"
-                                    onClick={() => setIsModalOpen(false)}
-                                >
+                                <button type="button" className="neu-btn" onClick={() => setIsModalOpen(false)}>
                                     Annuleren
                                 </button>
-                                <button 
-                                    type="submit" 
-                                    className="neu-btn-primary"
-                                >
+                                <button type="submit" className="neu-btn-primary">
                                     <span className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-lg">send</span>
                                         Verstuur aanmelding
@@ -568,7 +674,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     setIsModalOpen={setIsRegistrationsModalOpen}
                 >
                     <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-1">
-                        {/* Empty state */}
                         {pendingRegistrations.length === 0 && acceptedRegistrations.length === 0 && (
                             <div className="text-center py-8">
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--gray-200)] flex items-center justify-center">
@@ -578,7 +683,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             </div>
                         )}
 
-                        {/* Accepted Registrations - Progress Tracking */}
                         {acceptedRegistrations.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -591,40 +695,29 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         const isCompleted = !!registration.completed_at;
                                         const isLoading = progressLoading[registration.student.id];
                                         
-                                        // Determine status
-                                        let status = 'accepted';
                                         let statusColor = 'text-emerald-600 bg-emerald-100';
                                         let statusIcon = 'schedule';
                                         let statusText = 'Wacht op start';
                                         
                                         if (isCompleted) {
-                                            status = 'completed';
                                             statusColor = 'text-blue-600 bg-blue-100';
                                             statusIcon = 'task_alt';
                                             statusText = 'Afgerond';
                                         } else if (isStarted) {
-                                            status = 'started';
                                             statusColor = 'text-amber-600 bg-amber-100';
                                             statusIcon = 'play_circle';
                                             statusText = 'Bezig';
                                         }
                                         
                                         return (
-                                            <div 
-                                                key={registration.student.id} 
-                                                className="rounded-xl border border-[var(--neu-border)] bg-[var(--neu-bg)] p-4"
-                                            >
+                                            <div key={registration.student.id} className="rounded-xl border border-[var(--neu-border)] bg-[var(--neu-bg)] p-4">
                                                 <div className="flex items-center justify-between gap-4">
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-400/20 flex items-center justify-center flex-shrink-0">
                                                             <span className="material-symbols-outlined text-emerald-600">person</span>
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <Link 
-                                                                to={`/student/${registration.student.id}`} 
-                                                                className="font-bold text-[var(--text-primary)] hover:text-primary transition truncate block" 
-                                                                target="_blank"
-                                                            >
+                                                            <Link to={`/student/${registration.student.id}`} className="font-bold text-[var(--text-primary)] hover:text-primary transition truncate block" target="_blank">
                                                                 {registration.student.full_name}
                                                             </Link>
                                                             <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${statusColor}`}>
@@ -633,36 +726,16 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                             </span>
                                                         </div>
                                                     </div>
-                                                    
-                                                    {/* Progress buttons */}
                                                     <div className="flex gap-2 flex-shrink-0">
                                                         {!isStarted && !isCompleted && (
-                                                            <button
-                                                                onClick={() => handleMarkStarted(registration.student.id)}
-                                                                disabled={isLoading}
-                                                                className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors"
-                                                                title="Markeer als gestart"
-                                                            >
-                                                                {isLoading === 'starting' ? (
-                                                                    <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
-                                                                ) : (
-                                                                    <span className="material-symbols-outlined text-base">play_arrow</span>
-                                                                )}
+                                                            <button onClick={() => handleMarkStarted(registration.student.id)} disabled={isLoading} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors" title="Markeer als gestart">
+                                                                {isLoading === 'starting' ? <span className="material-symbols-outlined animate-spin text-base">progress_activity</span> : <span className="material-symbols-outlined text-base">play_arrow</span>}
                                                                 Start
                                                             </button>
                                                         )}
                                                         {isStarted && !isCompleted && (
-                                                            <button
-                                                                onClick={() => handleMarkCompleted(registration.student.id)}
-                                                                disabled={isLoading}
-                                                                className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5"
-                                                                title="Markeer als afgerond"
-                                                            >
-                                                                {isLoading === 'completing' ? (
-                                                                    <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
-                                                                ) : (
-                                                                    <span className="material-symbols-outlined text-base">check_circle</span>
-                                                                )}
+                                                            <button onClick={() => handleMarkCompleted(registration.student.id)} disabled={isLoading} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5" title="Markeer als afgerond">
+                                                                {isLoading === 'completing' ? <span className="material-symbols-outlined animate-spin text-base">progress_activity</span> : <span className="material-symbols-outlined text-base">check_circle</span>}
                                                                 Afronden
                                                             </button>
                                                         )}
@@ -682,38 +755,27 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             </div>
                         )}
 
-                        {/* Pending Registrations - Accept/Reject */}
                         {pendingRegistrations.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-bold text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-2">
                                     <span className="material-symbols-outlined text-amber-500">pending</span>
                                     Wachtend op beslissing ({pendingRegistrations.length})
                                 </h3>
-                                {isFull && (
-                                    <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />
-                                )}
+                                {isFull && <Alert isCloseable={false} text="Deze taak is vol. Er kunnen geen nieuwe aanmeldingen meer worden geaccepteerd." />}
                                 <div className="space-y-4">
                                     {pendingRegistrations.map((registration) => {
-                                        const taskSkillIds = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
-                                        const matchingSkills = registration.student.skills.filter(s => taskSkillIds.has(s.skillId ?? s.id)).length;
+                                        const taskSkillIdsSet = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
+                                        const matchingSkills = registration.student.skills.filter(s => taskSkillIdsSet.has(s.skillId ?? s.id)).length;
                                         
                                         return (
-                                            <div 
-                                                key={registration.student.id} 
-                                                className="rounded-2xl overflow-hidden border border-[var(--neu-border)] bg-[var(--neu-bg)]"
-                                            >
-                                                {/* Student header */}
+                                            <div key={registration.student.id} className="rounded-2xl overflow-hidden border border-[var(--neu-border)] bg-[var(--neu-bg)]">
                                                 <div className="p-4 border-b border-[var(--neu-border)]" style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}>
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-orange-400/20 flex items-center justify-center">
                                                             <span className="material-symbols-outlined text-primary">person</span>
                                                         </div>
                                                         <div>
-                                                            <Link 
-                                                                to={`/student/${registration.student.id}`} 
-                                                                className="font-bold text-[var(--text-primary)] hover:text-primary transition" 
-                                                                target="_blank"
-                                                            >
+                                                            <Link to={`/student/${registration.student.id}`} className="font-bold text-[var(--text-primary)] hover:text-primary transition" target="_blank">
                                                                 {registration.student.full_name}
                                                             </Link>
                                                             <p className="text-xs text-[var(--text-muted)]">
@@ -722,8 +784,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Motivation & Actions */}
                                                 <div className="p-4 space-y-3">
                                                     <div>
                                                         <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1 block">Motivatie</span>
@@ -731,55 +791,26 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                             <RichTextViewer text={registration.reason} />
                                                         </div>
                                                     </div>
-
-                                                    {/* Skills (collapsed) */}
                                                     <div className="flex flex-wrap gap-1.5">
                                                         {registration.student.skills.slice(0, 5).map((skill) => {
                                                             const skillId = skill.skillId ?? skill.id;
-                                                            const matchesTask = taskSkillIds.has(skillId);
-                                                            return (
-                                                                <SkillBadge
-                                                                    key={skillId}
-                                                                    skillName={skill.name}
-                                                                    isPending={skill.isPending ?? skill.is_pending}
-                                                                    isOwn={matchesTask}
-                                                                />
-                                                            );
+                                                            const matchesTask = taskSkillIdsSet.has(skillId);
+                                                            return <SkillBadge key={skillId} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} isOwn={matchesTask} />;
                                                         })}
-                                                        {registration.student.skills.length > 5 && (
-                                                            <span className="text-xs text-[var(--text-muted)] self-center">+{registration.student.skills.length - 5} meer</span>
-                                                        )}
+                                                        {registration.student.skills.length > 5 && <span className="text-xs text-[var(--text-muted)] self-center">+{registration.student.skills.length - 5} meer</span>}
                                                     </div>
-
                                                     <Alert text={registrationErrors.find((errorObj) => errorObj.userId === registration.student.id)?.error} />
-                                                    
-                                                    {/* Response form */}
                                                     <form onSubmit={handleRegistrationResponse} className="pt-2 border-t border-[var(--neu-border)]">
                                                         <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
                                                         <input type="hidden" name="userId" value={registration.student.id} />
                                                         <div className="flex gap-3 mt-3">
-                                                            <button 
-                                                                type="submit" 
-                                                                value={true} 
-                                                                disabled={isFull} 
-                                                                className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${
-                                                                    isFull 
-                                                                        ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" 
-                                                                        : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"
-                                                                }`}
-                                                                style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}
-                                                            >
+                                                            <button type="submit" value={true} disabled={isFull} className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${isFull ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"}`} style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}>
                                                                 <span className="flex items-center justify-center gap-2">
                                                                     <span className="material-symbols-outlined text-lg">check</span>
                                                                     Accepteren
                                                                 </span>
                                                             </button>
-                                                            <button 
-                                                                type="submit" 
-                                                                value={false} 
-                                                                className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm"
-                                                                style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
-                                                            >
+                                                            <button type="submit" value={false} className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm" style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
                                                                 <span className="flex items-center justify-center gap-2">
                                                                     <span className="material-symbols-outlined text-lg">close</span>
                                                                     Weigeren
@@ -795,13 +826,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             </div>
                         )}
                     </div>
-                    
-                    {/* Footer */}
                     <div className="flex justify-center pt-4 mt-4 border-t border-[var(--neu-border)]">
-                        <button 
-                            className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
-                            onClick={() => setIsRegistrationsModalOpen(false)}
-                        >
+                        <button className="text-sm font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors" onClick={() => setIsRegistrationsModalOpen(false)}>
                             Sluiten
                         </button>
                     </div>
@@ -819,16 +845,12 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     maxWidth="max-w-xl"
                 >
                     <div className="flex flex-col gap-4 max-h-[50vh] overflow-y-auto pr-1 pb-4">
-                        {/* Info about locked task when there are registrations */}
                         {hasRegistrations && (
                             <InfoBox type="info">
                                 <span className="font-semibold">Taak vergrendeld:</span> Er zijn al aanmeldingen. Je kunt alleen extra plekken toevoegen.
                             </InfoBox>
                         )}
-
-                        {/* Row 1: Name and Spots side by side */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {/* Task name - takes 2 columns */}
                             <div className="sm:col-span-2">
                                 <label className="neu-label mb-1.5 block" htmlFor="task-name">
                                     Taaknaam
@@ -837,47 +859,24 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 {hasRegistrations ? (
                                     <p className="text-[var(--text-primary)] font-medium py-2">{task.name}</p>
                                 ) : (
-                                    <input
-                                        id="task-name"
-                                        type="text"
-                                        value={newName}
-                                        onChange={(e) => setNewName(e.target.value)}
-                                        className="neu-input w-full"
-                                        maxLength={50}
-                                        required
-                                    />
+                                    <input id="task-name" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} className="neu-input w-full" maxLength={50} required />
                                 )}
                             </div>
-
-                            {/* Spots adjustment - takes 1 column */}
                             <div>
                                 <p className="neu-label mb-1.5">Plekken</p>
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        className="neu-btn !p-1.5"
-                                        onClick={() => setNewTotalNeeded(Math.max(task.total_accepted || 1, newTotalNeeded - 1))}
-                                        disabled={newTotalNeeded <= (task.total_accepted || 1)}
-                                        aria-label="Verlaag"
-                                    >
+                                    <button type="button" className="neu-btn !p-1.5" onClick={() => setNewTotalNeeded(Math.max(task.total_accepted || 1, newTotalNeeded - 1))} disabled={newTotalNeeded <= (task.total_accepted || 1)} aria-label="Verlaag">
                                         <span className="material-symbols-outlined text-base">remove</span>
                                     </button>
                                     <div className="neu-pressed px-4 py-1.5 rounded-lg min-w-[50px] text-center">
                                         <span className="text-xl font-bold text-[var(--text-primary)]">{newTotalNeeded}</span>
                                     </div>
-                                    <button
-                                        type="button"
-                                        className="neu-btn !p-1.5"
-                                        onClick={() => setNewTotalNeeded(newTotalNeeded + 1)}
-                                        aria-label="Verhoog"
-                                    >
+                                    <button type="button" className="neu-btn !p-1.5" onClick={() => setNewTotalNeeded(newTotalNeeded + 1)} aria-label="Verhoog">
                                         <span className="material-symbols-outlined text-base">add</span>
                                     </button>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Task description */}
                         <div>
                             <label className="neu-label mb-1.5 block">
                                 Beschrijving
@@ -888,129 +887,55 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     <RichTextViewer text={task.description} />
                                 </div>
                             ) : (
-                                <RichTextEditor
-                                    defaultText={newDescription}
-                                    onSave={setNewDescription}
-                                    max={4000}
-                                />
+                                <RichTextEditor defaultText={newDescription} onSave={setNewDescription} max={4000} />
                             )}
                         </div>
-
-                        {/* Date fields */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="neu-label mb-1.5 block" htmlFor="task-start-date">
                                     <span className="material-symbols-outlined text-xs align-middle mr-1">calendar_today</span>
                                     Startdatum
                                 </label>
-                                <input
-                                    id="task-start-date"
-                                    type="date"
-                                    value={newStartDate}
-                                    onChange={(e) => setNewStartDate(e.target.value)}
-                                    className="neu-input w-full"
-                                />
+                                <input id="task-start-date" type="date" value={newStartDate} onChange={(e) => setNewStartDate(e.target.value)} className="neu-input w-full" />
                             </div>
                             <div>
                                 <label className="neu-label mb-1.5 block" htmlFor="task-end-date">
                                     <span className="material-symbols-outlined text-xs align-middle mr-1">event</span>
                                     Einddatum (deadline)
                                 </label>
-                                <input
-                                    id="task-end-date"
-                                    type="date"
-                                    value={newEndDate}
-                                    onChange={(e) => setNewEndDate(e.target.value)}
-                                    className="neu-input w-full"
-                                />
+                                <input id="task-end-date" type="date" value={newEndDate} onChange={(e) => setNewEndDate(e.target.value)} className="neu-input w-full" />
                             </div>
                         </div>
-
-                        {/* Skills section */}
                         <div className="pt-3 border-t border-[var(--neu-border)]">
                             <p className="neu-label mb-2">
                                 Vereiste skills
                                 {hasRegistrations && <span className="material-symbols-outlined text-xs align-middle ml-1 text-[var(--text-muted)]">lock</span>}
                             </p>
-                            
                             {hasRegistrations ? (
-                                // Locked skills display
                                 <div className="flex flex-wrap gap-1.5">
-                                    {task.skills && task.skills.length === 0 && (
-                                        <span className="text-[var(--text-muted)] text-sm">Geen skills</span>
-                                    )}
-                                    {task.skills && task.skills.map((skill) => (
-                                        <SkillBadge
-                                            key={skill.skillId ?? skill.id}
-                                            skillName={skill.name}
-                                            isPending={skill.isPending ?? skill.is_pending}
-                                        />
-                                    ))}
+                                    {task.skills && task.skills.length === 0 && <span className="text-[var(--text-muted)] text-sm">Geen skills</span>}
+                                    {task.skills && task.skills.map((skill) => <SkillBadge key={skill.skillId ?? skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />)}
                                 </div>
                             ) : (
-                                // Editable skills - instantApply so buttons are in footer
-                                <SkillsEditor
-                                    allSkills={allSkills}
-                                    initialSkills={task.skills}
-                                    isEditing={true}
-                                    onSave={(skills) => {
-                                        // Just update the local state, actual save happens in footer button
-                                        setTaskSkillsState(skills);
-                                    }}
-                                    onCancel={() => setIsEditing(false)}
-                                    setError={setTaskSkillsError}
-                                    isAllowedToAddSkill={true}
-                                    isAbsolute={false}
-                                    hideSelectedSkills={false}
-                                    instantApply={true}
-                                    embedded={true}
-                                    hideButtons={true}
-                                    maxSkillsDisplayed={12}
-                                >
+                                <SkillsEditor allSkills={allSkills} initialSkills={task.skills} isEditing={true} onSave={(skills) => setTaskSkillsState(skills)} onCancel={() => setIsEditing(false)} setError={setTaskSkillsError} isAllowedToAddSkill={true} isAbsolute={false} hideSelectedSkills={false} instantApply={true} embedded={true} hideButtons={true} maxSkillsDisplayed={12}>
                                     <></>
                                 </SkillsEditor>
                             )}
                         </div>
-
                     </div>
-
-                    {/* Footer - always visible outside scroll area */}
                     <div className="pt-4 border-t border-[var(--neu-border)]">
                         <Alert text={spotsError} onClose={() => setSpotsError("")} />
                         <Alert text={taskSkillsError} onClose={() => setTaskSkillsError("")} />
-
-                        {/* Actions - always visible */}
                         <div className="flex items-center justify-end gap-3 pt-2">
-                            <button 
-                                type="button" 
-                                className="neu-btn"
-                                onClick={() => {
-                                    if (hasRegistrations) {
-                                        setIsSpotsModalOpen(false);
-                                    } else {
-                                        setIsEditing(false);
-                                    }
-                                }}
-                            >
+                            <button type="button" className="neu-btn" onClick={() => { hasRegistrations ? setIsSpotsModalOpen(false) : setIsEditing(false); }}>
                                 Annuleren
                             </button>
-                            <button 
-                                type="button"
-                                className="neu-btn-primary"
-                                onClick={hasRegistrations ? handleSaveTask : handleSaveTaskWithSkills}
-                                disabled={isSavingTask}
-                            >
+                            <button type="button" className="neu-btn-primary" onClick={hasRegistrations ? handleSaveTask : handleSaveTaskWithSkills} disabled={isSavingTask}>
                                 <span className="flex items-center gap-2">
                                     {isSavingTask ? (
-                                        <>
-                                            <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                                            Opslaan...
-                                        </>
+                                        <><span className="material-symbols-outlined animate-spin">progress_activity</span>Opslaan...</>
                                     ) : (
-                                        <>
-                                            <span className="material-symbols-outlined">save</span>
-                                            Opslaan
-                                        </>
+                                        <><span className="material-symbols-outlined">save</span>Opslaan</>
                                     )}
                                 </span>
                             </button>

@@ -33,7 +33,7 @@ class SubtaskRepository:
                 'status': $status,
                 'created_at': $created_at,
                 'completed_at': [$subtask.completedAt],
-                'task_id': ~task_id,
+                'task_id': $task.id,
                 'claimed_by': [
                     match
                         $claim isa claimedBy (subtask: $subtask, student: $student);
@@ -76,7 +76,7 @@ class SubtaskRepository:
                 $belongsTo isa belongsToTask (task: $task, subtask: $subtask);
                 $task has id $task_id;
             fetch {
-                'id': ~subtask_id,
+                'id': $subtask.id,
                 'title': $title,
                 'what': [$subtask.subtaskWhat],
                 'why': [$subtask.subtaskWhy],
@@ -354,7 +354,7 @@ class SubtaskRepository:
                 'how': [$template.subtaskHow],
                 'criteria': [$template.subtaskCriteria],
                 'created_at': $created_at,
-                'business_id': ~business_id
+                'business_id': $business.id
             };
         """
         results = Db.read_transact(query, {"business_id": business_id})

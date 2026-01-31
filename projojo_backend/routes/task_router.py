@@ -8,6 +8,14 @@ from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, Tas
 from datetime import datetime
 from typing import List, Optional
 
+def normalize_datetime(dt):
+    """Remove timezone info from datetime to allow comparison with naive datetimes."""
+    if dt is None:
+        return None
+    if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+        return dt.replace(tzinfo=None)
+    return dt
+
 task_repo = TaskRepository()
 user_repo = UserRepository()
 skill_repo = SkillRepository()
@@ -239,19 +247,22 @@ async def create_task(
             raise HTTPException(status_code=404, detail="Project niet gevonden.")
         
         # Use provided dates or inherit from project
-        start_date = task_create.start_date or project.start_date
-        end_date = task_create.end_date or project.end_date
+        # Normalize all dates to naive datetimes to avoid comparison issues
+        start_date = normalize_datetime(task_create.start_date) or normalize_datetime(project.start_date)
+        end_date = normalize_datetime(task_create.end_date) or normalize_datetime(project.end_date)
+        project_start = normalize_datetime(project.start_date)
+        project_end = normalize_datetime(project.end_date)
         
         # Validate task dates are within project period
-        if start_date and project.start_date and start_date < project.start_date:
+        if start_date and project_start and start_date < project_start:
             raise HTTPException(
                 status_code=400, 
-                detail=f"Taak startdatum ({start_date.strftime('%d-%m-%Y')}) kan niet voor de project startdatum ({project.start_date.strftime('%d-%m-%Y')}) liggen."
+                detail=f"Taak startdatum ({start_date.strftime('%d-%m-%Y')}) kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen."
             )
-        if end_date and project.end_date and end_date > project.end_date:
+        if end_date and project_end and end_date > project_end:
             raise HTTPException(
                 status_code=400,
-                detail=f"Taak einddatum ({end_date.strftime('%d-%m-%Y')}) kan niet na de project einddatum ({project.end_date.strftime('%d-%m-%Y')}) liggen."
+                detail=f"Taak einddatum ({end_date.strftime('%d-%m-%Y')}) kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen."
             )
         if start_date and end_date and start_date > end_date:
             raise HTTPException(
@@ -312,20 +323,26 @@ async def update_task(
         except ValueError:
             raise HTTPException(status_code=400, detail="Ongeldige einddatum formaat.")
     
+    # Normalize parsed dates
+    parsed_start = normalize_datetime(parsed_start)
+    parsed_end = normalize_datetime(parsed_end)
+    
     # Get project for date validation
     if existing_task.project_id:
         project = project_repo.get_by_id(existing_task.project_id)
         if project:
+            project_start = normalize_datetime(project.start_date)
+            project_end = normalize_datetime(project.end_date)
             # Validate dates are within project period
-            if parsed_start and project.start_date and parsed_start < project.start_date:
+            if parsed_start and project_start and parsed_start < project_start:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Taak startdatum kan niet voor de project startdatum ({project.start_date.strftime('%d-%m-%Y')}) liggen."
+                    detail=f"Taak startdatum kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen."
                 )
-            if parsed_end and project.end_date and parsed_end > project.end_date:
+            if parsed_end and project_end and parsed_end > project_end:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Taak einddatum kan niet na de project einddatum ({project.end_date.strftime('%d-%m-%Y')}) liggen."
+                    detail=f"Taak einddatum kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen."
                 )
     
     # Validate start before end

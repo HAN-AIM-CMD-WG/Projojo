@@ -4,7 +4,7 @@ import FormInput from "./FormInput";
 import Loading from "./Loading";
 import Modal from "./Modal";
 
-export default function CreateBusinessEmail({ taskId, dontSetLocation /* variable used for testing */ = false }) {
+export default function CreateBusinessEmail({ taskId, dontSetLocation /* variable used for testing */ = false, compact = false }) {
     const [isCreateMailModalOpen, setIsCreateMailModalOpen] = useState();
     const [isMailLoading, setIsMailLoading] = useState(false);
     const [fetchError, setFetchError] = useState(undefined);
@@ -69,9 +69,14 @@ export default function CreateBusinessEmail({ taskId, dontSetLocation /* variabl
 
     return (
         <>
-            <button data-testid="open-create-mail-button" className="neu-btn-primary w-full flex items-center justify-center gap-2" onClick={onCreateMailButtonClick}>
+            <button 
+                data-testid="open-create-mail-button" 
+                className={`neu-btn-primary flex items-center justify-center gap-2 ${compact ? '' : 'w-full'}`} 
+                onClick={onCreateMailButtonClick}
+                title="Creëer email"
+            >
                 <span className="material-symbols-outlined text-lg">mail</span>
-                Creëer email
+                {!compact && <span>Creëer email</span>}
             </button>
             <Modal modalHeader="Genereer email" modalIcon="mail" isModalOpen={isCreateMailModalOpen} setIsModalOpen={setIsCreateMailModalOpen}>
                 <form onSubmit={onMailtoButtonClick} className="flex flex-col gap-4">

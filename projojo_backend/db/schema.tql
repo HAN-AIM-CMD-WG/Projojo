@@ -16,7 +16,8 @@ entity student sub user,
     owns cvPath @card(0..1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..),
-    plays hasPortfolio:student @card(0..);
+    plays hasPortfolio:student @card(0..),
+    plays claimedBy:student @card(0..);  # Kan meerdere deeltaken claimen
 
 entity teacher sub user;
 
@@ -37,7 +38,8 @@ entity business,
     owns isArchived @card(0..1),
     plays manages:business @card(0..),
     plays hasProjects:business @card(0..),
-    plays businessInvite:business @card(0..);
+    plays businessInvite:business @card(0..),
+    plays belongsToBusiness:business @card(0..);  # Deeltaak templates
 
 entity project,
     owns id @key,
@@ -63,7 +65,8 @@ entity task,
     owns endDate @card(0..1),
     plays containsTask:task @card(1),
     plays requiresSkill:task @card(0..),
-    plays registersForTask:task @card(0..);
+    plays registersForTask:task @card(0..),
+    plays belongsToTask:task @card(0..);  # Deeltaken relatie
 
 entity skill,
     owns id @key,
