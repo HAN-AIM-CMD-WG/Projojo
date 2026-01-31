@@ -13,8 +13,35 @@ import Alert from "./Alert";
 import ProjectActionModal from "./ProjectActionModal";
 import { getCountdownText, calculateProgress, formatDate } from "../utils/dates";
 
-export default function ProjectDetails({ project, businessId, refreshData }) {
+export default function ProjectDetails({ project, tasks, businessId, refreshData }) {
     const isLoading = !project;
+    
+    // Scroll to task with specific skill - highlights ALL matching tasks
+    const scrollToTaskWithSkill = (skillId) => {
+        if (!tasks) return;
+        
+        // Find ALL tasks that have this skill
+        const tasksWithSkill = tasks.filter(task => 
+            task.skills?.some(s => (s.skillId ?? s.id) === skillId)
+        );
+        
+        if (tasksWithSkill.length > 0) {
+            // Scroll to first task
+            const firstElement = document.getElementById(`task-${tasksWithSkill[0].id}`);
+            firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Highlight ALL matching tasks
+            tasksWithSkill.forEach(task => {
+                const taskElement = document.getElementById(`task-${task.id}`);
+                if (taskElement) {
+                    taskElement.classList.add('animate-highlight');
+                    setTimeout(() => {
+                        taskElement.classList.remove('animate-highlight');
+                    }, 1500);
+                }
+            });
+        }
+    };
     const navigate = useNavigate();
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
@@ -31,6 +58,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const canManageProject = isOwner || isTeacher;
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [formKey, setFormKey] = useState(0);
+    const [showMap, setShowMap] = useState(false);
 
     const formDataObj = {};
 
@@ -157,124 +185,176 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
 
     return (
         <div className="bg-neu-bg">
-            {/* Hero section with image */}
-            <div className="relative">
-                <div className="h-48 sm:h-64 w-full overflow-hidden neu-flat">
-                        <img
+            {/* Compact Header with Image and Key Info */}
+            <div className="flex flex-col sm:flex-row">
+                {/* Project Image - Left side */}
+                <div className="sm:w-48 h-36 sm:h-auto sm:min-h-[200px] flex-shrink-0 relative overflow-hidden z-10">
+                    <img
                         className="w-full h-full object-cover"
-                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                            alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
-                        />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                    </div>
-                
-                {/* Project title overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <span className="neu-badge-glass mb-2 inline-block">Project</span>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">
-                            {project.name}
-                            
-                        </h1>
-                        <h2 className="text-1xl font-semibold text-gray-800 tracking-wide leading-tight  m-4 pb-2">
-                        {project.location && project.location.trim().length > 0 && (
-                                            <div className="flex gap-1 items-center">
-                                                <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                                {project.location}
-                                            </div>
-                                        )}
-                                        </h2>
+                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                        alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                    />
+                    {/* Archived overlay - subtle dimming only */}
+                    {project.is_archived && (
+                        <div className="absolute inset-0 bg-black/30" />
+                    )}
                 </div>
-            </div>
-
-            {/* Business info card */}
-            <div className="p-6">
-                {!isLoading && project.business && (
+                
+                {/* Main Info - Right side */}
+                <div className="flex-1 p-4 sm:p-5">
+                    {/* Title row */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                                    Project
+                                </span>
+                                {project.is_archived && (
+                                    <span className="text-xs font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                                        Gearchiveerd
+                                    </span>
+                                )}
+                            </div>
+                            <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] leading-tight">
+                                {project.name}
+                            </h1>
+                            {/* Business link - compact */}
+                            {!isLoading && project.business && (
+                                <div className="flex items-center gap-2 mt-1">
                                     <Link
                                         to={`/business/${project.business.id}`}
-                        className="flex items-center gap-4 mb-6 neu-flat p-4 hover:translate-y-[-2px] transition-all duration-200 group"
-                    >
-                        <div className="shrink-0">
-                            {project.business.image_path && project.business.image_path !== 'default.png' ? (
-                                <img
-                                    className="h-14 w-14 sm:h-16 sm:w-16 object-cover rounded-xl"
-                                    src={`${IMAGE_BASE_URL}${project.business.image_path}`}
-                                    alt="Bedrijfslogo"
-                                />
-                            ) : (
-                                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                                    <span className="font-bold text-primary text-xl">
-                                        {project.business.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
-                                    </span>
+                                        className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-primary transition group"
+                                    >
+                                        {project.business.image_path && project.business.image_path !== 'default.png' ? (
+                                            <img
+                                                className="h-5 w-5 object-cover rounded"
+                                                src={`${IMAGE_BASE_URL}${project.business.image_path}`}
+                                                alt=""
+                                            />
+                                        ) : (
+                                            <span className="material-symbols-outlined text-sm">business</span>
+                                        )}
+                                        <span className="group-hover:underline">{project.business.name}</span>
+                                    </Link>
+                                    {project.business.location && (
+                                        <button
+                                            onClick={() => setShowMap(!showMap)}
+                                            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition ${
+                                                showMap 
+                                                    ? 'bg-primary/10 text-primary' 
+                                                    : 'text-[var(--text-muted)] hover:text-primary hover:bg-primary/5'
+                                            }`}
+                                            title={showMap ? "Verberg kaart" : "Toon kaart"}
+                                        >
+                                            <span className="material-symbols-outlined text-xs">location_on</span>
+                                            {project.business.location}
+                                            <span className={`material-symbols-outlined text-xs transition-transform ${showMap ? 'rotate-180' : ''}`}>
+                                                expand_more
+                                            </span>
+                                        </button>
+                                    )}
                                 </div>
                             )}
                         </div>
-                        <div className="flex-1">
-                            <span className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">Aangeboden door</span>
-                            <p className="font-bold text-lg text-[var(--text-primary)] group-hover:text-primary transition">
-                                {project.business.name}
-                            </p>
-                            <div className="text-[var(--text-muted)] text-sm flex flex-col gap-1">
-                                <div className="flex gap-1 items-center">
-                                    <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                    {project.business.location}
-                                </div>
-                            </div>
-                        </div>
-                        <span className="material-symbols-outlined text-gray-300 group-hover:text-primary transition">
-                            chevron_right
-                        </span>
-                    </Link>
-                )}
-
-                {/* Project Timeline / Planning */}
-                {!isLoading && (project.start_date || project.end_date) && (
-                    <div className="neu-pressed p-4 rounded-xl mb-6">
-                        <p className="neu-label mb-3 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm text-primary">schedule</span>
-                            Project Planning
-                        </p>
-                        <div className="flex justify-between text-sm mb-3">
-                            <div className="text-[var(--text-secondary)]">
-                                <span className="text-[var(--text-muted)]">Start:</span>{' '}
-                                <span className="font-medium">{formatDate(project.start_date)}</span>
-                            </div>
-                            <div className="text-[var(--text-secondary)]">
-                                <span className="text-[var(--text-muted)]">Deadline:</span>{' '}
-                                <span className="font-medium">{formatDate(project.end_date)}</span>
-                            </div>
-                        </div>
-                        {project.start_date && project.end_date && (
-                            <>
-                                <div className="h-2.5 bg-[var(--gray-200)] rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-primary to-orange-500 rounded-full transition-all duration-500"
-                                        style={{ width: `${calculateProgress(project.start_date, project.end_date)}%` }}
-                                    />
-                                </div>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="text-xs text-[var(--text-muted)]">
-                                        {calculateProgress(project.start_date, project.end_date)}% voortgang
-                                    </span>
-                                    <span className="text-xs font-medium text-[var(--text-secondary)]">
-                                        {getCountdownText(project.end_date)}
-                                    </span>
-                                </div>
-                            </>
+                        
+                        {/* Add task button */}
+                        {isOwner && (
+                            <button className="neu-btn-primary !py-2 !px-3 text-sm flex-shrink-0" onClick={handleOpenModal}>
+                                <span className="flex items-center gap-1.5">
+                                    <span className="material-symbols-outlined text-base">add</span>
+                                    <span className="hidden sm:inline">Taak toevoegen</span>
+                                </span>
+                            </button>
                         )}
                     </div>
-                )}
-
-                {/* Description */}
-                {project.description && (
-                    <div className="neu-pressed p-5 rounded-2xl mb-6">
-                        <p className="neu-label mb-3">Beschrijving</p>
-                        <div className="text-[var(--text-secondary)]">
+                    
+                    {/* Timeline - compact inline */}
+                    {!isLoading && (project.start_date || project.end_date) && (
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-3">
+                            {project.start_date && (
+                                <span className="flex items-center gap-1 text-[var(--text-muted)]">
+                                    <span className="material-symbols-outlined text-sm text-primary">calendar_today</span>
+                                    {formatDate(project.start_date)}
+                                </span>
+                            )}
+                            {project.end_date && (
+                                <span className="flex items-center gap-1 text-[var(--text-muted)]">
+                                    <span className="material-symbols-outlined text-sm text-orange-500">event</span>
+                                    {formatDate(project.end_date)}
+                                    <span className="text-xs font-medium text-[var(--text-secondary)]">
+                                        ({getCountdownText(project.end_date)})
+                                    </span>
+                                </span>
+                            )}
+                            {project.start_date && project.end_date && (
+                                <span className="text-xs font-semibold text-primary">
+                                    {calculateProgress(project.start_date, project.end_date)}%
+                                </span>
+                            )}
+                        </div>
+                    )}
+                    
+                    {/* Progress bar - thin */}
+                    {!isLoading && project.start_date && project.end_date && (
+                        <div className="h-1.5 bg-[var(--gray-200)] rounded-full overflow-hidden mb-3">
+                            <div 
+                                className="h-full bg-gradient-to-r from-primary to-orange-500 rounded-full transition-all duration-500"
+                                style={{ width: `${calculateProgress(project.start_date, project.end_date)}%` }}
+                            />
+                        </div>
+                    )}
+                    
+                    {/* Description - truncated */}
+                    {project.description && (
+                        <div className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-3">
                             <RichTextViewer text={project.description} />
                         </div>
-                    </div>
-                )}
-
-                {/* Success/Error messages */}
+                    )}
+                    
+                    {/* Skills - inline with label, clickable to jump to task */}
+                    {project.topSkills && project.topSkills.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-xs font-semibold text-[var(--text-muted)] mr-1">Skills:</span>
+                            {project.topSkills.slice(0, 5).map((skill) => {
+                                const isMatch = studentSkillIds.has(skill.skillId);
+                                return (
+                                    <button
+                                        key={skill.skillId}
+                                        onClick={() => scrollToTaskWithSkill(skill.skillId)}
+                                        className="cursor-pointer hover:scale-105 transition-transform"
+                                        title={`Ga naar taak met ${skill.name}`}
+                                    >
+                                        <SkillBadge 
+                                            skillName={skill.name} 
+                                            isPending={skill.isPending ?? skill.is_pending}
+                                            isOwn={isMatch}
+                                        />
+                                    </button>
+                                );
+                            })}
+                            {project.topSkills.length > 5 && (
+                                <span className="text-xs text-[var(--text-muted)] self-center">
+                                    +{project.topSkills.length - 5} meer
+                                </span>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+            
+            {/* Collapsible Map Section */}
+            {!isLoading && showMap && project.business?.location && (
+                <div className="mx-4 sm:mx-5 mt-2 mb-3 animate-fade-in rounded-xl overflow-hidden border border-[var(--neu-border)]">
+                    <LocationMap 
+                        address={project.business.location}
+                        name={project.business.name}
+                        height="140px"
+                    />
+                </div>
+            )}
+            
+            {/* Success/Error messages */}
+            <div className="px-4 sm:px-5">
                 {successMessage && (
                     <Alert 
                         text={successMessage} 
@@ -288,107 +368,43 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         onClose={() => setError("")} 
                     />
                 )}
+            </div>
 
-                {/* Skills section */}
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <p className="neu-label mb-3">Gevraagde skills</p>
-                        <ul className="flex flex-wrap gap-2">
-                    {project.topSkills?.map((skill) => {
-                        const isMatch = studentSkillIds.has(skill.skillId);
-                        return (
-                        <li key={skill.skillId}>
-                                <SkillBadge 
-                                    skillName={skill.name} 
-                                    isPending={skill.isPending ?? skill.is_pending}
-                                    isOwn={isMatch}
-                                >
-                                    {isMatch && (
-                                        <span className="material-symbols-outlined text-xs mr-1">check</span>
-                                    )}
-                                </SkillBadge>
-                        </li>
-                        );
-                    })}
-                            {(!project.topSkills || project.topSkills.length === 0) && (
-                                <li className="text-[var(--text-muted)] text-sm">Geen skills gespecificeerd</li>
-                            )}
-                </ul>
-                    </div>
-                {isOwner && (
-                        <button className="neu-btn-primary" onClick={handleOpenModal}>
-                            <span className="flex items-center gap-2">
-                                <span className="material-symbols-outlined">add</span>
-                                Taak toevoegen
-                            </span>
+            {/* Project management - compact footer */}
+            {canManageProject && !isLoading && (
+                <div className="px-4 sm:px-5 pb-4 flex flex-wrap items-center gap-2 border-t border-[var(--neu-border)] pt-3 mt-2">
+                    <span className="text-xs text-[var(--text-muted)] mr-2">Beheer:</span>
+                    {project.is_archived ? (
+                        <button 
+                            className="text-xs font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
+                            onClick={handleRestoreClick}
+                            disabled={isActionLoading}
+                        >
+                            <span className="material-symbols-outlined text-sm">unarchive</span>
+                            Herstellen
+                        </button>
+                    ) : (
+                        <button 
+                            className="text-xs font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                            onClick={handleArchiveClick}
+                            disabled={isActionLoading}
+                        >
+                            <span className="material-symbols-outlined text-sm">archive</span>
+                            Archiveren
+                        </button>
+                    )}
+                    {isTeacher && (
+                        <button 
+                            className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1"
+                            onClick={handleDeleteClick}
+                            disabled={isActionLoading}
+                        >
+                            <span className="material-symbols-outlined text-sm">delete</span>
+                            Verwijderen
                         </button>
                     )}
                 </div>
-
-                {/* Project management buttons (for owner/teacher) */}
-                {canManageProject && !isLoading && (
-                    <div className="mt-6 pt-6 border-t border-[var(--neu-border)]">
-                        <p className="neu-label mb-3">Projectbeheer</p>
-                        <div className="flex flex-wrap gap-3">
-                            {/* Archive/Restore button */}
-                            {project.is_archived ? (
-                                <button 
-                                    className="neu-btn flex items-center gap-2 text-green-600 hover:text-green-700"
-                                    onClick={handleRestoreClick}
-                                    disabled={isActionLoading}
-                                >
-                                    <span className="material-symbols-outlined text-lg">unarchive</span>
-                                    Herstellen
-                                </button>
-                            ) : (
-                                <button 
-                                    className="neu-btn flex items-center gap-2 text-amber-600 hover:text-amber-700"
-                                    onClick={handleArchiveClick}
-                                    disabled={isActionLoading}
-                                >
-                                    <span className="material-symbols-outlined text-lg">archive</span>
-                                    Archiveren
-                                </button>
-                            )}
-                            
-                            {/* Delete button (teacher only) */}
-                            {isTeacher && (
-                                <button 
-                                    className="neu-btn flex items-center gap-2 text-red-600 hover:text-red-700"
-                                    onClick={handleDeleteClick}
-                                    disabled={isActionLoading}
-                                >
-                                    <span className="material-symbols-outlined text-lg">delete_forever</span>
-                                    Verwijderen
-                                </button>
-                            )}
-                        </div>
-                        
-                        {/* Archived badge */}
-                        {project.is_archived && (
-                            <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-sm">
-                                <span className="material-symbols-outlined text-base">inventory_2</span>
-                                Dit project is gearchiveerd
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Location Map */}
-                {!isLoading && project.business?.location && (
-                    <div className="mt-6">
-                        <p className="neu-label mb-3 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm text-primary">location_on</span>
-                            Locatie
-                        </p>
-                        <LocationMap 
-                            address={project.business.location}
-                            name={project.business.name}
-                            height="200px"
-                        />
-                    </div>
-                )}
-            </div>
+            )}
             {isOwner && (
                 <Modal
                     modalHeader={`Nieuwe taak`}

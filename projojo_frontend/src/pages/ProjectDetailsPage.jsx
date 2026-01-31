@@ -68,10 +68,15 @@ export default function ProjectDetailsPage() {
     return (
         <>
             <div className="neu-flat overflow-hidden">
-                <ProjectDetails project={project} businessId={project?.business_id} refreshData={() => {
-                    fetchProjectAndTasks();
-                    scrollToLastTask();
-                }} />
+                <ProjectDetails 
+                    project={project} 
+                    tasks={tasks}
+                    businessId={project?.business_id} 
+                    refreshData={() => {
+                        fetchProjectAndTasks();
+                        scrollToLastTask();
+                    }} 
+                />
                 <ProjectTasks tasks={tasks} fetchAmount={fetchAmount} setFetchAmount={setFetchAmount} businessId={project?.business_id} lastTaskRef={lastTaskRef} />
             </div>
         </>

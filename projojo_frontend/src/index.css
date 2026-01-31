@@ -19,18 +19,29 @@
 
 /* pulse task after navigating to specific task in project */
 @keyframes highlight {
-    0% {
-        background-color: var(--color-primary);
-        border-color: var(--color-primary);
+    0%, 40% {
+        opacity: 1;
     }
-
     100% {
-        background-color: transparent;
-        border-color: transparent;
+        opacity: 0;
     }
 }
 
 @utility animate-highlight {
+    position: relative;
+    isolation: isolate;
+}
+
+.animate-highlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 1.5rem;
+    clip-path: inset(0 round 1.5rem);
+    border: 2px solid var(--color-primary);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
     animation: highlight 1.5s ease-out;
 }
 

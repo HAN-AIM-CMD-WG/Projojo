@@ -264,31 +264,37 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     };
 
     // === TAB DEFINITIONS ===
+    const hasSubtasks = task.subtask_count > 0;
     const tabs = [
         { id: 'details', label: 'Details', icon: 'info' },
         { 
             id: 'subtasks', 
             label: 'Deeltaken', 
             icon: 'checklist',
-            badge: task.subtask_count > 0 ? `${task.subtask_done || 0}/${task.subtask_count}` : null,
-            hidden: !isAcceptedStudent && !isOwner
+            // Badge shows progress (done/total) or just count
+            count: hasSubtasks && !task.subtask_done ? task.subtask_count : null,
+            badge: hasSubtasks && task.subtask_done > 0 ? `${task.subtask_done}/${task.subtask_count}` : null,
+            // Show to all users if there are subtasks, or to owners always
+            hidden: !hasSubtasks && !isOwner
         },
         { 
             id: 'team', 
             label: 'Team', 
             icon: 'group',
-            badge: pendingRegistrations.length > 0 ? pendingRegistrations.length : null,
+            // Show accepted count, warning badge for pending
+            count: acceptedRegistrations.length,
+            badge: pendingRegistrations.length > 0 ? `+${pendingRegistrations.length}` : null,
             badgeColor: 'bg-amber-500',
             hidden: !isOwner
         },
     ].filter(tab => !tab.hidden);
 
     return (
-        <div id={`task-${task.id}`} className="group h-full">
-            <div className="neu-flat rounded-2xl h-full flex flex-col overflow-hidden transition-shadow duration-200 hover:shadow-lg">
+        <div className="group h-full">
+            <div id={`task-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
                 
                 {/* === COMPACT HEADER === */}
-                <div className="p-3 sm:p-4 border-b border-[var(--neu-border)]">
+                <div className="p-3 sm:p-4 border-b border-[var(--neu-border)] rounded-t-2xl overflow-hidden">
                     <div className="flex items-start justify-between gap-2 sm:gap-3">
                         {/* Left: Icon + Title */}
                         <div className="flex items-start gap-2 sm:gap-3 min-w-0 flex-1">
@@ -358,6 +364,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         >
                             <span className="material-symbols-outlined text-base sm:text-lg">{tab.icon}</span>
                             <span>{tab.label}</span>
+                            {/* Subtle count in parentheses */}
+                            {tab.count !== undefined && tab.count > 0 && (
+                                <span className="text-[var(--text-light)] font-normal">
+                                    ({tab.count})
+                                </span>
+                            )}
+                            {/* Warning/progress badge */}
                             {tab.badge && (
                                 <span className={`ml-1 px-1.5 py-0.5 text-xs font-bold rounded-full ${
                                     tab.badgeColor || 'bg-primary/10 text-primary'
@@ -374,7 +387,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 </div>
 
                 {/* === TAB CONTENT === */}
-                <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-[160px] sm:min-h-[180px] max-h-[250px] sm:max-h-[300px]">
+                <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-[160px] sm:min-h-[180px] max-h-[250px] sm:max-h-[300px] rounded-b-2xl">
                     
                     {/* Details Tab */}
                     {activeTab === 'details' && (
@@ -442,8 +455,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         </div>
                     )}
 
-                    {/* Subtasks Tab */}
-                    {activeTab === 'subtasks' && (isAcceptedStudent || isOwner) && (
+                    {/* Subtasks Tab - visible to all, but actions limited by role */}
+                    {activeTab === 'subtasks' && (
                         <TaskSubtasks 
                             taskId={task.id}
                             taskName={task.name}

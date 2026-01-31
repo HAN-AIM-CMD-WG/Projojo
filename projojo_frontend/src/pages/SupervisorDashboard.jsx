@@ -530,7 +530,7 @@ function ActiveStudentCard({ student }) {
 }
 
 /**
- * Project Card component for the dashboard - More spacious layout
+ * Project Card component for the dashboard - Compact horizontal layout with image
  */
 function ProjectCard({ project, pendingCount = 0 }) {
     const taskCount = project.tasks?.length || 0;
@@ -538,60 +538,55 @@ function ProjectCard({ project, pendingCount = 0 }) {
     return (
         <Link 
             to={`/projects/${project.id}`}
-            className="neu-flat-interactive !p-5 !text-left block"
+            className="neu-flat-interactive !p-0 !text-left block overflow-hidden group"
         >
-            {/* Project header with icon */}
-            <div className="flex items-start gap-3 mb-3">
-                <div className="neu-pressed p-2.5 rounded-lg relative">
-                    <span className="material-symbols-outlined text-primary text-xl">folder</span>
-                    {/* Pending badge on icon */}
+            <div className="flex">
+                {/* Project image */}
+                <div className="w-24 h-24 flex-shrink-0 relative">
+                    <img 
+                        src={`${IMAGE_BASE_URL}${project.image_path || 'project_technology.png'}`}
+                        alt={project.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.target.src = `${IMAGE_BASE_URL}project_technology.png`;
+                        }}
+                    />
+                    {/* Pending badge overlay */}
                     {pendingCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-primary text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        <span className="absolute top-1.5 left-1.5 bg-primary text-white text-xs font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-xs">person_add</span>
                             {pendingCount}
                         </span>
                     )}
                 </div>
-                <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-[var(--text-primary)] text-base leading-tight">
-                        {project.name}
-                    </h4>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">
-                        Project
-                    </p>
-                </div>
-            </div>
-            
-            {/* Stats */}
-            <div className="flex items-center gap-4 mb-3">
-                <div className="flex items-center gap-1.5 text-sm text-[var(--text-secondary)]">
-                    <span className="material-symbols-outlined text-base text-gray-400">task</span>
-                    <span className="font-semibold">{taskCount}</span>
-                    <span className="text-[var(--text-muted)]">{taskCount === 1 ? 'taak' : 'taken'}</span>
-                </div>
-                {/* Pending registrations indicator */}
-                {pendingCount > 0 && (
-                    <div className="flex items-center gap-1.5 text-sm text-primary">
-                        <span className="material-symbols-outlined text-base">person_add</span>
-                        <span className="font-semibold">{pendingCount}</span>
-                        <span className="text-primary/70">{pendingCount === 1 ? 'aanmelding' : 'aanmeldingen'}</span>
+                
+                {/* Content */}
+                <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
+                    <div>
+                        <h4 className="font-bold text-[var(--text-primary)] text-sm leading-tight line-clamp-2">
+                            {project.name}
+                        </h4>
+                        <div className="flex items-center gap-3 mt-1.5">
+                            <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
+                                <span className="material-symbols-outlined text-sm">task</span>
+                                {taskCount} {taskCount === 1 ? 'taak' : 'taken'}
+                            </span>
+                            {pendingCount > 0 && (
+                                <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
+                                    <span className="material-symbols-outlined text-sm">notifications</span>
+                                    Actie
+                                </span>
+                            )}
+                        </div>
                     </div>
-                )}
-            </div>
-            
-            {/* Footer */}
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                {pendingCount > 0 ? (
-                    <span className="text-xs text-primary font-medium flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">priority_high</span>
-                        Actie vereist
-                    </span>
-                ) : (
-                    <span />
-                )}
-                <span className="flex items-center gap-1 text-primary text-sm font-medium">
-                    Bekijk
-                    <span className="material-symbols-outlined text-base">arrow_forward</span>
-                </span>
+                    
+                    {/* Arrow indicator */}
+                    <div className="flex justify-end">
+                        <span className="material-symbols-outlined text-base text-[var(--text-muted)] group-hover:text-primary transition-colors">
+                            arrow_forward
+                        </span>
+                    </div>
+                </div>
             </div>
         </Link>
     );

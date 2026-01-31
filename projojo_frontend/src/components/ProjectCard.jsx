@@ -102,7 +102,7 @@ export default function ProjectCard({ project, index = 0 }) {
   const animationClass = `fade-in-up-${(index % 4) + 1}`;
 
   return (
-    <article className={`fade-in-up ${animationClass} h-full`}>
+    <article id={`project-${project.id}`} className={`fade-in-up ${animationClass} h-full`}>
       <Link
         to={`/projects/${project.id}`}
         className="block neu-flat-interactive h-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/30 group"

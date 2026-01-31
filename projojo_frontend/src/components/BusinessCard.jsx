@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import FormInput from './FormInput';
 import Loading from "./Loading";
+import LocationMap from "./LocationMap";
 import Modal from "./Modal";
 import RichTextViewer from './RichTextViewer';
 import SkillBadge from './SkillBadge';
@@ -46,7 +47,8 @@ export default function BusinessCard({
     companySize,
     website,
     showDescription = false, 
-    showUpdateButton = false 
+    showUpdateButton = false,
+    onSkillClick = null
 }) {
     const { authData } = useAuth();
     const { studentSkills } = useStudentSkills();
@@ -55,6 +57,7 @@ export default function BusinessCard({
     const [expiry, setExpiry] = useState(null);
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [showMap, setShowMap] = useState(false);
     const toolTipRef = useRef(null);
     const [tooltipText, setTooltipText] = useState("Kopieer link");
     const [timeoutRef, setTimeoutRef] = useState(null);
@@ -170,10 +173,21 @@ export default function BusinessCard({
                                     </h2>
                                 </Link>
                                 {locationText && (
-                                        <span className="text-xs text-[var(--text-muted)] flex items-center gap-1 shrink-0">
-                                            <span className="material-symbols-outlined text-xs">location_on</span>
+                                    <button
+                                        onClick={() => setShowMap(!showMap)}
+                                        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition ${
+                                            showMap 
+                                                ? 'bg-primary/10 text-primary' 
+                                                : 'text-[var(--text-muted)] hover:text-primary hover:bg-primary/5'
+                                        }`}
+                                        title={showMap ? "Verberg kaart" : "Toon kaart"}
+                                    >
+                                        <span className="material-symbols-outlined text-xs">location_on</span>
                                         {locationText}
+                                        <span className={`material-symbols-outlined text-xs transition-transform ${showMap ? 'rotate-180' : ''}`}>
+                                            expand_more
                                         </span>
+                                    </button>
                                 )}
                                 </div>
                             </div>
@@ -191,6 +205,17 @@ export default function BusinessCard({
                         </div>
                     </div>
                 </div>
+
+                {/* Collapsible Map Section */}
+                {showMap && locationText && (
+                    <div className="mt-4 animate-fade-in rounded-xl overflow-hidden border border-[var(--neu-border)]">
+                        <LocationMap 
+                            address={locationText}
+                            name={name}
+                            height="140px"
+                        />
+                    </div>
+                )}
 
                 {/* Info Pills Row - neumorphic pressed style */}
                 {hasMetadata && (
@@ -247,11 +272,12 @@ export default function BusinessCard({
                         <div className="flex flex-wrap items-center gap-2">
                             {visibleSkills.map((skill) => {
                                 const isMatch = studentSkillIds.has(skill.skillId);
-                                return (
-                                <SkillBadge
-                                    key={skill.skillId ?? skill.id}
-                                    skillName={skill.name}
-                                    isPending={skill.isPending ?? skill.is_pending}
+                                const skillId = skill.skillId ?? skill.id;
+                                const badge = (
+                                    <SkillBadge
+                                        key={skillId}
+                                        skillName={skill.name}
+                                        isPending={skill.isPending ?? skill.is_pending}
                                         isOwn={isMatch}
                                     >
                                         {isMatch && (
@@ -259,6 +285,21 @@ export default function BusinessCard({
                                         )}
                                     </SkillBadge>
                                 );
+                                
+                                // If onSkillClick callback is provided, wrap in clickable button
+                                if (onSkillClick) {
+                                    return (
+                                        <button
+                                            key={skillId}
+                                            onClick={() => onSkillClick(skillId)}
+                                            className="cursor-pointer hover:scale-105 transition-transform"
+                                            title={`Bekijk projecten met ${skill.name}`}
+                                        >
+                                            {badge}
+                                        </button>
+                                    );
+                                }
+                                return badge;
                             })}
                             {remainingSkills > 0 && (
                                 <span className="px-3 py-1.5 text-xs font-bold rounded-full bg-[var(--gray-200)] text-[var(--text-muted)]">
