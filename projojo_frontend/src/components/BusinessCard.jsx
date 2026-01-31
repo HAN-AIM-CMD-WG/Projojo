@@ -10,7 +10,7 @@ import SkillBadge from './SkillBadge';
 import { filterVisibleSkillsForUser } from '../utils/skills';
 import Tooltip from './Tooltip';
 
-export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false }) {
+export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false, showViewButton = false }) {
     const { authData } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
@@ -87,7 +87,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                 }
             </div>
             <div className="md:ml-auto p-4 flex gap-3 flex-col">
-                {!showUpdateButton && <Link to={`/business/${businessId}`} className="btn-primary">Bekijk bedrijf</Link>}
+                {(!showUpdateButton || showViewButton) && <Link to={`/business/${businessId}`} className="btn-primary flex justify-center">Bekijk bedrijf</Link>}
                 {showUpdateButton && authData.businessId === businessId && (
                     <>
                         <Link to={`/projects/add`} className="btn-primary ps-3 flex flex-row gap-2 justify-center">
