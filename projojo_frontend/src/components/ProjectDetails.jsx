@@ -187,17 +187,21 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
         <div className="bg-neu-bg">
             {/* Compact Header with Image and Key Info */}
             <div className="flex flex-col sm:flex-row">
-                {/* Project Image - Left side */}
-                <div className="sm:w-48 h-36 sm:h-auto sm:min-h-[200px] flex-shrink-0 relative overflow-hidden z-10">
-                    <img
-                        className="w-full h-full object-cover"
-                        src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                        alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
-                    />
-                    {/* Archived overlay - subtle dimming only */}
-                    {project.is_archived && (
-                        <div className="absolute inset-0 bg-black/30" />
-                    )}
+                {/* Project Image - Left side with neumorphic styling */}
+                <div className="sm:w-52 h-40 sm:h-auto sm:min-h-[220px] flex-shrink-0 relative m-4 sm:m-5 sm:mr-0 rounded-2xl overflow-hidden neu-pressed p-1">
+                    <div className="relative w-full h-full rounded-xl overflow-hidden">
+                        <img
+                            className="w-full h-full object-cover"
+                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                            alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                        />
+                        {/* Subtle vignette overlay for depth */}
+                        <div className="absolute inset-0 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]" />
+                        {/* Archived overlay - subtle dimming only */}
+                        {project.is_archived && (
+                            <div className="absolute inset-0 bg-black/30" />
+                        )}
+                    </div>
                 </div>
                 
                 {/* Main Info - Right side */}
