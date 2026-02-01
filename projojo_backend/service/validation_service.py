@@ -20,6 +20,9 @@ def strip_markdown(text: str) -> str:
     # Remove bold/italic/code/strikethrough markers
     text = re.sub(r'[*_`~]', '', text)
 
+    # Normalize newlines: collapse multiple newlines to single newline to match visual length
+    text = re.sub(r'[\r\n]+', '\n', text)
+
     return text.strip()
 
 def is_valid_length(text: str, max_length: int, strip_md: bool = False) -> bool:

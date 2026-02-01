@@ -118,10 +118,10 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
 
         if (editor) {
             // Set initial character count from editor's plain text
-            setCharCount(editor.getText().length);
+            setCharCount(getPlainText().length);
 
             editor.on('update', () => {
-                const content = editor.getText();
+                const content = getPlainText();
                 setCharCount(content.length);
 
                 // Validate character limit and update error state
@@ -138,6 +138,11 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
             });
         }
     }, [editor, max, required, setError, handleSave, setInternalError]);
+
+    const getPlainText = () => {
+        if (!editor) return '';
+        return editor.getText({ blockSeparator: '\n' }).trim();
+    };
 
     if (!editor) {
         return null;
@@ -247,7 +252,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     Link naar de website
                 </label>
                 <div className="mt-1">
-                    <div className={`flex items-center rounded-md bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 ${urlError ? 'outline-red-500 focus-within:outline-red-600' : ''}`}>
+                    <div className={`flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 ${urlError ? 'outline-red-500 focus-within:outline-red-600' : ''}`}>
                         <div className="shrink-0 select-none text-base text-gray-500 sm:text-sm/6">https://</div>
                         <input
                             id="link-ref"
@@ -256,7 +261,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                             placeholder="www.voorbeeld.nl"
                             value={linkUrl}
                             onChange={changeLinkUrl}
-                            className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6"
+                            className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-0 sm:text-sm/6"
                         />
                     </div>
                     {urlError && <div className='text-red-600 text-sm mt-1'>
