@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate, useParams } from "react-router-dom";
 import Alert from '../components/Alert';
 import { useAuth } from '../auth/AuthProvider';
 import Card from '../components/Card';
@@ -8,11 +8,13 @@ import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
 import { getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
 import useFetch from '../useFetch';
+import NotFound from './NotFound';
 
 /**
  * Creates a UpdateBusinessPage component
  */
 export default function UpdateBusinessPage() {
+    const { businessId } = useParams();
     const { authData } = useAuth();
     const [error, setError] = useState();
     const [nameError, setNameError] = useState();
@@ -21,15 +23,13 @@ export default function UpdateBusinessPage() {
     const [locationError, setLocationError] = useState();
     const navigation = useNavigate();
 
-    useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'supervisor') {
-            navigation("/not-found");
-        }
-    }, [authData.isLoading])
-
-    const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessById(authData.businessId), [authData.businessId]);
+    const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessById(businessId), [businessId, authData.isLoading]);
     if (business?.description !== undefined && description === undefined) {
         setDescription(business?.description);
+    }
+
+    if (authData && !authData.isLoading && (authData.type === 'supervisor' && authData.businessId != businessId)) {
+        return <NotFound />;
     }
 
     function onSubmit(event) {
@@ -46,9 +46,9 @@ export default function UpdateBusinessPage() {
 
         formData.append("description", description);
 
-        updateBusiness(authData.businessId, formData)
+        updateBusiness(businessId, formData)
             .then(() => {
-                navigation(`/business/${authData.businessId}`);
+                navigation(`/business/${businessId}`);
             })
             .catch(error => setError(error.message));
     }

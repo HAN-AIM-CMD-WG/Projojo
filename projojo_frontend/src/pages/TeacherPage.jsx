@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import BusinessesOverview from "../components/BusinessesOverview";
 import FormInput from "../components/FormInput";
@@ -9,10 +8,10 @@ import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import Tooltip from "../components/Tooltip";
 import { createTeacherInviteKey, createNewBusiness, getBusinessesBasic } from "../services";
+import NotFound from "./NotFound";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
-    const navigation = useNavigate();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
     const [expiry, setExpiry] = useState(null);
@@ -28,10 +27,32 @@ export default function TeacherPage() {
     const [numberToReloadBusinesses, setNumberToReloadBusinesses] = useState(0);
 
     useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'teacher') {
-            navigation("/not-found");
+        let ignore = false;
+        setIsLoading(true);
+
+        getBusinessesBasic()
+            .then(data => {
+                if (ignore) return;
+                setBusinesses(data);
+            })
+            .catch(err => {
+                if (ignore) return;
+                setError(err.message);
+            })
+            .finally(() => {
+                if (ignore) return;
+                setIsLoading(false);
+            });
+
+        return () => {
+            ignore = true;
+            setIsLoading(false);
         }
-    }, [authData.isLoading]);
+    }, [numberToReloadBusinesses]);
+
+    if (authData && !authData.isLoading && authData.type !== 'teacher') {
+        return <NotFound />;
+    }
 
     const formatDate = date => {
         const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -87,30 +108,6 @@ export default function TeacherPage() {
             setTooltipText("Kopieer link");
         }, 5000));
     }
-
-    useEffect(() => {
-        let ignore = false;
-        setIsLoading(true);
-
-        getBusinessesBasic()
-            .then(data => {
-                if (ignore) return;
-                setBusinesses(data);
-            })
-            .catch(err => {
-                if (ignore) return;
-                setError(err.message);
-            })
-            .finally(() => {
-                if (ignore) return;
-                setIsLoading(false);
-            });
-
-        return () => {
-            ignore = true;
-            setIsLoading(false);
-        }
-    }, [numberToReloadBusinesses]);
 
     return (
         <>

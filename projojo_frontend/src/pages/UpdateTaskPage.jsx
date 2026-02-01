@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from "react-router-dom";
 import Alert from '../components/Alert';
 import { useAuth } from '../auth/AuthProvider';
@@ -7,6 +7,7 @@ import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
 import { getTaskById, updateTask } from '../services';
 import useFetch from '../useFetch';
+import NotFound from './NotFound';
 
 export default function UpdateTaskPage() {
     const { authData } = useAuth();
@@ -18,16 +19,14 @@ export default function UpdateTaskPage() {
     const [totalNeededError, setTotalNeededError] = useState();
     const navigation = useNavigate();
 
-    useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'supervisor' && authData.type !== 'teacher') {
-            navigation("/not-found");
-        }
-    }, [authData.isLoading])
-
     const { data: task } = useFetch(async () => !authData.isLoading && await getTaskById(taskId), [taskId]);
 
     if (task?.description !== undefined && description === undefined) {
         setDescription(task?.description);
+    }
+
+    if (authData && !authData.isLoading && authData.type !== 'supervisor' && authData.type !== 'teacher') {
+        return <NotFound />;
     }
 
     function onSubmit(event) {
@@ -77,7 +76,7 @@ export default function UpdateTaskPage() {
                 <FormInput
                     label="Aantal plekken"
                     type="number"
-                    name="total_needed" 
+                    name="total_needed"
                     initialValue={task?.total_needed}
                     error={totalNeededError}
                     setError={setTotalNeededError}
