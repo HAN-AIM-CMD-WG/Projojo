@@ -13,7 +13,7 @@ export default function SkillBadge({ children, skillName, isPending, onClick = n
     const toolTipRef = useRef(null);
 
     let classNames = isPending ? 'bg-gray-300 text-black border border-gray-400' : 'bg-primary text-white';
-    classNames += ' px-3 py-1 text-nowrap text-sm font-medium rounded-full shadow-md';
+    classNames += ' px-3 py-1 break-words whitespace-normal text-start text-sm font-medium rounded-2xl shadow-md inline-block max-w-full';
 
     const content = (
         <>

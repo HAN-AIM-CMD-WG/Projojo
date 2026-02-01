@@ -69,15 +69,14 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                         />
                     </div>
                     <div className="w-full">
-                        <h1 className="text-3xl font-semibold text-gray-800 tracking-wide leading-tight border-b-2 border-primary m-4 pb-2">
+                        <h1 className="text-3xl font-semibold text-gray-800 tracking-wide leading-tight border-b-2 border-primary m-4 pb-2 break-words">
                             {project.name}
-
                         </h1>
-                        <h2 className="text-1xl font-semibold text-gray-800 tracking-wide leading-tight  m-4 pb-2">
+                        <h2 className="text-1xl font-semibold text-gray-800 tracking-wide leading-tight m-4 pb-2">
                             {project.location && project.location.trim().length > 0 && (
                                 <div className="flex gap-1 items-center">
-                                    <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                    {project.location}
+                                    <svg className="w-3 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                    <span className="break-words min-w-0">{project.location}</span>
                                 </div>
                             )}
                         </h2>
@@ -99,8 +98,8 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                                     </Link>
                                     <div className="text-black-600 text-sm flex flex-col gap-1">
                                         <div className="flex gap-1 items-center">
-                                            <svg className="w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                                            {project.business.location}
+                                            <svg className="w-3 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                                            <span className="break-words min-w-0">{project.business.location}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -125,15 +124,15 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
             <h2 className="text-lg font-semibold text-black-700 pt-3 px-4">
                 Top {project.topSkills?.length || 0} skills van het project
             </h2>
-            <div className="flex flex-row justify-between">
-                <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6">
+            <div className="flex flex-col sm:flex-row items-start">
+                <ul className="flex flex-wrap gap-3 p-4 pt-2 pb-6 min-w-0 flex-1">
                     {filterVisibleSkillsForUser(authData, project.topSkills || []).map((skill) => (
-                        <li key={skill.skillId}>
+                        <li key={skill.skillId} className="max-w-full">
                             <SkillBadge skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                         </li>
                     ))}
                 </ul>
-                <div className="w-fit p-4 pt-0 flex gap-2">
+                <div className="p-4 pt-0 sm:pt-2 flex gap-2 shrink-0">
                     {(isOwner || (authData && authData.type === "teacher")) && (
                         <Link to={`/projects/${project.id}/update`} className="btn-primary border border-gray-400 px-3 py-2 text-sm">
                             Project aanpassen
@@ -167,7 +166,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
                     >
                         <div className="flex flex-col gap-4 mb-4">
                             {error && <Alert text={error} onClose={() => setError("")} />}
-                            <FormInput type="text" label={`Titel voor nieuwe taak`} placeholder={"Titel"} name={`title`} required />
+                            <FormInput type="text" label={`Titel voor nieuwe taak`} placeholder={"Titel"} name={`title`} max={100} required />
                             <RichTextEditor
                                 onSave={setNewTaskDescription}
                                 label={`Beschrijving`}

@@ -132,7 +132,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                     </SkillBadge>
                 ))}
             </div>
-            <div className={`${isAbsolute && 'absolute bottom-0 translate-y-full -mb-2 z-10'} flex flex-col gap-2 p-2 border bg-white border-gray-400 rounded-lg shadow-lg min-w-full`} role="dialog" aria-label="Skill editor dialog">
+            <div className={`${isAbsolute && 'absolute bottom-0 translate-y-full -mb-2 z-10'} w-full flex flex-col gap-2 p-2 border bg-white border-gray-400 rounded-lg shadow-lg min-w-full`} role="dialog" aria-label="Skill editor dialog">
                 <div>
                     <label className="block text-sm font-medium leading-6 text-gray-900" htmlFor="search">
                         Zoeken
@@ -171,7 +171,7 @@ export default function SkillsEditor({ children, allSkills, initialSkills, isEdi
                             )}
                         </>
                     )}
-                    <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex flex-wrap gap-2 items-center w-full max-w-full">
                         {filteredSkills.slice(0, maxSkillsDisplayed).map((skill) => (
                             <SkillBadge key={skill.skillId || skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} onClick={() => toggleSkill(skill)} ariaLabel={`${skill.name} toevoegen`}>
                                 <span className="ps-1 font-bold text-xl leading-3">+</span>

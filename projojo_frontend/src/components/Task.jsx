@@ -125,8 +125,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     return (
         <div id={`task-${task.id}`} className="group">
             <div className="target flex flex-col sm:flex-row gap-4 justify-between items-center w-full p-5 bg-white rounded-lg shadow-md border border-gray-300 transition hover:shadow-lg">
-                <div className="space-y-3 flex-grow">
-                    <h2 className="text-2xl font-bold text-gray-800">
+                <div className="space-y-3 flex-grow min-w-0 w-full">
+                    <h2 className="text-2xl font-bold text-gray-800 break-words">
                         {task.name}
                     </h2>
                     <RichTextViewer
@@ -161,7 +161,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     </SkillsEditor>
                 </div>
 
-                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto">
+                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto w-xs">
                     <InfoBox>
                         <strong className="text-primary mr-1">
                             {task.total_needed - task.total_accepted}

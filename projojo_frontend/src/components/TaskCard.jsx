@@ -9,7 +9,7 @@ export default function TaskCard({ task }) {
     return (
         <div className="max-w-sm bg-slate-100 border border-gray-200 rounded-lg shadow-lg hover:rounded-lg hover:ring-4 hover:ring-pink-300 transition-all duration-300 ease-in-out">
             <div className="flex flex-col gap-3 p-4">
-                <h5 className="text-xl font-bold tracking-tight text-slate-800 group-hover:text-slate-700 transition-colors">
+                <h5 className="text-xl font-bold tracking-tight text-slate-800 group-hover:text-slate-700 transition-colors break-words">
                     Taak: {task.name}
                 </h5>
                 <InfoBox className="flex flex-col px-2 py-[0.25rem]">
