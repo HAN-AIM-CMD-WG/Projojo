@@ -116,7 +116,7 @@ export default function PortfolioList({
                     </span>
                     <input
                         type="text"
-                        placeholder="Zoek op taak, project, bedrijf of skill..."
+                        placeholder="Zoek op taak, project, organisatie of skill..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full sm:w-64 pl-10 pr-4 py-2 rounded-xl neu-pressed text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary/50"
@@ -167,7 +167,7 @@ export default function PortfolioList({
                     >
                         <option value="recent">Recentste eerst</option>
                         <option value="oldest">Oudste eerst</option>
-                        <option value="business">Op bedrijf</option>
+                        <option value="business">Op organisatie</option>
                     </select>
                 </div>
             </div>

@@ -161,7 +161,7 @@ export default function BusinessCard({
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
                                 <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
-                                    Bedrijf
+                                    Organisatie
                                 </span>
                                 <div className="flex items-center gap-2">
                                 <Link 
@@ -198,7 +198,7 @@ export default function BusinessCard({
                                     to={`/business/${businessId}`} 
                                     className="neu-btn-primary !py-3 !px-5 font-bold shrink-0 flex items-center gap-2"
                                 >
-                                    Bekijk bedrijf
+                                    Bekijk organisatie
                                     <span className="material-symbols-outlined text-xl">arrow_forward</span>
                                 </Link>
                             )}

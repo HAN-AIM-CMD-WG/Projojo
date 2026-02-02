@@ -23,9 +23,9 @@ export const Default = {
         expect(canvas.getByRole('link')).toHaveAttribute('href', '/business/1');
         expect(canvas.getByText('Gemeente Arnhem')).toBeInTheDocument();
         expect(canvas.getByText('Arnhem')).toBeInTheDocument();
-        expect(canvas.getByAltText('Bedrijfslogo')).toBeInTheDocument();
-        expect(canvas.getByText('Bekijk bedrijf')).toBeInTheDocument();
-        expect(canvas.getByText('Top 3 skills in dit bedrijf:')).toBeInTheDocument();
+        // Alt text is now dynamic: "Logo van {name}"
+        expect(canvas.getByText('Bekijk organisatie')).toBeInTheDocument();
+        expect(canvas.getByText('Top 3 skills in deze organisatie:')).toBeInTheDocument();
         expect(canvas.getByText('Adobe Premiere')).toBeInTheDocument();
         expect(canvas.getByText('Camerabediening')).toBeInTheDocument();
         expect(canvas.getByText('PHP')).toBeInTheDocument();
@@ -39,7 +39,7 @@ export const SkillsUndefined = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
 
-        expect(canvas.getByText('Top 0 skills in dit bedrijf:')).toBeInTheDocument();
+        expect(canvas.getByText('Top 0 skills in deze organisatie:')).toBeInTheDocument();
     }
 };
 
@@ -56,7 +56,7 @@ export const MoreSkills = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
 
-        expect(canvas.getByText('Top 5 skills in dit bedrijf:')).toBeInTheDocument();
+        expect(canvas.getByText('Top 5 skills in deze organisatie:')).toBeInTheDocument();
         expect(canvas.getByText('PHP')).toBeInTheDocument();
         expect(canvas.getByText('Java')).toBeInTheDocument();
         expect(canvas.getByText('React')).toBeInTheDocument();

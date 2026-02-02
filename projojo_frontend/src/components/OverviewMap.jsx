@@ -303,7 +303,7 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
                                             className="mt-2 inline-flex items-center gap-1 text-xs font-bold hover:underline"
                                             style={{ color: '#FF7F50' }}
                                         >
-                                            Bekijk {loc.type === 'project' ? 'project' : 'bedrijf'}
+                                            Bekijk {loc.type === 'project' ? 'project' : 'organisatie'}
                                             <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                         </Link>
                                     </div>

@@ -37,7 +37,7 @@ export default function Navbar() {
         });
     } else if (authData.type === "supervisor") {
         routes.push({
-            name: "Mijn bedrijf",
+            name: "Mijn organisatie",
             ref: `/business/${authData.businessId}`,
         });
     } else if (authData.type === "student") {

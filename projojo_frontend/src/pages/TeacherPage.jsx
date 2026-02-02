@@ -169,7 +169,7 @@ export default function TeacherPage() {
                 </button>
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="neu-btn-primary">
                     <span className="material-symbols-outlined text-sm mr-2">add_business</span>
-                    Bedrijf aanmaken
+                    Organisatie aanmaken
                 </button>
             </div>
 
@@ -177,7 +177,7 @@ export default function TeacherPage() {
             <section className="mb-8">
                 <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">business</span>
-                    Actieve Bedrijven
+                    Actieve Organisaties
                     <span className="neu-badge-primary ml-2">{businesses.length}</span>
                 </h2>
                 
@@ -186,7 +186,7 @@ export default function TeacherPage() {
                 ) : businesses.length === 0 ? (
                     <div className="neu-pressed p-8 text-center">
                         <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">business</span>
-                        <p className="text-[var(--text-muted)]">Nog geen bedrijven aangemaakt</p>
+                        <p className="text-[var(--text-muted)]">Nog geen organisaties aangemaakt</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -241,7 +241,7 @@ export default function TeacherPage() {
                     <span className={`material-symbols-outlined transition-transform ${showArchivedSection ? 'rotate-90' : ''}`}>
                         chevron_right
                     </span>
-                    <span className="font-bold">Gearchiveerde Bedrijven</span>
+                    <span className="font-bold">Gearchiveerde Organisaties</span>
                     {archivedBusinesses.length > 0 && (
                         <span className="neu-badge-outline">{archivedBusinesses.length}</span>
                     )}
@@ -251,7 +251,7 @@ export default function TeacherPage() {
                     archivedBusinesses.length === 0 ? (
                         <div className="neu-pressed p-6 text-center">
                             <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inventory_2</span>
-                            <p className="text-[var(--text-muted)] text-sm">Geen gearchiveerde bedrijven</p>
+                            <p className="text-[var(--text-muted)] text-sm">Geen gearchiveerde organisaties</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -365,7 +365,7 @@ export default function TeacherPage() {
 
             {/* Archive Confirmation Modal */}
             <Modal
-                modalHeader="Bedrijf archiveren"
+                modalHeader="Organisatie archiveren"
                 isModalOpen={!!archiveModalBusiness}
                 setIsModalOpen={() => setArchiveModalBusiness(null)}
             >
@@ -379,7 +379,7 @@ export default function TeacherPage() {
                                 Weet je zeker dat je <span className="text-primary">{archiveModalBusiness?.name}</span> wilt archiveren?
                             </p>
                             <p className="text-sm text-[var(--text-muted)] mt-1">
-                                Het bedrijf wordt verborgen voor studenten en supervisors.
+                                De organisatie wordt verborgen voor studenten en supervisors.
                             </p>
                         </div>
                     </div>
@@ -413,7 +413,7 @@ export default function TeacherPage() {
             </Modal>
 
             <Modal
-                modalHeader={`Nieuw bedrijf`}
+                modalHeader={`Nieuwe organisatie`}
                 isModalOpen={isCreateBusinessModalVisible}
                 setIsModalOpen={setIsCreateBusinessModalVisible}
             >
@@ -424,8 +424,8 @@ export default function TeacherPage() {
                     }}
                 >
                     <div className="flex flex-col mb-4">
-                        <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Bedrijfsnaam`} placeholder={"Vul de naam van het bedrijf in..."} name={`title`} required />
-                        <p className="mt-1 text-sm italic text-[var(--text-secondary)]">De rest van de informatie vult het bedrijf zelf in.</p>
+                        <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Organisatienaam`} placeholder={"Vul de naam van de organisatie in..."} name={`title`} required />
+                        <p className="mt-1 text-sm italic text-[var(--text-secondary)]">De rest van de informatie vult de organisatie zelf in.</p>
                     </div>
                     
                     {/* Create as draft checkbox */}
@@ -445,14 +445,14 @@ export default function TeacherPage() {
                         </div>
                         <div>
                             <span className="font-medium text-[var(--text-primary)] group-hover:text-primary transition-colors">Aanmaken als concept</span>
-                            <p className="text-xs text-[var(--text-muted)]">Het bedrijf is verborgen totdat je het publiceert</p>
+                            <p className="text-xs text-[var(--text-muted)]">De organisatie is verborgen totdat je het publiceert</p>
                         </div>
                     </label>
                     
                     {createNewBusinessError && <p className="col-span-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{createNewBusinessError}</p>}
-                    <button type="button" onClick={onCreateNewBusiness} name="Bedrijf aanmaken" className="neu-btn-primary w-full justify-center">
+                    <button type="button" onClick={onCreateNewBusiness} name="Organisatie aanmaken" className="neu-btn-primary w-full justify-center">
                         <span className="material-symbols-outlined text-sm mr-2">{createAsDraft ? 'edit_note' : 'add_business'}</span>
-                        {createAsDraft ? 'Concept aanmaken' : 'Bedrijf aanmaken'}
+                        {createAsDraft ? 'Concept aanmaken' : 'Organisatie aanmaken'}
                     </button>
                 </form>
             </Modal>

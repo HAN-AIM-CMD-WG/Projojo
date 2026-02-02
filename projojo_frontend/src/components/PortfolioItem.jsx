@@ -160,7 +160,7 @@ export default function PortfolioItem({ item, expanded = false, onToggleExpand }
                         {/* Business info */}
                         <div>
                             <h4 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wide mb-2">
-                                Bedrijf
+                                Organisatie
                             </h4>
                             <div className="neu-pressed rounded-xl p-3">
                                 <div className="flex items-center justify-between">

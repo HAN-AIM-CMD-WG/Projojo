@@ -16,7 +16,7 @@ export const Default = {
         const canvas = within(canvasElement);
 
         const filterButton = canvas.getByText('Filter op skills');
-        const searchInput = canvas.getByPlaceholderText('Zoek op bedrijfs- of projectnaam');
+        const searchInput = canvas.getByPlaceholderText('Zoek een organisatie of project...');
         expect(filterButton).toBeInTheDocument();
         expect(searchInput).toBeInTheDocument();
     }
@@ -26,9 +26,9 @@ export const SearchInput = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
 
-        const searchInput = canvas.getByPlaceholderText('Zoek op bedrijfs- of projectnaam');
+        const searchInput = canvas.getByPlaceholderText('Zoek een organisatie of project...');
         await userEvent.type(searchInput, 'HAN');
-        const searchButton = canvas.getByLabelText('Zoeken op bedrijfs- of projectnaam');
+        const searchButton = canvas.getByLabelText('Zoeken op organisatie- of projectnaam');
         await userEvent.click(searchButton);
         expect(searchInput).toHaveValue('HAN');
         expect(onFilterMock).toHaveBeenCalledWith({
@@ -42,7 +42,7 @@ export const ClearSearchInput = {
     play: async ({ canvasElement }) => {
         const canvas = within(canvasElement);
 
-        const searchInput = canvas.getByPlaceholderText('Zoek op bedrijfs- of projectnaam');
+        const searchInput = canvas.getByPlaceholderText('Zoek een organisatie of project...');
         await userEvent.type(searchInput, 'HAN');
         const deleteButton = canvas.getByLabelText('Wis zoekopdracht');
         expect(deleteButton).toBeInTheDocument();

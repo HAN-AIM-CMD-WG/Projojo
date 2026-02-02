@@ -69,9 +69,9 @@ export default function UpdateBusinessPage() {
                 setError(createErrorMessage(
                     error,
                     {
-                        401: "De bedrijfspagina kan niet aangepast worden als je niet bent ingelogd",
-                        403: "Je bent niet geautoriseerd om de bedrijfspagina aan te passen",
-                        404: "De bedrijfspagina kan niet gevonden worden",
+                        401: "De organisatiepagina kan niet aangepast worden als je niet bent ingelogd",
+                        403: "Je bent niet geautoriseerd om de organisatiepagina aan te passen",
+                        404: "De organisatiepagina kan niet gevonden worden",
                     }
                 ));
             }).finally(() => {
@@ -104,10 +104,10 @@ export default function UpdateBusinessPage() {
                     className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-4"
                 >
                     <span className="material-symbols-outlined text-xl">arrow_back</span>
-                    Terug naar bedrijfspagina
+                    Terug naar organisatiepagina
                 </Link>
-                <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Bedrijf aanpassen</h1>
-                <p className="text-[var(--text-muted)] mt-2">Pas de gegevens van je bedrijf aan</p>
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Organisatie aanpassen</h1>
+                <p className="text-[var(--text-muted)] mt-2">Pas de gegevens van je organisatie aan</p>
             </div>
 
             <form onSubmit={onSubmit}>
@@ -117,7 +117,7 @@ export default function UpdateBusinessPage() {
                 <div className="neu-flat rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">image</span>
-                        Bedrijfslogo
+                        Organisatielogo
                     </h2>
                     <DragDrop
                         name="image"
@@ -134,7 +134,7 @@ export default function UpdateBusinessPage() {
                     </h2>
                     <div className="space-y-4">
                         <FormInput
-                            label="Bedrijfsnaam"
+                            label="Organisatienaam"
                             type="text"
                             name="name"
                             initialValue={business?.name}

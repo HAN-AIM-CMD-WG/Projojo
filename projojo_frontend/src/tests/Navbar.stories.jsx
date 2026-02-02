@@ -75,6 +75,6 @@ export const NavbarSupervisor = {
         // Wait for the component to reflect the mock
         await new Promise((resolve) => setTimeout(resolve, 20));
 
-        expect(canvas.getByText("Mijn bedrijf")).toBeInTheDocument();
+        expect(canvas.getByText("Mijn organisatie")).toBeInTheDocument();
     },
 };

@@ -158,7 +158,7 @@ export default function LandingPage() {
                                     Van studie naar{" "}
                                     <span className="relative inline-block">
                                         <span className="relative z-10 bg-gradient-to-r from-primary to-orange-600 bg-clip-text text-transparent">
-                                            succes
+                                            impact
                                         </span>
                                         <svg className="absolute -bottom-2 left-0 w-full h-3" viewBox="0 0 200 12" fill="none" preserveAspectRatio="none">
                                             <path d="M2 10C50 2 150 2 198 10" stroke="url(#gradient)" strokeWidth="4" strokeLinecap="round"/>
@@ -242,7 +242,7 @@ export default function LandingPage() {
                                         </div>
                                         
                                         <p className="text-sm text-[var(--text-secondary)] mb-4">
-                                            Bouw een moderne web applicatie met React en TypeScript voor een innovatief tech bedrijf.
+                                            Bouw een moderne web applicatie met React en TypeScript voor een innovatief tech organisatie.
                                         </p>
                                         
                                         <div className="flex flex-wrap gap-2 mb-4">

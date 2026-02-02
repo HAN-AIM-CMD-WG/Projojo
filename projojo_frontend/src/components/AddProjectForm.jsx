@@ -75,10 +75,10 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-4"
                 >
                     <span className="material-symbols-outlined text-xl">arrow_back</span>
-                    Terug naar bedrijfspagina
+                    Terug naar organisatiepagina
                 </Link>
                 <h1 className="text-3xl font-extrabold text-[var(--text-primary)]">Project aanmaken</h1>
-                <p className="text-[var(--text-muted)] mt-2">Maak een nieuw project aan voor je bedrijf</p>
+                <p className="text-[var(--text-muted)] mt-2">Maak een nieuw project aan voor je organisatie</p>
             </div>
 
             <form onSubmit={handleSubmit} aria-label="Project aanmaken form">

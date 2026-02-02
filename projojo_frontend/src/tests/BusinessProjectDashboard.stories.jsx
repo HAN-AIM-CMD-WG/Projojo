@@ -82,7 +82,7 @@ export const Default = {
 
         expect(canvas.getByText('Gemeente Arnhem')).toBeInTheDocument();
         expect(canvas.getByText('Arnhem')).toBeInTheDocument();
-        expect(canvas.getByText('Top 2 skills in dit bedrijf:')).toBeInTheDocument();
+        expect(canvas.getByText('Top 2 skills in deze organisatie:')).toBeInTheDocument();
         expect(canvas.getAllByText('Verfilming van een boek')).toHaveLength(2);
         expect(canvas.getAllByText('Aftermovie bijeenkomst')).toHaveLength(2);
         const images = canvas.getAllByRole('img');

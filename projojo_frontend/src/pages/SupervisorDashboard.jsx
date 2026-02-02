@@ -78,7 +78,7 @@ export default function SupervisorDashboard() {
             {/* Page header */}
             <div className="pt-4 mb-8 text-center">
                 <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                    Bedrijfsdashboard
+                    Organisatiedashboard
                 </h1>
                 <p className="text-base text-[var(--text-muted)] font-medium mt-2">
                     {dashboardData?.stats?.pending_count > 0 ? (
@@ -261,7 +261,7 @@ export default function SupervisorDashboard() {
                                 </Link>
                                 <Link to={`/business/${dashboardData?.business_id}`} className="neu-btn w-full justify-start gap-3 !text-sm">
                                     <span className="material-symbols-outlined text-primary">business</span>
-                                    Bedrijfspagina
+                                    Organisatiepagina
                                 </Link>
                                 <Link to="/ontdek" className="neu-btn w-full justify-start gap-3 !text-sm">
                                     <span className="material-symbols-outlined text-primary">explore</span>

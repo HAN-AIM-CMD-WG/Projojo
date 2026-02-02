@@ -363,7 +363,7 @@ export default function Filter({ onFilter, businesses = [] }) {
                         />
 
                         <FilterChip
-                            label="Bedrijfsgrootte"
+                            label="Organisatiegrootte"
                             icon="apartment"
                             value={selectedCompanySize}
                             options={filterOptions.companySizes}
@@ -446,14 +446,14 @@ export default function Filter({ onFilter, businesses = [] }) {
                 <div className="flex-1 max-w-xl">
                     <form onSubmit={handleSearch} className="flex w-full gap-3">
                         <div className="relative flex-1 group">
-                            <label className="sr-only" htmlFor="search">Zoek een bedrijf of project</label>
+                            <label className="sr-only" htmlFor="search">Zoek een organisatie of project</label>
                             <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" aria-hidden="true">
                                 search
                             </span>
                             <input
                                 id="search"
                                 type="text"
-                                placeholder="Zoek een bedrijf of project..."
+                                placeholder="Zoek een organisatie of project..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 maxLength={50}
@@ -463,7 +463,7 @@ export default function Filter({ onFilter, businesses = [] }) {
                         <button 
                             type="submit" 
                             className="neu-btn-primary !px-5" 
-                            aria-label="Zoeken op bedrijfs- of projectnaam"
+                            aria-label="Zoeken op organisatie- of projectnaam"
                         >
                             <span className="material-symbols-outlined" aria-hidden="true">search</span>
                         </button>
@@ -526,13 +526,13 @@ export default function Filter({ onFilter, businesses = [] }) {
                                     <span className="text-primary font-bold">{matchingLocationsCount}</span>
                                     {' van '}
                                     {mapView === 'businesses' 
-                                        ? `${businesses.length} ${businesses.length === 1 ? 'bedrijf' : 'bedrijven'}` 
+                                        ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}` 
                                         : `${totalProjects} ${totalProjects === 1 ? 'project' : 'projecten'}`}
                                     {' matcht jouw skills'}
                                 </>
                             ) : (
                                 mapView === 'businesses' 
-                                    ? `${businesses.length} ${businesses.length === 1 ? 'bedrijf' : 'bedrijven'}` 
+                                    ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}` 
                                     : `${totalProjects} ${totalProjects === 1 ? 'project' : 'projecten'}`
                             )}
                         </span>

@@ -94,7 +94,7 @@ export default function BusinessPage() {
 
     return (
         <>
-            <PageHeader name={'Bedrijfspagina'} />
+            <PageHeader name={'Organisatiepagina'} />
             <div className={`flex flex-col gap-2 ${(businessErrorMessage !== undefined || projectsErrorMessage !== undefined) && 'mb-4'}`}>
                 <Alert text={businessErrorMessage} />
                 <Alert text={projectsErrorMessage} />

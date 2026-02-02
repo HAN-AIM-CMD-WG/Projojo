@@ -21,7 +21,7 @@ export default function ProjectDashboard({ projects, isAlwaysExtended = false })
                 )}
                 <div className={`grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 p-4 pb-8 w-full`}>
                     {projects?.length === 0 && (
-                        <p className="text-text-muted col-span-full text-center">Dit bedrijf heeft nog geen openstaande projecten</p>
+                        <p className="text-text-muted col-span-full text-center">Deze organisatie heeft nog geen openstaande projecten</p>
                     )}
                     {shownProjects?.map((project, projectIndex) => (
                         <div key={project.projectId} className="w-full">
