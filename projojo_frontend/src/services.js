@@ -440,19 +440,20 @@ export function createNewBusiness(newBusinessName) {
  * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
  */
 export function createSupervisorInviteKey(businessId) {
-    return fetchWithError(`${API_BASE_URL}invites/supervisor/${businessId}`, {
+    return fetchWithError(`${API_BASE_URL}invites/${businessId}`, {
         method: "POST",
     });
 }
 
 /**
- * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ * Validate an invite token
+ * @param {string} token
+ * @returns {Promise<{valid: boolean, business: {id: string, name: string, imagePath: string}}>}
  */
-export function createTeacherInviteKey() {
-    return fetchWithError(`${API_BASE_URL}invites/teacher`, {
-        method: "POST",
-    });
+export function validateInvite(token) {
+    return fetchWithError(`${API_BASE_URL}invites/validate/${token}`);
 }
+
 
 /**
  * @returns {Promise<User[]>}
@@ -552,23 +553,3 @@ export function updateSkillName(skillId, name) {
         body: JSON.stringify({ name }),
     }, true);
 }
-
-// ============================================================================
-// EMAIL TEST FUNCTION - REMOVE AFTER TESTING
-// ============================================================================
-/**
- * Send a test email to verify MailHog integration
- * @param {string} recipientEmail - Email address to send the test email to
- * @returns {Promise<{status: string, message: string}>}
- *
- * REMOVE THIS FUNCTION AFTER TESTING EMAIL FUNCTIONALITY
- */
-export function sendTestEmail(recipientEmail) {
-    return fetchWithError(`${API_BASE_URL}test/email`, {
-        method: "POST",
-        body: JSON.stringify({ recipient_email: recipientEmail }),
-    });
-}
-// ============================================================================
-// END EMAIL TEST FUNCTION - REMOVE AFTER TESTING
-// ============================================================================

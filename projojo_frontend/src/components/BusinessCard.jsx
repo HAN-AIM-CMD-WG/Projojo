@@ -35,7 +35,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         setIsLoading(true);
         createSupervisorInviteKey(businessId)
             .then(data => {
-                const link = `${window.location.origin}/invite?key=${data.key}`;
+                const link = `${window.location.origin}/invite/${data.key}`;
                 const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
 
                 setInviteLink(link);

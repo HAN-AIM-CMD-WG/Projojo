@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 from auth.jwt_middleware import JWTMiddleware
+from auth.permissions import auth
+from service.custom_static_files import FallbackStaticFiles
 
 # ============================================================================
 # EMAIL TEST IMPORTS - REMOVE AFTER TESTING
@@ -96,7 +98,7 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/image", StaticFiles(directory="static/images"), name="image")
+app.mount("/image", FallbackStaticFiles(directory="static/images", default_file="static/default.svg"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 
 @app.get("/")
@@ -132,6 +134,7 @@ class TestEmailRequest(BaseModel):
     recipient_email: str
 
 @app.post("/test/email")
+@auth(role="unauthenticated")
 async def send_test_email(request: TestEmailRequest):
     """
     TEST ENDPOINT - Send a test email using the invitation template.
@@ -159,7 +162,7 @@ async def send_test_email(request: TestEmailRequest):
     if result.success:
         return {
             "status": "success",
-            "message": f"Test email sent to {request.recipient_email}. Check your mailbox."
+            "message": f"Test e-mail verstuurd naar {request.recipient_email}. Check je mailbox."
         }
     else:
         return {

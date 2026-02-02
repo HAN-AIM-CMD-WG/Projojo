@@ -158,8 +158,10 @@ async def create_registration(
         task_repo.create_registration(task_id, student_id, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
     except Exception as e:
-        print(e)
-        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
+        print(f"{type(e)} - {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren.")
 
 @router.put("/{task_id}/registrations/{student_id}")
 @auth(role="supervisor", owner_id_key="task_id")
@@ -182,7 +184,9 @@ async def update_registration(
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
-        print(f"Error updating registration for task {task_id} and student {student_id}: {e}")
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
+        print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie.")
 
 @router.post("/{project_id}", response_model=Task, status_code=201)
@@ -207,7 +211,9 @@ async def create_task(
         created_task = task_repo.create(task)
         return created_task
     except Exception as e:
-        print(f"Error creating task for project {project_id}: {e}")
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
+        print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
 
 @router.put("/{task_id}")
@@ -226,7 +232,7 @@ async def update_task(
     if not existing_task:
         raise HTTPException(status_code=404, detail="Taak niet gevonden.")
 
-    try:        
+    try:
         task_repo.update(task_id, name, description, total_needed)
         return {"message": "Taak succesvol bijgewerkt"}
     except Exception as e:
