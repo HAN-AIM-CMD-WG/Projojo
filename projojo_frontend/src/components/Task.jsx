@@ -23,7 +23,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [registrations, setRegistrations] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
     const [motivation, setMotivation] = useState("");
-    const [canSubmit, setCanSubmit] = useState(true);
     const [isSavingSkills, setIsSavingSkills] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
@@ -34,7 +33,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!canSubmit) {
+        if (error) {
             return;
         }
 
@@ -126,8 +125,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     return (
         <div id={`task-${task.id}`} className="group">
             <div className="target flex flex-col sm:flex-row gap-4 justify-between items-center w-full p-5 bg-white rounded-lg shadow-md border border-gray-300 transition hover:shadow-lg">
-                <div className="space-y-3 flex-grow">
-                    <h2 className="text-2xl font-bold text-gray-800">
+                <div className="space-y-3 flex-grow min-w-0 w-full">
+                    <h2 className="text-2xl font-bold text-gray-800 break-words">
                         {task.name}
                     </h2>
                     <RichTextViewer
@@ -162,7 +161,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     </SkillsEditor>
                 </div>
 
-                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto">
+                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto w-xs">
                     <InfoBox>
                         <strong className="text-primary mr-1">
                             {task.total_needed - task.total_accepted}
@@ -200,7 +199,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             <RichTextEditor
                                 label="Motivatiebrief"
                                 onSave={setMotivation}
-                                setCanSubmit={setCanSubmit}
+                                setError={setError}
                             />
                             <div className="col-span-2">
                             </div>

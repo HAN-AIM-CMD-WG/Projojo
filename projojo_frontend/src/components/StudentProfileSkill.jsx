@@ -38,9 +38,9 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
         <div key={skill.skillId ?? skill.id} className="w-full p-5 rounded-lg bg-white shadow-md border border-gray-300 transition hover:shadow-lg">
             <div className="w-full">
                 <div className="flex flex-col min-[400px]:flex-row min-[400px]:justify-between  gap-2">
-                    <h2 className="text-lg font-semibold text-gray-800">{skill.name}</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 break-words min-w-0">{skill.name}</h2>
                     {isOwnProfile && !isEditing && (
-                        <button className="btn-secondary py-1 px-3 self-start" onClick={() => setIsEditing(true)}>Toelichting ✏️</button>
+                        <button className="btn-secondary py-1 px-3 self-start shrink-0" onClick={() => setIsEditing(true)}>Toelichting ✏️</button>
                     )}
                 </div>
                 {isOwnProfile && isEditing ? (
