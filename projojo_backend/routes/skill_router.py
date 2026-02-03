@@ -3,6 +3,7 @@ from auth.permissions import auth
 
 from domain.repositories import SkillRepository
 from domain.models import Skill
+from exceptions import ItemRetrievalException
 
 skill_repo = SkillRepository()
 
@@ -67,6 +68,8 @@ async def update_skill_acceptance(
     # Ensure skill exists
     try:
         skill_repo.get_by_id(skill_id)
+    except ItemRetrievalException:
+        raise
     except Exception:
         raise HTTPException(status_code=404, detail="Skill niet gevonden")
 
@@ -85,7 +88,7 @@ async def update_skill_acceptance(
             return {"message": "Skill afgewezen en verwijderd"}
     except Exception as e:
         print(f"Error {'updating' if accepted else 'deleting'} skill {skill_id}: {e}")
-        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken/verwijderen van de skill.")
+        raise HTTPException(status_code=500, detail=f"Er is een fout opgetreden bij het {'accepteren' if accepted else 'verwijderen'} van de skill.")
 
 @router.patch("/{skill_id}/name")
 @auth(role="teacher")
@@ -103,6 +106,8 @@ async def update_skill_name(
     # Ensure skill exists
     try:
         skill_repo.get_by_id(skill_id)
+    except ItemRetrievalException:
+        raise
     except Exception:
         raise HTTPException(status_code=404, detail="Skill niet gevonden")
 

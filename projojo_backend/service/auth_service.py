@@ -2,16 +2,18 @@ import asyncio
 from fastapi import Request, Depends
 from domain.models.user import User
 from domain.repositories.user_repository import UserRepository
+from domain.repositories.invite_repository import InviteRepository
 from auth.jwt_utils import create_jwt_token
 from auth.oauth_config import oauth_client
 from domain.models.authentication import OAuthProvider
 from service.image_service import save_image_from_bytes
 
 class AuthService:
-    def __init__(self, user_repo: UserRepository = Depends(UserRepository)):
+    def __init__(self, user_repo: UserRepository = Depends(UserRepository), invite_repo: InviteRepository = Depends(InviteRepository)):
         self.user_repo = user_repo
+        self.invite_repo = invite_repo
 
-    async def handle_oauth_callback(self, request: Request, provider: str) -> tuple[str, bool]:
+    async def handle_oauth_callback(self, request: Request, provider: str, invite_token: str | None = None) -> tuple[str, bool]:
         """Handle OAuth callback and return JWT token and is_new_user flag"""
         # Get OAuth client
         client = getattr(oauth_client, provider, None)
@@ -25,10 +27,21 @@ class AuthService:
         extracted_user = await self._extract_user_from_token(provider, client, token)
 
         # Get or create user in database
-        final_user, is_new_user = self._get_or_create_user(extracted_user)
+        final_user, is_new_user = self._get_or_create_user(extracted_user, invite_token)
 
         # Create JWT token
-        jwt_token = create_jwt_token(final_user.id)
+        # Pass business_id if user is a supervisor
+        business_id = None
+        if final_user.type == 'supervisor':
+            if hasattr(final_user, 'business_association_id') and final_user.business_association_id:
+                business_id = final_user.business_association_id
+            else:
+                # Fetch supervisor details to get business_id if not present in the user object
+                supervisor = self.user_repo.get_supervisor_by_id(final_user.id)
+                if supervisor:
+                    business_id = supervisor.business_association_id
+
+        jwt_token = create_jwt_token(user_id=final_user.id, role=final_user.type, business_id=business_id)
 
         return jwt_token, is_new_user
 
@@ -153,12 +166,19 @@ class AuthService:
                 # Save the image bytes
                 image_filename = save_image_from_bytes(picture_resp.content, file_extension)
         except Exception as e:
+            # Log error but don't fail. User can proceed without profile picture.
             print(f"Failed to download Microsoft profile picture: {e}")
 
         return image_filename
 
-    def _get_or_create_user(self, extracted_user: User) -> tuple[User, bool]:
-        """Get existing user or create new one. Returns (user, is_new_user)"""
+    def _get_or_create_user(self, extracted_user: User, invite_token: str | None = None) -> tuple[User, bool]:
+        """
+        Get existing user or create new one. Returns (user, is_new_user)
+
+        Returns:
+            user: User object
+            is_new_user: bool indicating if the user was newly created
+        """
         if not extracted_user.oauth_providers or len(extracted_user.oauth_providers) == 0:
             raise ValueError("Geen login-provider gevonden")
 
@@ -169,8 +189,32 @@ class AuthService:
             oauth_provider.provider_name
         )
 
-        if not existing_user:
-            new_user = self.user_repo.create_user(extracted_user)
-            return new_user, True
+        if existing_user:
+            if invite_token:
+                raise ValueError("Je hebt al een account. Log in zonder uitnodiging.")
+            return existing_user, False
 
-        return existing_user, False
+        # New user
+        if invite_token:
+            # Validate invite
+            invite_data = self.invite_repo.validate_invite_key(invite_token)
+            if not invite_data:
+                raise ValueError("Ongeldige of verlopen uitnodiging")
+
+            business_id = invite_data['business']['id']
+
+            # Create supervisor
+            new_user = self.user_repo.create_user(extracted_user, role="supervisor", business_id=business_id)
+
+            # Mark invite as used
+            self.invite_repo.mark_invite_as_used(invite_token)
+
+            return new_user, True
+        else:
+            # If no invite token, check if provider is one of the supervisor-only providers
+            if oauth_provider.provider_name in ['google', 'microsoft', 'github']:
+                raise ValueError("Registratie als supervisor vereist een uitnodiging. Studenten moeten inloggen met hun HAN-account.")
+
+            # Create student
+            new_user = self.user_repo.create_user(extracted_user, role="student")
+            return new_user, True
