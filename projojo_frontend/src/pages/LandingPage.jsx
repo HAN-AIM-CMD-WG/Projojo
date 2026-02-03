@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
+import DiscoverySection from "../components/DiscoverySection";
 
 /**
  * Modern Landing Page - Student-focused, professional, innovative
@@ -110,6 +111,12 @@ export default function LandingPage() {
                         >
                             Hoe het werkt
                         </a>
+                        <Link 
+                            to="/publiek" 
+                            className="hidden md:block text-sm font-semibold text-[var(--text-secondary)] hover:text-primary transition-colors"
+                        >
+                            Ontdek projecten
+                        </Link>
                         {/* Theme Toggle */}
                         <button
                             onClick={() => setTheme(isDark ? 'light' : 'dark')}
@@ -424,7 +431,7 @@ export default function LandingPage() {
                         </p>
                     </div>
                     
-                    <div className="flex flex-wrap justify-center items-center gap-12 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                        <div className="flex flex-wrap justify-center items-center gap-12 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
                         <div className="h-12 flex items-center filter drop-shadow-lg">
                             <img 
                                 src="/han_logo.png" 
@@ -441,6 +448,9 @@ export default function LandingPage() {
                     </div>
                 </div>
             </section>
+
+            {/* Public Discovery Section */}
+            <DiscoverySection />
 
             {/* CTA Section - Final Push */}
             <section className="py-24 px-6">

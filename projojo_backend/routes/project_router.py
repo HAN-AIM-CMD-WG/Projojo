@@ -27,7 +27,32 @@ class ProjectActionResponse(BaseModel):
 
 router = APIRouter(prefix="/projects", tags=["Project Endpoints"])
 
-# Project endpoints
+# Public endpoints (no authentication required)
+@router.get("/public")
+async def get_public_projects():
+    """
+    Get all public projects for the discovery page.
+    No authentication required.
+    """
+    projects = project_repo.get_public_projects()
+    return projects
+
+
+@router.get("/public/{project_id}")
+async def get_public_project(project_id: str = Path(..., description="Project ID")):
+    """
+    Get a specific public project by ID.
+    No authentication required.
+    Returns 404 if project is not public or doesn't exist.
+    """
+    projects = project_repo.get_public_projects()
+    for p in projects:
+        if p.get("id") == project_id:
+            return p
+    raise HTTPException(status_code=404, detail="Project niet gevonden of niet publiek beschikbaar")
+
+
+# Authenticated project endpoints
 @router.get("/")
 @auth(role="authenticated")
 async def get_all_projects():
@@ -251,6 +276,71 @@ async def archive_project(
         message="Project succesvol gearchiveerd",
         notified_count=notified_count
     )
+
+
+@router.patch("/{project_id}/visibility")
+async def set_project_visibility(
+    project_id: str = Path(..., description="Project ID"),
+    is_public: bool = Query(..., description="Whether the project should be publicly visible"),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Set the public visibility of a project.
+    - Supervisor: only their own projects
+    - Teacher: all projects
+    """
+    role = payload.get("role")
+    user_id = payload.get("sub")
+    
+    # Check authorization
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten kunnen de zichtbaarheid niet wijzigen")
+    
+    if role == "supervisor":
+        if not project_repo.check_project_owner(project_id, user_id):
+            raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten aanpassen")
+    elif role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen de zichtbaarheid wijzigen")
+    
+    project_repo.set_public(project_id, is_public)
+    
+    return {"message": f"Project is nu {'publiek zichtbaar' if is_public else 'niet meer publiek zichtbaar'}"}
+
+
+class ImpactSummaryUpdate(BaseModel):
+    """Request model for updating impact summary."""
+    impact_summary: str | None = None
+
+
+@router.patch("/{project_id}/impact")
+async def set_project_impact(
+    project_id: str = Path(..., description="Project ID"),
+    update: ImpactSummaryUpdate = None,
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Set the impact summary of a project.
+    Typically used for completed projects to showcase their results.
+    - Supervisor: only their own projects
+    - Teacher: all projects
+    """
+    role = payload.get("role")
+    user_id = payload.get("sub")
+    
+    # Check authorization
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten kunnen de impact niet wijzigen")
+    
+    if role == "supervisor":
+        if not project_repo.check_project_owner(project_id, user_id):
+            raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten aanpassen")
+    elif role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen de impact wijzigen")
+    
+    impact_summary = update.impact_summary if update else None
+    project_repo.set_impact_summary(project_id, impact_summary)
+    
+    return {"message": "Impact samenvatting bijgewerkt"}
 
 
 @router.patch("/{project_id}/restore")

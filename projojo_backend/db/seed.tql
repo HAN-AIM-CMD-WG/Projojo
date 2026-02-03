@@ -413,7 +413,8 @@ insert
         has imagePath "project_monitoring.png",
         has createdAt 2025-01-20T09:00:00+0000,
         has startDate 2025-06-15T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
+        has endDate 2026-03-31T23:59:00+0000,
+        has isPublic true;
 
     $p2 isa project,
         has id "b6260d01-f570-4eea-b0ae-8cfedf2eb6b2",
@@ -478,7 +479,8 @@ insert
         has imagePath "project_ai_technology.png",
         has createdAt 2025-01-27T09:15:00+0000,
         has startDate 2025-06-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
+        has endDate 2026-02-28T23:59:00+0000,
+        has isPublic true;
 
     $p9 isa project,
         has id "202bf45b-42ec-4e50-9ae1-bae161d56b25",
@@ -524,7 +526,8 @@ insert
         has imagePath "project_ai_technology.png",
         has createdAt 2025-02-01T08:45:00+0000,
         has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
+        has endDate 2026-03-15T23:59:00+0000,
+        has isPublic true;
 
     $p14 isa project,
         has id "2d0d232f-10b6-4628-a972-831e7be60fac",
@@ -580,7 +583,8 @@ insert
         has imagePath "project_monitoring.png",
         has createdAt 2025-02-07T14:45:00+0000,
         has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
+        has endDate 2026-02-28T23:59:00+0000,
+        has isPublic true;
 
     $p20 isa project,
         has id "c03ca374-5334-4dde-b355-81ee591526f0",
@@ -664,7 +668,8 @@ insert
         has imagePath "project_sustainability.png",
         has createdAt 2025-02-16T14:20:00+0000,
         has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000;
+        has endDate 2026-04-15T23:59:00+0000,
+        has isPublic true;
 
     $p29 isa project,
         has id "0b5dc5c8-0be6-4ad1-8ffc-77ebe950acd3",
@@ -692,7 +697,8 @@ insert
         has imagePath "project_logistics.png",
         has createdAt 2025-02-19T08:30:00+0000,
         has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-06-30T23:59:00+0000;
+        has endDate 2026-06-30T23:59:00+0000,
+        has isPublic true;
 
     $p32 isa project,
         has id "495050ab-07ea-4e9f-bf43-74ee7f7e95f1",
@@ -1696,11 +1702,130 @@ insert
         has subtaskCriteria "- Onderzoeksvraag is beantwoord\n- Bronnen zijn gedocumenteerd\n- Conclusies zijn onderbouwd",
         has createdAt 2025-01-15T11:30:00+0000;
     
-    # Koppel templates aan bedrijf
+    # Koppel originele templates aan SmartFarm (b3)
     $btpl1 isa belongsToBusiness (business: $b3, template: $template1);
     $btpl2 isa belongsToBusiness (business: $b3, template: $template2);
     $btpl3 isa belongsToBusiness (business: $b3, template: $template3);
     $btpl4 isa belongsToBusiness (business: $b3, template: $template4);
+    
+    # Templates voor De Gouden Akker (b1)
+    $tpl_b1_1 isa subtaskTemplate,
+        has id "tpl-b1-1",
+        has templateName "Data Analyse",
+        has title "Data analyseren",
+        has subtaskWhat "Analyseer de verzamelde data en identificeer patronen",
+        has subtaskWhy "Data-gedreven inzichten helpen bij betere besluitvorming",
+        has subtaskHow "1. Data verzamelen\n2. Visualisaties maken\n3. Conclusies trekken",
+        has subtaskCriteria "- Data is gevalideerd\n- Conclusies onderbouwd",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b1_1 isa belongsToBusiness (business: $b1, template: $tpl_b1_1);
+    
+    $tpl_b1_2 isa subtaskTemplate,
+        has id "tpl-b1-2",
+        has templateName "Rapport Schrijven",
+        has title "Eindrapport opstellen",
+        has subtaskWhat "Schrijf een rapport over de uitgevoerde werkzaamheden",
+        has subtaskWhy "Een goed rapport documenteert het werk",
+        has subtaskHow "1. Structuur bepalen\n2. Uitwerken\n3. Review vragen",
+        has subtaskCriteria "- Structuur is logisch\n- Taalgebruik professioneel",
+        has createdAt 2025-01-15T12:30:00+0000;
+    $btpl_b1_2 isa belongsToBusiness (business: $b1, template: $tpl_b1_2);
+    
+    # Templates voor Veeteelt Groep (b2)
+    $tpl_b2_1 isa subtaskTemplate,
+        has id "tpl-b2-1",
+        has templateName "Observatie",
+        has title "Veldonderzoek",
+        has subtaskWhat "Voer observaties uit in het veld",
+        has subtaskWhy "Directe observatie geeft praktische inzichten",
+        has subtaskHow "1. Checklist opstellen\n2. Observaties vastleggen\n3. Analyseren",
+        has subtaskCriteria "- Observaties zijn gedocumenteerd\n- Foto's toegevoegd",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b2_1 isa belongsToBusiness (business: $b2, template: $tpl_b2_1);
+    
+    # Templates voor Groene Kassen (b4)
+    $tpl_b4_1 isa subtaskTemplate,
+        has id "tpl-b4-1",
+        has templateName "Meetplan",
+        has title "Meetplan opstellen",
+        has subtaskWhat "Stel een plan op voor het verzamelen van meetgegevens",
+        has subtaskWhy "Gestructureerde metingen geven betrouwbare data",
+        has subtaskHow "1. Meetpunten definiëren\n2. Frequentie bepalen\n3. Methode beschrijven",
+        has subtaskCriteria "- Alle meetpunten gedefinieerd\n- Methode reproduceerbaar",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b4_1 isa belongsToBusiness (business: $b4, template: $tpl_b4_1);
+    
+    # Templates voor Bodemexperts (b5)
+    $tpl_b5_1 isa subtaskTemplate,
+        has id "tpl-b5-1",
+        has templateName "Analyse",
+        has title "Bodemanalyse",
+        has subtaskWhat "Analyseer de bodemmonsters",
+        has subtaskWhy "Bodemkwaliteit bepaalt teeltsucces",
+        has subtaskHow "1. Monsters nemen\n2. Lab analyse\n3. Resultaten interpreteren",
+        has subtaskCriteria "- Monsters correct genomen\n- Resultaten geïnterpreteerd",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b5_1 isa belongsToBusiness (business: $b5, template: $tpl_b5_1);
+    
+    # Templates voor AquaCultuur (b6)
+    $tpl_b6_1 isa subtaskTemplate,
+        has id "tpl-b6-1",
+        has templateName "Waterkwaliteit",
+        has title "Waterkwaliteit meten",
+        has subtaskWhat "Meet en registreer waterkwaliteitsparameters",
+        has subtaskWhy "Waterkwaliteit is cruciaal voor gezonde teelt",
+        has subtaskHow "1. Parameters meten (pH, O2, temp)\n2. Registreren\n3. Afwijkingen signaleren",
+        has subtaskCriteria "- Alle parameters gemeten\n- Afwijkingen gerapporteerd",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b6_1 isa belongsToBusiness (business: $b6, template: $tpl_b6_1);
+    
+    # Templates voor Fruitboomgaarden (b7)
+    $tpl_b7_1 isa subtaskTemplate,
+        has id "tpl-b7-1",
+        has templateName "Inventarisatie",
+        has title "Inventaris opmaken",
+        has subtaskWhat "Maak een inventarisatie van de huidige stand van zaken",
+        has subtaskWhy "Overzicht is nodig voor planning",
+        has subtaskHow "1. Tellen/meten\n2. Registreren\n3. Verwerken in systeem",
+        has subtaskCriteria "- Telling compleet\n- Data ingevoerd",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b7_1 isa belongsToBusiness (business: $b7, template: $tpl_b7_1);
+    
+    # Templates voor Akkerbouw Mechanisatie (b8)
+    $tpl_b8_1 isa subtaskTemplate,
+        has id "tpl-b8-1",
+        has templateName "Technisch Ontwerp",
+        has title "Ontwerp maken",
+        has subtaskWhat "Maak een technisch ontwerp voor de oplossing",
+        has subtaskWhy "Een goed ontwerp voorkomt fouten in de uitvoering",
+        has subtaskHow "1. Requirements verzamelen\n2. Ontwerp schetsen\n3. Review",
+        has subtaskCriteria "- Ontwerp is compleet\n- Goedgekeurd door stakeholders",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b8_1 isa belongsToBusiness (business: $b8, template: $tpl_b8_1);
+    
+    # Templates voor Biodynamische Boerderij (b9)
+    $tpl_b9_1 isa subtaskTemplate,
+        has id "tpl-b9-1",
+        has templateName "Seizoensplanning",
+        has title "Planning opstellen",
+        has subtaskWhat "Stel een planning op voor het komende seizoen",
+        has subtaskWhy "Goede planning zorgt voor efficiënte werkzaamheden",
+        has subtaskHow "1. Activiteiten inventariseren\n2. Tijdlijn maken\n3. Afstemmen",
+        has subtaskCriteria "- Alle activiteiten gepland\n- Afgestemd met team",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b9_1 isa belongsToBusiness (business: $b9, template: $tpl_b9_1);
+    
+    # Templates voor Agri-Logistiek (b10)
+    $tpl_b10_1 isa subtaskTemplate,
+        has id "tpl-b10-1",
+        has templateName "Procesanalyse",
+        has title "Proces analyseren",
+        has subtaskWhat "Analyseer het huidige proces en identificeer verbeterpunten",
+        has subtaskWhy "Procesverbetering leidt tot efficiëntie",
+        has subtaskHow "1. Proces in kaart brengen\n2. Knelpunten identificeren\n3. Verbeteringen voorstellen",
+        has subtaskCriteria "- Proces gedocumenteerd\n- Verbeterpunten onderbouwd",
+        has createdAt 2025-01-15T12:00:00+0000;
+    $btpl_b10_1 isa belongsToBusiness (business: $b10, template: $tpl_b10_1);
 
     # ============================================
     # Deeltaken (Subtasks)
@@ -1757,3 +1882,75 @@ insert
     
     # Emma heeft subtask 1 geclaimd (in_progress)
     $claim1 isa claimedBy (subtask: $sub1, student: $u2);
+
+    # ============================================
+    # Thema's voor Publieke Discovery
+    # ============================================
+    
+    $theme1 isa theme,
+        has id "theme-duurzaamheid",
+        has name "Duurzaamheid",
+        has sdgCode "SDG12",
+        has icon "eco",
+        has themeDescription "Projecten gericht op duurzame praktijken en circulaire economie",
+        has color "#4CAF50",
+        has displayOrder 1;
+    
+    $theme2 isa theme,
+        has id "theme-klimaat",
+        has name "Klimaat & Milieu",
+        has sdgCode "SDG13",
+        has icon "nature",
+        has themeDescription "Projecten die bijdragen aan klimaatactie en milieubescherming",
+        has color "#2196F3",
+        has displayOrder 2;
+    
+    $theme3 isa theme,
+        has id "theme-innovatie",
+        has name "Innovatie & Technologie",
+        has sdgCode "SDG9",
+        has icon "lightbulb",
+        has themeDescription "Technologische innovaties en digitale transformatie",
+        has color "#9C27B0",
+        has displayOrder 3;
+    
+    $theme4 isa theme,
+        has id "theme-voedsel",
+        has name "Voedselzekerheid",
+        has sdgCode "SDG2",
+        has icon "restaurant",
+        has themeDescription "Projecten voor duurzame voedselproductie en -distributie",
+        has color "#FF9800",
+        has displayOrder 4;
+    
+    $theme5 isa theme,
+        has id "theme-water",
+        has name "Water & Biodiversiteit",
+        has sdgCode "SDG14",
+        has icon "water_drop",
+        has themeDescription "Waterbeheer en behoud van biodiversiteit",
+        has color "#00BCD4",
+        has displayOrder 5;
+    
+    $theme6 isa theme,
+        has id "theme-onderwijs",
+        has name "Kennisdeling",
+        has sdgCode "SDG4",
+        has icon "school",
+        has themeDescription "Educatie en kennisoverdracht projecten",
+        has color "#E91E63",
+        has displayOrder 6;
+
+    # Koppel een paar projecten aan thema's om te testen
+    $pt_theme1 isa hasTheme (project: $p1, theme: $theme1);
+    $pt_theme2 isa hasTheme (project: $p1, theme: $theme3);
+    $pt_theme3 isa hasTheme (project: $p8, theme: $theme3);
+    $pt_theme4 isa hasTheme (project: $p8, theme: $theme1);
+    $pt_theme5 isa hasTheme (project: $p13, theme: $theme2);
+    $pt_theme6 isa hasTheme (project: $p13, theme: $theme1);
+    $pt_theme7 isa hasTheme (project: $p19, theme: $theme5);
+    $pt_theme8 isa hasTheme (project: $p19, theme: $theme4);
+    $pt_theme9 isa hasTheme (project: $p28, theme: $theme5);
+    $pt_theme10 isa hasTheme (project: $p28, theme: $theme1);
+    $pt_theme11 isa hasTheme (project: $p31, theme: $theme4);
+    $pt_theme12 isa hasTheme (project: $p31, theme: $theme3);

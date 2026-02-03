@@ -18,6 +18,8 @@ class Project(BaseModel):
     tasks: list[Task] | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None
+    is_public: bool | None = None
+    impact_summary: str | None = None
 
     class Config:
         from_attributes = True

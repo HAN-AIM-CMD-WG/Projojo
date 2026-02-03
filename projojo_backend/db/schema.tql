@@ -49,11 +49,25 @@ entity project,
     owns createdAt @card(1),
     owns location @card(0..1),
     owns isArchived @card(0..1),
+    owns isPublic @card(0..1),
+    owns impactSummary @card(0..1),
     owns startDate @card(0..1),
     owns endDate @card(0..1),
     plays hasProjects:project @card(1),
     plays containsTask:project @card(0..),
-    plays creates:project @card(0..);
+    plays creates:project @card(0..),
+    plays hasTheme:project @card(0..);
+
+# Thema's voor publieke discovery (gebaseerd op SDG's of eigen thema's)
+entity theme,
+    owns id @key,
+    owns name @card(1),
+    owns sdgCode @card(0..1),      # Optionele SDG koppeling (bijv. "SDG3", "SDG13")
+    owns icon @card(0..1),          # Material icon name
+    owns themeDescription @card(0..1),
+    owns color @card(0..1),         # Kleurcode (bijv. "#4CAF50")
+    owns displayOrder @card(0..1),  # Sorteervolgorde
+    plays hasTheme:theme @card(0..);
 
 entity task,
     owns id @key,
@@ -143,6 +157,11 @@ relation hasPortfolio,
     relates student @card(1),
     relates item @card(1);
 
+# Project-Thema koppeling
+relation hasTheme,
+    relates project @card(1),
+    relates theme @card(1);
+
 # Deeltaken Systeem (Subtasks)
 # UI toont "Deeltaak" - toegankelijk voor alle disciplines
 entity subtask,
@@ -231,3 +250,10 @@ attribute subtaskHow value string;
 attribute subtaskCriteria value string;
 attribute subtaskStatus value string @values("open", "in_progress", "done");
 attribute templateName value string;
+attribute isPublic value boolean;
+attribute impactSummary value string;
+attribute sdgCode value string;
+attribute icon value string;
+attribute themeDescription value string;
+attribute color value string;
+attribute displayOrder value integer;

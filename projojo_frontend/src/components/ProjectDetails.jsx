@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, deleteProject } from "../services";
+import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
 import FormInput from "./FormInput";
@@ -59,6 +59,10 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [formKey, setFormKey] = useState(0);
     const [showMap, setShowMap] = useState(false);
+    const [isPublicLoading, setIsPublicLoading] = useState(false);
+    const [isEditingImpact, setIsEditingImpact] = useState(false);
+    const [impactText, setImpactText] = useState("");
+    const [isImpactLoading, setIsImpactLoading] = useState(false);
 
     const formDataObj = {};
 
@@ -169,6 +173,41 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
             setIsActionLoading(false);
         }
     };
+
+    // Toggle public visibility
+    const handleTogglePublic = async () => {
+        if (!project?.id) return;
+        setIsPublicLoading(true);
+        try {
+            const newPublicState = !project.is_public;
+            const result = await setProjectVisibility(project.id, newPublicState);
+            setSuccessMessage(result.message);
+            refreshData?.();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsPublicLoading(false);
+        }
+    };
+
+    // Save impact summary
+    const handleSaveImpact = async () => {
+        if (!project?.id) return;
+        setIsImpactLoading(true);
+        try {
+            const result = await setProjectImpact(project.id, impactText.trim() || null);
+            setSuccessMessage(result.message);
+            setIsEditingImpact(false);
+            refreshData?.();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsImpactLoading(false);
+        }
+    };
+
+    // Check if project is completed (end_date passed)
+    const isCompleted = project?.end_date && new Date(project.end_date) < new Date();
 
     if (isLoading) {
         project = {
@@ -314,6 +353,82 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             <RichTextViewer text={project.description} />
                         </div>
                     )}
+
+                    {/* Impact Summary Section - for completed projects */}
+                    {!isLoading && isCompleted && (
+                        <div className="mb-3">
+                            {project.impact_summary && !isEditingImpact ? (
+                                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex items-start gap-2">
+                                            <span className="material-symbols-outlined text-blue-600 text-lg mt-0.5">emoji_events</span>
+                                            <div>
+                                                <p className="text-xs font-bold text-blue-700 uppercase tracking-wide mb-1">Impact & Resultaten</p>
+                                                <p className="text-sm text-blue-800">{project.impact_summary}</p>
+                                            </div>
+                                        </div>
+                                        {canManageProject && (
+                                            <button
+                                                onClick={() => {
+                                                    setImpactText(project.impact_summary || "");
+                                                    setIsEditingImpact(true);
+                                                }}
+                                                className="text-blue-600 hover:text-blue-800 p-1"
+                                                title="Bewerk impact"
+                                            >
+                                                <span className="material-symbols-outlined text-sm">edit</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : canManageProject && (
+                                <div className="p-3 rounded-lg border border-dashed border-blue-300 bg-blue-50/50">
+                                    {isEditingImpact ? (
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-bold text-blue-700 uppercase tracking-wide flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-sm">emoji_events</span>
+                                                Impact & Resultaten
+                                            </label>
+                                            <textarea
+                                                value={impactText}
+                                                onChange={(e) => setImpactText(e.target.value)}
+                                                placeholder="Beschrijf de impact en resultaten van dit project..."
+                                                className="w-full p-2 text-sm rounded-lg border border-blue-200 bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none resize-none"
+                                                rows={3}
+                                                maxLength={500}
+                                            />
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs text-blue-500">{impactText.length}/500</span>
+                                                <div className="flex gap-2">
+                                                    <button
+                                                        onClick={() => setIsEditingImpact(false)}
+                                                        className="text-xs px-3 py-1.5 text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        Annuleren
+                                                    </button>
+                                                    <button
+                                                        onClick={handleSaveImpact}
+                                                        disabled={isImpactLoading}
+                                                        className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+                                                    >
+                                                        {isImpactLoading ? 'Opslaan...' : 'Opslaan'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsEditingImpact(true)}
+                                            className="w-full flex items-center justify-center gap-2 text-blue-600 hover:text-blue-800 text-sm py-2"
+                                        >
+                                            <span className="material-symbols-outlined text-lg">add_circle</span>
+                                            Voeg impact samenvatting toe
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     
                     {/* Skills - inline with label, clickable to jump to task */}
                     {project.topSkills && project.topSkills.length > 0 && (
@@ -374,39 +489,76 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                 )}
             </div>
 
-            {/* Project management - compact footer */}
+            {/* Project management - clean action bar */}
             {canManageProject && !isLoading && (
-                <div className="px-4 sm:px-5 pb-4 flex flex-wrap items-center gap-2 border-t border-[var(--neu-border)] pt-3 mt-2">
-                    <span className="text-xs text-[var(--text-muted)] mr-2">Beheer:</span>
-                    {project.is_archived ? (
-                        <button 
-                            className="text-xs font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
-                            onClick={handleRestoreClick}
-                            disabled={isActionLoading}
+                <div className="px-4 sm:px-5 pb-4 border-t border-[var(--neu-border)] pt-3 mt-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* Visibility toggle - action-oriented button */}
+                        <button
+                            onClick={handleTogglePublic}
+                            disabled={isPublicLoading}
+                            className={`
+                                inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                transition-all duration-200 border
+                                ${isPublicLoading ? 'opacity-50 cursor-wait' : ''}
+                                ${project.is_public 
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300' 
+                                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:border-gray-300'
+                                }
+                            `}
+                            title={project.is_public 
+                                ? 'Zichtbaar op de publieke ontdekpagina voor iedereen. Klik om te verbergen.' 
+                                : 'Alleen zichtbaar voor ingelogde gebruikers. Klik om ook publiek vindbaar te maken.'
+                            }
                         >
-                            <span className="material-symbols-outlined text-sm">unarchive</span>
-                            Herstellen
+                            <span className="material-symbols-outlined text-sm">
+                                {isPublicLoading ? 'sync' : (project.is_public ? 'public' : 'lock')}
+                            </span>
+                            {project.is_public ? 'Publiek vindbaar' : 'Niet publiek'}
                         </button>
-                    ) : (
-                        <button 
-                            className="text-xs font-medium text-amber-600 hover:text-amber-700 flex items-center gap-1"
-                            onClick={handleArchiveClick}
-                            disabled={isActionLoading}
-                        >
-                            <span className="material-symbols-outlined text-sm">archive</span>
-                            Archiveren
-                        </button>
-                    )}
-                    {isTeacher && (
-                        <button 
-                            className="text-xs font-medium text-red-600 hover:text-red-700 flex items-center gap-1"
-                            onClick={handleDeleteClick}
-                            disabled={isActionLoading}
-                        >
-                            <span className="material-symbols-outlined text-sm">delete</span>
-                            Verwijderen
-                        </button>
-                    )}
+
+                        {/* Archive/Restore button */}
+                        {project.is_archived ? (
+                            <button 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    bg-green-50 border border-green-200 text-green-700 
+                                    hover:bg-green-100 hover:border-green-300 transition-all duration-200"
+                                onClick={handleRestoreClick}
+                                disabled={isActionLoading}
+                                title="Haal dit project uit het archief"
+                            >
+                                <span className="material-symbols-outlined text-sm">unarchive</span>
+                                Herstellen
+                            </button>
+                        ) : (
+                            <button 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    bg-amber-50 border border-amber-200 text-amber-700 
+                                    hover:bg-amber-100 hover:border-amber-300 transition-all duration-200"
+                                onClick={handleArchiveClick}
+                                disabled={isActionLoading}
+                                title="Verplaats dit project naar het archief"
+                            >
+                                <span className="material-symbols-outlined text-sm">archive</span>
+                                Archiveren
+                            </button>
+                        )}
+
+                        {/* Delete button - teacher only */}
+                        {isTeacher && (
+                            <button 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    bg-red-50 border border-red-200 text-red-700 
+                                    hover:bg-red-100 hover:border-red-300 transition-all duration-200"
+                                onClick={handleDeleteClick}
+                                disabled={isActionLoading}
+                                title="Verwijder dit project permanent"
+                            >
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                                Verwijderen
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
             {isOwner && (

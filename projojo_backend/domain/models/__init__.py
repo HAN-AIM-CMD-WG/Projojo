@@ -5,3 +5,4 @@ from .task import Task, TaskRegistration
 from .skill import Skill
 from .authentication import LoginRequest, LoginResponse
 from .subtask import Subtask, SubtaskCreate, SubtaskTemplate, SubtaskTemplateCreate
+from .theme import Theme, ThemeCreate, ThemeUpdate

@@ -129,6 +129,149 @@ export function getProjects() {
 }
 
 /**
+ * Get all public projects for the discovery page (no authentication required)
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, business: object, open_positions: number, skills: string[]}[]>}
+ */
+export function getPublicProjects() {
+    // Fetch without authentication
+    return fetch(`${API_BASE_URL}projects/public`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Failed to fetch public projects", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Get a specific public project by ID (no authentication required)
+ * @param {string} projectId
+ * @returns {Promise<object>}
+ */
+export function getPublicProject(projectId) {
+    return fetch(`${API_BASE_URL}projects/public/${projectId}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Project niet gevonden", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Set project visibility (public/private)
+ * @param {string} projectId
+ * @param {boolean} isPublic
+ */
+export function setProjectVisibility(projectId, isPublic) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/visibility?is_public=${isPublic}`, {
+        method: 'PATCH'
+    });
+}
+
+/**
+ * Set project impact summary
+ * @param {string} projectId
+ * @param {string|null} impactSummary
+ */
+export function setProjectImpact(projectId, impactSummary) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/impact`, {
+        method: 'PATCH',
+        body: JSON.stringify({ impact_summary: impactSummary })
+    });
+}
+
+// ============================================================================
+// THEME ENDPOINTS
+// ============================================================================
+
+/**
+ * Get all themes (public endpoint)
+ * @returns {Promise<{id: string, name: string, sdg_code?: string, icon?: string, description?: string, color?: string, display_order?: number}[]>}
+ */
+export function getThemes() {
+    return fetch(`${API_BASE_URL}themes/`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Failed to fetch themes", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Get themes for a specific project (public endpoint)
+ * @param {string} projectId
+ * @returns {Promise<object[]>}
+ */
+export function getProjectThemes(projectId) {
+    return fetch(`${API_BASE_URL}themes/project/${projectId}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Failed to fetch project themes", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Create a new theme (teacher only)
+ * @param {object} theme
+ * @returns {Promise<object>}
+ */
+export function createTheme(theme) {
+    return fetchWithError(`${API_BASE_URL}themes`, {
+        method: 'POST',
+        body: JSON.stringify(theme)
+    });
+}
+
+/**
+ * Update a theme (teacher only)
+ * @param {string} themeId
+ * @param {object} theme
+ * @returns {Promise<object>}
+ */
+export function updateTheme(themeId, theme) {
+    return fetchWithError(`${API_BASE_URL}themes/${themeId}`, {
+        method: 'PUT',
+        body: JSON.stringify(theme)
+    });
+}
+
+/**
+ * Delete a theme (teacher only)
+ * @param {string} themeId
+ * @returns {Promise<object>}
+ */
+export function deleteTheme(themeId) {
+    return fetchWithError(`${API_BASE_URL}themes/${themeId}`, {
+        method: 'DELETE'
+    });
+}
+
+/**
+ * Link a project to themes (replaces existing links)
+ * @param {string} projectId
+ * @param {string[]} themeIds
+ * @returns {Promise<object>}
+ */
+export function linkProjectThemes(projectId, themeIds) {
+    return fetchWithError(`${API_BASE_URL}themes/project/${projectId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ theme_ids: themeIds })
+    });
+}
+
+/**
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}[]>}
  */
 export function getBusinessesComplete() {

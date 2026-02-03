@@ -19,6 +19,12 @@ EXCLUDED_ENDPOINTS = [
     "/pdf/*",  # Public PDF access
     "/image/*",  # Public image access
 
+    # Public discovery endpoints (no authentication required)
+    "/projects/public",  # List all public projects
+    "/projects/public/*",  # Get specific public project
+    "/themes",  # List all themes (public)
+    "/themes/*",  # Get specific theme (public for GET)
+
     # Development
     "/typedb/status",  # TypeDB status check
     "/auth/test/login/*",  # Localhost testing - test login

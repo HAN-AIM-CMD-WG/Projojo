@@ -32,7 +32,9 @@ class ProjectRepository(BaseRepository[Project]):
                 'createdAt': $createdAt,
                 'business': $business_id,
                 'start_date': [$project.startDate],
-                'end_date': [$project.endDate]
+                'end_date': [$project.endDate],
+                'is_public': [$project.isPublic],
+                'impact_summary': [$project.impactSummary]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -60,11 +62,187 @@ class ProjectRepository(BaseRepository[Project]):
                 'createdAt': $createdAt,
                 'business': $business_id,
                 'start_date': [$project.startDate],
-                'end_date': [$project.endDate]
+                'end_date': [$project.endDate],
+                'is_public': [$project.isPublic],
+                'impact_summary': [$project.impactSummary]
             };
         """
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
+
+    def get_public_projects(self) -> list[dict]:
+        """Get all public projects with business info for the public discovery page."""
+        query = """
+            match
+                $project isa project,
+                has id $id,
+                has name $name,
+                has description $description,
+                has imagePath $imagePath,
+                has createdAt $createdAt,
+                has isPublic true;
+                $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id,
+                    has name $business_name;
+                not { $project has isArchived true; };
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'imagePath': $imagePath,
+                'location': $project.location,
+                'createdAt': $createdAt,
+                'start_date': [$project.startDate],
+                'end_date': [$project.endDate],
+                'impact_summary': [$project.impactSummary],
+                'business': {
+                    'id': $business_id,
+                    'name': $business_name,
+                    'location': $business.location
+                },
+                'themes': [
+                    match
+                        $hasTheme isa hasTheme(project: $project, theme: $theme);
+                        $theme has id $theme_id, has name $theme_name;
+                    fetch {
+                        'id': $theme_id,
+                        'name': $theme_name,
+                        'icon': [$theme.icon],
+                        'color': [$theme.color]
+                    };
+                ],
+                'tasks': [
+                    match
+                        $containsTask isa containsTask(project: $project, task: $task);
+                        $task has id $task_id, has name $task_name, has totalNeeded $total_needed;
+                    fetch {
+                        'id': $task_id,
+                        'name': $task_name,
+                        'total_needed': $total_needed,
+                        'skills': [
+                            match
+                                $requiresSkill isa requiresSkill(task: $task, skill: $skill);
+                                $skill has name $skill_name;
+                            fetch {
+                                'name': $skill_name
+                            };
+                        ],
+                        'total_accepted': [
+                            match
+                                $registration isa registersForTask(task: $task),
+                                    has isAccepted true;
+                            fetch {
+                                'count': true
+                            };
+                        ]
+                    };
+                ]
+            };
+        """
+        results = Db.read_transact(query)
+        
+        public_projects = []
+        for r in results:
+            # Process tasks to calculate totals
+            tasks_data = r.get("tasks", [])
+            total_positions = 0
+            total_accepted = 0
+            all_skills = set()
+            
+            for t in tasks_data:
+                total_positions += t.get("total_needed", 0)
+                accepted_list = t.get("total_accepted", [])
+                total_accepted += len(accepted_list)
+                for s in t.get("skills", []):
+                    all_skills.add(s.get("name", ""))
+            
+            impact_summary_list = r.get("impact_summary", [])
+            
+            # Process themes
+            themes_data = r.get("themes", [])
+            themes = []
+            for t in themes_data:
+                icon_list = t.get("icon", [])
+                color_list = t.get("color", [])
+                themes.append({
+                    "id": t.get("id", ""),
+                    "name": t.get("name", ""),
+                    "icon": icon_list[0] if icon_list else None,
+                    "color": color_list[0] if color_list else None
+                })
+            
+            public_projects.append({
+                "id": r.get("id", ""),
+                "name": r.get("name", ""),
+                "description": r.get("description", ""),
+                "image_path": r.get("imagePath", ""),
+                "location": r.get("location", ""),
+                "created_at": r.get("createdAt", ""),
+                "start_date": r.get("start_date", [None])[0],
+                "end_date": r.get("end_date", [None])[0],
+                "impact_summary": impact_summary_list[0] if impact_summary_list else None,
+                "business": r.get("business", {}),
+                "themes": themes,
+                "open_positions": total_positions - total_accepted,
+                "total_positions": total_positions,
+                "skills": list(all_skills)
+            })
+        
+        return public_projects
+
+    def set_public(self, project_id: str, is_public: bool) -> None:
+        """Set the public visibility of a project."""
+        # First check if isPublic exists and delete the ownership
+        # TypeDB 3.x syntax: has $attribute of $entity
+        delete_query = """
+            match
+                $project isa project, has id ~project_id;
+                $val isa isPublic;
+                $project has $val;
+            delete
+                has $val of $project;
+        """
+        try:
+            Db.write_transact(delete_query, {"project_id": project_id})
+        except Exception as e:
+            # If no isPublic exists, that's fine - we'll insert a new one
+            print(f"Delete isPublic (might not exist): {e}")
+        
+        # Insert new value
+        insert_query = """
+            match
+                $project isa project, has id ~project_id;
+            insert
+                $project has isPublic ~is_public;
+        """
+        Db.write_transact(insert_query, {"project_id": project_id, "is_public": is_public})
+
+    def set_impact_summary(self, project_id: str, impact_summary: str | None) -> None:
+        """Set the impact summary of a project (for completed projects)."""
+        # First delete existing impactSummary if any
+        # TypeDB 3.x syntax: has $attribute of $entity
+        delete_query = """
+            match
+                $project isa project, has id ~project_id;
+                $val isa impactSummary;
+                $project has $val;
+            delete
+                has $val of $project;
+        """
+        try:
+            Db.write_transact(delete_query, {"project_id": project_id})
+        except Exception:
+            pass
+        
+        # Insert new value if provided
+        if impact_summary:
+            insert_query = """
+                match
+                    $project isa project, has id ~project_id;
+                insert
+                    $project has impactSummary ~impact_summary;
+            """
+            Db.write_transact(insert_query, {"project_id": project_id, "impact_summary": impact_summary})
 
     def get_projects_by_business(self, business_id: str) -> list[Project]:
         query = """
@@ -145,6 +323,12 @@ class ProjectRepository(BaseRepository[Project]):
         end_date_list = result.get("end_date", [])
         start_date = start_date_list[0] if start_date_list else None
         end_date = end_date_list[0] if end_date_list else None
+        
+        # Extract optional public/impact fields (returned as arrays)
+        is_public_list = result.get("is_public", [])
+        impact_summary_list = result.get("impact_summary", [])
+        is_public = is_public_list[0] if is_public_list else False
+        impact_summary = impact_summary_list[0] if impact_summary_list else None
 
         # Convert createdAt string to datetime
         created_at = (
@@ -178,6 +362,8 @@ class ProjectRepository(BaseRepository[Project]):
             tasks=tasks,
             start_date=start_date,
             end_date=end_date,
+            is_public=is_public,
+            impact_summary=impact_summary,
         )
 
     def check_project_exists(self, project_name: str, business_id: str) -> bool:

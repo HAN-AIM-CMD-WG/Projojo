@@ -7,3 +7,4 @@ from .base import BaseRepository
 from .invite_repository import InviteRepository
 from .portfolio_repository import PortfolioRepository
 from .subtask_repository import SubtaskRepository
+from .theme_repository import ThemeRepository

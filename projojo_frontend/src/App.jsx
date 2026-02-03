@@ -25,6 +25,7 @@ import { notification } from './components/notifications/NotifySystem.jsx';
 import StudentDashboard from "./pages/StudentDashboard";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import DesignDemoPage from "./pages/DesignDemoPage";
+import PublicDiscoveryPage from "./pages/PublicDiscoveryPage";
 
 /**
  * HomePage - Conditionally renders StudentDashboard or SupervisorDashboard based on user role
@@ -208,8 +209,8 @@ export default function App() {
     }
   }, [location.pathname]);
 
-  // Pages without navbar/footer (landing, login, auth callback, design demo)
-  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo";
+  // Pages without navbar/footer (landing, login, auth callback, design demo, public discovery)
+  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname.startsWith("/publiek");
 
   return (
     <ThemeProvider>
@@ -257,6 +258,8 @@ export default function App() {
           </Route>
           <Route path="/teacher" element={<TeacherPage />} />
             <Route path="/design-demo" element={<DesignDemoPage />} />
+            <Route path="/publiek" element={<PublicDiscoveryPage />} />
+            <Route path="/publiek/:projectId" element={<PublicDiscoveryPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

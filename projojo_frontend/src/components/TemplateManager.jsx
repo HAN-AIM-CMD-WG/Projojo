@@ -115,25 +115,18 @@ export default function TemplateManager({ businessId }) {
     }
 
     return (
-        <div className="neu-flat p-6 rounded-2xl">
+        <div className="neu-flat p-5 rounded-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-primary text-2xl">content_copy</span>
-                    <div>
-                        <h3 className="font-bold text-[var(--text-primary)]">Deeltaak Templates</h3>
-                        <p className="text-xs text-[var(--text-muted)]">
-                            Herbruikbare templates voor veelvoorkomende deeltaken
-                        </p>
-                    </div>
-                </div>
-                
+            <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide">
+                    Templates
+                </h3>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="neu-btn-primary !py-2 !px-3 text-sm"
+                    className="neu-btn-primary !py-1.5 !px-2.5 text-xs"
                 >
-                    <span className="material-symbols-outlined text-base">add</span>
-                    Template
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    Nieuw
                 </button>
             </div>
 
@@ -148,90 +141,83 @@ export default function TemplateManager({ businessId }) {
                 </div>
             )}
 
-            {/* Templates grid */}
+            {/* Templates list */}
             {templates.length === 0 ? (
-                <div className="text-center py-8 text-[var(--text-muted)]">
-                    <span className="material-symbols-outlined text-4xl mb-2 block opacity-50">content_copy</span>
-                    <p>Nog geen templates</p>
-                    <p className="text-sm mt-1">
-                        Maak templates voor veelvoorkomende deeltaken zoals "Bug Fix", "Feature", of "Documentatie"
+                <div className="neu-pressed rounded-xl p-6 text-center">
+                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">content_copy</span>
+                    <p className="text-sm text-[var(--text-muted)]">Nog geen templates</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">
+                        Maak templates voor veelvoorkomende deeltaken
                     </p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-2">
                     {templates.map((template) => {
                         const isLoading = actionLoading === template.id;
+                        const filledFields = [
+                            template.what && { icon: 'assignment', color: 'text-blue-500', label: 'WAT' },
+                            template.why && { icon: 'lightbulb', color: 'text-amber-500', label: 'WAAROM' },
+                            template.how && { icon: 'route', color: 'text-green-500', label: 'HOE' },
+                            template.criteria && { icon: 'checklist', color: 'text-purple-500', label: 'CRITERIA' },
+                        ].filter(Boolean);
                         
                         return (
                             <div 
                                 key={template.id}
-                                className="neu-pressed p-4 rounded-xl"
+                                className="neu-flat p-3 rounded-xl flex items-center gap-3 group hover:shadow-md transition-shadow"
                             >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="font-bold text-[var(--text-primary)] truncate">
-                                            {template.template_name}
-                                        </h4>
-                                        {template.title && template.title !== template.template_name && (
-                                            <p className="text-sm text-[var(--text-muted)] truncate">
-                                                Titel: {template.title}
-                                            </p>
-                                        )}
-                                        
-                                        {/* Show preview of fields */}
-                                        <div className="mt-2 space-y-1">
-                                            {template.what && (
-                                                <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-xs text-blue-500">assignment</span>
-                                                    WAT ingevuld
-                                                </p>
-                                            )}
-                                            {template.why && (
-                                                <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-xs text-amber-500">lightbulb</span>
-                                                    WAAROM ingevuld
-                                                </p>
-                                            )}
-                                            {template.how && (
-                                                <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-xs text-green-500">route</span>
-                                                    HOE ingevuld
-                                                </p>
-                                            )}
-                                            {template.criteria && (
-                                                <p className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                                                    <span className="material-symbols-outlined text-xs text-purple-500">checklist</span>
-                                                    CRITERIA ingevuld
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
+                                {/* Template icon */}
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                    <span className="material-symbols-outlined text-primary">description</span>
+                                </div>
+                                
+                                {/* Content */}
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-[var(--text-primary)] text-sm truncate">
+                                        {template.template_name}
+                                    </h4>
                                     
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-1">
-                                        {isLoading ? (
-                                            <span className="material-symbols-outlined animate-spin text-[var(--text-muted)]">
-                                                progress_activity
+                                    {/* Field indicators as small badges */}
+                                    <div className="flex items-center gap-1.5 mt-1">
+                                        {filledFields.map((field, idx) => (
+                                            <span 
+                                                key={idx}
+                                                className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-800 ${field.color}`}
+                                                title={`${field.label} is ingevuld`}
+                                            >
+                                                <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>{field.icon}</span>
                                             </span>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    onClick={() => setEditingTemplate(template)}
-                                                    className="p-1.5 rounded hover:bg-[var(--gray-200)] transition"
-                                                    title="Bewerken"
-                                                >
-                                                    <span className="material-symbols-outlined text-sm text-[var(--text-muted)]">edit</span>
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(template.id)}
-                                                    className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition"
-                                                    title="Verwijderen"
-                                                >
-                                                    <span className="material-symbols-outlined text-sm text-red-500">delete</span>
-                                                </button>
-                                            </>
+                                        ))}
+                                        {filledFields.length === 0 && (
+                                            <span className="text-xs text-[var(--text-muted)]">Geen velden ingevuld</span>
                                         )}
                                     </div>
+                                </div>
+                                
+                                {/* Actions */}
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    {isLoading ? (
+                                        <span className="material-symbols-outlined animate-spin text-[var(--text-muted)]">
+                                            progress_activity
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => setEditingTemplate(template)}
+                                                className="p-1.5 rounded-lg hover:bg-[var(--gray-200)] transition"
+                                                title="Bewerken"
+                                            >
+                                                <span className="material-symbols-outlined text-sm text-[var(--text-muted)]">edit</span>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(template.id)}
+                                                className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition"
+                                                title="Verwijderen"
+                                            >
+                                                <span className="material-symbols-outlined text-sm text-red-500">delete</span>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -240,29 +226,35 @@ export default function TemplateManager({ businessId }) {
             )}
 
             {/* Add template modal */}
-            {showAddModal && (
-                <Modal
-                    title="Nieuwe template"
-                    onClose={() => setShowAddModal(false)}
-                >
-                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300">
-                        <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
-                        Templates helpen je snel deeltaken aan te maken met vooraf ingevulde velden.
-                    </div>
-                    <SubtaskForm
-                        onSubmit={handleCreate}
-                        onCancel={() => setShowAddModal(false)}
-                        isLoading={actionLoading === 'create'}
-                    />
-                </Modal>
-            )}
+            <Modal
+                isModalOpen={showAddModal}
+                setIsModalOpen={setShowAddModal}
+                modalHeader="Nieuwe template"
+                modalSubtitle="Maak een herbruikbare template voor deeltaken"
+                modalIcon="content_copy"
+                maxWidth="max-w-lg"
+            >
+                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-sm text-blue-700 dark:text-blue-300">
+                    <span className="material-symbols-outlined text-sm align-middle mr-1">info</span>
+                    Templates helpen je snel deeltaken aan te maken met vooraf ingevulde velden.
+                </div>
+                <SubtaskForm
+                    onSubmit={handleCreate}
+                    onCancel={() => setShowAddModal(false)}
+                    isLoading={actionLoading === 'create'}
+                />
+            </Modal>
 
             {/* Edit template modal */}
-            {editingTemplate && (
-                <Modal
-                    title="Template bewerken"
-                    onClose={() => setEditingTemplate(null)}
-                >
+            <Modal
+                isModalOpen={!!editingTemplate}
+                setIsModalOpen={(open) => !open && setEditingTemplate(null)}
+                modalHeader="Template bewerken"
+                modalSubtitle={editingTemplate?.template_name || 'Pas de template aan'}
+                modalIcon="edit"
+                maxWidth="max-w-lg"
+            >
+                {editingTemplate && (
                     <SubtaskForm
                         onSubmit={handleUpdate}
                         onCancel={() => setEditingTemplate(null)}
@@ -275,8 +267,8 @@ export default function TemplateManager({ businessId }) {
                         }}
                         isLoading={actionLoading === editingTemplate.id}
                     />
-                </Modal>
-            )}
+                )}
+            </Modal>
         </div>
     );
 }
