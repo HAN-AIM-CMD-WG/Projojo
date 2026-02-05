@@ -63,10 +63,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         const deadline = new Date(task.end_date);
         const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
         
-        if (daysLeft < 0) return { color: 'text-red-600 bg-red-100', text: 'Verlopen', icon: 'error' };
-        if (daysLeft <= 3) return { color: 'text-orange-600 bg-orange-100', text: `${daysLeft}d`, icon: 'warning' };
-        if (daysLeft <= 7) return { color: 'text-amber-600 bg-amber-100', text: `${daysLeft}d`, icon: 'schedule' };
-        return { color: 'text-emerald-600 bg-emerald-100', text: `${daysLeft}d`, icon: 'event_available' };
+        if (daysLeft < 0) return { color: 'status-badge-error', text: 'Verlopen', icon: 'error' };
+        if (daysLeft <= 3) return { color: 'status-badge-warning', text: `${daysLeft}d`, icon: 'warning' };
+        if (daysLeft <= 7) return { color: 'status-badge-warning', text: `${daysLeft}d`, icon: 'schedule' };
+        return { color: 'status-badge-success', text: `${daysLeft}d`, icon: 'event_available' };
     };
 
     const deadlineStatus = getDeadlineStatus();
@@ -289,48 +289,49 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 <h2 className="text-base font-bold text-[var(--text-primary)] leading-tight line-clamp-2">
                                     {task.name}
                                 </h2>
-                                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                    {/* Spots badge */}
-                                    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                                        spotsAvailable > 0 
-                                            ? 'text-emerald-700 bg-emerald-100' 
-                                            : 'text-red-700 bg-red-100'
-                                    }`}>
-                                        <span className="material-symbols-outlined text-sm">
-                                            {spotsAvailable > 0 ? 'check_circle' : 'cancel'}
-                                        </span>
-                                        {spotsAvailable > 0 ? `${task.total_accepted}/${task.total_needed}` : 'Vol'}
-                                    </span>
-                                    
-                                    {/* Deadline badge */}
-                                    {deadlineStatus && (
-                                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${deadlineStatus.color}`}>
-                                            <span className="material-symbols-outlined text-sm">{deadlineStatus.icon}</span>
-                                            {deadlineStatus.text}
-                                        </span>
-                                    )}
-                                    
-                                    {/* Pending registrations indicator */}
-                                    {isOwner && task.total_registered > 0 && (
-                                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full text-amber-700 bg-amber-100">
-                                            <span className="material-symbols-outlined text-sm">pending</span>
-                                            {task.total_registered}
-                                        </span>
-                                    )}
-                                </div>
                             </div>
                         </div>
                         
-                        {/* Right: Edit button (owner only) */}
-                        {isOwner && (
-                            <button 
-                                onClick={openEditModal}
-                                className="p-2 rounded-lg text-[var(--text-muted)] hover:text-primary hover:bg-[var(--gray-200)] transition-colors shrink-0"
-                                title="Taak bewerken"
-                            >
-                                <span className="material-symbols-outlined text-lg">{hasRegistrations ? 'lock' : 'edit'}</span>
-                            </button>
-                        )}
+                        {/* Right: Status badges + Edit button */}
+                        <div className="flex items-center gap-2 shrink-0">
+                            {/* Status badges */}
+                            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                {/* Spots badge */}
+                                <span className={spotsAvailable > 0 ? 'status-badge-success' : 'status-badge-error'}>
+                                    <span className="material-symbols-outlined text-[11px]">
+                                        {spotsAvailable > 0 ? 'check_circle' : 'cancel'}
+                                    </span>
+                                    {spotsAvailable > 0 ? `${task.total_accepted}/${task.total_needed}` : 'Vol'}
+                                </span>
+                                
+                                {/* Deadline badge */}
+                                {deadlineStatus && (
+                                    <span className={deadlineStatus.color}>
+                                        <span className="material-symbols-outlined text-[11px]">{deadlineStatus.icon}</span>
+                                        {deadlineStatus.text}
+                                    </span>
+                                )}
+                                
+                                {/* Pending registrations indicator */}
+                                {isOwner && task.total_registered > 0 && (
+                                    <span className="status-badge-warning">
+                                        <span className="material-symbols-outlined text-[11px]">pending</span>
+                                        {task.total_registered}
+                                    </span>
+                                )}
+                            </div>
+                            
+                            {/* Edit button (owner only) */}
+                            {isOwner && (
+                                <button 
+                                    onClick={openEditModal}
+                                    className="p-2 rounded-lg text-[var(--text-muted)] hover:text-primary hover:bg-[var(--gray-200)] transition-colors"
+                                    title="Taak bewerken"
+                                >
+                                    <span className="material-symbols-outlined text-lg">{hasRegistrations ? 'lock' : 'edit'}</span>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

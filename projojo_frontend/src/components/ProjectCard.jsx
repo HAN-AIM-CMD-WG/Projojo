@@ -149,7 +149,7 @@ export default function ProjectCard({ project, index = 0 }) {
               </span>
               {/* Match badge - alleen tonen als student skills heeft en er matches zijn */}
             {studentSkills.length > 0 && matchingPositions > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#156064] dark:bg-[#00C49A] text-white dark:text-[#1A1512]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-white dark:text-[#1A1512]">
                   Match!
                 </span>
               )}
@@ -172,7 +172,7 @@ export default function ProjectCard({ project, index = 0 }) {
                 {matchingSkills.slice(0, 3).map(skill => (
                   <span 
                     key={skill.skillId || skill.id} 
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[#156064] dark:text-[#00C49A] border border-[#156064] dark:border-[#00C49A] bg-[var(--neu-bg)]/50"
+                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-primary border border-primary bg-primary/5"
                     title={`Je hebt deze skill: ${skill.name}`}
                   >
                     <span className="material-symbols-outlined text-[12px]">check</span>

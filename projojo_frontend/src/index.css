@@ -651,18 +651,18 @@
         border-color: var(--gray-400);
     }
 
-    /* Own/matching skill: stormy teal border + text indicates match */
+    /* Own/matching skill: coral primary border + text indicates match */
     .skill-badge-own {
         @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
-        background: rgba(255, 255, 255, 0.5);
-        color: #156064; /* Stormy Teal */
-        border: 1px solid #156064; /* Stormy Teal */
+        background: rgba(255, 127, 80, 0.08);
+        color: var(--primary-color);
+        border: 1.5px solid var(--primary-color);
     }
 
     .dark .skill-badge-own {
-        background: rgba(61, 46, 38, 0.6);
-        color: #00C49A; /* Mint Leaf for dark mode */
-        border-color: #00C49A; /* Mint Leaf for dark mode */
+        background: rgba(255, 140, 90, 0.15);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
     }
 
     /* Pending skill: dashed border */
@@ -678,18 +678,18 @@
         color: var(--text-secondary);
     }
     
-    /* Prominent pill for matched/highlighted items - stormy teal border + text */
+    /* Prominent pill for matched/highlighted items - coral primary border + text */
     .neu-pill-primary {
         @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
-        background: rgba(255, 255, 255, 0.5);
-        color: #156064; /* Stormy Teal */
-        border: 1px solid #156064; /* Stormy Teal */
+        background: rgba(255, 127, 80, 0.08);
+        color: var(--primary-color);
+        border: 1.5px solid var(--primary-color);
     }
 
     .dark .neu-pill-primary {
-        background: rgba(61, 46, 38, 0.6);
-        color: #00C49A; /* Mint Leaf for dark mode */
-        border-color: #00C49A; /* Mint Leaf for dark mode */
+        background: rgba(255, 140, 90, 0.15);
+        color: var(--primary-color);
+        border-color: var(--primary-color);
     }
     .neu-pill-subtle {
         @apply inline-flex items-center px-4 py-2 text-xs font-bold rounded-full cursor-default;
@@ -827,7 +827,7 @@
         background: rgba(107, 114, 128, 0.2);
     }
 
-    /* Solid variants */
+    /* Solid variants - bold gradient style */
     .neu-badge-success-solid {
         padding: 0.25rem 0.75rem;
         border-radius: 9999px;
@@ -874,6 +874,74 @@
         color: white;
         background: var(--color-primary);
         box-shadow: 0 2px 8px rgba(255, 127, 80, 0.3);
+    }
+
+    /* Compact status badges - subtle, inline-friendly */
+    .status-badge-success {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.375rem;
+        color: #059669;
+        background: rgba(16, 185, 129, 0.12);
+    }
+
+    .dark .status-badge-success {
+        color: #34d399;
+        background: rgba(52, 211, 153, 0.15);
+    }
+
+    .status-badge-warning {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.375rem;
+        color: #d97706;
+        background: rgba(245, 158, 11, 0.12);
+    }
+
+    .dark .status-badge-warning {
+        color: #fbbf24;
+        background: rgba(251, 191, 36, 0.15);
+    }
+
+    .status-badge-error {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.375rem;
+        color: #dc2626;
+        background: rgba(239, 68, 68, 0.12);
+    }
+
+    .dark .status-badge-error {
+        color: #f87171;
+        background: rgba(248, 113, 113, 0.15);
+    }
+
+    .status-badge-gray {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.125rem;
+        font-size: 10px;
+        font-weight: 600;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.375rem;
+        color: var(--text-muted);
+        background: rgba(107, 114, 128, 0.1);
+    }
+
+    .dark .status-badge-gray {
+        background: rgba(156, 163, 175, 0.12);
     }
 
     /* Primary badge - outline style */

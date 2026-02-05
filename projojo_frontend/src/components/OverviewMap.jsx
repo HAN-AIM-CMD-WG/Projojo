@@ -287,12 +287,12 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
                                         </span>
                                         <div className="flex items-center gap-3 mt-2">
                                             {loc.count !== undefined && loc.count > 0 && (
-                                                <span className="text-xs font-bold" style={{ color: '#156064' }}>
+                                                <span className="text-xs font-bold text-[var(--text-secondary)]">
                                                     {loc.count} {loc.count === 1 ? 'project' : 'projecten'}
                                                 </span>
                                             )}
                                             {loc.matchCount > 0 && (
-                                                <span className="text-xs font-bold flex items-center gap-0.5" style={{ color: '#00C49A' }}>
+                                                <span className="text-xs font-bold flex items-center gap-0.5 text-primary">
                                                     <span className="material-symbols-outlined text-xs">check_circle</span>
                                                     {loc.matchCount} {loc.matchCount === 1 ? 'match' : 'matches'}
                                                 </span>
