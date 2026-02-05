@@ -5,7 +5,6 @@ import { getSupervisorDashboard, updateRegistration } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
-import TemplateManager from '../components/TemplateManager';
 import { IMAGE_BASE_URL } from '../services';
 
 /**
@@ -16,7 +15,6 @@ export default function SupervisorDashboard() {
     const [dashboardData, setDashboardData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showTemplates, setShowTemplates] = useState(false);
 
     // Get time-based greeting
     const getGreeting = () => {
@@ -269,23 +267,8 @@ export default function SupervisorDashboard() {
                                     <span className="material-symbols-outlined text-primary">explore</span>
                                     Ontdek platform
                                 </Link>
-                                <button 
-                                    onClick={() => setShowTemplates(!showTemplates)}
-                                    className={`neu-btn w-full justify-start gap-3 !text-sm ${showTemplates ? 'neu-pressed' : ''}`}
-                                >
-                                    <span className="material-symbols-outlined text-primary">content_copy</span>
-                                    Deeltaak templates
-                                    <span className="material-symbols-outlined text-xs ml-auto">
-                                        {showTemplates ? 'expand_less' : 'expand_more'}
-                                    </span>
-                                </button>
                             </div>
                         </section>
-
-                        {/* Templates Manager - Collapsible */}
-                        {showTemplates && dashboardData?.business_id && (
-                            <TemplateManager businessId={dashboardData.business_id} />
-                        )}
 
                         {/* Tips section */}
                         <section className="neu-pressed p-5">

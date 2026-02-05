@@ -12,7 +12,6 @@ import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
-import TaskSubtasks from "./TaskSubtasks";
 import { formatDate, getCountdownText } from "../utils/dates";
 
 export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
@@ -48,10 +47,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [taskSkillsState, setTaskSkillsState] = useState(task.skills || []);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
-    
-    // Check if current student is accepted for this task (for subtasks visibility)
-    const isAcceptedStudent = authData.type === "student" && 
-        acceptedRegistrations.some(reg => reg.student?.id === user?.id);
 
     const isFull = task.total_accepted >= task.total_needed;
     
@@ -264,19 +259,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     };
 
     // === TAB DEFINITIONS ===
-    const hasSubtasks = task.subtask_count > 0;
     const tabs = [
         { id: 'details', label: 'Details', icon: 'info' },
-        { 
-            id: 'subtasks', 
-            label: 'Deeltaken', 
-            icon: 'checklist',
-            // Badge shows progress (done/total) or just count
-            count: hasSubtasks && !task.subtask_done ? task.subtask_count : null,
-            badge: hasSubtasks && task.subtask_done > 0 ? `${task.subtask_done}/${task.subtask_count}` : null,
-            // Show to all users if there are subtasks, or to owners always
-            hidden: !hasSubtasks && !isOwner
-        },
         { 
             id: 'team', 
             label: 'Team', 
@@ -453,18 +437,6 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 </div>
                             )}
                         </div>
-                    )}
-
-                    {/* Subtasks Tab - visible to all, but actions limited by role */}
-                    {activeTab === 'subtasks' && (
-                        <TaskSubtasks 
-                            taskId={task.id}
-                            taskName={task.name}
-                            businessId={businessId}
-                            isAcceptedStudent={isAcceptedStudent}
-                            isSupervisor={isOwner}
-                            embedded={true}
-                        />
                     )}
 
                     {/* Team Tab */}

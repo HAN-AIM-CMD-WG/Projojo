@@ -16,8 +16,7 @@ entity student sub user,
     owns cvPath @card(0..1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..),
-    plays hasPortfolio:student @card(0..),
-    plays claimedBy:student @card(0..);  # Kan meerdere deeltaken claimen
+    plays hasPortfolio:student @card(0..);
 
 entity teacher sub user;
 
@@ -38,8 +37,7 @@ entity business,
     owns isArchived @card(0..1),
     plays manages:business @card(0..),
     plays hasProjects:business @card(0..),
-    plays businessInvite:business @card(0..),
-    plays belongsToBusiness:business @card(0..);  # Deeltaak templates
+    plays businessInvite:business @card(0..);
 
 entity project,
     owns id @key,
@@ -79,8 +77,7 @@ entity task,
     owns endDate @card(0..1),
     plays containsTask:task @card(1),
     plays requiresSkill:task @card(0..),
-    plays registersForTask:task @card(0..),
-    plays belongsToTask:task @card(0..);  # Deeltaken relatie
+    plays registersForTask:task @card(0..);
 
 entity skill,
     owns id @key,
@@ -162,45 +159,6 @@ relation hasTheme,
     relates project @card(1),
     relates theme @card(1);
 
-# Deeltaken Systeem (Subtasks)
-# UI toont "Deeltaak" - toegankelijk voor alle disciplines
-entity subtask,
-    owns id @key,
-    owns title @card(1),
-    owns subtaskWhat @card(0..1),      # WAT: Wat moet er gebeuren?
-    owns subtaskWhy @card(0..1),       # WAAROM: Context en reden
-    owns subtaskHow @card(0..1),       # HOE: Aanpak/stappen
-    owns subtaskCriteria @card(0..1),  # CRITERIA: Waar moet het aan voldoen?
-    owns subtaskStatus @card(1),       # "open" | "in_progress" | "done"
-    owns createdAt @card(1),
-    owns completedAt @card(0..1),
-    plays belongsToTask:subtask @card(1),
-    plays claimedBy:subtask @card(0..1);
-
-# Templates voor veelvoorkomende deeltaken
-entity subtaskTemplate,
-    owns id @key,
-    owns templateName @card(1),
-    owns title @card(0..1),
-    owns subtaskWhat @card(0..1),
-    owns subtaskWhy @card(0..1),
-    owns subtaskHow @card(0..1),
-    owns subtaskCriteria @card(0..1),
-    owns createdAt @card(1),
-    plays belongsToBusiness:template @card(1);
-
-relation belongsToTask,
-    relates task @card(1),
-    relates subtask @card(0..);
-
-relation claimedBy,
-    relates subtask @card(1),
-    relates student @card(0..1);
-
-relation belongsToBusiness,
-    relates business @card(1),
-    relates template @card(0..);
-
 #Werkt helaas nog niet :(
 # TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
 # nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
@@ -243,13 +201,6 @@ attribute taskSnapshot value string;
 attribute skillsSnapshot value string;
 attribute startDate value datetime-tz;
 attribute endDate value datetime-tz;
-attribute title value string;
-attribute subtaskWhat value string;
-attribute subtaskWhy value string;
-attribute subtaskHow value string;
-attribute subtaskCriteria value string;
-attribute subtaskStatus value string @values("open", "in_progress", "done");
-attribute templateName value string;
 attribute isPublic value boolean;
 attribute impactSummary value string;
 attribute sdgCode value string;
