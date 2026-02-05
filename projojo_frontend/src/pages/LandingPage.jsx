@@ -501,7 +501,7 @@ export default function LandingPage() {
                         </div>
                         
                         <p className="text-[var(--text-muted)] text-sm font-medium">
-                            © {new Date().getFullYear()} Projojo. Gemaakt met ❤️ voor studenten.
+                            © {new Date().getFullYear()} Projojo. Gemaakt door en voor studenten!
                         </p>
                         
                         <div className="flex items-center gap-6">

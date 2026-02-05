@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted } from "../services";
+import { notification } from "./notifications/NotifySystem";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
@@ -84,6 +85,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             createRegistration(task.id, motivation.trim())
                 .then(() => {
                     setIsModalOpen(false);
+                    notification.success("Je aanmelding is verstuurd! Je ontvangt bericht zodra de organisatie reageert.");
                     if (setFetchAmount) {
                         setFetchAmount(currentAmount => currentAmount + 1);
                     }
