@@ -16,7 +16,10 @@ services:
     extends:
       file: docker-compose.base.yml
       service: backend
-    container_name: projojo_backend  # Explicit name for development
+    container_name: projojo_backend
+    depends_on:
+      - typedb
+      - mailhog
     build:
       target: development  # Use development stage
     env_file:
@@ -25,6 +28,10 @@ services:
       - ./projojo_backend:/app  # Volume mount for development
       - /app/__pycache__        # Anonymous volume to prevent host __pycache__ from mounting (avoids Python version/platform conflicts)
       - /app/.venv # Anonymous volume to prevent host .venv from mounting
+    environment:
+      - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
+      - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
+      - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
     networks:
       - projojo-network
 

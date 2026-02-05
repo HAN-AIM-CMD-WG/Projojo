@@ -1,67 +1,60 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Alert from '../components/Alert';
 import { useAuth } from '../auth/AuthProvider';
 import Card from '../components/Card';
-import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
+import { getTaskById, updateTask } from '../services';
 import useFetch from '../useFetch';
 
-/**
- * Creates a UpdateBusinessPage component
- */
-export default function UpdateBusinessPage() {
+export default function UpdateTaskPage() {
     const { authData } = useAuth();
+    const { taskId } = useParams();
     const [error, setError] = useState();
     const [nameError, setNameError] = useState();
     const [description, setDescription] = useState();
     const [descriptionError, setDescriptionError] = useState();
-    const [locationError, setLocationError] = useState();
+    const [totalNeededError, setTotalNeededError] = useState();
     const navigation = useNavigate();
 
     useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'supervisor') {
+        if (!authData.isLoading && authData.type !== 'supervisor' && authData.type !== 'teacher') {
             navigation("/not-found");
         }
     }, [authData.isLoading])
 
-    const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessById(authData.businessId), [authData.businessId]);
-    if (business?.description !== undefined && description === undefined) {
-        setDescription(business?.description);
+    const { data: task } = useFetch(async () => !authData.isLoading && await getTaskById(taskId), [taskId]);
+
+    if (task?.description !== undefined && description === undefined) {
+        setDescription(task?.description);
     }
 
     function onSubmit(event) {
         event.preventDefault();
-        if (nameError != undefined || descriptionError != undefined || locationError != undefined) {
+        if (nameError != undefined || descriptionError != undefined || totalNeededError != undefined) {
             return;
         }
 
         const formData = new FormData(event.target);
-        const photo = formData.get("photos");
-        if (photo instanceof File && photo.size === 0 && photo.name.length === 0) {
-            formData.delete("photos");
-        }
 
         formData.append("description", description);
 
-        updateBusiness(authData.businessId, formData)
+        updateTask(taskId, formData)
             .then(() => {
-                navigation(`/business/${authData.businessId}`);
-            })
-            .catch(error => setError(error.message));
+                navigation(-1);
+            }).catch(error => setError(error.message));
     }
 
     return (
         <form onSubmit={onSubmit} className="max-w-2xl mx-auto">
-            <Card header="Bedrijf aanpassen" className="flex flex-col gap-3 px-6 py-12 sm:rounded-lg sm:px-12 shadow-xl border border-gray-300">
+            <Card header="Taak aanpassen" className="flex flex-col gap-3 px-6 py-12 sm:rounded-lg sm:px-12 shadow-xl border border-gray-300">
                 <Alert text={error} onClose={() => setError("")} />
                 <FormInput
-                    label="Bedrijfsnaam"
+                    label="Taaknaam"
                     type="text"
                     name="name"
-                    initialValue={business?.name}
+                    initialValue={task?.name}
                     error={nameError}
                     setError={setNameError}
                     max={100}
@@ -82,20 +75,14 @@ export default function UpdateBusinessPage() {
                     </div>
                 }
                 <FormInput
-                    label="Locatie"
-                    type="text"
-                    name="location"
-                    initialValue={business?.location}
-                    error={locationError}
-                    setError={setLocationError}
-                    max={255}
+                    label="Aantal plekken"
+                    type="number"
+                    name="total_needed"
+                    initialValue={task?.total_needed}
+                    error={totalNeededError}
+                    setError={setTotalNeededError}
+                    min={1}
                     required={true}
-                />
-                <DragDrop
-                    name="image"
-                    accept="image"
-                    label="Bedrijfslogo"
-                    initialFilePath={IMAGE_BASE_URL + business?.image_path}
                 />
                 <div className='grid grid-cols-2 gap-2'>
                     <button className="btn-secondary flex-grow" type="button" onClick={() => navigation(-1)}>Annuleren</button>

@@ -11,6 +11,17 @@ from config.settings import SESSIONS_SECRET_KEY, IS_DEVELOPMENT
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 from auth.jwt_middleware import JWTMiddleware
+from auth.permissions import auth
+from service.custom_static_files import FallbackStaticFiles
+
+# ============================================================================
+# EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
+from service.email_service import send_templated_email
+from pydantic import BaseModel
+# ============================================================================
+# END EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
 
 # Import routers
 from routes.auth_router import router as auth_router
@@ -105,7 +116,7 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/image", StaticFiles(directory="static/images"), name="image")
+app.mount("/image", FallbackStaticFiles(directory="static/images", default_file="static/default.svg"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 
 @app.get("/")
@@ -131,6 +142,55 @@ async def typedb_status(db=Depends(get_db)):
             "status": "error",
             "message": str(e)
         }
+
+
+# ============================================================================
+# EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+class TestEmailRequest(BaseModel):
+    """Request model for test email endpoint - REMOVE AFTER TESTING"""
+    recipient_email: str
+
+@app.post("/test/email")
+@auth(role="unauthenticated")
+async def send_test_email(request: TestEmailRequest):
+    """
+    TEST ENDPOINT - Send a test email using the invitation template.
+    This endpoint is for development testing only.
+    
+    REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
+    """
+    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+
+    result = await send_templated_email(
+        recipient=request.recipient_email,
+        subject="[TEST] Projojo Email Test - Invitation Template",
+        template_name="invitation.html",
+        context={
+            "user_name": "Test User",
+            "project_name": "Test Project",
+            "business_name": "Test Business B.V.",
+            "task_name": "Test Task",
+            "invite_link": "https://projojo.nl/invite/test123",
+            "message": "This is a test email to verify the email service is working correctly. If you received this, the mail integration is functioning!",
+        }
+    )
+    
+    if result.success:
+        return {
+            "status": "success",
+            "message": f"Test e-mail verstuurd naar {request.recipient_email}. Check je mailbox."
+        }
+    else:
+        return {
+            "status": "error",
+            "message": result.error
+        }
+# ============================================================================
+# END EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

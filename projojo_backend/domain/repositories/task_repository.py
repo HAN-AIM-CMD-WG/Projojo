@@ -116,6 +116,21 @@ class TaskRepository(BaseRepository[Task]):
 
         return tasks
 
+    def get_business_id_by_task(self, task_id: str) -> str | None:
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $contains isa containsTask (project: $project, task: $task);
+                $hasProjects isa hasProjects (business: $business, project: $project);
+            fetch {
+                'business_id': $business.id
+            };
+        """
+        results = Db.read_transact(query, {"task_id": task_id})
+        if not results:
+            return None
+        return results[0].get("business_id")
+
     def create(self, task: Task) -> Task:
         if not task.project_id:
             raise ValueError("De taak moet bij een bestaand project horen.")
@@ -176,29 +191,6 @@ class TaskRepository(BaseRepository[Task]):
         task.id = id
         task.created_at = created_at
         return task
-
-    def update(self, id: str, task: Task) -> Task | None:
-        # First delete the old task
-        delete_query = """
-            match
-                $task isa task,
-                has id ~id;
-            delete $task isa task;
-        """
-        Db.write_transact(delete_query, {"id": id})
-
-        # Then create a new one with updated values
-        return self.create(task)
-
-    def delete(self, id: str) -> bool:
-        query = """
-            match
-                $task isa task,
-                has id ~id;
-            delete $task isa task;
-        """
-        Db.write_transact(query, {"id": id})
-        return True
 
     def get_registrations(self, task_id: str) -> list[dict]:
         """
@@ -276,3 +268,80 @@ class TaskRepository(BaseRepository[Task]):
             "accepted": accepted,
             "response": response
         })
+
+    def update(self, task_id: str, name: str, description: str, total_needed: int) -> Task:
+        # Get project info and check for duplicate task names
+        validation_query = """
+            match
+                $currentTask isa task, has id ~task_id;
+                $projectTask isa containsTask (project: $project, task: $currentTask);
+                $project isa project, has name $project_name, has id $project_id;
+            fetch {
+                'project_name': $project_name,
+                'project_id': $project_id,
+                'conflicting_tasks': [
+                    match
+                        $sameProject isa project, has id $project_id;
+                        $conflictTask isa task, has name ~task_name, has id $conflict_id;
+                        $containsConflict isa containsTask (project: $sameProject, task: $conflictTask);
+                    fetch { 'conflict_id': $conflict_id };
+                ]
+            };
+        """
+        validation_results = Db.read_transact(validation_query, {
+            "task_id": task_id,
+            "task_name": name
+        })
+        
+        if not validation_results:
+            raise ItemRetrievalException("Task", f"Taak met ID '{task_id}' niet gevonden.")
+            
+        result = validation_results[0]
+        project_name = result['project_name']
+        
+        # Check if any conflicting tasks found that are NOT the current task
+        for conflict in result.get('conflicting_tasks', []):
+            if conflict['conflict_id'] != task_id:
+                raise ValueError(f"Er bestaat al een taak met de naam '{name}' in project '{project_name}'.")
+
+        # Validate that total_needed is not less than current total_accepted
+        accepted_count_query = """
+            match
+                $task isa task, has id ~task_id;
+            fetch {
+                'total_accepted': (
+                    match
+                        $registration isa registersForTask (task: $task, student: $student),
+                        has isAccepted true;
+                    return count;
+                )
+            };
+        """
+        accepted_results = Db.read_transact(accepted_count_query, {"task_id": task_id})
+        current_accepted = accepted_results[0]['total_accepted'] if accepted_results else 0
+        
+        if total_needed < current_accepted:
+            raise ValueError(f"Het totaal aantal plekken ({total_needed}) kan niet lager zijn dan het aantal al geaccepteerde deelnemers ({current_accepted}).")
+
+        # Build the update query dynamically based on what needs to be updated
+        update_clauses = [
+            '$task has name ~name;',
+            '$task has description ~description;',
+            '$task has totalNeeded ~total_needed;',
+        ]
+        update_params = {
+            "task_id": task_id,
+            "name": name,
+            "description": description,
+            "total_needed": total_needed,
+        }
+
+        query = f"""
+            match
+                $task isa task, has id ~task_id;
+            update
+                {' '.join(update_clauses)}
+        """
+
+        Db.write_transact(query, update_params)
+

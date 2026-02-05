@@ -275,10 +275,10 @@ def _remove_none_clauses(template: str, none_params: list[str]) -> str:
     result = template
 
     for param in none_params:
-        # Remove entire line containing the placeholder
-        # This regex matches a line (with leading whitespace) containing ~param_name
+        # Remove the line/clause containing the ~param_name
+        # This regex matches a line/clause (with leading whitespace/tabs) containing ~param_name
         # and handles both comma-terminated and semicolon-terminated lines
-        pattern = rf'^\s*.*~{re.escape(param)}(?![a-zA-Z0-9_]).*$\n?'
+        pattern = rf'[ \t]*[^;,\n]*~{re.escape(param)}(?![a-zA-Z0-9_])[^;,\n]*[;,]'
         result = re.sub(pattern, '', result, flags=re.MULTILINE)
 
     # Clean up dangling commas before semicolons or closing braces

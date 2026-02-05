@@ -6,6 +6,7 @@ from auth.permissions import auth
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
+from service.validation_service import is_valid_length
 
 project_repo = ProjectRepository()
 
@@ -61,11 +62,30 @@ async def create_project(
     description: Annotated[str, Form(...)],
     supervisor_id: Annotated[str, Form(...)],
     business_id: Annotated[str, Form(...)],
+    location: str | None = Form(None),
     image: UploadFile = File(...)
 ):
     """
     Create a new project with image upload
     """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if location and not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
     # Validate required fields
     if not image or not image.filename:
         raise HTTPException(
@@ -89,10 +109,62 @@ async def create_project(
         description=description,
         image_path=unique_filename,  # Use the unique filename
         created_at=datetime.now(),
-        supervisor_id=supervisor_id,
-        business_id=business_id
+        business_id=business_id,
+        location=location,
+        supervisor_id=supervisor_id
     )
 
     # Create the project in the database
     created_project = project_repo.create(project_creation)
     return created_project
+
+@router.put("/{project_id}")
+@auth(role="supervisor", owner_id_key="project_id")
+async def update_project(
+    project_id: str = Path(..., description="Project ID to update"),
+    name: str = Form(...),
+    description: str = Form(...),
+    location: str | None = Form(None),
+    image: UploadFile | None = File(None),
+):
+    """
+    Update project information with optional photo upload.
+    Only a teacher or a supervisor of the same business may update the project.
+    """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if location and not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
+    # Handle photo upload if provided
+    image_filename = None
+    if image and image.filename:
+        try:
+            image_filename = save_image(image)
+        except Exception as e:
+            if hasattr(e, 'status_code'):
+                raise HTTPException(status_code=e.status_code, detail=e.detail)
+            print(f"Error saving image: {e}")
+            raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
+
+    try:
+        project_repo.update(project_id, name, description, location, image_filename)
+        return {"message": "Project succesvol bijgewerkt"}
+    except Exception as e:
+        if hasattr(e, 'status_code'):
+            raise HTTPException(status_code=e.status_code, detail=e.detail)
+        print(f"Error updating project: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project")

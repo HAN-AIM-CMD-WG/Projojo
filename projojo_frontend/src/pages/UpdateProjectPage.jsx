@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Alert from '../components/Alert';
 import { useAuth } from '../auth/AuthProvider';
 import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
+import { getProject, IMAGE_BASE_URL, updateProject } from '../services';
 import useFetch from '../useFetch';
+import Loading from '../components/Loading';
 
 /**
- * Creates a UpdateBusinessPage component
+ * UpdateProjectPage - allows supervisors (owner) or teachers to update a project.
  */
-export default function UpdateBusinessPage() {
+export default function UpdateProjectPage() {
     const { authData } = useAuth();
+    const { projectId } = useParams();
     const [error, setError] = useState();
     const [nameError, setNameError] = useState();
     const [description, setDescription] = useState();
@@ -21,15 +23,36 @@ export default function UpdateBusinessPage() {
     const [locationError, setLocationError] = useState();
     const navigation = useNavigate();
 
-    useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'supervisor') {
-            navigation("/not-found");
-        }
-    }, [authData.isLoading])
+    // Fetch project (complete)
+    const { data: projectData, error: projectError, isLoading } = useFetch(() => getProject(projectId), [projectId]);
 
-    const { data: business } = useFetch(async () => !authData.isLoading && await getBusinessById(authData.businessId), [authData.businessId]);
-    if (business?.description !== undefined && description === undefined) {
-        setDescription(business?.description);
+    useEffect(() => {
+        if (projectData && description === undefined) {
+            // projectData.description exists as markdown/html from backend; initialize editor
+            setDescription(projectData.description);
+        }
+    }, [projectData]);
+
+    useEffect(() => {
+        if (projectError?.statusCode == 404 || (!authData.isLoading && authData.type !== 'teacher' && authData.type !== 'supervisor')) {
+            navigation("/not-found", { replace: true });
+        }
+    }, [authData.isLoading, isLoading]);
+
+    if (projectError) {
+        return <Alert text={projectError?.message} />;
+    }
+
+    if (isLoading || !projectData) {
+        return <Loading />;
+    }
+
+    // Additional authorization check: supervisors only allowed if they created the project (server also enforces)
+    const isOwner = authData.type === "supervisor" && authData.businessId === projectData.business?.id;
+    const allowed = authData.type === "teacher" || isOwner;
+
+    if (!allowed) {
+        return <Alert text="Je bent niet geautoriseerd om dit project aan te passen." />;
     }
 
     function onSubmit(event) {
@@ -39,29 +62,37 @@ export default function UpdateBusinessPage() {
         }
 
         const formData = new FormData(event.target);
-        const photo = formData.get("photos");
+        const photo = formData.get("image");
         if (photo instanceof File && photo.size === 0 && photo.name.length === 0) {
-            formData.delete("photos");
+            formData.delete("image");
+        }
+
+        // Only send location if changed compared to current project value
+        const currentLocation = (formData.get("location") ?? "").toString();
+        const baselineLocation = (projectData.location ?? "");
+        if (currentLocation === baselineLocation) {
+            formData.delete("location");
         }
 
         formData.append("description", description);
 
-        updateBusiness(authData.businessId, formData)
+        updateProject(projectId, formData)
             .then(() => {
-                navigation(`/business/${authData.businessId}`);
-            })
-            .catch(error => setError(error.message));
+                navigation(`/projects/${projectId}`);
+            }).catch(error =>
+                setError(error.message || "Er is een onbekende fout opgetreden bij het bijwerken van het project.")
+            );
     }
 
     return (
         <form onSubmit={onSubmit} className="max-w-2xl mx-auto">
-            <Card header="Bedrijf aanpassen" className="flex flex-col gap-3 px-6 py-12 sm:rounded-lg sm:px-12 shadow-xl border border-gray-300">
+            <Card header="Project aanpassen" className="flex flex-col gap-3 px-6 py-12 sm:rounded-lg sm:px-12 shadow-xl border border-gray-300">
                 <Alert text={error} onClose={() => setError("")} />
                 <FormInput
-                    label="Bedrijfsnaam"
+                    label="Projectnaam"
                     type="text"
                     name="name"
-                    initialValue={business?.name}
+                    initialValue={projectData.name}
                     error={nameError}
                     setError={setNameError}
                     max={100}
@@ -85,17 +116,18 @@ export default function UpdateBusinessPage() {
                     label="Locatie"
                     type="text"
                     name="location"
-                    initialValue={business?.location}
+                    placeholder={projectData.business?.location}
+                    initialValue={projectData.location ?? ""}
                     error={locationError}
                     setError={setLocationError}
                     max={255}
-                    required={true}
+                    required={false}
                 />
                 <DragDrop
                     name="image"
                     accept="image"
-                    label="Bedrijfslogo"
-                    initialFilePath={IMAGE_BASE_URL + business?.image_path}
+                    label="Projectafbeelding"
+                    initialFilePath={IMAGE_BASE_URL + (projectData.image_path || projectData.image_path)}
                 />
                 <div className='grid grid-cols-2 gap-2'>
                     <button className="btn-secondary flex-grow" type="button" onClick={() => navigation(-1)}>Annuleren</button>

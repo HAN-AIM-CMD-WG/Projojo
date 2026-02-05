@@ -8,6 +8,7 @@ export default function BusinessesOverview({ businesses }) {
                     key={business.id}
                     business={business}
                     showUpdateButton={true}
+                    showViewButton={true}
                 />
             ))}
         </div>

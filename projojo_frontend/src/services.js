@@ -96,12 +96,26 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                 let message;
                 try {
                     const jsonObj = JSON.parse(json);
-                    // checks if detail field exists and is non-empty
-                    if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
-                        // doesnt exist or is empty. Go to catch block
+                    const detail = jsonObj?.detail;
+
+                    if (detail === undefined || detail === null || detail === "") {
                         throw new Error();
                     }
-                    message = jsonObj.detail;
+
+                    if (Array.isArray(detail)) {
+                        // FastAPI validation errors: list of objects {loc,msg,type,...}
+                        message = detail.map((d) => {
+                            if (typeof d === "string") return d;
+                            if (typeof d === "object" && d !== null) {
+                                return d.msg || d.message || JSON.stringify(d);
+                            }
+                            return String(d);
+                        }).join("; ");
+                    } else if (typeof detail === "object") {
+                        message = detail.message || detail.msg || JSON.stringify(detail);
+                    } else {
+                        message = String(detail);
+                    }
                 } catch {
                     // assign default message based on status code
                     switch (errorStatus) {
@@ -119,6 +133,9 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                             break;
                         case 409:
                             message = "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            break;
+                        case 422:
+                            message = "Ongeldige invoer. Controleer je gegevens.";
                             break;
                         case 429:
                             message = "Te veel verzoeken. Probeer het later opnieuw.";
@@ -300,6 +317,9 @@ export function createProject(project_data) {
     formData.append("description", project_data.description);
     formData.append("supervisor_id", project_data.supervisor_id);
     formData.append("business_id", project_data.business_id);
+    if (project_data.location !== undefined) {
+        formData.append("location", project_data.location);
+    }
 
     // Add image file
     if (project_data.imageFile) {
@@ -374,6 +394,30 @@ export function updateBusiness(businessId, formData) {
         method: "PUT",
         body: formData,
     }, true);
+    }
+
+/**
+ * @param {string} taskId - The task ID to update
+ * @param {FormData} formData - The form data containing task information (name, description, total_needed)
+ * @returns {Promise<void>}
+ */
+export function updateTask(taskId, formData) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
+}
+
+/**
+ * Update a project's full data (name, description, location, image)
+ * @param {string} projectId
+ * @param {FormData} formData
+ */
+export function updateProject(projectId, formData) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
 }
 
 /**
@@ -403,7 +447,6 @@ export function getTaskSkills(taskId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`)
 }
 
-
 /**
  *
  * @param {string} newBusinessName
@@ -420,19 +463,20 @@ export function createNewBusiness(newBusinessName) {
  * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
  */
 export function createSupervisorInviteKey(businessId) {
-    return fetchWithError(`${API_BASE_URL}invites/supervisor/${businessId}`, {
+    return fetchWithError(`${API_BASE_URL}invites/${businessId}`, {
         method: "POST",
     });
 }
 
 /**
- * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ * Validate an invite token
+ * @param {string} token
+ * @returns {Promise<{valid: boolean, business: {id: string, name: string, imagePath: string}}>}
  */
-export function createTeacherInviteKey() {
-    return fetchWithError(`${API_BASE_URL}invites/teacher`, {
-        method: "POST",
-    });
+export function validateInvite(token) {
+    return fetchWithError(`${API_BASE_URL}invites/validate/${token}`);
 }
+
 
 /**
  * @returns {Promise<User[]>}
