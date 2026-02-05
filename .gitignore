@@ -19,6 +19,7 @@ projojo_frontend/build
 projojo_frontend/dist
 
 # Frontend Environment variables
+.env
 projojo_frontend/.env
 projojo_frontend/.env.local
 projojo_frontend/.env.development.local
