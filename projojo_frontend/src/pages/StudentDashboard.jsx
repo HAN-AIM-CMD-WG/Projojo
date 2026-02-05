@@ -22,6 +22,8 @@ export default function StudentDashboard() {
     const [error, setError] = useState(null);
     const [visibleActiveTasks, setVisibleActiveTasks] = useState(TASKS_PER_PAGE);
     const [visiblePendingTasks, setVisiblePendingTasks] = useState(TASKS_PER_PAGE);
+    const [activeTasksExpanded, setActiveTasksExpanded] = useState(false);
+    const [pendingTasksExpanded, setPendingTasksExpanded] = useState(false);
 
     // Get time-based greeting
     const getGreeting = () => {
@@ -175,9 +177,22 @@ export default function StudentDashboard() {
                                         <span className="material-symbols-outlined text-green-500">task_alt</span>
                                         Actieve Taken
                                     </h2>
-                                    {activeTasks.length > 0 && (
-                                        <span className="neu-badge-success-solid">{activeTasks.length}</span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {activeTasks.length > 0 && (
+                                            <>
+                                                <button 
+                                                    onClick={() => setActiveTasksExpanded(!activeTasksExpanded)}
+                                                    className="neu-btn !py-1 !px-2 text-xs"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">
+                                                        {activeTasksExpanded ? 'unfold_less' : 'unfold_more'}
+                                                    </span>
+                                                    {activeTasksExpanded ? 'Compact' : 'Details'}
+                                                </button>
+                                                <span className="neu-badge-success-solid">{activeTasks.length}</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {activeTasks.length === 0 ? (
@@ -190,7 +205,12 @@ export default function StudentDashboard() {
                                 ) : (
                                     <div className="space-y-3">
                                         {activeTasks.slice(0, visibleActiveTasks).map((task) => (
-                                            <TaskCard key={task.id} task={task} status="active" />
+                                            <TaskCard 
+                                                key={task.id} 
+                                                task={task} 
+                                                status="active" 
+                                                isExpanded={activeTasksExpanded}
+                                            />
                                         ))}
                                         {activeTasks.length > visibleActiveTasks && (
                                             <button
@@ -212,9 +232,22 @@ export default function StudentDashboard() {
                                         <span className="material-symbols-outlined text-primary">schedule</span>
                                         Aanmeldingen
                                     </h2>
-                                    {pendingRegistrations.length > 0 && (
-                                        <span className="neu-badge-primary">{pendingRegistrations.length}</span>
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                        {pendingRegistrations.length > 0 && (
+                                            <>
+                                                <button 
+                                                    onClick={() => setPendingTasksExpanded(!pendingTasksExpanded)}
+                                                    className="neu-btn !py-1 !px-2 text-xs"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">
+                                                        {pendingTasksExpanded ? 'unfold_less' : 'unfold_more'}
+                                                    </span>
+                                                    {pendingTasksExpanded ? 'Compact' : 'Details'}
+                                                </button>
+                                                <span className="neu-badge-primary">{pendingRegistrations.length}</span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {pendingRegistrations.length === 0 ? (
@@ -232,6 +265,7 @@ export default function StudentDashboard() {
                                                 task={task} 
                                                 status="pending" 
                                                 onCancel={handleCancelRegistration}
+                                                isExpanded={pendingTasksExpanded}
                                             />
                                         ))}
                                         {pendingRegistrations.length > visiblePendingTasks && (
@@ -319,8 +353,9 @@ export default function StudentDashboard() {
 
 /**
  * Task Card component for the dashboard
+ * @param {boolean} isExpanded - Whether to show full details or compact view
  */
-function TaskCard({ task, status, onCancel }) {
+function TaskCard({ task, status, onCancel, isExpanded = false }) {
     const { studentSkills } = useStudentSkills();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const [isCancelling, setIsCancelling] = useState(false);
@@ -420,103 +455,115 @@ function TaskCard({ task, status, onCancel }) {
                 </div>
             )}
 
-            {/* Status badge */}
-            <div className="mb-2">
-                <span className={config.badge}>{config.badgeText}</span>
+            {/* Status badge + Task name */}
+            <div className={`flex flex-col gap-1 ${isExpanded ? 'mb-2' : 'mb-3'}`}>
+                <span className={`${config.badge} self-start`}>{config.badgeText}</span>
+                {!isExpanded && (
+                    <span className="font-bold text-[var(--text-primary)]">
+                        {task.name || 'Taak'}
+                    </span>
+                )}
             </div>
 
-            {/* Task name */}
-            <h4 className="font-bold text-[var(--text-primary)] mb-2">
-                {task.name || 'Taak'}
-            </h4>
-
-            {/* Description - normal weight */}
-            {truncatedDescription && (
-                <p className="text-sm text-[var(--text-muted)] font-normal mb-3">
-                    {truncatedDescription}
-                </p>
+            {/* Task name - full width when expanded */}
+            {isExpanded && (
+                <h4 className="font-bold text-[var(--text-primary)] mb-2">
+                    {task.name || 'Taak'}
+                </h4>
             )}
 
-            {/* Skills */}
-            {task.skills && task.skills.length > 0 && (
-                <div className="mb-3">
-                    <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1.5">Vereiste skills</p>
-                    <div className="flex flex-wrap gap-1.5">
-                        {task.skills.slice(0, 5).map((skill) => {
-                            const skillId = skill.skillId || skill.id;
-                            const isMatch = studentSkillIds.has(skillId);
-                            return (
-                                <SkillBadge 
-                                    key={skillId} 
-                                    skillName={skill.name} 
-                                    isPending={skill.isPending ?? skill.is_pending}
-                                    isOwn={isMatch}
+            {/* Expanded content */}
+            {isExpanded && (
+                <>
+                    {/* Description - normal weight */}
+                    {truncatedDescription && (
+                        <p className="text-sm text-[var(--text-muted)] font-normal mb-3">
+                            {truncatedDescription}
+                        </p>
+                    )}
+
+                    {/* Skills */}
+                    {task.skills && task.skills.length > 0 && (
+                        <div className="mb-3">
+                            <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-1.5">Vereiste skills</p>
+                            <div className="flex flex-wrap gap-1.5">
+                                {task.skills.slice(0, 5).map((skill) => {
+                                    const skillId = skill.skillId || skill.id;
+                                    const isMatch = studentSkillIds.has(skillId);
+                                    return (
+                                        <SkillBadge 
+                                            key={skillId} 
+                                            skillName={skill.name} 
+                                            isPending={skill.isPending ?? skill.is_pending}
+                                            isOwn={isMatch}
+                                        >
+                                            {isMatch && (
+                                                <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                            )}
+                                        </SkillBadge>
+                                    );
+                                })}
+                                {task.skills.length > 5 && (
+                                    <span className="text-xs text-[var(--text-muted)]">+{task.skills.length - 5} meer</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Error message */}
+                    {cancelError && (
+                        <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-sm">error</span>
+                            {cancelError}
+                        </p>
+                    )}
+
+                    {/* Confirmation dialog for pending registrations */}
+                    {status === 'pending' && showConfirm && (
+                        <div className="mb-3 p-4 neu-pressed">
+                            <p className="text-sm text-[var(--text-primary)] font-semibold mb-3 text-center">
+                                Weet je zeker dat je deze aanmelding wilt annuleren?
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleConfirmCancel}
+                                    disabled={isCancelling}
+                                    className="neu-btn flex-1 !bg-red-500 !text-white hover:!bg-red-600"
                                 >
-                                    {isMatch && (
-                                        <span className="material-symbols-outlined text-xs mr-1">check</span>
+                                    {isCancelling ? (
+                                        <>
+                                            <span className="material-symbols-outlined text-sm animate-spin mr-1">hourglass_empty</span>
+                                            Bezig...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined text-sm mr-1">check</span>
+                                            Ja, annuleren
+                                        </>
                                     )}
-                                </SkillBadge>
-                            );
-                        })}
-                        {task.skills.length > 5 && (
-                            <span className="text-xs text-[var(--text-muted)]">+{task.skills.length - 5} meer</span>
-                        )}
-                    </div>
-                </div>
-            )}
+                                </button>
+                                <button
+                                    onClick={handleCancelConfirm}
+                                    disabled={isCancelling}
+                                    className="neu-btn flex-1"
+                                >
+                                    Nee, terug
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
-            {/* Error message */}
-            {cancelError && (
-                <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">error</span>
-                    {cancelError}
-                </p>
-            )}
-
-            {/* Confirmation dialog for pending registrations */}
-            {status === 'pending' && showConfirm && (
-                <div className="mb-3 p-4 neu-pressed">
-                    <p className="text-sm text-[var(--text-primary)] font-semibold mb-3 text-center">
-                        Weet je zeker dat je deze aanmelding wilt annuleren?
-                    </p>
-                    <div className="flex gap-2">
+                    {/* Cancel button for pending registrations - separate row */}
+                    {status === 'pending' && !showConfirm && (
                         <button
-                            onClick={handleConfirmCancel}
-                            disabled={isCancelling}
-                            className="neu-btn flex-1 !bg-red-500 !text-white hover:!bg-red-600"
+                            onClick={handleCancelClick}
+                            className="neu-btn-primary w-full mb-3"
                         >
-                            {isCancelling ? (
-                                <>
-                                    <span className="material-symbols-outlined text-sm animate-spin mr-1">hourglass_empty</span>
-                                    Bezig...
-                                </>
-                            ) : (
-                                <>
-                                    <span className="material-symbols-outlined text-sm mr-1">check</span>
-                                    Ja, annuleren
-                                </>
-                            )}
+                            <span className="material-symbols-outlined text-sm mr-1.5">cancel</span>
+                            Aanmelding annuleren
                         </button>
-                        <button
-                            onClick={handleCancelConfirm}
-                            disabled={isCancelling}
-                            className="neu-btn flex-1"
-                        >
-                            Nee, terug
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Cancel button for pending registrations - separate row */}
-            {status === 'pending' && !showConfirm && (
-                <button
-                    onClick={handleCancelClick}
-                    className="neu-btn-primary w-full mb-3"
-                >
-                    <span className="material-symbols-outlined text-sm mr-1.5">cancel</span>
-                    Aanmelding annuleren
-                </button>
+                    )}
+                </>
             )}
 
             {/* Footer with metadata */}

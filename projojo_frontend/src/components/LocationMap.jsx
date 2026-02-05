@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useTheme } from '../context/ThemeContext';
 
@@ -20,6 +20,21 @@ const coralIcon = L.divIcon({
     popupAnchor: [1, -34],
 });
 
+// Component to handle map resize when expanding/collapsing
+function InvalidateSizeOnResize({ isExpanded }) {
+    const map = useMap();
+    
+    useEffect(() => {
+        // Wait for CSS transition to complete (300ms), then invalidate size
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 350);
+        return () => clearTimeout(timer);
+    }, [map, isExpanded]);
+    
+    return null;
+}
+
 /**
  * LocationMap component - Shows an interactive OpenStreetMap with a marker
  * Uses Nominatim API for geocoding addresses to coordinates
@@ -29,13 +44,44 @@ const coralIcon = L.divIcon({
  * @param {string} [props.name] - Name to show in the popup (e.g., business/project name)
  * @param {{lat: number, lng: number}} [props.coordinates] - Optional pre-defined coordinates
  * @param {string} [props.height="200px"] - Height of the map container
+ * @param {string} [props.expandedHeight="450px"] - Height when expanded
+ * @param {boolean} [props.expandable=true] - Whether to show expand/collapse button
  * @param {string} [props.className] - Additional CSS classes
  */
-export default function LocationMap({ address, name, coordinates, height = "200px", className = "" }) {
+export default function LocationMap({ 
+    address, 
+    name, 
+    coordinates, 
+    height = "200px", 
+    expandedHeight = "calc(100vh - 240px)",
+    expandable = true,
+    className = "" 
+}) {
     const { isDark } = useTheme();
     const [position, setPosition] = useState(coordinates || null);
     const [loading, setLoading] = useState(!coordinates);
     const [error, setError] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const containerRef = useRef(null);
+    
+    // Calculate current height based on expanded state
+    const currentHeight = isExpanded ? expandedHeight : height;
+    
+    // Scroll into view when expanding
+    useEffect(() => {
+        if (isExpanded && containerRef.current) {
+            // Small delay to allow the height transition to start
+            setTimeout(() => {
+                // Get the element's position and scroll with offset for header
+                const rect = containerRef.current.getBoundingClientRect();
+                const scrollTop = window.pageYOffset + rect.top - 170; // 170px offset for header + surrounding elements
+                window.scrollTo({
+                    top: scrollTop,
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }
+    }, [isExpanded]);
 
     // Default center (Netherlands) if no address/coordinates
     const defaultCenter = [52.1326, 5.2913];
@@ -106,7 +152,11 @@ export default function LocationMap({ address, name, coordinates, height = "200p
     }
 
     return (
-        <div className={`neu-flat overflow-hidden relative z-0 ${className}`} style={{ height }}>
+        <div 
+            ref={containerRef}
+            className={`neu-flat overflow-hidden relative z-0 transition-all duration-300 ease-out ${className}`} 
+            style={{ height: currentHeight }}
+        >
             {loading ? (
                 <div className="flex items-center justify-center h-full bg-neu-bg">
                     <div className="flex items-center gap-2 text-[var(--text-muted)]">
@@ -142,6 +192,7 @@ export default function LocationMap({ address, name, coordinates, height = "200p
                         url={tileUrl}
                         key={isDark ? 'dark' : 'light'}
                     />
+                    <InvalidateSizeOnResize isExpanded={isExpanded} />
                     <Marker position={[position.lat, position.lng]} icon={coralIcon}>
                         <Popup>
                             <div className="font-sans min-w-[150px]">
@@ -158,9 +209,22 @@ export default function LocationMap({ address, name, coordinates, height = "200p
                 </div>
             )}
             
+            {/* Expand/Collapse button */}
+            {expandable && position && (
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="absolute top-2 right-2 z-[1000] neu-btn !py-1.5 !px-2.5 text-xs !rounded-lg opacity-90 hover:opacity-100"
+                    title={isExpanded ? "Kaart verkleinen" : "Kaart vergroten"}
+                >
+                    <span className="material-symbols-outlined text-sm">
+                        {isExpanded ? 'fullscreen_exit' : 'fullscreen'}
+                    </span>
+                </button>
+            )}
+            
             {/* Quick link to external maps */}
             {position && address && (
-                <div className="absolute bottom-2 right-2 z-[1000]">
+                <div className="absolute bottom-2 left-2 z-[1000]">
                     <a
                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
                         target="_blank"

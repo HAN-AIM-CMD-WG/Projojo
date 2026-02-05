@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Link } from 'react-router-dom';
@@ -82,6 +82,21 @@ function FitBounds({ positions }) {
     return null;
 }
 
+// Component to handle map resize when expanding/collapsing
+function InvalidateSizeOnResize({ isExpanded }) {
+    const map = useMap();
+    
+    useEffect(() => {
+        // Wait for CSS transition to complete (300ms), then invalidate size
+        const timer = setTimeout(() => {
+            map.invalidateSize();
+        }, 350);
+        return () => clearTimeout(timer);
+    }, [map, isExpanded]);
+    
+    return null;
+}
+
 /**
  * OverviewMap component - Shows an interactive map with multiple markers
  * Uses Nominatim API for geocoding addresses to coordinates
@@ -90,13 +105,43 @@ function FitBounds({ positions }) {
  * @param {Array} props.locations - Array of {id, name, address, type: 'business'|'project', count?, businessName?, isFilterMatch?, matchCount?}
  * @param {boolean} [props.showOnlyMatches=false] - If true, only show matching locations
  * @param {string} [props.height="300px"] - Height of the map container
+ * @param {string} [props.expandedHeight="550px"] - Height when expanded
+ * @param {boolean} [props.expandable=true] - Whether to show expand/collapse button
  * @param {string} [props.className] - Additional CSS classes
  */
-export default function OverviewMap({ locations = [], showOnlyMatches = false, height = "300px", className = "" }) {
+export default function OverviewMap({ 
+    locations = [], 
+    showOnlyMatches = false, 
+    height = "300px", 
+    expandedHeight = "calc(100vh - 240px)",
+    expandable = true,
+    className = "" 
+}) {
     const { isDark } = useTheme();
     const [geocodedLocations, setGeocodedLocations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const containerRef = useRef(null);
+    
+    // Calculate current height based on expanded state
+    const currentHeight = isExpanded ? expandedHeight : height;
+    
+    // Scroll into view when expanding
+    useEffect(() => {
+        if (isExpanded && containerRef.current) {
+            // Small delay to allow the height transition to start
+            setTimeout(() => {
+                // Get the element's position and scroll with offset for header
+                const rect = containerRef.current.getBoundingClientRect();
+                const scrollTop = window.pageYOffset + rect.top - 170; // 170px offset for header + filter buttons
+                window.scrollTo({
+                    top: scrollTop,
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }
+    }, [isExpanded]);
 
     // Default center (Netherlands)
     const defaultCenter = [52.1326, 5.2913];
@@ -204,7 +249,11 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
     }
 
     return (
-        <div className={`neu-pressed rounded-xl overflow-hidden relative z-0 ${className}`} style={{ height }}>
+        <div 
+            ref={containerRef}
+            className={`neu-pressed rounded-xl overflow-hidden relative z-0 transition-all duration-300 ease-out ${className}`} 
+            style={{ height: currentHeight }}
+        >
             {loading ? (
                 <div className="flex items-center justify-center h-full bg-neu-bg">
                     <div className="flex items-center gap-2 text-[var(--text-muted)]">
@@ -231,6 +280,7 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
                     />
                     
                     <FitBounds positions={positions} />
+                    <InvalidateSizeOnResize isExpanded={isExpanded} />
                     
                     <MarkerClusterGroup
                         chunkedLoading
@@ -315,11 +365,37 @@ export default function OverviewMap({ locations = [], showOnlyMatches = false, h
                 </MapContainer>
             )}
             
+            {/* Expand/Collapse button */}
+            {expandable && !loading && positions.length > 0 && (
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="absolute top-2 right-2 z-[1000] neu-btn !py-1.5 !px-2.5 text-xs !rounded-lg opacity-90 hover:opacity-100"
+                    title={isExpanded ? "Kaart verkleinen" : "Kaart vergroten"}
+                >
+                    <span className="material-symbols-outlined text-sm">
+                        {isExpanded ? 'fullscreen_exit' : 'fullscreen'}
+                    </span>
+                </button>
+            )}
+            
             {/* Legend */}
             {!loading && visiblePositions.length > 0 && (
                 <div className="absolute bottom-2 left-2 z-[1000] bg-white/90 dark:bg-[#2D221C]/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--text-muted)]">
                     {visiblePositions.length} {visiblePositions.length === 1 ? 'locatie' : 'locaties'}
                 </div>
+            )}
+            
+            {/* Quick link to Google Maps */}
+            {!loading && positions.length > 0 && (
+                <a
+                    href={`https://www.google.com/maps/@${defaultCenter[0]},${defaultCenter[1]},8z`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute bottom-2 right-2 z-[1000] neu-btn !py-1.5 !px-2.5 text-xs !rounded-lg opacity-90 hover:opacity-100"
+                    title="Open in Google Maps"
+                >
+                    <span className="material-symbols-outlined text-sm">open_in_new</span>
+                </a>
             )}
         </div>
     );
