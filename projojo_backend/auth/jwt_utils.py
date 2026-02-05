@@ -1,17 +1,13 @@
 from datetime import datetime, timedelta, timezone
-import os
 import jwt
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
-from dotenv import load_dotenv
-
-load_dotenv()
+from config.settings import JWT_SECRET_KEY
 
 # Security scheme for extracting Bearer tokens
 security = HTTPBearer()
 
 # JWT configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_TIME_MINUTES = 60 * 8
 

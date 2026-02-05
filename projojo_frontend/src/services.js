@@ -1,6 +1,29 @@
-export const API_BASE_URL = "http://localhost:8000/";
-export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
-export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
+// Dynamically determine API URL based on current browser location
+const getApiBaseUrl = () => {
+  const backendPort = import.meta.env.VITE_BACKEND_PORT
+  let result
+
+// Check if VITE_BACKEND_HOST is set in environment variables
+  // This allows overriding the default host in development or production builds
+  // Useful for different environments like staging or production
+  // If not set, fallback to the current window location
+  // or a default url for server-side rendering
+
+  if (import.meta.env.VITE_BACKEND_HOST) {
+    result = `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
+  } else if (typeof window !== "undefined" && window.location) {
+    const { protocol, hostname } = window.location
+    result = `${protocol}//${hostname}:${backendPort}/`
+  } else {
+    // Fallback for server-side rendering or non-browser environments
+    return `http://localhost:${backendPort}/`
+  }
+  return result
+}
+
+export const API_BASE_URL = getApiBaseUrl()
+export const IMAGE_BASE_URL = `${API_BASE_URL}image/`
+export const PDF_BASE_URL = `${API_BASE_URL}pdf/`
 
 export class HttpError extends Error {
     #statusCode;
@@ -210,7 +233,7 @@ export function getUser(userId) {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getSkills() {
-    return fetchWithError(`${API_BASE_URL}skills`);
+    return fetchWithError(`${API_BASE_URL}skills/`);
 }
 /**
  * @param {string} studentId
@@ -274,7 +297,7 @@ export function getStudentRegistrations() {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}>}
  */
 export function createSkill(skill) {
-    return fetchWithError(`${API_BASE_URL}skills`, {
+    return fetchWithError(`${API_BASE_URL}skills/`, {
         method: "POST",
         body: JSON.stringify(skill),
     });

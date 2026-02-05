@@ -1,5 +1,9 @@
-import os
 from authlib.integrations.starlette_client import OAuth
+from config.settings import (
+    GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+    GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET,
+    MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET
+)
 
 
 def setup_oauth() -> OAuth:
@@ -8,16 +12,16 @@ def setup_oauth() -> OAuth:
 
     oauth.register(
         name='google',
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
         server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
         client_kwargs={'scope': 'openid email profile'}
     )
 
     oauth.register(
         name='github',
-        client_id=os.getenv("GITHUB_CLIENT_ID"),
-        client_secret=os.getenv("GITHUB_CLIENT_SECRET"),
+        client_id=GITHUB_CLIENT_ID,
+        client_secret=GITHUB_CLIENT_SECRET,
         access_token_url='https://github.com/login/oauth/access_token',
         access_token_params=None,
         authorize_url='https://github.com/login/oauth/authorize',
@@ -28,8 +32,8 @@ def setup_oauth() -> OAuth:
 
     oauth.register(
         name='microsoft',
-        client_id=os.getenv("MICROSOFT_CLIENT_ID"),
-        client_secret=os.getenv("MICROSOFT_CLIENT_SECRET"),
+        client_id=MICROSOFT_CLIENT_ID,
+        client_secret=MICROSOFT_CLIENT_SECRET,
         # server_metadata_url='https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
         access_token_url='https://login.microsoftonline.com/common/oauth2/v2.0/token',
         authorize_url='https://login.microsoftonline.com/common/oauth2/v2.0/authorize',

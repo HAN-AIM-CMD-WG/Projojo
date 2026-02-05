@@ -6,14 +6,14 @@ from auth.oauth_config import oauth_client
 from auth.jwt_utils import create_jwt_token
 from auth.permissions import auth
 from service.auth_service import AuthService
-import os
+from config.settings import FRONTEND_URL, IS_DEVELOPMENT
 from urllib.parse import urlparse
 
 user_repo = UserRepository()
 router = APIRouter(prefix="/auth", tags=["Auth Endpoints"])
 
 # Default frontend URL as fallback
-DEFAULT_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+DEFAULT_FRONTEND_URL = FRONTEND_URL
 
 
 def get_frontend_url_from_login(request: Request) -> str:
@@ -45,6 +45,10 @@ async def auth_login(
 ):
     """Step 1: Redirect user to OAuth provider"""
     redirect_uri = request.url_for('auth_callback', provider=provider)
+    
+    # Force HTTPS when behind reverse proxy (non-development environments)
+    if not IS_DEVELOPMENT:
+        redirect_uri = str(redirect_uri).replace('http://', 'https://')
 
     # Get frontend URL from the request and store it in the session
     frontend_url = get_frontend_url_from_login(request)
@@ -109,7 +113,7 @@ async def test_login(user_id: str, request: Request):
     This endpoint should only be used in development environments.
     """
     # Check if the request is from localhost
-    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+    if not IS_DEVELOPMENT:
         raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
 
     # Get user from database

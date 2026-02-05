@@ -17,7 +17,7 @@
 #
 # Behavior:
 # - Starts services in detached mode.
-# - Opens the default web browser to http://localhost:5173 after a short delay.
+# - Opens the default web browser to http://localhost:10101 after a short delay.
 # - Streams the last 20 logs and then follows new logs from 'backend' and 'frontend'.
 # - Pressing Ctrl+C while logs are streaming will stop the log stream but will NOT
 #   stop the running containers. Containers should be managed via Docker Desktop or
@@ -41,7 +41,20 @@ if ($reset) {
 Write-Host "Allowing a few seconds for services to initialize..."
 Start-Sleep -Seconds 5
 
-$URL = "http://localhost:5173"
+$Port = "10101"
+
+if (Test-Path .env) {
+    # Find the line starting with FRONTEND_PORT=
+    $EnvLine = Get-Content .env | Where-Object { $_ -match "^FRONTEND_PORT=" } | Select-Object -First 1
+    
+    if ($EnvLine) {
+        # Remove the key, quotes, and whitespace to get the value
+        $Port = $EnvLine -replace "^FRONTEND_PORT=", "" -replace "[\`"'`r]", ""
+    }
+}
+
+$URL = "http://localhost:$Port"
+
 Write-Host "Opening browser to $URL..."
 Start-Process $URL
 
