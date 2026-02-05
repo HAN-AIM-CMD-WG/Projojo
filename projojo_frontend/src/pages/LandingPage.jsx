@@ -113,9 +113,10 @@ export default function LandingPage() {
                         </a>
                         <Link 
                             to="/publiek" 
-                            className="hidden md:block text-sm font-semibold text-[var(--text-secondary)] hover:text-primary transition-colors"
+                            className="text-sm font-semibold text-[var(--text-secondary)] hover:text-primary transition-colors"
                         >
-                            Ontdek projecten
+                            <span className="hidden sm:inline">Ontdek projecten</span>
+                            <span className="sm:hidden">Ontdek</span>
                         </Link>
                         {/* Theme Toggle */}
                         <button

@@ -5,6 +5,7 @@ import PublicProjectCard from '../components/PublicProjectCard';
 import Loading from '../components/Loading';
 import RichTextViewer from '../components/RichTextViewer';
 import LocationMap from '../components/LocationMap';
+import OverviewMap from '../components/OverviewMap';
 import { formatDate, getCountdownText } from '../utils/dates';
 
 /**
@@ -189,9 +190,9 @@ function PublicProjectList() {
 
             {/* Filters */}
             <div className="sticky top-0 z-10 bg-[var(--neu-bg)] border-b border-[var(--neu-border)] py-4 px-6">
-                <div className="max-w-7xl mx-auto flex flex-wrap gap-4 items-center justify-between">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
                     {/* Status filter pills */}
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => setActiveFilter('all')}
                             className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
@@ -224,10 +225,10 @@ function PublicProjectList() {
                         </button>
                     </div>
 
-                    <div className="flex gap-4 items-center">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center">
                         {/* Location filter pills */}
                         {locations.length > 0 && (
-                            <div className="flex gap-1.5 items-center">
+                            <div className="flex flex-wrap gap-1.5 items-center">
                                 <span className="material-symbols-outlined text-sm text-[var(--text-muted)]">location_on</span>
                                 <button
                                     onClick={() => setLocationFilter('')}
@@ -316,6 +317,24 @@ function PublicProjectList() {
                     </div>
                 ) : (
                     <>
+                        {/* Map overview */}
+                        <div className="mb-8">
+                            <OverviewMap 
+                                locations={filteredProjects
+                                    .filter(p => p.business?.location)
+                                    .map(p => ({
+                                        id: p.id,
+                                        name: p.name,
+                                        address: p.business.location,
+                                        type: 'project',
+                                        businessName: p.business.name,
+                                        image: p.business.image_path,
+                                        linkTo: `/publiek/${p.id}`
+                                    }))}
+                                height="300px"
+                            />
+                        </div>
+                        
                         <p className="text-[var(--text-muted)] mb-6">
                             {filteredProjects.length} {filteredProjects.length === 1 ? 'project' : 'projecten'} gevonden
                         </p>

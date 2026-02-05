@@ -349,7 +349,7 @@ export default function OverviewMap({
                                             )}
                                         </div>
                                         <Link 
-                                            to={loc.type === 'project' ? `/projects/${loc.id}` : `/business/${loc.id}`}
+                                            to={loc.linkTo || (loc.type === 'project' ? `/projects/${loc.id}` : `/business/${loc.id}`)}
                                             className="mt-2 inline-flex items-center gap-1 text-xs font-bold hover:underline"
                                             style={{ color: '#FF7F50' }}
                                         >
