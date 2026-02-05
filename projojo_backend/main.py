@@ -5,9 +5,9 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
+import os
 from contextlib import asynccontextmanager
-
-from config.settings import SESSIONS_SECRET_KEY, IS_DEVELOPMENT
+from config.settings import IS_PRODUCTION, IS_DEVELOPMENT, SESSIONS_SECRET_KEY
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 from auth.jwt_middleware import JWTMiddleware
@@ -82,7 +82,7 @@ app.add_middleware(
 
 # Trust proxy headers from Traefik (X-Forwarded-Proto, X-Forwarded-For)
 # This ensures request.url_for() generates HTTPS URLs when behind a reverse proxy
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"]) # type: ignore
 
 @app.middleware("http")
 async def print_headers(request: Request, call_next):
@@ -154,14 +154,15 @@ class TestEmailRequest(BaseModel):
 @app.post("/test/email")
 @auth(role="unauthenticated")
 async def send_test_email(request: TestEmailRequest):
+
     """
     TEST ENDPOINT - Send a test email using the invitation template.
     This endpoint is for development testing only.
     
     REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
     """
-    if os.getenv("ENVIRONMENT", "none").lower() != "development":
-        raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
+    if IS_PRODUCTION:
+        raise HTTPException(status_code=403, detail="Dit kan niet de production-omgeving")
 
     result = await send_templated_email(
         recipient=request.recipient_email,

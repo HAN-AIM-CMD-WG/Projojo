@@ -12,6 +12,8 @@ env.read_env(".env", recurse=True, override=False)
 # Environment
 ENVIRONMENT: str = env.str("ENVIRONMENT", "none")
 IS_DEVELOPMENT: bool = ENVIRONMENT.lower() == "development"
+IS_PRODUCTION: bool = ENVIRONMENT.lower() == "production"
+
 
 # Frontend
 FRONTEND_URL: str = env.str("FRONTEND_URL")
