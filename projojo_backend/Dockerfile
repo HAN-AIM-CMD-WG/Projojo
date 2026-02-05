@@ -7,15 +7,6 @@ WORKDIR /app
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# System dependencies needed for typedb-driver native extensions
-# - build-essential: Provides compilers and build tools for C/C++ extension compilation
-# - libpython3-dev: Provides Python C API headers needed for Python extensions
-# - Cleanup to reduce image size by removing package indexes (not needed after installation)
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpython3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Copy uv dependency files
 COPY pyproject.toml uv.lock README.md ./
 

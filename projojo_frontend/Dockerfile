@@ -10,7 +10,7 @@ WORKDIR /app
 
 # Copy and install dependencies only when needed
 COPY package*.json ./
-RUN npm ci
+RUN npm i
 
 # Development stage - expects volume mount for live reloading
 FROM base AS development
