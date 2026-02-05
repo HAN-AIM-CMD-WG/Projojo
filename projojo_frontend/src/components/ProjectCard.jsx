@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { IMAGE_BASE_URL } from '../services';
 import { useStudentSkills } from '../context/StudentSkillsContext';
+import { useStudentWork } from '../context/StudentWorkContext';
 import RichTextViewer from "./RichTextViewer";
 import { getCountdownText, formatDateShort } from "../utils/dates";
 
@@ -49,6 +50,7 @@ const statusConfig = {
  */
 export default function ProjectCard({ project, index = 0 }) {
   const { studentSkills } = useStudentSkills();
+  const { isWorkingOnProject, hasPendingOnProject } = useStudentWork();
   
   // Get status config (Student-friendly Dutch labels)
   const status = project.status?.toLowerCase() || 'default';
@@ -116,6 +118,22 @@ export default function ProjectCard({ project, index = 0 }) {
           />
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          
+          {/* Active work badge - show if student is working on this project */}
+          {isWorkingOnProject(project.id) && (
+            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500 text-white shadow-sm flex items-center gap-1">
+              <span className="material-symbols-outlined text-xs">work</span>
+              Actief
+            </div>
+          )}
+          
+          {/* Pending badge - show if student has pending registration (but not active) */}
+          {hasPendingOnProject(project.id) && !isWorkingOnProject(project.id) && (
+            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-500 text-white shadow-sm flex items-center gap-1">
+              <span className="material-symbols-outlined text-xs">schedule</span>
+              Aangevraagd
+            </div>
+          )}
           
           {/* Status badge - only show if NOT open (avoid redundant "OPEN" on every card) */}
           {status !== 'active' && status !== 'default' && project.status && (

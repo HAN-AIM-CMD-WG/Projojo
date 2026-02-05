@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { getSkills } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
+import { useStudentWork } from '../context/StudentWorkContext';
 import Alert from "./Alert";
 import FilterChip from "./FilterChip";
 import SkillBadge from './SkillBadge';
@@ -17,6 +18,7 @@ import OverviewMap from "./OverviewMap";
 */
 export default function Filter({ onFilter, businesses = [] }) {
     const { studentSkills } = useStudentSkills();
+    const { workingBusinessIds } = useStudentWork();
     const [allSkills, setAllSkills] = useState([]);
     const [selectedSkills, setSelectedSkills] = useState([]);
     const [search, setSearch] = useState('');
@@ -25,6 +27,7 @@ export default function Filter({ onFilter, businesses = [] }) {
     const [showMap, setShowMap] = useState(false);
     const [mapView, setMapView] = useState('businesses'); // 'businesses' | 'projects'
     const [showOnlyMatches, setShowOnlyMatches] = useState(false);
+    const [showOnlyMyWork, setShowOnlyMyWork] = useState(false);
     
     // Quick filter chips state
     const [selectedCountry, setSelectedCountry] = useState(null);
@@ -71,6 +74,7 @@ export default function Filter({ onFilter, businesses = [] }) {
             sector: selectedSector,
             location: selectedLocation,
             companySize: selectedCompanySize,
+            showOnlyMyWork,
             ...overrides
         });
     };
@@ -149,7 +153,8 @@ export default function Filter({ onFilter, businesses = [] }) {
         setSelectedSector(null);
         setSelectedLocation(null);
         setSelectedCompanySize(null);
-        triggerFilter({ country: null, sector: null, location: null, companySize: null });
+        setShowOnlyMyWork(false);
+        triggerFilter({ country: null, sector: null, location: null, companySize: null, showOnlyMyWork: false });
     };
 
     // Compute map locations based on view
@@ -218,8 +223,8 @@ export default function Filter({ onFilter, businesses = [] }) {
     );
 
     // Check if there are active filters (including quick filters)
-    const hasActiveFilters = search.trim() || selectedSkills.length > 0 || selectedCountry || selectedSector || selectedLocation || selectedCompanySize;
-    const hasQuickFilters = selectedCountry || selectedSector || selectedLocation || selectedCompanySize;
+    const hasActiveFilters = search.trim() || selectedSkills.length > 0 || selectedCountry || selectedSector || selectedLocation || selectedCompanySize || showOnlyMyWork;
+    const hasQuickFilters = selectedCountry || selectedSector || selectedLocation || selectedCompanySize || showOnlyMyWork;
     // Show matching toggle only when student has skills (so matching is meaningful)
     const canShowMatching = studentSkills.length > 0;
 
@@ -243,6 +248,35 @@ export default function Filter({ onFilter, businesses = [] }) {
                         >
                             <span className="material-symbols-outlined text-base" aria-hidden="true">map</span>
                             <span className="hidden sm:inline">Kaart</span>
+                        </button>
+                    )}
+
+                    {/* My work filter - only show if student has work registrations */}
+                    {workingBusinessIds.size > 0 && (
+                        <button 
+                            type="button"
+                            className={`flex items-center gap-2 !py-2 !px-3 text-sm font-bold rounded-xl transition-all ${
+                                showOnlyMyWork 
+                                    ? 'neu-pressed text-emerald-600 ring-2 ring-emerald-500/30' 
+                                    : 'neu-btn hover:ring-2 hover:ring-emerald-500/20'
+                            }`}
+                            onClick={() => {
+                                const newValue = !showOnlyMyWork;
+                                setShowOnlyMyWork(newValue);
+                                triggerFilter({ showOnlyMyWork: newValue });
+                            }}
+                            aria-pressed={showOnlyMyWork}
+                            aria-label={showOnlyMyWork ? 'Toon alle bedrijven' : 'Toon alleen mijn werk'}
+                        >
+                            <span className="material-symbols-outlined text-base" aria-hidden="true">work</span>
+                            <span className="hidden sm:inline">Mijn werk</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                                showOnlyMyWork 
+                                    ? 'bg-emerald-500 text-white' 
+                                    : 'bg-emerald-100 text-emerald-700'
+                            }`}>
+                                {workingBusinessIds.size}
+                            </span>
                         </button>
                     )}
 

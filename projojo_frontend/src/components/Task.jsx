@@ -4,6 +4,7 @@ import { createRegistration, getAllRegistrations, updateRegistration, updateTask
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
+import { useStudentWork } from "../context/StudentWorkContext";
 import FormInput from "./FormInput";
 import InfoBox from "./InfoBox";
 import Modal from "./Modal";
@@ -17,6 +18,7 @@ import { formatDate, getCountdownText } from "../utils/dates";
 export default function Task({ task, setFetchAmount, businessId, allSkills, studentAlreadyRegistered }) {
     const { authData, user } = useAuth();
     const { studentSkills } = useStudentSkills();
+    const { isWorkingOnTask, hasPendingOnTask } = useStudentWork();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     
     // Tab state
@@ -286,6 +288,22 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 <span className="material-symbols-outlined text-primary text-xl sm:text-2xl">assignment</span>
                             </div>
                             <div className="min-w-0">
+                                {/* Student status badge */}
+                                {authData.type === 'student' && (isWorkingOnTask(task.id) || hasPendingOnTask(task.id)) && (
+                                    <div className="mb-1">
+                                        {isWorkingOnTask(task.id) ? (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white">
+                                                <span className="material-symbols-outlined text-xs">work</span>
+                                                Je werkt hieraan
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+                                                <span className="material-symbols-outlined text-xs">schedule</span>
+                                                Aangevraagd
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
                                 <h2 className="text-base font-bold text-[var(--text-primary)] leading-tight line-clamp-2">
                                     {task.name}
                                 </h2>

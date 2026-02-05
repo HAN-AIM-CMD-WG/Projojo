@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
+import { useStudentWork } from '../context/StudentWorkContext';
 import FormInput from './FormInput';
 import Loading from "./Loading";
 import LocationMap from "./LocationMap";
@@ -52,6 +53,7 @@ export default function BusinessCard({
 }) {
     const { authData } = useAuth();
     const { studentSkills } = useStudentSkills();
+    const { isWorkingAtBusiness, hasPendingAtBusiness } = useStudentWork();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
     const [expiry, setExpiry] = useState(null);
@@ -160,9 +162,23 @@ export default function BusinessCard({
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
-                                    Organisatie
-                                </span>
+                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                                        Organisatie
+                                    </span>
+                                    {isWorkingAtBusiness(businessId) && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white">
+                                            <span className="material-symbols-outlined text-xs">work</span>
+                                            Je werkt hier
+                                        </span>
+                                    )}
+                                    {hasPendingAtBusiness(businessId) && !isWorkingAtBusiness(businessId) && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white">
+                                            <span className="material-symbols-outlined text-xs">schedule</span>
+                                            Aangevraagd
+                                        </span>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-2">
                                 <Link 
                                     to={`/business/${businessId}`}

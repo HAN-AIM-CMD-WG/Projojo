@@ -6,9 +6,11 @@ import Loading from '../components/Loading';
 import { getBusinessesComplete } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
+import { useStudentWork } from '../context/StudentWorkContext';
 
 export default function OverviewPage() {
   const { studentName, studentSkills } = useStudentSkills();
+  const { workingBusinessIds } = useStudentWork();
   const [initialBusinesses, setInitialBusinesses] = useState([]);
   const [shownBusinesses, setShownBusinesses] = useState([]);
   const [error, setError] = useState(null);
@@ -98,12 +100,12 @@ export default function OverviewPage() {
 
   const isSearchInString = (search, string) => string.toLowerCase().includes(search.toLowerCase());
 
-  const handleFilter = ({ searchInput, selectedSkills, country, sector, location, companySize }) => {
+  const handleFilter = ({ searchInput, selectedSkills, country, sector, location, companySize, showOnlyMyWork }) => {
     const formattedSearch = searchInput.trim().replace(/\s+/g, ' ')
     setError(null);
 
     // Check if any filter is active
-    const hasFilters = formattedSearch || selectedSkills.length > 0 || country || sector || location || companySize;
+    const hasFilters = formattedSearch || selectedSkills.length > 0 || country || sector || location || companySize || showOnlyMyWork;
 
     if (!hasFilters) {
       setShownBusinesses(initialBusinesses);
@@ -111,6 +113,13 @@ export default function OverviewPage() {
     }
 
     let filteredData = initialBusinesses;
+
+    // "My work" filter - show only businesses where student is working
+    if (showOnlyMyWork) {
+      filteredData = filteredData.filter(b => 
+        workingBusinessIds.has(b.business?.businessId || b.id)
+      );
+    }
 
     // Country filter
     if (country) {
@@ -200,6 +209,7 @@ export default function OverviewPage() {
 
     if (filteredData.length === 0) {
       const activeFilters = [];
+      if (showOnlyMyWork) activeFilters.push('mijn werk');
       if (formattedSearch) activeFilters.push(`"${formattedSearch}"`);
       if (selectedSkills.length > 0) activeFilters.push(selectedSkills.map(s => s.name).join(', '));
       if (country) activeFilters.push(`land: ${country}`);

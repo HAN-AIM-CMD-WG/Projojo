@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './auth/AuthProvider';
 import { StudentSkillsProvider } from './context/StudentSkillsContext';
+import { StudentWorkProvider } from './context/StudentWorkContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Footer from "./components/Footer";
 import Navbar from './components/Navbar';
@@ -215,6 +216,7 @@ export default function App() {
   return (
     <ThemeProvider>
     <StudentSkillsProvider>
+    <StudentWorkProvider>
         <div className="min-h-screen bg-[var(--neu-bg)] text-[var(--text-primary)] transition-colors duration-300">
           {/* Skip link for keyboard navigation - WCAG 2.4.1 */}
           <a 
@@ -265,6 +267,7 @@ export default function App() {
         </main>
         {!isPublicPage && <Footer />}
       </div>
+    </StudentWorkProvider>
     </StudentSkillsProvider>
     </ThemeProvider>
   )
