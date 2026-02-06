@@ -1728,3 +1728,314 @@ insert
     $pt_theme10 isa hasTheme (project: $p28, theme: $theme1);
     $pt_theme11 isa hasTheme (project: $p31, theme: $theme4);
     $pt_theme12 isa hasTheme (project: $p31, theme: $theme3);
+
+    # ============================================
+    # City Deal - Agenda Stad
+    # ============================================
+    
+    # City Deal Business
+    $b_citydeal isa business,
+        has id "634ec486-a790-4b08-bddd-9e8d58b2874b",
+        has name "City Deal - Agenda Stad",
+        has description "City Deals zijn samenwerkingsverbanden tussen steden, Rijk, kennisinstellingen en bedrijven. Samen werken we aan innovatieve oplossingen voor stedelijke uitdagingen op het gebied van energie, mobiliteit, inclusie en digitalisering.",
+        has imagePath "logo_citydeal.png",
+        has location "Den Haag, Nederland",
+        has sector "Overheid & Publiek",
+        has companySize "51-200",
+        has website "https://agendastad.nl/city-deals/";
+
+    # City Deal Supervisor
+    $s_citydeal isa supervisor,
+        has id "d145ac42-c45e-4bf5-92b7-ce4b5d11d500",
+        has fullName "Marieke van den Berg",
+        has imagePath "supervisor_female.png",
+        has email "m.vandenberg@agendastad.nl";
+
+    # OAuth for City Deal supervisor
+    $auth_citydeal isa oauthAuthentication (user: $s_citydeal, provider: $op2),
+        has oauthSub "b06051b4-ae0b-4934-953b-510be5360c98";
+
+    # City Deal management relation
+    $m_citydeal isa manages (supervisor: $s_citydeal, business: $b_citydeal),
+        has location "Den Haag";
+
+    # City Deal Project 1: Energieke Wijken
+    $p_cd1 isa project,
+        has id "feceff46-0cc4-4e2e-bf48-366dfe81b423",
+        has name "Energieke Wijken - Duurzaam en Sociaal",
+        has description "In de City Deal Energieke Wijken werken gemeenten, woningcorporaties, netbeheerders en bewoners samen aan de energietransitie op wijkniveau. Het doel is om wijken aardgasvrij te maken én tegelijkertijd de sociale cohesie te versterken. Studenten kunnen bijdragen aan onderzoek, communicatie en technische oplossingen.",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-02-25T09:00:00+0000,
+        has startDate 2025-09-01T00:00:00+0000,
+        has endDate 2026-06-30T23:59:00+0000,
+        has isPublic true;
+
+    # City Deal Project 2: Slim Maatwerk
+    $p_cd2 isa project,
+        has id "5727608e-8465-49b0-954f-64f8f3912580",
+        has name "Slim Maatwerk - Data voor de Wijk",
+        has description "Data-gedreven aanpak voor wijkverbetering. We verzamelen en analyseren data om beter te begrijpen wat er speelt in wijken en hoe we interventies effectiever kunnen maken. Van energieverbruik tot sociale indicatoren.",
+        has imagePath "project_analytics.png",
+        has createdAt 2025-02-26T10:00:00+0000,
+        has startDate 2025-10-01T00:00:00+0000,
+        has endDate 2026-05-31T23:59:00+0000,
+        has isPublic true;
+
+    # City Deal Project 3: Inclusieve Stad
+    $p_cd3 isa project,
+        has id "4b34a441-4933-4d9c-bc8c-54af7b78fee5",
+        has name "Inclusieve Stad - Toegankelijkheid voor Iedereen",
+        has description "Een stad moet voor iedereen toegankelijk zijn. In dit project werken we aan digitale en fysieke toegankelijkheid, met speciale aandacht voor mensen met een beperking, ouderen en nieuwkomers.",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-02-27T11:00:00+0000,
+        has startDate 2025-11-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000,
+        has isPublic true;
+
+    # City Deal Tasks
+    $t_cd1 isa task,
+        has id "8f0dd715-1f80-43b0-aa19-1c18e042d3cd",
+        has name "Wijkcommunicatie Specialist",
+        has description "Ontwikkel communicatiematerialen en strategieën om bewoners te betrekken bij de energietransitie. Denk aan infographics, sociale media content en bewonersbijeenkomsten.",
+        has totalNeeded 2,
+        has createdAt 2025-02-25T10:00:00+0000,
+        has startDate 2025-09-15T00:00:00+0000,
+        has endDate 2026-03-31T23:59:00+0000;
+
+    $t_cd2 isa task,
+        has id "aa19cb8b-f995-43b4-ba98-47217060e72f",
+        has name "Energie Data Analist",
+        has description "Analyseer energieverbruiksdata op wijkniveau om patronen te identificeren en besparingsmogelijkheden in kaart te brengen. Maak visualisaties voor beleidsmakers.",
+        has totalNeeded 1,
+        has createdAt 2025-02-25T11:00:00+0000,
+        has startDate 2025-10-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000;
+
+    $t_cd3 isa task,
+        has id "97f51f9e-6c51-4daf-bf29-4e1930ff3c17",
+        has name "Wijkdashboard Developer",
+        has description "Bouw een interactief dashboard waar bewoners en beleidsmakers de voortgang van de energietransitie kunnen volgen. Gebruik React en data visualisatie libraries.",
+        has totalNeeded 2,
+        has createdAt 2025-02-26T10:30:00+0000,
+        has startDate 2025-10-15T00:00:00+0000,
+        has endDate 2026-05-31T23:59:00+0000;
+
+    $t_cd4 isa task,
+        has id "7278c5ce-2bf6-49f3-829b-7fe6a9b129e4",
+        has name "Sociale Impact Onderzoeker",
+        has description "Onderzoek de sociale effecten van de energietransitie op wijkbewoners. Voer interviews uit, analyseer data en schrijf beleidsaanbevelingen.",
+        has totalNeeded 1,
+        has createdAt 2025-02-26T11:00:00+0000,
+        has startDate 2025-11-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000;
+
+    $t_cd5 isa task,
+        has id "6803a887-cd2b-496c-b0a8-c121ad7c9d58",
+        has name "Toegankelijkheid Tester",
+        has description "Test digitale diensten en apps op toegankelijkheid (WCAG). Werk samen met mensen met verschillende beperkingen om gebruikerservaringen te evalueren.",
+        has totalNeeded 2,
+        has createdAt 2025-02-27T11:30:00+0000,
+        has startDate 2025-11-15T00:00:00+0000,
+        has endDate 2026-03-31T23:59:00+0000;
+
+    $t_cd6 isa task,
+        has id "ca8438ca-9888-43d4-adcd-e4763325ad72",
+        has name "Inclusie App Developer",
+        has description "Ontwikkel een app die nieuwkomers helpt navigeren door gemeentelijke diensten. Focus op meertaligheid en eenvoudige UX.",
+        has totalNeeded 1,
+        has createdAt 2025-02-27T12:00:00+0000,
+        has startDate 2025-12-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000;
+
+    # City Deal project creation relations
+    $c_cd1 isa creates (supervisor: $s_citydeal, project: $p_cd1),
+        has createdAt 2025-02-25T09:00:00+0000;
+    $c_cd2 isa creates (supervisor: $s_citydeal, project: $p_cd2),
+        has createdAt 2025-02-26T10:00:00+0000;
+    $c_cd3 isa creates (supervisor: $s_citydeal, project: $p_cd3),
+        has createdAt 2025-02-27T11:00:00+0000;
+
+    # City Deal business-project relations
+    $bp_cd1 isa hasProjects (business: $b_citydeal, project: $p_cd1);
+    $bp_cd2 isa hasProjects (business: $b_citydeal, project: $p_cd2);
+    $bp_cd3 isa hasProjects (business: $b_citydeal, project: $p_cd3);
+
+    # City Deal project-task relations
+    $pt_cd1 isa containsTask (project: $p_cd1, task: $t_cd1);
+    $pt_cd2 isa containsTask (project: $p_cd1, task: $t_cd2);
+    $pt_cd3 isa containsTask (project: $p_cd2, task: $t_cd3);
+    $pt_cd4 isa containsTask (project: $p_cd2, task: $t_cd4);
+    $pt_cd5 isa containsTask (project: $p_cd3, task: $t_cd5);
+    $pt_cd6 isa containsTask (project: $p_cd3, task: $t_cd6);
+
+    # City Deal task-skill relations
+    $ts_cd1 isa requiresSkill (task: $t_cd1, skill: $sk11);
+    $ts_cd2 isa requiresSkill (task: $t_cd2, skill: $sk11);
+    $ts_cd3 isa requiresSkill (task: $t_cd2, skill: $sk12);
+    $ts_cd4 isa requiresSkill (task: $t_cd3, skill: $sk11);
+    $ts_cd5 isa requiresSkill (task: $t_cd4, skill: $sk11);
+    $ts_cd6 isa requiresSkill (task: $t_cd5, skill: $sk11);
+    $ts_cd7 isa requiresSkill (task: $t_cd6, skill: $sk11);
+
+    # City Deal theme relations
+    $pt_theme_cd1 isa hasTheme (project: $p_cd1, theme: $theme1);
+    $pt_theme_cd2 isa hasTheme (project: $p_cd1, theme: $theme2);
+    $pt_theme_cd3 isa hasTheme (project: $p_cd2, theme: $theme3);
+    $pt_theme_cd4 isa hasTheme (project: $p_cd2, theme: $theme1);
+    $pt_theme_cd5 isa hasTheme (project: $p_cd3, theme: $theme6);
+
+    # ============================================
+    # Gemeente Arnhem - Smart City & Wijkaanpak
+    # ============================================
+    
+    # Gemeente Arnhem Business
+    $b_arnhem isa business,
+        has id "7a11f3f9-f9c4-486d-8a76-08443b0a773e",
+        has name "Gemeente Arnhem",
+        has description "Gemeente Arnhem werkt aan een duurzame, inclusieve en innovatieve stad. Via City Deals en lokale samenwerkingsverbanden pakken we uitdagingen aan op het gebied van energietransitie, klimaatadaptatie en digitale inclusie. Studenten spelen een belangrijke rol als frisse denkers en doeners.",
+        has imagePath "logo_arnhem.png",
+        has location "Arnhem, Gelderland",
+        has sector "Overheid & Publiek",
+        has companySize "200+",
+        has website "https://www.arnhem.nl";
+
+    # Gemeente Arnhem Supervisor
+    $s_arnhem isa supervisor,
+        has id "2aada709-b3df-4ee9-bbe8-958b010925f3",
+        has fullName "Lisa Kuiper",
+        has imagePath "supervisor_female.png",
+        has email "l.kuiper@arnhem.nl";
+
+    # OAuth for Arnhem supervisor
+    $auth_arnhem isa oauthAuthentication (user: $s_arnhem, provider: $op2),
+        has oauthSub "8b9f3ce2-d3c7-4b49-a7ea-7921b4e36285";
+
+    # Arnhem management relation
+    $m_arnhem isa manages (supervisor: $s_arnhem, business: $b_arnhem),
+        has location "Arnhem";
+
+    # Arnhem Project 1: Energietransitie Arnhem-Zuid
+    $p_arn1 isa project,
+        has id "5d4d3c89-a435-41e9-ad5e-d361bac6a3d4",
+        has name "Energietransitie Arnhem-Zuid",
+        has description "Arnhem-Zuid is een van de eerste wijken in Arnhem die van het aardgas af gaat. In dit project werken we samen met bewoners, woningcorporatie Vivare en netbeheerder Liander aan een haalbaar en betaalbaar alternatief. Studenten helpen met bewonersonderzoek, data-analyse en communicatie.",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-03-01T09:00:00+0000,
+        has startDate 2025-09-01T00:00:00+0000,
+        has endDate 2026-06-30T23:59:00+0000,
+        has isPublic true;
+
+    # Arnhem Project 2: Klimaatadaptatie Spijkerkwartier
+    $p_arn2 isa project,
+        has id "41f362ae-4109-48e1-ac80-91169fe9975c",
+        has name "Klimaatadaptatie Spijkerkwartier",
+        has description "Het Spijkerkwartier is een van de meest versteende wijken van Arnhem. Bij hevige regenbuien staat het water op straat. In dit project onderzoeken we hoe we met vergroening, wateropvang en slimme bestrating de wijk klimaatbestendig maken. Inclusief een bewonersparticipatie-traject.",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-03-02T10:00:00+0000,
+        has startDate 2025-10-01T00:00:00+0000,
+        has endDate 2026-05-31T23:59:00+0000,
+        has isPublic true;
+
+    # Arnhem Project 3: Digitaal Toegankelijk Arnhem
+    $p_arn3 isa project,
+        has id "69e8448d-4e25-4575-ab52-7fdb6a792d60",
+        has name "Digitaal Toegankelijk Arnhem",
+        has description "Niet alle Arnhemmers zijn digitaal vaardig. In dit project helpen we de gemeente om haar digitale diensten toegankelijker te maken. Van het herontwerpen van formulieren tot het opzetten van digi-hulppunten in de wijk.",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-03-03T11:00:00+0000,
+        has startDate 2025-11-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000,
+        has isPublic true;
+
+    # Arnhem Tasks
+    $t_arn1 isa task,
+        has id "aea2dc84-4e18-4dad-926b-71864a4d9c83",
+        has name "Bewonersonderzoeker Energietransitie",
+        has description "Voer gesprekken met bewoners van Arnhem-Zuid over hun wensen en zorgen rondom de energietransitie. Verwerk de resultaten in een rapport met concrete aanbevelingen voor de projectaanpak.",
+        has totalNeeded 2,
+        has createdAt 2025-03-01T10:00:00+0000,
+        has startDate 2025-09-15T00:00:00+0000,
+        has endDate 2026-02-28T23:59:00+0000;
+
+    $t_arn2 isa task,
+        has id "97299a04-54d3-4095-805a-a3827f15f063",
+        has name "Warmtenet Data Analist",
+        has description "Analyseer data over warmteverbruik en -verlies in Arnhem-Zuid. Maak modellen die helpen bij het ontwerpen van een efficiënt warmtenet. Werk samen met Liander en de HAN.",
+        has totalNeeded 1,
+        has createdAt 2025-03-01T11:00:00+0000,
+        has startDate 2025-10-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000;
+
+    $t_arn3 isa task,
+        has id "f06d3911-3913-4929-9862-b0affbf8f97e",
+        has name "Groene Wijk Ontwerper",
+        has description "Ontwerp vergroeningsplannen voor het Spijkerkwartier. Maak 3D-visualisaties van mogelijke ingrepen zoals groene gevels, wadi's en regentuinen. Presenteer je ontwerpen aan bewoners.",
+        has totalNeeded 2,
+        has createdAt 2025-03-02T10:30:00+0000,
+        has startDate 2025-10-15T00:00:00+0000,
+        has endDate 2026-03-31T23:59:00+0000;
+
+    $t_arn4 isa task,
+        has id "2cc81d22-9643-4174-a52a-da4e9f7ca12d",
+        has name "Regenwater Sensor Specialist",
+        has description "Installeer en beheer sensoren die wateroverlast meten in het Spijkerkwartier. Bouw een real-time dashboard voor de gemeente en bewoners.",
+        has totalNeeded 1,
+        has createdAt 2025-03-02T11:00:00+0000,
+        has startDate 2025-11-01T00:00:00+0000,
+        has endDate 2026-05-31T23:59:00+0000;
+
+    $t_arn5 isa task,
+        has id "80f3f085-b1db-417a-9f4b-e2d303ec0884",
+        has name "UX Designer Gemeentelijke Diensten",
+        has description "Herontwerp gemeentelijke online formulieren en processen zodat ze voor iedereen begrijpelijk zijn. Test met gebruikers van diverse achtergronden en digitale vaardigheidsniveaus.",
+        has totalNeeded 1,
+        has createdAt 2025-03-03T11:30:00+0000,
+        has startDate 2025-11-15T00:00:00+0000,
+        has endDate 2026-03-31T23:59:00+0000;
+
+    $t_arn6 isa task,
+        has id "afd56ab5-b695-4b7a-84f6-819c11f016c2",
+        has name "Digi-Hulppunt Coördinator",
+        has description "Zet digi-hulppunten op in bibliotheken en buurthuizen in Arnhem. Train vrijwilligers, ontwikkel lesmateriaal en evalueer de impact.",
+        has totalNeeded 2,
+        has createdAt 2025-03-03T12:00:00+0000,
+        has startDate 2025-12-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000;
+
+    # Arnhem project creation relations
+    $c_arn1 isa creates (supervisor: $s_arnhem, project: $p_arn1),
+        has createdAt 2025-03-01T09:00:00+0000;
+    $c_arn2 isa creates (supervisor: $s_arnhem, project: $p_arn2),
+        has createdAt 2025-03-02T10:00:00+0000;
+    $c_arn3 isa creates (supervisor: $s_arnhem, project: $p_arn3),
+        has createdAt 2025-03-03T11:00:00+0000;
+
+    # Arnhem business-project relations
+    $bp_arn1 isa hasProjects (business: $b_arnhem, project: $p_arn1);
+    $bp_arn2 isa hasProjects (business: $b_arnhem, project: $p_arn2);
+    $bp_arn3 isa hasProjects (business: $b_arnhem, project: $p_arn3);
+
+    # Arnhem project-task relations
+    $pt_arn1 isa containsTask (project: $p_arn1, task: $t_arn1);
+    $pt_arn2 isa containsTask (project: $p_arn1, task: $t_arn2);
+    $pt_arn3 isa containsTask (project: $p_arn2, task: $t_arn3);
+    $pt_arn4 isa containsTask (project: $p_arn2, task: $t_arn4);
+    $pt_arn5 isa containsTask (project: $p_arn3, task: $t_arn5);
+    $pt_arn6 isa containsTask (project: $p_arn3, task: $t_arn6);
+
+    # Arnhem task-skill relations
+    $ts_arn1 isa requiresSkill (task: $t_arn1, skill: $sk11);
+    $ts_arn2 isa requiresSkill (task: $t_arn2, skill: $sk11);
+    $ts_arn3 isa requiresSkill (task: $t_arn2, skill: $sk12);
+    $ts_arn4 isa requiresSkill (task: $t_arn3, skill: $sk11);
+    $ts_arn5 isa requiresSkill (task: $t_arn4, skill: $sk12);
+    $ts_arn6 isa requiresSkill (task: $t_arn5, skill: $sk11);
+    $ts_arn7 isa requiresSkill (task: $t_arn6, skill: $sk11);
+
+    # Arnhem theme relations
+    $pt_theme_arn1 isa hasTheme (project: $p_arn1, theme: $theme1);
+    $pt_theme_arn2 isa hasTheme (project: $p_arn1, theme: $theme2);
+    $pt_theme_arn3 isa hasTheme (project: $p_arn2, theme: $theme2);
+    $pt_theme_arn4 isa hasTheme (project: $p_arn2, theme: $theme5);
+    $pt_theme_arn5 isa hasTheme (project: $p_arn3, theme: $theme6);
+    $pt_theme_arn6 isa hasTheme (project: $p_arn3, theme: $theme3);
