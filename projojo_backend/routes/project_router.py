@@ -6,6 +6,7 @@ from auth.permissions import auth
 from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
+from service.validation_service import is_valid_length
 
 project_repo = ProjectRepository()
 
@@ -67,6 +68,24 @@ async def create_project(
     """
     Create a new project with image upload
     """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if location and not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
     # Validate required fields
     if not image or not image.filename:
         raise HTTPException(
@@ -112,6 +131,24 @@ async def update_project(
     Update project information with optional photo upload.
     Only a teacher or a supervisor of the same business may update the project.
     """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if location and not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
     # Handle photo upload if provided
     image_filename = None
     if image and image.filename:

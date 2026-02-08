@@ -100,7 +100,7 @@ export default function UpdateProjectPage() {
                 {description !== undefined
                     ? <RichTextEditor
                         label="Beschrijving"
-                        max={8000}
+                        max={4000}
                         required
                         defaultText={description}
                         onSave={setDescription}

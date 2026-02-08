@@ -24,7 +24,7 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
             alt="Projectafbeelding"
           />
           <div className="h-fit bottom-0 left-0 right-0 p-8 pt-4">
-            <h4 className="line-clamp-1 mb-2 break-all text-xl font-semibold text-black">
+            <h4 className="line-clamp-1 mb-2 break-words text-xl font-semibold text-black">
               {project.title || project.name}
             </h4>
             <div className="line-clamp-2 text-sm text-black-300 group-hover:text-black-200 group-focus:text-gray-200 transition-colors duration-200">
@@ -37,7 +37,7 @@ export default function ProjectCard({ project, index = 0, isExpanded = false }) 
           <div className="space-y-3">
             <div className="block max-w-sm bg-slate-100 border border-gray-200 rounded-lg shadow-lg mb-8 hover:rounded-lg hover:ring-4 hover:ring-pink-300 transition-all duration-300 ease-in-out">
               <div className="flex flex-col gap-3 p-4">
-                <h4 className="text-2xl font-bold tracking-tight text-primary transition-colors">
+                <h4 className="text-2xl font-bold tracking-tight text-primary transition-colors break-words">
                   {project.title || project.name}
                 </h4>
                 <span className="text-md font-semibold text-slate-700">Naar de projectpagina</span>
