@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
-import { getStudentRegistrations, getTaskSkills, cancelRegistration, IMAGE_BASE_URL } from '../services';
+import useBookmarks from '../hooks/useBookmarks';
+import { getStudentRegistrations, getTaskSkills, cancelRegistration, getProject, IMAGE_BASE_URL } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
+import SkeletonList from '../components/SkeletonList';
 import StudentPortfolio from '../components/StudentPortfolio';
 
 /**
@@ -105,31 +107,9 @@ export default function StudentDashboard() {
         setRegistrations(prev => prev.filter(t => t.id !== taskId));
     };
 
-    // Show different dashboard for non-students
+    // Show teacher dashboard for non-students
     if (authData.type !== 'student') {
-        return (
-            <div className="space-y-6">
-                <div className="pt-4 mb-8 text-center">
-                    <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
-                        Dashboard
-                    </h1>
-                    <p className="text-base text-[var(--text-muted)] font-medium mt-2">
-                        Welkom bij Projojo
-                    </p>
-                </div>
-                
-                <div className="neu-flat p-8 text-center">
-                    <span className="material-symbols-outlined text-4xl text-gray-400 mb-3">dashboard</span>
-                    <p className="text-[var(--text-secondary)] font-medium">
-                        Het dashboard is momenteel alleen beschikbaar voor studenten.
-                    </p>
-                    <Link to="/ontdek" className="neu-btn-primary mt-4 inline-flex items-center gap-2">
-                        <span className="material-symbols-outlined">explore</span>
-                        Ontdek projecten
-                    </Link>
-                </div>
-            </div>
-        );
+        return <TeacherDashboard />;
     }
 
     return (
@@ -347,6 +327,229 @@ export default function StudentDashboard() {
                 </div>
             )}
 
+        </div>
+    );
+}
+
+/**
+ * Teacher Dashboard - Shows saved projects and quick actions
+ */
+function TeacherDashboard() {
+    const { bookmarkedIds, removeBookmark, bookmarkCount } = useBookmarks();
+    const [savedProjects, setSavedProjects] = useState([]);
+    const [isLoadingSaved, setIsLoadingSaved] = useState(false);
+    const [loadError, setLoadError] = useState(null);
+
+    useEffect(() => {
+        if (bookmarkedIds.length === 0) {
+            setSavedProjects([]);
+            return;
+        }
+
+        let ignore = false;
+        setIsLoadingSaved(true);
+        setLoadError(null);
+
+        Promise.all(
+            bookmarkedIds.map((id) =>
+                getProject(id).catch(() => null) // silently skip deleted/unavailable projects
+            )
+        )
+            .then((results) => {
+                if (ignore) return;
+                const valid = results.filter(Boolean);
+                setSavedProjects(valid);
+                // Clean up bookmarks for projects that no longer exist
+                const validIds = new Set(valid.map((p) => p.id));
+                bookmarkedIds.forEach((id) => {
+                    if (!validIds.has(id)) removeBookmark(id);
+                });
+            })
+            .catch((err) => {
+                if (ignore) return;
+                setLoadError(err.message);
+            })
+            .finally(() => {
+                if (ignore) return;
+                setIsLoadingSaved(false);
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [bookmarkedIds.length]);
+
+    const handleCopyLink = (projectId) => {
+        navigator.clipboard.writeText(`${window.location.origin}/projects/${projectId}`);
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* Page header */}
+            <div className="pt-4 mb-8 text-center">
+                <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                    Dashboard
+                </h1>
+                <p className="text-base text-[var(--text-muted)] font-medium mt-2">
+                    Welkom bij Projojo
+                </p>
+            </div>
+
+            {/* Quick actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Link
+                    to="/ontdek"
+                    className="neu-flat p-5 flex items-center gap-4 hover:scale-[1.01] transition-transform group"
+                >
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                        <span className="material-symbols-outlined text-primary text-2xl" aria-hidden="true">explore</span>
+                    </div>
+                    <div>
+                        <p className="font-bold text-[var(--text-primary)] group-hover:text-primary transition-colors">Ontdek projecten</p>
+                        <p className="text-xs text-[var(--text-muted)]">Vind vraagstukken voor je onderwijs</p>
+                    </div>
+                </Link>
+                <Link
+                    to="/teacher"
+                    className="neu-flat p-5 flex items-center gap-4 hover:scale-[1.01] transition-transform group"
+                >
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
+                        <span className="material-symbols-outlined text-blue-500 text-2xl" aria-hidden="true">business</span>
+                    </div>
+                    <div>
+                        <p className="font-bold text-[var(--text-primary)] group-hover:text-blue-500 transition-colors">Beheer organisaties</p>
+                        <p className="text-xs text-[var(--text-muted)]">Organisaties en skills beheren</p>
+                    </div>
+                </Link>
+                <div className="neu-flat p-5 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-emerald-500 text-2xl" aria-hidden="true">bookmark</span>
+                    </div>
+                    <div>
+                        <p className="font-bold text-[var(--text-primary)]">Opgeslagen</p>
+                        <p className="text-xs text-[var(--text-muted)]">
+                            {bookmarkCount === 0
+                                ? 'Nog geen projecten opgeslagen'
+                                : `${bookmarkCount} ${bookmarkCount === 1 ? 'project' : 'projecten'} opgeslagen`}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Saved projects section */}
+            <section>
+                <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary">bookmark</span>
+                    Opgeslagen projecten
+                    {bookmarkCount > 0 && (
+                        <span className="neu-badge-primary ml-2">{bookmarkCount}</span>
+                    )}
+                </h2>
+
+                {loadError && <Alert text={loadError} />}
+
+                {isLoadingSaved ? (
+                    <SkeletonList count={3} variant="business" />
+                ) : savedProjects.length === 0 ? (
+                    <div className="neu-flat p-8 text-center">
+                        <span className="material-symbols-outlined text-4xl text-gray-300 mb-3" aria-hidden="true">bookmark_border</span>
+                        <p className="text-[var(--text-secondary)] font-medium mb-2">
+                            Je hebt nog geen projecten opgeslagen
+                        </p>
+                        <p className="text-sm text-[var(--text-muted)] mb-4">
+                            Ga naar Ontdek om interessante projecten te vinden en sla ze op met de bookmark-knop.
+                        </p>
+                        <Link to="/ontdek" className="neu-btn-primary inline-flex items-center gap-2">
+                            <span className="material-symbols-outlined" aria-hidden="true">explore</span>
+                            Ontdek projecten
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {savedProjects.map((project) => (
+                            <div key={project.id} className="neu-flat overflow-hidden flex flex-col">
+                                {/* Project image */}
+                                {project.image_path && (
+                                    <Link to={`/projects/${project.id}`} className="block">
+                                        <img
+                                            src={`${IMAGE_BASE_URL}${project.image_path}`}
+                                            alt={project.name}
+                                            className="w-full h-36 object-cover hover:scale-[1.02] transition-transform"
+                                        />
+                                    </Link>
+                                )}
+                                <div className="p-4 flex-1 flex flex-col">
+                                    {/* Business info */}
+                                    {project.business && (
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {project.business.image_path && project.business.image_path !== 'default.png' ? (
+                                                <img
+                                                    src={`${IMAGE_BASE_URL}${project.business.image_path}`}
+                                                    alt=""
+                                                    className="w-5 h-5 rounded object-cover"
+                                                />
+                                            ) : (
+                                                <span className="material-symbols-outlined text-sm text-[var(--text-muted)]">business</span>
+                                            )}
+                                            <span className="text-xs text-[var(--text-muted)] truncate">{project.business.name}</span>
+                                        </div>
+                                    )}
+                                    {/* Title */}
+                                    <Link
+                                        to={`/projects/${project.id}`}
+                                        className="font-bold text-[var(--text-primary)] hover:text-primary transition-colors mb-2 line-clamp-2"
+                                    >
+                                        {project.name}
+                                    </Link>
+                                    {/* Skills */}
+                                    {project.tasks && project.tasks.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mb-3">
+                                            {[...new Map(
+                                                project.tasks
+                                                    .flatMap((t) => t.skills || [])
+                                                    .map((s) => [s.name, s])
+                                            ).values()]
+                                                .slice(0, 3)
+                                                .map((skill) => (
+                                                    <SkillBadge
+                                                        key={skill.name}
+                                                        skillName={skill.name}
+                                                        isPending={skill.isPending ?? skill.is_pending}
+                                                    />
+                                                ))}
+                                        </div>
+                                    )}
+                                    {/* Actions */}
+                                    <div className="flex gap-2 mt-auto pt-3 border-t border-[var(--neu-border)]">
+                                        <Link
+                                            to={`/projects/${project.id}`}
+                                            className="neu-btn flex-1 text-sm justify-center"
+                                        >
+                                            <span className="material-symbols-outlined text-sm mr-1">visibility</span>
+                                            Bekijk
+                                        </Link>
+                                        <button
+                                            onClick={() => handleCopyLink(project.id)}
+                                            className="neu-btn text-sm"
+                                            title="Kopieer project link"
+                                        >
+                                            <span className="material-symbols-outlined text-sm">share</span>
+                                        </button>
+                                        <button
+                                            onClick={() => removeBookmark(project.id)}
+                                            className="neu-btn text-sm !text-red-500"
+                                            title="Verwijder uit opgeslagen"
+                                            aria-label={`Verwijder ${project.name} uit opgeslagen projecten`}
+                                        >
+                                            <span className="material-symbols-outlined text-sm">bookmark_remove</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
         </div>
     );
 }

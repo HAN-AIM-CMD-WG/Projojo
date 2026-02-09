@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
-import Loading from '../components/Loading';
+import SkeletonOverview from '../components/SkeletonOverview';
 import { getBusinessesComplete } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
@@ -290,8 +290,7 @@ export default function OverviewPage() {
       <div className={`flex flex-col gap-2 ${(error != null) && 'mb-4'}`}>
         <Alert text={error} isCloseable={false} />
       </div>
-      {isLoading && <Loading />}
-      <DashboardsOverview businesses={shownBusinesses} />
+      {isLoading ? <SkeletonOverview count={3} /> : <DashboardsOverview businesses={shownBusinesses} />}
     </>
   );
 }

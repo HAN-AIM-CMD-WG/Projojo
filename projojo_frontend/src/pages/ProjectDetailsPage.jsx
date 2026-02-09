@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import Breadcrumb from "../components/Breadcrumb";
 import ProjectDetails from "../components/ProjectDetails";
 import ProjectTasks from "../components/ProjectTasks";
 import { getProject } from "../services";
@@ -65,8 +66,15 @@ export default function ProjectDetailsPage() {
 
     if (!projectId || showNotFound) return <NotFoundPage />
 
+    const breadcrumbItems = [
+        { label: "Ontdek", to: "/ontdek" },
+        ...(project?.business ? [{ label: project.business.name, to: `/business/${project.business.id}` }] : []),
+        { label: project?.name || "Laden..." },
+    ];
+
     return (
         <>
+            <Breadcrumb items={breadcrumbItems} />
             <div className="neu-flat overflow-hidden">
                 <ProjectDetails 
                     project={project} 

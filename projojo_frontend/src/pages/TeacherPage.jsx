@@ -6,6 +6,7 @@ import Loading from "../components/Loading";
 import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
+import SkeletonList from "../components/SkeletonList";
 import Tooltip from "../components/Tooltip";
 import { createTeacherInviteKey, createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
 
@@ -182,7 +183,7 @@ export default function TeacherPage() {
                 </h2>
                 
                 {isLoading ? (
-                    <Loading />
+                    <SkeletonList count={6} variant="business" />
                 ) : businesses.length === 0 ? (
                     <div className="neu-pressed p-8 text-center">
                         <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">business</span>

@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import Alert from "../components/Alert";
+import Breadcrumb from "../components/Breadcrumb";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
 import { getBusinessById, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
@@ -91,8 +92,14 @@ export default function BusinessPage() {
             .map(({ skillId, name, isPending }) => ({ skillId, name, isPending }));
     })();
 
+    const breadcrumbItems = [
+        { label: "Ontdek", to: "/ontdek" },
+        { label: businessData?.name || "Organisatie" },
+    ];
+
     return (
         <>
+            <Breadcrumb items={breadcrumbItems} />
             <PageHeader name={'Organisatiepagina'} />
             <div className={`flex flex-col gap-2 ${(businessErrorMessage !== undefined || projectsErrorMessage !== undefined) && 'mb-4'}`}>
                 <Alert text={businessErrorMessage} />

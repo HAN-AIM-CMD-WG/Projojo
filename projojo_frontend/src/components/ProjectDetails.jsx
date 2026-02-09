@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
+import useBookmarks from "../hooks/useBookmarks";
 import FormInput from "./FormInput";
 import LocationMap from "./LocationMap";
 import Modal from "./Modal";
@@ -63,6 +64,9 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
     const [isEditingImpact, setIsEditingImpact] = useState(false);
     const [impactText, setImpactText] = useState("");
     const [isImpactLoading, setIsImpactLoading] = useState(false);
+    const { isBookmarked, toggleBookmark } = useBookmarks();
+    const [shareCopied, setShareCopied] = useState(false);
+    const shareCopiedTimeout = useRef(null);
 
     const formDataObj = {};
 
@@ -208,6 +212,15 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
 
     // Check if project is completed (end_date passed)
     const isCompleted = project?.end_date && new Date(project.end_date) < new Date();
+
+    const handleShareLink = () => {
+        const url = `${window.location.origin}/projects/${project.id}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setShareCopied(true);
+            if (shareCopiedTimeout.current) clearTimeout(shareCopiedTimeout.current);
+            shareCopiedTimeout.current = setTimeout(() => setShareCopied(false), 3000);
+        });
+    };
 
     if (isLoading) {
         project = {
@@ -488,6 +501,43 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                     />
                 )}
             </div>
+
+            {/* Bookmark & Share actions - visible for all authenticated users */}
+            {!isLoading && project.id && (
+                <div className="px-4 sm:px-5 pb-2 flex items-center gap-2">
+                    <button
+                        onClick={() => toggleBookmark(project.id)}
+                        className={`
+                            inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                            transition-all duration-200 border
+                            ${isBookmarked(project.id)
+                                ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
+                                : 'bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30'
+                            }
+                        `}
+                        title={isBookmarked(project.id) ? 'Verwijder uit opgeslagen' : 'Project opslaan'}
+                        aria-label={isBookmarked(project.id) ? 'Verwijder uit opgeslagen projecten' : 'Sla dit project op'}
+                    >
+                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                            {isBookmarked(project.id) ? 'bookmark' : 'bookmark_border'}
+                        </span>
+                        {isBookmarked(project.id) ? 'Opgeslagen' : 'Opslaan'}
+                    </button>
+                    <button
+                        onClick={handleShareLink}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                            transition-all duration-200 border
+                            bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30"
+                        title="Kopieer project link"
+                        aria-label="Kopieer een link naar dit project"
+                    >
+                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                            {shareCopied ? 'check' : 'share'}
+                        </span>
+                        {shareCopied ? 'Link gekopieerd!' : 'Deel project'}
+                    </button>
+                </div>
+            )}
 
             {/* Project management - clean action bar */}
             {canManageProject && !isLoading && (
