@@ -2,10 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AddProjectForm from "../components/AddProjectForm";
 import { createProject } from "../services";
+import { useAuth } from "../auth/AuthProvider";
+import NotFound from "./NotFound";
 
 export default function ProjectsAddPage() {
     const navigate = useNavigate();
+    const { authData } = useAuth();
     const [serverErrorMessage, setServerErrorMessage] = useState('');
+
+    if (authData && !authData.isLoading && authData.type !== 'supervisor' && authData.type !== 'teacher') {
+        return <NotFound />;
+    }
 
     const onSubmit = (data) => {
         // Submit project data with image in a single call

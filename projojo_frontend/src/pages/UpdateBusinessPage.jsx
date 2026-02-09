@@ -28,7 +28,7 @@ export default function UpdateBusinessPage() {
         setDescription(business?.description);
     }
 
-    if (authData && !authData.isLoading && (authData.type === 'supervisor' && authData.businessId != businessId)) {
+    if (authData && !authData.isLoading && authData.type !== 'teacher' && (authData.type === 'supervisor' && authData.businessId != businessId)) {
         return <NotFound />;
     }
 

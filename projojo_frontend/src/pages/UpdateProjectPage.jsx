@@ -46,8 +46,8 @@ export default function UpdateProjectPage() {
         return <Loading />;
     }
 
-    // Additional authorization check: supervisors only allowed if they created the project (server also enforces)
-    const isOwner = authData.type === "supervisor" && authData.businessId === projectData.business?.id;
+    // Additional authorization check: supervisors only allowed if they created the project (server also enforces), teachers are always allowed
+    const isOwner = (authData.type === "supervisor" && authData.businessId === projectData.business?.id) || authData.type === "teacher";
     const allowed = authData.type === "teacher" || isOwner;
 
     if (!allowed) {

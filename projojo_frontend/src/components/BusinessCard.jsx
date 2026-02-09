@@ -88,7 +88,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
             </div>
             <div className="md:ml-auto p-4 flex gap-3 flex-col">
                 {(!showUpdateButton || showViewButton) && <Link to={`/business/${businessId}`} className="btn-primary flex justify-center">Bekijk bedrijf</Link>}
-                {showUpdateButton && authData.businessId === businessId && (
+                {showUpdateButton && (authData.businessId === businessId || authData.type === "teacher") && (
                     <>
                         <Link to={`/projects/add`} className="btn-primary ps-3 flex flex-row gap-2 justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" aria-hidden viewBox="0 0 448 512" className='h-5 w-5' stroke='#fff'>
