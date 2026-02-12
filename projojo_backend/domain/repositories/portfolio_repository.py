@@ -7,6 +7,23 @@ from service.uuid_service import generate_uuid
 class PortfolioRepository:
     """Repository for managing portfolio snapshots."""
 
+    @staticmethod
+    def _is_date_past(date_value) -> bool:
+        """Check if a date string/value is in the past."""
+        if not date_value:
+            return False
+        try:
+            if isinstance(date_value, str):
+                dt = datetime.fromisoformat(date_value.replace("Z", "+00:00"))
+            elif isinstance(date_value, datetime):
+                dt = date_value
+            else:
+                return False
+            # Compare date only (ignore time)
+            return dt.date() < datetime.now().date()
+        except (ValueError, TypeError):
+            return False
+
     def create_snapshot(
         self,
         student_id: str,
@@ -162,6 +179,7 @@ class PortfolioRepository:
                 'project_name': $project_name,
                 'project_description': $project_description,
                 'project_archived': [$project.isArchived],
+                'project_end_date': [$project.endDate],
                 'business_id': $business_id,
                 'business_name': $business_name,
                 'business_description': $business_description,
@@ -191,11 +209,17 @@ class PortfolioRepository:
             started_at = r.get("started_at", [])
             task_start_date = r.get("task_start_date", [])
             task_end_date = r.get("task_end_date", [])
+            project_end_date = r.get("project_end_date", [])
+            
+            # Archived if explicitly flagged OR project end_date in the past
+            is_archived = project_archived[0] if project_archived else False
+            if not is_archived and project_end_date:
+                is_archived = self._is_date_past(project_end_date[0] if project_end_date else None)
             
             items.append({
                 "id": f"live-{r.get('task_id', '')}",
                 "source_type": "live",
-                "is_archived": project_archived[0] if project_archived else False,
+                "is_archived": is_archived,
                 "project_name": r.get("project_name", ""),
                 "project_description": r.get("project_description", ""),
                 "business_name": r.get("business_name", ""),
@@ -250,6 +274,7 @@ class PortfolioRepository:
                 'project_name': $project_name,
                 'project_description': $project_description,
                 'project_archived': [$project.isArchived],
+                'project_end_date': [$project.endDate],
                 'business_id': $business_id,
                 'business_name': $business_name,
                 'business_description': $business_description,
@@ -278,11 +303,17 @@ class PortfolioRepository:
             started_at = r.get("started_at", [])
             task_start_date = r.get("task_start_date", [])
             task_end_date = r.get("task_end_date", [])
+            project_end_date = r.get("project_end_date", [])
+            
+            # Archived if explicitly flagged OR project end_date in the past
+            is_archived = project_archived[0] if project_archived else False
+            if not is_archived and project_end_date:
+                is_archived = self._is_date_past(project_end_date[0] if project_end_date else None)
             
             items.append({
                 "id": f"active-{r.get('task_id', '')}",
                 "source_type": "active",
-                "is_archived": project_archived[0] if project_archived else False,
+                "is_archived": is_archived,
                 "project_name": r.get("project_name", ""),
                 "project_description": r.get("project_description", ""),
                 "business_name": r.get("business_name", ""),
