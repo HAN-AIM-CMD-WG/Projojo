@@ -29,7 +29,7 @@ export default function LoginPage() {
 
   return (
     <div className="w-full min-h-dvh flex items-center justify-center bg-neu-bg p-6">
-      <div className="neu-card-lg w-full max-w-md fade-in-up">
+      <div className="neu-card-lg w-full max-w-md sm:max-w-xl fade-in-up">
         {/* Back to landing */}
         <Link 
           to="/" 
