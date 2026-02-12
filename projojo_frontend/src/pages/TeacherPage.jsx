@@ -8,7 +8,7 @@ import PageHeader from '../components/PageHeader';
 import NotFound from "./NotFound";
 import { createNewBusiness, getBusinessesBasic } from "../services";
 import Alert from "../components/Alert";
-import Loading from "@/components/Loading";
+import Loading from "../components/Loading";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
