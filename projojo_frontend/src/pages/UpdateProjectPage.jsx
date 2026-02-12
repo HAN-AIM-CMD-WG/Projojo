@@ -9,6 +9,7 @@ import RichTextEditor from '../components/RichTextEditor';
 import { getProject, IMAGE_BASE_URL, updateProject } from '../services';
 import useFetch from '../useFetch';
 import Loading from '../components/Loading';
+import NotFound from './NotFound';
 
 /**
  * UpdateProjectPage - allows supervisors (owner) or teachers to update a project.
@@ -33,11 +34,9 @@ export default function UpdateProjectPage() {
         }
     }, [projectData]);
 
-    useEffect(() => {
-        if (projectError?.statusCode == 404 || (!authData.isLoading && authData.type !== 'teacher' && authData.type !== 'supervisor')) {
-            navigation("/not-found", { replace: true });
-        }
-    }, [authData.isLoading, isLoading]);
+    if (projectError?.statusCode == 404 || (authData && !authData.isLoading && authData.type !== 'teacher' && authData.type !== 'supervisor')) {
+        return <NotFound />;
+    }
 
     if (projectError) {
         return <Alert text={projectError?.message} />;
@@ -47,8 +46,8 @@ export default function UpdateProjectPage() {
         return <Loading />;
     }
 
-    // Additional authorization check: supervisors only allowed if they created the project (server also enforces)
-    const isOwner = authData.type === "supervisor" && authData.businessId === projectData.business?.id;
+    // Additional authorization check: supervisors only allowed if they created the project (server also enforces), teachers are always allowed
+    const isOwner = (authData.type === "supervisor" && authData.businessId === projectData.business?.id) || authData.type === "teacher";
     const allowed = authData.type === "teacher" || isOwner;
 
     if (!allowed) {

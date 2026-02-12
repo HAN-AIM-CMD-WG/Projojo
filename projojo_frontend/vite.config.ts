@@ -24,7 +24,6 @@ export default defineConfig({
     host: '0.0.0.0',      // Listen on all interfaces (required for Docker)
     watch: {
       usePolling: true,   // Required for file changes to be detected in Docker on Windows
-      interval: 250,      // Polling interval in ms - lower is more responsive but uses more CPU
     },
     hmr: {
       clientPort: port,   // HMR also uses the same port for correct WebSocket connection

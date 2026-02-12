@@ -1,29 +1,51 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import BusinessesOverview from "../components/BusinessesOverview";
 import FormInput from "../components/FormInput";
 import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
+import NotFound from "./NotFound";
 import { createNewBusiness, getBusinessesBasic } from "../services";
-import Alert from "@/components/Alert";
+import Alert from "../components/Alert";
+import Loading from "../components/Loading";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
-    const navigation = useNavigate();
     const [error, setError] = useState(null);
     const [businesses, setBusinesses] = useState([]);
     const [isCreateBusinessModalVisible, setIsCreateBusinessModalVisible] = useState(false);
     const [newBusinessName, setNewBusinessName] = useState("");
     const [createNewBusinessError, setCreateNewBusinessError] = useState("");
     const [numberToReloadBusinesses, setNumberToReloadBusinesses] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!authData.isLoading && authData.type !== 'teacher') {
-            navigation("/not-found");
+        let ignore = false;
+        setIsLoading(true);
+
+        getBusinessesBasic()
+            .then(data => {
+                if (ignore) return;
+                setBusinesses(data);
+            })
+            .catch(err => {
+                if (ignore) return;
+                setError(err.message);
+            })
+            .finally(() => {
+                if (ignore) return;
+                setIsLoading(false);
+            });
+
+        return () => {
+            ignore = true;
         }
-    }, [authData.isLoading]);
+    }, [numberToReloadBusinesses]);
+
+    if (authData && !authData.isLoading && authData.type !== 'teacher') {
+        return <NotFound />;
+    }
 
     const onCreateNewBusiness = () => {
         createNewBusiness(newBusinessName)
@@ -39,24 +61,6 @@ export default function TeacherPage() {
             })
     }
 
-    useEffect(() => {
-        let ignore = false;
-
-        getBusinessesBasic()
-            .then(data => {
-                if (ignore) return;
-                setBusinesses(data);
-            })
-            .catch(err => {
-                if (ignore) return;
-                setError(err.message);
-            })
-
-        return () => {
-            ignore = true;
-        }
-    }, [numberToReloadBusinesses]);
-
     return (
         <>
             <Alert text={error} onClose={() => setError(null)} />
@@ -64,7 +68,13 @@ export default function TeacherPage() {
             <div className="flex flex-row gap-4 justify-end">
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="btn-primary mb-4">Bedrijf aanmaken</button>
             </div>
-            <BusinessesOverview businesses={businesses} />
+
+            {isLoading ? (
+                <Loading />
+            ) :
+                <BusinessesOverview businesses={businesses} />
+            }
+
             <hr className="mt-8 mb-3" />
             <NewSkillsManagement />
 

@@ -3,6 +3,7 @@ import { getSkills, updateSkillAcceptance, updateSkillName as updateSkillNameSer
 import { normalizeSkill } from "../utils/skills";
 import Alert from "./Alert";
 import Modal from "./Modal";
+import Loading from "./Loading";
 
 export default function NewSkillsManagement() {
     const [pendingSkills, setPendingSkills] = useState([]);
@@ -12,9 +13,11 @@ export default function NewSkillsManagement() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSkillId, setSelectedSkillId] = useState(null);
     const [newSkillName, setNewSkillName] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         let ignore = false;
+        setIsLoading(true);
 
         getSkills()
             .then(data => {
@@ -30,6 +33,10 @@ export default function NewSkillsManagement() {
                 if (ignore) return;
                 setError("Er is iets misgegaan bij het ophalen van de skills.");
             })
+            .finally(() => {
+                if (ignore) return;
+                setIsLoading(false);
+            });
 
         return () => {
             ignore = true;
@@ -83,6 +90,12 @@ export default function NewSkillsManagement() {
             .catch((error) => {
                 setUpdateError(error.message);
             });
+    }
+
+    if (isLoading) {
+        return (
+            <Loading />
+        );
     }
 
     return (
