@@ -1,13 +1,18 @@
 """
 Notification service for sending emails to students and teachers.
 
-This service provides a foundation for email notifications when projects
-are archived or deleted. The actual email sending implementation can be
-added later based on the chosen email provider (SMTP, SendGrid, etc.).
+This service provides email notifications for:
+- Project archiving and deletion
+- Task status change requests (consensus mechanism)
+- Status change responses and auto-approvals
 """
 
 from typing import Optional
 from datetime import datetime
+import asyncio
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class NotificationService:
@@ -16,7 +21,7 @@ class NotificationService:
     def __init__(self):
         # Email configuration would go here
         # e.g., SMTP settings, API keys, etc.
-        self.email_enabled = False  # Set to True when email is configured
+        self.email_enabled = True  # Enabled for status change notifications
     
     def notify_project_archived(
         self,
@@ -270,6 +275,133 @@ Projojo
         except Exception as e:
             print(f"Failed to send email to {to}: {e}")
             return False
+
+
+    # ================================================================
+    # Status Change Consensus Notifications
+    # ================================================================
+
+    async def notify_status_request(
+        self,
+        recipient_email: str,
+        recipient_name: str,
+        requester_name: str,
+        request_type: str,
+        reason: str,
+        task_name: str,
+        project_name: str,
+        student_name: str = "",
+        auto_approve_date: str = "",
+        action_url: str = "",
+    ) -> bool:
+        """Send notification about a new status change request."""
+        try:
+            from service.email_service import send_templated_email
+            
+            subject_map = {
+                "completion": f"Afrondverzoek: {task_name}",
+                "cancellation": f"Afbreekverzoek: {task_name}",
+                "end_review": f"Taakperiode verstreken: {task_name}",
+            }
+            subject = subject_map.get(request_type, f"Statusverzoek: {task_name}")
+            
+            result = await send_templated_email(
+                recipient=recipient_email,
+                subject=subject,
+                template_name="status_request.html",
+                context={
+                    "recipient_name": recipient_name,
+                    "requester_name": requester_name,
+                    "request_type": request_type,
+                    "reason": reason,
+                    "task_name": task_name,
+                    "project_name": project_name,
+                    "student_name": student_name,
+                    "auto_approve_date": auto_approve_date,
+                    "action_url": action_url,
+                },
+            )
+            
+            if not result.success:
+                logger.warning(f"Failed to send status request email to {recipient_email}: {result.error}")
+            return result.success
+        except Exception as e:
+            logger.warning(f"Error sending status request notification to {recipient_email}: {e}")
+            return False
+
+    async def notify_status_response(
+        self,
+        recipient_email: str,
+        recipient_name: str,
+        responder_name: str,
+        approved: bool,
+        task_name: str,
+        project_name: str,
+        new_status: str = "",
+        response_message: str = "",
+        auto_approved: bool = False,
+        action_url: str = "",
+    ) -> bool:
+        """Send notification about a status change response."""
+        try:
+            from service.email_service import send_templated_email
+            
+            if auto_approved:
+                subject = f"Automatisch goedgekeurd: {task_name}"
+            elif approved:
+                subject = f"Verzoek goedgekeurd: {task_name}"
+            else:
+                subject = f"Verzoek afgewezen: {task_name}"
+            
+            result = await send_templated_email(
+                recipient=recipient_email,
+                subject=subject,
+                template_name="status_response.html",
+                context={
+                    "recipient_name": recipient_name,
+                    "responder_name": responder_name,
+                    "approved": approved,
+                    "auto_approved": auto_approved,
+                    "task_name": task_name,
+                    "project_name": project_name,
+                    "new_status": new_status,
+                    "response_message": response_message,
+                    "action_url": action_url,
+                },
+            )
+            
+            if not result.success:
+                logger.warning(f"Failed to send status response email to {recipient_email}: {result.error}")
+            return result.success
+        except Exception as e:
+            logger.warning(f"Error sending status response notification to {recipient_email}: {e}")
+            return False
+
+    def notify_status_request_sync(self, **kwargs) -> bool:
+        """Synchronous wrapper for notify_status_request (for use in non-async contexts)."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Schedule as a task if we're already in an event loop
+                asyncio.ensure_future(self.notify_status_request(**kwargs))
+                return True
+            else:
+                return loop.run_until_complete(self.notify_status_request(**kwargs))
+        except RuntimeError:
+            # No event loop, create one
+            return asyncio.run(self.notify_status_request(**kwargs))
+
+    def notify_status_response_sync(self, **kwargs) -> bool:
+        """Synchronous wrapper for notify_status_response (for use in non-async contexts)."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.ensure_future(self.notify_status_response(**kwargs))
+                return True
+            else:
+                return loop.run_until_complete(self.notify_status_response(**kwargs))
+        except RuntimeError:
+            return asyncio.run(self.notify_status_response(**kwargs))
 
 
 # Singleton instance

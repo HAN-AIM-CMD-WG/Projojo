@@ -189,6 +189,8 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                 daysEarly,
                 isCompleted: !!timeline.completed_at,
                 isActive: !timeline.completed_at && (timeline.accepted_at || timeline.started_at),
+                registration_status: item.registration_status || null,
+                pending_request: item.pending_request || null,
             };
         }).filter(Boolean);
     }, [items, minDate, maxDate, months, monthWidth]);
@@ -269,17 +271,24 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
     }, [itemBars]);
 
     const getStatusColor = (item) => {
-        if (item.is_archived) return "bg-amber-500";
+        // New consensus-based status system
+        if (item.registration_status === "afgebroken") return "bg-gray-400";
+        if (item.registration_status === "afgerond") return "bg-green-500";
         if (item.source_type === "snapshot") return "bg-gray-400";
+        if (item.pending_request) return "bg-green-500"; // In beoordeling
         if (item.isCompleted) return "bg-green-500";
-        return "bg-blue-500";
+        if (item.isActive) return "bg-blue-500";
+        return "bg-gray-400";
     };
 
     const getStatusBgColor = (item) => {
-        if (item.is_archived) return "bg-amber-500/20";
+        if (item.registration_status === "afgebroken") return "bg-gray-400/20";
+        if (item.registration_status === "afgerond") return "bg-green-500/20";
         if (item.source_type === "snapshot") return "bg-gray-400/20";
+        if (item.pending_request) return "bg-green-500/15";
         if (item.isCompleted) return "bg-green-500/20";
-        return "bg-blue-500/20";
+        if (item.isActive) return "bg-blue-500/20";
+        return "bg-gray-400/20";
     };
 
     if (items.length === 0) {
@@ -364,19 +373,23 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                 </div>
             </div>
 
-            {/* Legend - cleaner */}
+            {/* Legend */}
             <div className="flex flex-wrap items-center gap-5 text-xs">
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-green-600 text-sm">check_circle</span>
-                    <span className="text-[var(--text-muted)]">Voltooid</span>
+                    <span className="text-[var(--text-muted)]">Afgerond</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-blue-500 text-sm animate-pulse">pending</span>
-                    <span className="text-[var(--text-muted)]">Actief</span>
+                    <span className="text-[var(--text-muted)]">Lopend</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-amber-500" />
-                    <span className="text-[var(--text-muted)]">Gearchiveerd</span>
+                    <span className="material-symbols-outlined text-gray-400 text-sm">cancel</span>
+                    <span className="text-[var(--text-muted)]">Afgebroken</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-green-500 text-sm">hourglass_top</span>
+                    <span className="text-[var(--text-muted)]">In beoordeling</span>
                 </div>
             </div>
 
@@ -441,14 +454,20 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                                                 />
                                             )}
                                             
-                                            {/* Work period foreground bar - clean design */}
+                                            {/* Work period foreground bar - clean design with consensus status */}
                                             <div
                                                 className={`group absolute top-0.5 h-10 rounded-lg cursor-pointer transition-all hover:scale-[1.02] hover:z-10 hover:shadow-lg ${
-                                                    item.isActive 
-                                                        ? 'bg-blue-500/25 border-2 border-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.3)]' 
-                                                        : item.isCompleted 
-                                                            ? 'bg-green-500/20 border border-green-500/30' 
-                                                            : getStatusBgColor(item) + ' border border-[var(--neu-border)]'
+                                                    item.registration_status === "afgebroken"
+                                                        ? 'bg-gray-400/20 border border-gray-400/30'
+                                                        : item.registration_status === "afgerond"
+                                                            ? 'bg-green-500/20 border border-green-500/30'
+                                                            : item.pending_request
+                                                                ? 'bg-green-500/15 border border-dashed border-green-500/40'
+                                                                : item.isActive 
+                                                                    ? 'bg-blue-500/25 border-2 border-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.3)]' 
+                                                                    : item.isCompleted 
+                                                                        ? 'bg-green-500/20 border border-green-500/30' 
+                                                                        : getStatusBgColor(item) + ' border border-[var(--neu-border)]'
                                                 }`}
                                                 style={{
                                                     left: `${item.leftPixels}px`,
@@ -460,8 +479,20 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                                             >
                                                 {/* Bar content - cleaner layout */}
                                                 <div className="flex items-center h-full px-3 gap-2 overflow-hidden">
-                                                    {/* Status icon - larger, at start */}
-                                                    {item.isCompleted ? (
+                                                    {/* Status icon based on consensus status */}
+                                                    {item.registration_status === "afgebroken" ? (
+                                                        <span className="material-symbols-outlined text-gray-400 text-base shrink-0">
+                                                            cancel
+                                                        </span>
+                                                    ) : item.registration_status === "afgerond" ? (
+                                                        <span className="material-symbols-outlined text-green-600 text-base shrink-0">
+                                                            check_circle
+                                                        </span>
+                                                    ) : item.pending_request ? (
+                                                        <span className="material-symbols-outlined text-green-500 text-base shrink-0 animate-pulse">
+                                                            hourglass_top
+                                                        </span>
+                                                    ) : item.isCompleted ? (
                                                         <span className="material-symbols-outlined text-green-600 text-base shrink-0">
                                                             check_circle
                                                         </span>
@@ -515,12 +546,26 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                     {/* Header with status */}
                     <div className="flex items-start gap-3 mb-3">
                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
-                            hoveredItem.isActive ? 'bg-blue-500/20' : hoveredItem.isCompleted ? 'bg-green-500/20' : getStatusBgColor(hoveredItem)
+                            hoveredItem.registration_status === "afgebroken" ? 'bg-gray-400/20'
+                            : hoveredItem.registration_status === "afgerond" ? 'bg-green-500/20'
+                            : hoveredItem.pending_request ? 'bg-green-500/15'
+                            : hoveredItem.isActive ? 'bg-blue-500/20' 
+                            : hoveredItem.isCompleted ? 'bg-green-500/20' 
+                            : getStatusBgColor(hoveredItem)
                         }`}>
                             <span className={`material-symbols-outlined text-xl ${
-                                hoveredItem.isActive ? 'text-blue-500' : hoveredItem.isCompleted ? 'text-green-600' : 'text-[var(--text-primary)]'
+                                hoveredItem.registration_status === "afgebroken" ? 'text-gray-400'
+                                : hoveredItem.registration_status === "afgerond" ? 'text-green-600'
+                                : hoveredItem.pending_request ? 'text-green-500'
+                                : hoveredItem.isActive ? 'text-blue-500' 
+                                : hoveredItem.isCompleted ? 'text-green-600' 
+                                : 'text-[var(--text-primary)]'
                             }`}>
-                                {hoveredItem.isCompleted ? 'task_alt' : hoveredItem.isActive ? 'pending' : 'schedule'}
+                                {hoveredItem.registration_status === "afgebroken" ? 'cancel' 
+                                : hoveredItem.registration_status === "afgerond" ? 'task_alt'
+                                : hoveredItem.pending_request ? 'hourglass_top'
+                                : hoveredItem.isCompleted ? 'task_alt' 
+                                : hoveredItem.isActive ? 'pending' : 'schedule'}
                             </span>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -569,15 +614,31 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
                             {/* Completion or status */}
                             <div className="flex items-center justify-between">
                                 <span className="text-[var(--text-muted)] flex items-center gap-1">
-                                    <span className={`material-symbols-outlined text-xs ${hoveredItem.isCompleted ? 'text-green-600' : 'text-blue-500'}`}>
-                                        {hoveredItem.isCompleted ? 'check_circle' : 'pending'}
+                                    <span className={`material-symbols-outlined text-xs ${
+                                        hoveredItem.registration_status === "afgebroken" ? 'text-gray-400'
+                                        : hoveredItem.registration_status === "afgerond" ? 'text-green-600'
+                                        : hoveredItem.pending_request ? 'text-green-500'
+                                        : hoveredItem.isCompleted ? 'text-green-600' : 'text-blue-500'
+                                    }`}>
+                                        {hoveredItem.registration_status === "afgebroken" ? 'cancel'
+                                        : hoveredItem.registration_status === "afgerond" ? 'check_circle'
+                                        : hoveredItem.pending_request ? 'hourglass_top'
+                                        : hoveredItem.isCompleted ? 'check_circle' : 'pending'}
                                     </span>
-                                    {hoveredItem.isCompleted ? 'Voltooid' : 'Status'}
+                                    Status
                                 </span>
-                                <span className={`font-medium ${hoveredItem.isCompleted ? 'text-green-600' : 'text-blue-600'}`}>
-                                    {hoveredItem.timeline?.completed_at 
+                                <span className={`font-medium ${
+                                    hoveredItem.registration_status === "afgebroken" ? 'text-gray-500'
+                                    : hoveredItem.registration_status === "afgerond" ? 'text-green-600'
+                                    : hoveredItem.pending_request ? 'text-green-500'
+                                    : hoveredItem.isCompleted ? 'text-green-600' : 'text-blue-600'
+                                }`}>
+                                    {hoveredItem.registration_status === "afgebroken" ? 'Afgebroken'
+                                    : hoveredItem.registration_status === "afgerond" ? 'Afgerond'
+                                    : hoveredItem.pending_request ? 'In beoordeling'
+                                    : hoveredItem.timeline?.completed_at 
                                         ? new Date(hoveredItem.timeline.completed_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
-                                        : 'Actief'}
+                                        : 'Lopend'}
                                 </span>
                             </div>
                             {/* Deadline */}

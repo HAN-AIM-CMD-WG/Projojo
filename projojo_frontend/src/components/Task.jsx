@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted } from "../services";
+import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted, requestTaskStatusChange, getTaskStatusRequest } from "../services";
+import StatusRequestBanner from "./StatusRequestBanner";
 import { notification } from "./notifications/NotifySystem";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
@@ -37,6 +38,14 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
     const [progressLoading, setProgressLoading] = useState({});
+    
+    // Status change consensus state
+    const [statusRequest, setStatusRequest] = useState(null);
+    const [registrationStatus, setRegistrationStatus] = useState(null);
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+    const [statusModalType, setStatusModalType] = useState(null); // "completion" | "cancellation"
+    const [statusReason, setStatusReason] = useState("");
+    const [isSubmittingStatus, setIsSubmittingStatus] = useState(false);
     
     // Task editing state
     const [isSpotsModalOpen, setIsSpotsModalOpen] = useState(false);
@@ -165,6 +174,62 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         } finally {
             setProgressLoading(prev => ({ ...prev, [studentId]: null }));
         }
+    };
+
+    // Fetch status change request for this task (if user is working on it or is owner)
+    const isWorkingOnThisTask = isWorkingOnTask?.(task.id);
+    useEffect(() => {
+        if (!user?.id || (!isWorkingOnThisTask && !isOwner)) return;
+        const studentId = isWorkingOnThisTask ? user.id : null;
+        if (!studentId && !isOwner) return;
+        
+        // For owners, check each accepted student's registration
+        // For students, check their own registration
+        if (isWorkingOnThisTask) {
+            getTaskStatusRequest(task.id, user.id)
+                .then(data => {
+                    setStatusRequest(data.pending_request);
+                    setRegistrationStatus(data.registration_status);
+                })
+                .catch(() => {});
+        }
+    }, [task.id, user?.id, isWorkingOnThisTask, isOwner]);
+
+    const handleStatusChangeRequest = async () => {
+        if (!statusReason.trim() || !statusModalType) return;
+        setIsSubmittingStatus(true);
+        try {
+            const studentId = isWorkingOnThisTask ? user.id : null;
+            if (!studentId) return;
+            await requestTaskStatusChange(task.id, studentId, statusModalType, statusReason.trim());
+            notification.success(
+                statusModalType === "completion" 
+                    ? "Afrondverzoek ingediend! Wachten op akkoord." 
+                    : "Afbreekverzoek ingediend! Wachten op akkoord."
+            );
+            setIsStatusModalOpen(false);
+            setStatusReason("");
+            // Refresh status
+            const data = await getTaskStatusRequest(task.id, studentId);
+            setStatusRequest(data.pending_request);
+            setRegistrationStatus(data.registration_status);
+        } catch (error) {
+            notification.error(error.message || "Er is iets misgegaan");
+        } finally {
+            setIsSubmittingStatus(false);
+        }
+    };
+
+    const handleStatusResponseComplete = async (approved) => {
+        notification.success(approved ? "Verzoek goedgekeurd" : "Verzoek afgewezen");
+        if (isWorkingOnThisTask) {
+            try {
+                const data = await getTaskStatusRequest(task.id, user.id);
+                setStatusRequest(data.pending_request);
+                setRegistrationStatus(data.registration_status);
+            } catch { /* ignore */ }
+        }
+        if (setFetchAmount) setFetchAmount(prev => prev + 1);
     };
 
     const handleSaveTask = async () => {
@@ -397,6 +462,50 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     {/* Details Tab */}
                     {activeTab === 'details' && (
                         <div className="space-y-4">
+                            {/* Status Change Request Banner */}
+                            {statusRequest && (
+                                <StatusRequestBanner
+                                    pendingRequest={statusRequest}
+                                    currentUserId={user?.id}
+                                    currentUserRole={authData?.type}
+                                    onResponseComplete={handleStatusResponseComplete}
+                                />
+                            )}
+
+                            {/* Registration status indicator */}
+                            {registrationStatus && registrationStatus !== "lopend" && registrationStatus !== "in_beoordeling" && (
+                                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                                    registrationStatus === "afgerond" 
+                                        ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400' 
+                                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                }`}>
+                                    <span className="material-symbols-outlined text-base">
+                                        {registrationStatus === "afgerond" ? 'check_circle' : 'cancel'}
+                                    </span>
+                                    {registrationStatus === "afgerond" ? 'Deze taak is afgerond' : 'Deze taak is afgebroken'}
+                                </div>
+                            )}
+
+                            {/* Consensus action buttons (for students working on this task) */}
+                            {isWorkingOnThisTask && !statusRequest && !registrationStatus && (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => { setStatusModalType("completion"); setIsStatusModalOpen(true); }}
+                                        className="flex-1 neu-btn !rounded-lg !py-2 text-sm flex items-center justify-center gap-1.5 hover:bg-green-50 hover:text-green-700 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-base">check_circle</span>
+                                        Taak afronden
+                                    </button>
+                                    <button
+                                        onClick={() => { setStatusModalType("cancellation"); setIsStatusModalOpen(true); }}
+                                        className="flex-1 neu-btn !rounded-lg !py-2 text-sm flex items-center justify-center gap-1.5 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-base">cancel</span>
+                                        Taak afbreken
+                                    </button>
+                                </div>
+                            )}
+
                             {/* Description */}
                             <div>
                                 <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">Beschrijving</p>
@@ -944,6 +1053,72 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         <><span className="material-symbols-outlined">save</span>Opslaan</>
                                     )}
                                 </span>
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {/* Status Change Request Modal */}
+            {isStatusModalOpen && (
+                <Modal
+                    isOpen={isStatusModalOpen}
+                    onClose={() => { setIsStatusModalOpen(false); setStatusReason(""); }}
+                    title={statusModalType === "completion" ? "Taak afronden" : "Taak afbreken"}
+                >
+                    <div className="space-y-4">
+                        <p className="text-sm text-[var(--text-secondary)]">
+                            {statusModalType === "completion" 
+                                ? "Je verzoekt om deze taak als afgerond te markeren. De begeleider moet hiermee akkoord gaan."
+                                : "Je verzoekt om deze taak als afgebroken te markeren. De begeleider moet hiermee akkoord gaan."
+                            }
+                        </p>
+                        
+                        <div>
+                            <label className="neu-label mb-1.5 block">
+                                {statusModalType === "completion" ? "Toelichting (wat heb je opgeleverd?)" : "Reden voor afbreken"}
+                            </label>
+                            <textarea
+                                value={statusReason}
+                                onChange={(e) => setStatusReason(e.target.value)}
+                                placeholder={statusModalType === "completion" 
+                                    ? "Beschrijf kort wat je hebt opgeleverd en waarom de taak klaar is..."
+                                    : "Beschrijf waarom de taak wordt afgebroken..."
+                                }
+                                className="w-full px-3 py-2 rounded-lg neu-pressed text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                                rows={3}
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-2 border-t border-[var(--neu-border)]">
+                            <button 
+                                className="neu-btn" 
+                                onClick={() => { setIsStatusModalOpen(false); setStatusReason(""); }}
+                            >
+                                Annuleren
+                            </button>
+                            <button
+                                className={`text-sm px-4 py-2 rounded-lg font-medium text-white transition-colors ${
+                                    statusModalType === "completion" 
+                                        ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-400'
+                                        : 'bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400'
+                                }`}
+                                onClick={handleStatusChangeRequest}
+                                disabled={isSubmittingStatus || !statusReason.trim()}
+                            >
+                                {isSubmittingStatus ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                                        Verwerken...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-base">
+                                            {statusModalType === "completion" ? "check_circle" : "cancel"}
+                                        </span>
+                                        {statusModalType === "completion" ? "Verzoek indienen" : "Verzoek indienen"}
+                                    </span>
+                                )}
                             </button>
                         </div>
                     </div>

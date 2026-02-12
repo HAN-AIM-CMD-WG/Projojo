@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Statusverzoek {{ "goedgekeurd" if approved else "afgewezen" }}: {{ task_name }}{% endblock %}
+
+{% block header_subtitle %}
+<p class="subtitle">Verzoek {{ "Goedgekeurd" if approved else "Afgewezen" }}</p>
+{% endblock %}
+
+{% block content %}
+<h2>Hallo {{ recipient_name }}!</h2>
+
+{% if auto_approved %}
+<p>Het statusverzoek voor taak <strong>{{ task_name }}</strong> is <strong>automatisch goedgekeurd</strong> omdat er niet binnen 14 dagen is gereageerd.</p>
+{% elif approved %}
+<p>{{ responder_name }} heeft het statusverzoek voor taak <strong>{{ task_name }}</strong> <strong>goedgekeurd</strong>.</p>
+{% else %}
+<p>{{ responder_name }} heeft het statusverzoek voor taak <strong>{{ task_name }}</strong> <strong>afgewezen</strong>.</p>
+{% endif %}
+
+<div class="info-box">
+    <p><strong>Project:</strong> {{ project_name }}</p>
+    <p><strong>Taak:</strong> {{ task_name }}</p>
+    {% if new_status %}
+    <p><strong>Nieuwe status:</strong> {{ new_status }}</p>
+    {% endif %}
+    {% if response_message %}
+    <p><strong>Reactie:</strong> {{ response_message }}</p>
+    {% endif %}
+</div>
+
+{% if not approved %}
+<p>De taak blijft op de huidige status staan. Neem contact op als je vragen hebt.</p>
+{% endif %}
+
+{% if action_url %}
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="button">Bekijk Taak</a>
+</p>
+{% endif %}
+{% endblock %}

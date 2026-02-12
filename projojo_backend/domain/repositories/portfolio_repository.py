@@ -151,6 +151,7 @@ class PortfolioRepository:
         """
         Get live portfolio items (completed tasks from existing projects).
         These come from registrations with completedAt set.
+        Now includes registrationStatus and pending_request info.
         """
         query = """
             match
@@ -188,6 +189,18 @@ class PortfolioRepository:
                 'requested_at': [$registration.requestedAt],
                 'accepted_at': [$registration.acceptedAt],
                 'started_at': [$registration.startedAt],
+                'registration_status': [$registration.registrationStatus],
+                'pending_request': [
+                    match
+                        $scr isa statusChangeRequest (registration: $registration),
+                            has id $scr_id,
+                            has requestType $scr_type,
+                            has requestStatus "pending";
+                    fetch {
+                        'id': $scr_id,
+                        'request_type': $scr_type
+                    };
+                ],
                 'skills': [
                     match
                         $requiresSkill isa requiresSkill(task: $task, skill: $skill);
@@ -210,8 +223,14 @@ class PortfolioRepository:
             task_start_date = r.get("task_start_date", [])
             task_end_date = r.get("task_end_date", [])
             project_end_date = r.get("project_end_date", [])
+            reg_status_list = r.get("registration_status", [])
+            pending_req_list = r.get("pending_request", [])
             
-            # Archived if explicitly flagged OR project end_date in the past
+            # Determine registration status (new system)
+            registration_status = reg_status_list[0] if reg_status_list else None
+            pending_request = pending_req_list[0] if pending_req_list else None
+            
+            # Legacy: archived if explicitly flagged OR project end_date in the past
             is_archived = project_archived[0] if project_archived else False
             if not is_archived and project_end_date:
                 is_archived = self._is_date_past(project_end_date[0] if project_end_date else None)
@@ -220,6 +239,8 @@ class PortfolioRepository:
                 "id": f"live-{r.get('task_id', '')}",
                 "source_type": "live",
                 "is_archived": is_archived,
+                "registration_status": registration_status or ("afgerond" if not is_archived else "afgebroken"),
+                "pending_request": pending_request,
                 "project_name": r.get("project_name", ""),
                 "project_description": r.get("project_description", ""),
                 "business_name": r.get("business_name", ""),
@@ -245,6 +266,7 @@ class PortfolioRepository:
         """
         Get active portfolio items (accepted/started tasks that are not yet completed).
         These are tasks the student is currently working on.
+        Now includes registrationStatus and pending_request info.
         """
         query = """
             match
@@ -282,6 +304,18 @@ class PortfolioRepository:
                 'requested_at': [$registration.requestedAt],
                 'accepted_at': [$registration.acceptedAt],
                 'started_at': [$registration.startedAt],
+                'registration_status': [$registration.registrationStatus],
+                'pending_request': [
+                    match
+                        $scr isa statusChangeRequest (registration: $registration),
+                            has id $scr_id,
+                            has requestType $scr_type,
+                            has requestStatus "pending";
+                    fetch {
+                        'id': $scr_id,
+                        'request_type': $scr_type
+                    };
+                ],
                 'skills': [
                     match
                         $requiresSkill isa requiresSkill(task: $task, skill: $skill);
@@ -304,8 +338,14 @@ class PortfolioRepository:
             task_start_date = r.get("task_start_date", [])
             task_end_date = r.get("task_end_date", [])
             project_end_date = r.get("project_end_date", [])
+            reg_status_list = r.get("registration_status", [])
+            pending_req_list = r.get("pending_request", [])
             
-            # Archived if explicitly flagged OR project end_date in the past
+            # Determine registration status (new system)
+            registration_status = reg_status_list[0] if reg_status_list else "lopend"
+            pending_request = pending_req_list[0] if pending_req_list else None
+            
+            # Legacy: archived if explicitly flagged OR project end_date in the past
             is_archived = project_archived[0] if project_archived else False
             if not is_archived and project_end_date:
                 is_archived = self._is_date_past(project_end_date[0] if project_end_date else None)
@@ -314,6 +354,8 @@ class PortfolioRepository:
                 "id": f"active-{r.get('task_id', '')}",
                 "source_type": "active",
                 "is_archived": is_archived,
+                "registration_status": registration_status,
+                "pending_request": pending_request,
                 "project_name": r.get("project_name", ""),
                 "project_description": r.get("project_description", ""),
                 "business_name": r.get("business_name", ""),
