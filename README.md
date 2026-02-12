@@ -62,7 +62,7 @@ The `-reset` flag will completely reset all containers (including volumes) for w
 
 ### Accessing TypeDB Studio
 
-TypeDB Studio is an external web application (TypeDB v3.4.0+).
+TypeDB Studio is an external web application (TypeDB v3.8.0+).
 
 To access TypeDB Studio:
 1. Go to [studio.typedb.com](https://studio.typedb.com)
