@@ -15,6 +15,11 @@ export default function PortfolioItem({ item, expanded = false, onToggleExpand }
     const isLive = item.source_type === "live";
     const isArchived = item.is_archived;
     const isSnapshot = item.source_type === "snapshot";
+    const registrationStatus = item.registration_status || null;
+    const pendingRequest = item.pending_request || null;
+    const isAfgerond = registrationStatus === "afgerond";
+    const isAfgebroken = registrationStatus === "afgebroken";
+    const isInBeoordeling = !!pendingRequest;
 
     // Parse timeline
     const timeline = item.timeline || {};
@@ -68,9 +73,27 @@ export default function PortfolioItem({ item, expanded = false, onToggleExpand }
                                 {item.task_name}
                             </h3>
                             
-                            {/* Status badges */}
-                            {isArchived && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                            {/* Status badges - consensus system */}
+                            {isAfgerond && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-700 dark:text-green-400">
+                                    <span className="material-symbols-outlined text-xs">check_circle</span>
+                                    Afgerond
+                                </span>
+                            )}
+                            {isAfgebroken && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 text-gray-600 dark:text-gray-400">
+                                    <span className="material-symbols-outlined text-xs">cancel</span>
+                                    Afgebroken
+                                </span>
+                            )}
+                            {isInBeoordeling && !isAfgerond && !isAfgebroken && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400">
+                                    <span className="material-symbols-outlined text-xs">hourglass_top</span>
+                                    In beoordeling
+                                </span>
+                            )}
+                            {!registrationStatus && !pendingRequest && isArchived && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/10 text-gray-600 dark:text-gray-400">
                                     <span className="material-symbols-outlined text-xs">inventory_2</span>
                                     Gearchiveerd
                                 </span>

@@ -870,3 +870,57 @@ export function markTaskCompleted(taskId, studentId) {
 export function getRegistrationTimeline(taskId, studentId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/timeline`);
 }
+
+// ============================================================================
+// Status Change Consensus API
+// ============================================================================
+
+/**
+ * Create a status change request for a task registration (completion or cancellation)
+ * @param {string} taskId
+ * @param {string} studentId
+ * @param {string} requestType - "completion" or "cancellation"
+ * @param {string} reason
+ * @returns {Promise<{id: string, request_type: string, reason: string, request_status: string}>}
+ */
+export function requestTaskStatusChange(taskId, studentId, requestType, reason) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/status-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_type: requestType, reason }),
+    });
+}
+
+/**
+ * Get the current status request for a task registration (includes lazy auto-review check)
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{pending_request: object|null, registration_status: string}>}
+ */
+export function getTaskStatusRequest(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/status-request`);
+}
+
+/**
+ * Respond to a status change request (approve or deny)
+ * @param {string} requestId
+ * @param {boolean} approved
+ * @param {string} responseMessage
+ * @returns {Promise<{id: string, request_status: string, responded_at: string}>}
+ */
+export function respondToStatusRequest(requestId, approved, responseMessage = "") {
+    return fetchWithError(`${API_BASE_URL}status-requests/${requestId}/respond`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approved, response_message: responseMessage }),
+    });
+}
+
+/**
+ * Get all pending status change requests for a user (for notification badge)
+ * @param {string} userId
+ * @returns {Promise<{pending_requests: Array, count: number}>}
+ */
+export function getPendingStatusRequests(userId) {
+    return fetchWithError(`${API_BASE_URL}users/${userId}/pending-status-requests`);
+}

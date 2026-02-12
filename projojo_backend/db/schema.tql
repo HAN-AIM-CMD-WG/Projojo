@@ -5,7 +5,9 @@ entity user @abstract,
     owns email @card(1),
     owns fullName @card(1),
     owns imagePath @card(1),
-    plays oauthAuthentication:user @card(1..10);
+    plays oauthAuthentication:user @card(1..10),
+    plays statusChangeRequest:requester @card(0..),
+    plays statusChangeRequest:responder @card(0..);
 
 entity supervisor sub user,
     plays manages:supervisor @card(1),
@@ -136,7 +138,9 @@ relation registersForTask,
     owns requestedAt @card(0..1),
     owns acceptedAt @card(0..1),
     owns startedAt @card(0..1),
-    owns completedAt @card(0..1);
+    owns completedAt @card(0..1),
+    owns registrationStatus @card(0..1),
+    plays statusChangeRequest:registration @card(0..);
 
 relation businessInvite,
     relates business @card(1),
@@ -158,6 +162,20 @@ relation hasPortfolio,
 relation hasTheme,
     relates project @card(1),
     relates theme @card(1);
+
+# Status change consensus - per taak-registratie
+relation statusChangeRequest,
+    relates registration @card(1),      # de registersForTask die beoordeeld wordt
+    relates requester @card(0..1),      # user die initieert (leeg bij auto end_review)
+    relates responder @card(0..1),      # user die reageert
+    owns id @key,
+    owns requestType @card(1),          # "completion" / "cancellation" / "end_review"
+    owns reason @card(1),
+    owns requestStatus @card(1),        # "pending" / "approved" / "denied" / "auto_approved"
+    owns createdAt @card(1),
+    owns respondedAt @card(0..1),
+    owns responseMessage @card(0..1),
+    owns autoApproveAt @card(0..1);     # Taak endDate + 14 dagen (alleen bij end_review)
 
 #Werkt helaas nog niet :(
 # TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
@@ -208,3 +226,10 @@ attribute icon value string;
 attribute themeDescription value string;
 attribute color value string;
 attribute displayOrder value integer;
+attribute reason value string;
+attribute requestType value string @values("completion", "cancellation", "end_review");
+attribute requestStatus value string @values("pending", "approved", "denied", "auto_approved");
+attribute responseMessage value string;
+attribute autoApproveAt value datetime-tz;
+attribute respondedAt value datetime-tz;
+attribute registrationStatus value string @values("lopend", "afgerond", "afgebroken");

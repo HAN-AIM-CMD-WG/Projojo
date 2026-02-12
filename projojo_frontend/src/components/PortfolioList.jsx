@@ -18,7 +18,7 @@ export default function PortfolioList({
     isLoading = false 
 }) {
     const [expandedId, setExpandedId] = useState(null);
-    const [filter, setFilter] = useState("all"); // all, live, archived, snapshot
+    const [filter, setFilter] = useState("all"); // all, lopend, afgerond, afgebroken, snapshot
     const [sortBy, setSortBy] = useState("recent"); // recent, oldest, business
     const [searchQuery, setSearchQuery] = useState("");
     const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
@@ -32,11 +32,16 @@ export default function PortfolioList({
     const filteredItems = useMemo(() => {
         let result = [...items];
 
-        // Apply filter
-        if (filter === "live") {
-            result = result.filter(item => item.source_type === "live" && !item.is_archived);
-        } else if (filter === "archived") {
-            result = result.filter(item => item.is_archived);
+        // Apply filter (consensus-based statuses)
+        if (filter === "lopend") {
+            result = result.filter(item => 
+                item.source_type === "active" || 
+                (!item.registration_status && !item.is_archived && item.source_type !== "snapshot")
+            );
+        } else if (filter === "afgerond") {
+            result = result.filter(item => item.registration_status === "afgerond");
+        } else if (filter === "afgebroken") {
+            result = result.filter(item => item.registration_status === "afgebroken");
         } else if (filter === "snapshot") {
             result = result.filter(item => item.source_type === "snapshot");
         }
@@ -71,11 +76,15 @@ export default function PortfolioList({
         return result;
     }, [items, filter, sortBy, searchQuery]);
 
-    // Count items by type
+    // Count items by type (consensus-based)
     const counts = useMemo(() => ({
         all: items.length,
-        live: items.filter(item => item.source_type === "live" && !item.is_archived).length,
-        archived: items.filter(item => item.is_archived).length,
+        lopend: items.filter(item => 
+            item.source_type === "active" || 
+            (!item.registration_status && !item.is_archived && item.source_type !== "snapshot")
+        ).length,
+        afgerond: items.filter(item => item.registration_status === "afgerond").length,
+        afgebroken: items.filter(item => item.registration_status === "afgebroken").length,
         snapshot: items.filter(item => item.source_type === "snapshot").length,
     }), [items]);
 
@@ -105,7 +114,7 @@ export default function PortfolioList({
                         Portfolio {studentName && `van ${studentName}`}
                     </h2>
                     <p className="text-sm text-[var(--text-muted)]">
-                        {items.length} voltooide {items.length === 1 ? 'taak' : 'taken'}
+                        {items.length} {items.length === 1 ? 'taak' : 'taken'}
                     </p>
                 </div>
 
@@ -136,26 +145,35 @@ export default function PortfolioList({
                         Alle
                     </FilterButton>
                     <FilterButton 
-                        active={filter === "live"} 
-                        onClick={() => setFilter("live")}
-                        count={counts.live}
+                        active={filter === "lopend"} 
+                        onClick={() => setFilter("lopend")}
+                        count={counts.lopend}
                     >
-                        Actief
+                        Lopend
                     </FilterButton>
                     <FilterButton 
-                        active={filter === "archived"} 
-                        onClick={() => setFilter("archived")}
-                        count={counts.archived}
+                        active={filter === "afgerond"} 
+                        onClick={() => setFilter("afgerond")}
+                        count={counts.afgerond}
                     >
-                        Gearchiveerd
+                        Afgerond
                     </FilterButton>
                     <FilterButton 
-                        active={filter === "snapshot"} 
-                        onClick={() => setFilter("snapshot")}
-                        count={counts.snapshot}
+                        active={filter === "afgebroken"} 
+                        onClick={() => setFilter("afgebroken")}
+                        count={counts.afgebroken}
                     >
-                        Archief
+                        Afgebroken
                     </FilterButton>
+                    {counts.snapshot > 0 && (
+                        <FilterButton 
+                            active={filter === "snapshot"} 
+                            onClick={() => setFilter("snapshot")}
+                            count={counts.snapshot}
+                        >
+                            Archief
+                        </FilterButton>
+                    )}
                 </div>
 
                 {/* Sort */}
@@ -202,8 +220,12 @@ export default function PortfolioList({
                         {searchQuery 
                             ? "Geen resultaten gevonden" 
                             : filter === "all" 
-                                ? "Nog geen voltooide taken"
-                                : `Geen ${filter === "archived" ? "gearchiveerde" : filter === "snapshot" ? "archief" : "actieve"} items`
+                                ? "Nog geen taken"
+                                : filter === "lopend" ? "Geen lopende taken"
+                                : filter === "afgerond" ? "Geen afgeronde taken"
+                                : filter === "afgebroken" ? "Geen afgebroken taken"
+                                : filter === "snapshot" ? "Geen archief items"
+                                : "Geen items"
                         }
                     </p>
                     {searchQuery && (
@@ -217,29 +239,29 @@ export default function PortfolioList({
                 </div>
             )}
 
-            {/* Info about archived items */}
-            {counts.archived > 0 || counts.snapshot > 0 ? (
+            {/* Info about archived/snapshot items */}
+            {(counts.afgebroken > 0 || counts.snapshot > 0) && (
                 <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
                     <div className="flex items-start gap-3">
                         <span className="material-symbols-outlined text-blue-500">info</span>
                         <div className="text-sm text-[var(--text-secondary)]">
-                            <p className="font-medium text-[var(--text-primary)] mb-1">Over gearchiveerde items</p>
-                            {counts.archived > 0 && (
+                            <p className="font-medium text-[var(--text-primary)] mb-1">Over statussen</p>
+                            {counts.afgebroken > 0 && (
                                 <p>
-                                    <strong>{counts.archived}</strong> {counts.archived === 1 ? 'project is' : 'projecten zijn'} gearchiveerd 
-                                    - het project is niet meer actief maar je werk blijft zichtbaar.
+                                    <strong>{counts.afgebroken}</strong> {counts.afgebroken === 1 ? 'taak is' : 'taken zijn'} afgebroken 
+                                    - de taak is vroegtijdig gestopt maar je werk blijft zichtbaar in je portfolio.
                                 </p>
                             )}
                             {counts.snapshot > 0 && (
                                 <p className="mt-1">
                                     <strong>{counts.snapshot}</strong> {counts.snapshot === 1 ? 'item is' : 'items zijn'} opgeslagen als archief 
-                                    - het originele project is verwijderd maar je voltooide werk is bewaard.
+                                    - het originele project is verwijderd maar je werk is bewaard.
                                 </p>
                             )}
                         </div>
                     </div>
                 </div>
-            ) : null}
+            )}
         </div>
     );
 }

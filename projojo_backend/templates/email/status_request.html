@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Statusverzoek: {{ task_name }}{% endblock %}
+
+{% block header_subtitle %}
+<p class="subtitle">Taak Statusverzoek</p>
+{% endblock %}
+
+{% block content %}
+<h2>Hallo {{ recipient_name }}!</h2>
+
+{% if request_type == "completion" %}
+<p><strong>{{ requester_name }}</strong> heeft een verzoek ingediend om de taak <strong>{{ task_name }}</strong> als <strong>afgerond</strong> te markeren.</p>
+{% elif request_type == "cancellation" %}
+<p><strong>{{ requester_name }}</strong> heeft een verzoek ingediend om de taak <strong>{{ task_name }}</strong> als <strong>afgebroken</strong> te markeren.</p>
+{% elif request_type == "end_review" %}
+<p>De taakperiode van <strong>{{ task_name }}</strong> is verstreken. Beoordeel of de taak is afgerond of afgebroken.</p>
+{% endif %}
+
+<div class="info-box">
+    <p><strong>Project:</strong> {{ project_name }}</p>
+    <p><strong>Taak:</strong> {{ task_name }}</p>
+    {% if student_name %}
+    <p><strong>Student:</strong> {{ student_name }}</p>
+    {% endif %}
+    {% if reason %}
+    <p><strong>Reden:</strong> {{ reason }}</p>
+    {% endif %}
+</div>
+
+{% if request_type == "end_review" and auto_approve_date %}
+<div class="warning-box">
+    <p>Let op: Als er niet binnen 14 dagen wordt gereageerd, wordt de taak automatisch als <strong>afgerond</strong> gemarkeerd ({{ auto_approve_date }}).</p>
+</div>
+{% endif %}
+
+{% if action_url %}
+<p style="text-align: center;">
+    <a href="{{ action_url }}" class="button">Bekijk Verzoek</a>
+</p>
+
+<p class="link-text">
+    Of kopieer deze link: {{ action_url }}
+</p>
+{% endif %}
+
+<p>Log in op Projojo om het verzoek te beoordelen en te reageren.</p>
+{% endblock %}

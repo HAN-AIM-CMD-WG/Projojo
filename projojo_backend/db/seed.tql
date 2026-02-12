@@ -1468,7 +1468,7 @@ insert
     # Emma's COMPLETED projects for portfolio/Gantt (10 total)
     # ============================================
     
-    # 1. IoT Sensor Specialist @ De Gouden Akker (Jul-Oct 2025)
+    # 1. IoT Sensor Specialist @ De Gouden Akker (Jul-Oct 2025) - AFGEROND via consensus
     $tr1 isa registersForTask (student: $u2, task: $t1),
         has description "Ik heb ervaring met IoT sensoren en wil graag bijdragen aan duurzame landbouw",
         has isAccepted true,
@@ -1477,9 +1477,10 @@ insert
         has requestedAt 2025-07-01T09:00:00+0000,
         has acceptedAt 2025-07-05T14:30:00+0000,
         has startedAt 2025-07-10T09:00:00+0000,
-        has completedAt 2025-10-15T16:00:00+0000;
+        has completedAt 2025-10-15T16:00:00+0000,
+        has registrationStatus "afgerond";
 
-    # 2. Data Analytics Developer @ De Gouden Akker (Aug-Nov 2025)
+    # 2. Data Analytics Developer @ De Gouden Akker (Aug-Nov 2025) - AFGEROND via consensus
     $tr2 isa registersForTask (student: $u2, task: $t2),
         has description "Mijn data analytics ervaring kan goed van pas komen bij dit dashboard project",
         has isAccepted true,
@@ -1488,9 +1489,10 @@ insert
         has requestedAt 2025-08-01T09:30:00+0000,
         has acceptedAt 2025-08-03T11:00:00+0000,
         has startedAt 2025-08-08T09:00:00+0000,
-        has completedAt 2025-11-20T15:30:00+0000;
+        has completedAt 2025-11-20T15:30:00+0000,
+        has registrationStatus "afgerond";
 
-    # 3. Soil Health Data Analyst @ De Gouden Akker (Sep-Dec 2025)
+    # 3. Soil Health Data Analyst @ De Gouden Akker (Sep-Dec 2025) - AFGEROND
     $tr_emma3 isa registersForTask (student: $u2, task: $t36),
         has description "Bodemgezondheid analyse past bij mijn interesse in duurzame landbouw",
         has isAccepted true,
@@ -1499,9 +1501,10 @@ insert
         has requestedAt 2025-09-01T10:00:00+0000,
         has acceptedAt 2025-09-04T09:30:00+0000,
         has startedAt 2025-09-10T09:00:00+0000,
-        has completedAt 2025-12-01T14:00:00+0000;
+        has completedAt 2025-12-01T14:00:00+0000,
+        has registrationStatus "afgerond";
 
-    # 4. Machine Learning Engineer @ Veeteelt Groep (Oct-Dec 2025)
+    # 4. Machine Learning Engineer @ Veeteelt Groep (Oct-Dec 2025) - AFGEROND
     $tr_emma4 isa registersForTask (student: $u2, task: $t6),
         has description "ML voor melkproductie optimalisatie is een interessante uitdaging",
         has isAccepted true,
@@ -1510,9 +1513,10 @@ insert
         has requestedAt 2025-10-01T08:00:00+0000,
         has acceptedAt 2025-10-03T16:00:00+0000,
         has startedAt 2025-10-07T09:00:00+0000,
-        has completedAt 2025-12-20T17:00:00+0000;
+        has completedAt 2025-12-20T17:00:00+0000,
+        has registrationStatus "afgerond";
 
-    # 5. Farm Dashboard Developer @ SmartFarm Solutions (Aug-Sep 2025)
+    # 5. Farm Dashboard Developer @ SmartFarm Solutions (Aug-Sep 2025) - AFGEBROKEN (vroegtijdig gestopt)
     $tr_emma5 isa registersForTask (student: $u2, task: $t12),
         has description "Dashboard ontwikkeling is mijn specialiteit",
         has isAccepted true,
@@ -1521,9 +1525,10 @@ insert
         has requestedAt 2025-08-15T11:00:00+0000,
         has acceptedAt 2025-08-17T10:00:00+0000,
         has startedAt 2025-08-20T09:00:00+0000,
-        has completedAt 2025-09-30T16:30:00+0000;
+        has completedAt 2025-09-30T16:30:00+0000,
+        has registrationStatus "afgebroken";
 
-    # 6. Climate AI Specialist @ Groene Kassen (Nov 2025-Jan 2026)
+    # 6. Climate AI Specialist @ Groene Kassen (Nov 2025-Jan 2026) - AFGEROND
     $tr_emma6 isa registersForTask (student: $u2, task: $t15),
         has description "AI voor klimaatbeheersing combineert mijn passie voor duurzaamheid met tech",
         has isAccepted true,
@@ -1532,9 +1537,10 @@ insert
         has requestedAt 2025-11-01T09:00:00+0000,
         has acceptedAt 2025-11-04T14:00:00+0000,
         has startedAt 2025-11-08T09:00:00+0000,
-        has completedAt 2026-01-10T15:00:00+0000;
+        has completedAt 2026-01-10T15:00:00+0000,
+        has registrationStatus "afgerond";
 
-    # 7. Irrigation System Engineer @ SmartFarm Solutions (Sep-Oct 2025)
+    # 7. Irrigation System Engineer @ SmartFarm Solutions (Sep-Oct 2025) - AFGEROND
     $tr_emma7 isa registersForTask (student: $u2, task: $t11),
         has description "IoT sensoren voor irrigatie is een praktische toepassing van mijn skills",
         has isAccepted true,
@@ -1543,9 +1549,10 @@ insert
         has requestedAt 2025-09-05T08:30:00+0000,
         has acceptedAt 2025-09-08T11:00:00+0000,
         has startedAt 2025-09-12T09:00:00+0000,
-        has completedAt 2025-10-25T16:00:00+0000;
+        has completedAt 2025-10-25T16:00:00+0000,
+        has registrationStatus "afgerond";
 
-    # 8. Lab Data Manager @ Bodemexperts (Oct-Nov 2025)
+    # 8. Lab Data Manager @ Bodemexperts (Oct-Nov 2025) - AFGEROND
     $tr_emma8 isa registersForTask (student: $u2, task: $t19),
         has description "Bodemanalyse digitaliseren past bij mijn achtergrond",
         has isAccepted true,
@@ -1554,9 +1561,10 @@ insert
         has requestedAt 2025-10-10T09:00:00+0000,
         has acceptedAt 2025-10-12T15:30:00+0000,
         has startedAt 2025-10-16T09:00:00+0000,
-        has completedAt 2025-11-28T14:00:00+0000;
+        has completedAt 2025-11-28T14:00:00+0000,
+        has registrationStatus "afgerond";
 
-    # 9. Water Quality Monitor @ AquaCultuur Innovatie (Nov-Dec 2025)
+    # 9. Water Quality Monitor @ AquaCultuur Innovatie (Nov-Dec 2025) - AFGEROND
     $tr_emma9 isa registersForTask (student: $u2, task: $t21),
         has description "Waterkwaliteit monitoring met IoT sensoren is interessant",
         has isAccepted true,
@@ -1565,9 +1573,10 @@ insert
         has requestedAt 2025-11-05T10:00:00+0000,
         has acceptedAt 2025-11-07T09:00:00+0000,
         has startedAt 2025-11-11T09:00:00+0000,
-        has completedAt 2025-12-15T16:30:00+0000;
+        has completedAt 2025-12-15T16:30:00+0000,
+        has registrationStatus "afgerond";
 
-    # 10. Harvest Prediction Analyst @ SmartFarm Solutions (Dec 2025-Jan 2026)
+    # 10. Harvest Prediction Analyst @ SmartFarm Solutions (Dec 2025-Jan 2026) - AFGEROND
     $tr_emma10 isa registersForTask (student: $u2, task: $t14),
         has description "Machine learning voor oogstvoorspellingen is een mooie uitdaging",
         has isAccepted true,
@@ -1576,7 +1585,8 @@ insert
         has requestedAt 2025-12-01T08:00:00+0000,
         has acceptedAt 2025-12-03T14:00:00+0000,
         has startedAt 2025-12-08T09:00:00+0000,
-        has completedAt 2026-01-05T17:00:00+0000;
+        has completedAt 2026-01-05T17:00:00+0000,
+        has registrationStatus "afgerond";
 
     # ============================================
     # Emma's ACTIVE tasks (started but not completed)
@@ -2039,3 +2049,34 @@ insert
     $pt_theme_arn4 isa hasTheme (project: $p_arn2, theme: $theme5);
     $pt_theme_arn5 isa hasTheme (project: $p_arn3, theme: $theme6);
     $pt_theme_arn6 isa hasTheme (project: $p_arn3, theme: $theme3);
+
+    # ============================================
+    # Status Change Requests (Consensus Systeem)
+    # ============================================
+
+    # Scenario 1: Emma wil haar actieve Computer Vision taak afronden (pending completion request)
+    # Supervisor van Fruitboomgaarden Van Dijk ($s8) moet nog reageren
+    $scr1 isa statusChangeRequest (
+        registration: $tr_emma_active1,
+        requester: $u2
+    ),
+        has id "scr-001-pending-completion",
+        has requestType "completion",
+        has reason "Ik heb het computer vision model afgerond en de documentatie is klaar. Graag als afgerond markeren.",
+        has requestStatus "pending",
+        has createdAt 2026-02-01T14:00:00+0000;
+
+    # Scenario 2: Afgerond verzoek dat is goedgekeurd (voor de afgebroken Farm Dashboard taak)
+    # Dit was het cancellation request dat is goedgekeurd
+    $scr2 isa statusChangeRequest (
+        registration: $tr_emma5,
+        requester: $u2,
+        responder: $s3
+    ),
+        has id "scr-002-approved-cancellation",
+        has requestType "cancellation",
+        has reason "Door veranderde projectvereisten kan ik het dashboard niet meer afronden zoals gepland.",
+        has requestStatus "approved",
+        has createdAt 2025-09-20T10:00:00+0000,
+        has respondedAt 2025-09-22T15:00:00+0000,
+        has responseMessage "Begrijpelijk, bedankt voor je eerlijkheid. We hebben het project aangepast.";

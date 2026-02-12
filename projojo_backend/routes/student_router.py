@@ -206,6 +206,8 @@ async def get_student_portfolio(
         "completed_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
         "active_count": sum(1 for item in portfolio if item.get("source_type") == "active"),
         "snapshot_count": sum(1 for item in portfolio if item.get("source_type") == "snapshot"),
+        "afgerond_count": sum(1 for item in portfolio if item.get("registration_status") == "afgerond"),
+        "afgebroken_count": sum(1 for item in portfolio if item.get("registration_status") == "afgebroken"),
         # Legacy fields for backwards compatibility
         "live_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
     }

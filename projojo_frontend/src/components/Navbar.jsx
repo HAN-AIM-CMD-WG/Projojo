@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { IMAGE_BASE_URL, getUser, getBusinessById } from "../services";
+import { IMAGE_BASE_URL, getUser, getBusinessById, getPendingStatusRequests } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import ThemeToggle from "./ThemeToggle";
 
@@ -9,6 +9,7 @@ export default function Navbar() {
     const [profilePicture, setProfilePicture] = useState("/default_profile_picture.png");
     const [businessData, setBusinessData] = useState(null);
     const [isCollapsed, setIsCollapsed] = useState(true);
+    const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
     const navigate = useNavigate();
     const location = useLocation();
     const navRef = useRef(null);
@@ -76,6 +77,27 @@ export default function Navbar() {
             ignore = true;
         }
     }, [authData])
+
+    // Fetch pending status change requests for notification badge
+    useEffect(() => {
+        if (!authData.userId || authData.type === "invalid" || authData.type === "none") return;
+        let ignore = false;
+        
+        const fetchPending = () => {
+            getPendingStatusRequests(authData.userId)
+                .then(data => {
+                    if (ignore) return;
+                    setPendingRequestsCount(data.count || 0);
+                })
+                .catch(() => {});
+        };
+        
+        fetchPending();
+        // Refresh every 60 seconds
+        const interval = setInterval(fetchPending, 60000);
+        
+        return () => { ignore = true; clearInterval(interval); };
+    }, [authData.userId, authData.type]);
 
     useEffect(() => {
         setIsCollapsed(true);
@@ -158,6 +180,25 @@ export default function Navbar() {
                             
                             {/* Divider (desktop) */}
                             <li className="hidden md:block w-px h-6 bg-[var(--gray-300)]/50 mx-3"></li>
+                            
+                            {/* Pending Status Requests Badge */}
+                            {pendingRequestsCount > 0 && (
+                                <li className="flex items-center py-2 md:py-0">
+                                    <Link
+                                        to="/home"
+                                        className="relative flex items-center justify-center w-9 h-9 rounded-xl hover:bg-[var(--gray-200)]/50 transition-colors"
+                                        title={`${pendingRequestsCount} openstaand${pendingRequestsCount === 1 ? '' : 'e'} statusverzoek${pendingRequestsCount === 1 ? '' : 'en'}`}
+                                        onClick={() => setIsCollapsed(true)}
+                                    >
+                                        <span className="material-symbols-outlined text-[var(--text-muted)] text-xl">
+                                            notifications
+                                        </span>
+                                        <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-primary text-white text-[10px] font-bold px-1 shadow-sm">
+                                            {pendingRequestsCount > 9 ? '9+' : pendingRequestsCount}
+                                        </span>
+                                    </Link>
+                                </li>
+                            )}
                             
                             {/* Theme Toggle */}
                             <li className="flex items-center py-2 md:py-0">
