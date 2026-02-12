@@ -50,6 +50,8 @@ import aiosmtplib
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 from pydantic import BaseModel, ConfigDict
 
+from config.settings import EMAIL_DEFAULT_SENDER, EMAIL_SMTP_HOST, EMAIL_SMTP_PASSWORD, EMAIL_SMTP_PORT, EMAIL_SMTP_USERNAME
+
 
 logger = logging.getLogger(__name__)
 
@@ -62,14 +64,14 @@ logger = logging.getLogger(__name__)
 class EmailAttachment(BaseModel):
     """
     Represents an email attachment.
-    
+
     Attributes:
         filename: Name of the file as it will appear in the email
         content: Raw bytes of the file content
         mime_type: MIME type of the file (e.g., "application/pdf")
     """
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     filename: str
     content: bytes
     mime_type: str = "application/octet-stream"
@@ -78,7 +80,7 @@ class EmailAttachment(BaseModel):
 class EmailResult(BaseModel):
     """
     Result of an email send operation.
-    
+
     Attributes:
         success: Whether the email was sent successfully
         error: Error message if sending failed
@@ -101,10 +103,10 @@ _jinja_env: Environment | None = None
 def _get_template_env() -> Environment:
     """
     Get or create the Jinja2 template environment.
-    
+
     The environment is lazily loaded and cached for reuse.
     Templates are loaded from: projojo_backend/templates/email/
-    
+
     Returns:
         Configured Jinja2 Environment instance
     """
@@ -122,14 +124,14 @@ def _get_template_env() -> Environment:
 def _render_template(template_name: str, context: dict[str, Any]) -> str:
     """
     Render a Jinja2 template with the given context.
-    
+
     Args:
         template_name: Name of the template file (e.g., "invitation.html")
         context: Dictionary of variables to pass to the template
-        
+
     Returns:
         Rendered template as a string
-        
+
     Raises:
         TemplateNotFound: If the template file doesn't exist
     """
@@ -145,7 +147,7 @@ def _render_template(template_name: str, context: dict[str, Any]) -> str:
 def _get_smtp_config() -> dict:
     """
     Load SMTP configuration from environment variables.
-    
+
     Returns:
         Dictionary with SMTP configuration:
         - host: SMTP server hostname
@@ -153,29 +155,19 @@ def _get_smtp_config() -> dict:
         - username: SMTP authentication username (None if empty)
         - password: SMTP authentication password (None if empty)
         - default_sender: Default sender email address
-        
+
     Note:
         - Port is safely parsed with a default of 1025 if invalid.
         - TLS is auto-negotiated by aiosmtplib (STARTTLS if server supports it).
         - Authentication is skipped if username/password are None.
     """
-    port_str = os.getenv("EMAIL_SMTP_PORT", "1025")
-    try:
-        port = int(port_str.strip())
-    except (ValueError, AttributeError):
-        logger.warning(f"Invalid EMAIL_SMTP_PORT value '{port_str}', using default 1025")
-        port = 1025
-    
-    # Convert empty strings to None so aiosmtplib skips authentication
-    username = os.getenv("EMAIL_SMTP_USERNAME", "") or None
-    password = os.getenv("EMAIL_SMTP_PASSWORD", "") or None
-    
+
     return {
-        "host": os.getenv("EMAIL_SMTP_HOST", "localhost"),
-        "port": port,
-        "username": username,
-        "password": password,
-        "default_sender": os.getenv("EMAIL_DEFAULT_SENDER", "noreply@projojo.nl"),
+        "host": EMAIL_SMTP_HOST,
+        "port": EMAIL_SMTP_PORT,
+        "username": EMAIL_SMTP_USERNAME,
+        "password": EMAIL_SMTP_PASSWORD,
+        "default_sender": EMAIL_DEFAULT_SENDER
     }
 
 
@@ -196,16 +188,16 @@ async def send_email(
 ) -> EmailResult:
     """
     Send an email via SMTP asynchronously.
-    
+
     SMTP server is configured via environment variables:
     - EMAIL_SMTP_HOST: SMTP server hostname (default: localhost)
     - EMAIL_SMTP_PORT: SMTP server port (default: 1025)
     - EMAIL_SMTP_USERNAME: SMTP username (empty = no auth)
     - EMAIL_SMTP_PASSWORD: SMTP password (empty = no auth)
     - EMAIL_DEFAULT_SENDER: Default sender email address
-    
+
     Note: TLS/STARTTLS is auto-negotiated by aiosmtplib.
-    
+
     Args:
         recipient: Email address or list of addresses to send to
         subject: Email subject line
@@ -216,10 +208,10 @@ async def send_email(
         bcc: List of BCC recipients
         reply_to: Reply-to email address
         attachments: List of EmailAttachment objects
-        
+
     Returns:
         EmailResult with success status and optional error message
-        
+
     Example:
         >>> result = await send_email(
         ...     recipient="user@example.com",
@@ -232,33 +224,33 @@ async def send_email(
     """
     config = _get_smtp_config()
     from_addr = sender or config["default_sender"]
-    
+
     # Normalize recipient to list for the To header
     to_list = [recipient] if isinstance(recipient, str) else list(recipient)
-    
+
     # Build the email message with headers
     # aiosmtplib extracts recipients from To, Cc, Bcc headers and strips Bcc before sending
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = from_addr
     msg["To"] = ", ".join(to_list)
-    
+
     if cc:
         msg["Cc"] = ", ".join(cc)
-    
+
     if bcc:
         msg["Bcc"] = ", ".join(bcc)  # aiosmtplib will strip this before sending
-    
+
     if reply_to:
         msg["Reply-To"] = reply_to
-    
+
     # Add body parts (text first, then HTML for proper email client rendering)
     if body_text:
         msg.attach(MIMEText(body_text, "plain", "utf-8"))
-    
+
     if body_html:
         msg.attach(MIMEText(body_html, "html", "utf-8"))
-    
+
     # Add attachments
     if attachments:
         for attachment in attachments:
@@ -266,7 +258,7 @@ async def send_email(
                 maintype, subtype = attachment.mime_type.split("/", 1)
             except ValueError:
                 maintype, subtype = "application", "octet-stream"
-            
+
             part = MIMEBase(maintype, subtype)
             part.set_payload(attachment.content)
             encoders.encode_base64(part)
@@ -275,7 +267,7 @@ async def send_email(
                 f'attachment; filename="{attachment.filename}"'
             )
             msg.attach(part)
-    
+
     # Send via async SMTP
     # aiosmtplib auto-negotiates STARTTLS if server supports it
     # Authentication is skipped if username/password are None
@@ -289,7 +281,7 @@ async def send_email(
             timeout=30,
         )
         return EmailResult(success=True)
-        
+
     except aiosmtplib.SMTPAuthenticationError as e:
         logger.error(f"SMTP authentication failed: {e}")
         return EmailResult(success=False, error=f"SMTP authentication failed: {str(e)}")
@@ -306,7 +298,7 @@ async def send_email(
         # Covers ConnectionRefusedError, socket errors, etc.
         logger.error(f"Connection error to {config['host']}:{config['port']}: {e}")
         return EmailResult(
-            success=False, 
+            success=False,
             error=f"Connection error to {config['host']}:{config['port']}: {str(e)}"
         )
     except Exception as e:
@@ -329,9 +321,9 @@ async def send_templated_email(
 ) -> EmailResult:
     """
     Send an email using a Jinja2 template asynchronously.
-    
+
     Templates are loaded from: projojo_backend/templates/email/
-    
+
     Args:
         recipient: Email address or list of addresses
         subject: Email subject line
@@ -343,10 +335,10 @@ async def send_templated_email(
         bcc: List of BCC recipients
         reply_to: Reply-to email address
         attachments: List of EmailAttachment objects
-        
+
     Returns:
         EmailResult with success status and optional error message
-        
+
     Example:
         >>> result = await send_templated_email(
         ...     recipient="user@example.com",
@@ -363,7 +355,7 @@ async def send_templated_email(
     """
     body_html: str | None = None
     body_text: str | None = None
-    
+
     try:
         body_html = _render_template(template_name, context)
     except TemplateNotFound as e:
@@ -378,7 +370,7 @@ async def send_templated_email(
             success=False,
             error=f"Template rendering error for '{template_name}': {str(e)}"
         )
-    
+
     # Render text template if provided
     if text_template_name:
         try:
@@ -387,7 +379,7 @@ async def send_templated_email(
             logger.warning(f"Text template not found: {e.name}, proceeding without text body")
         except Exception as e:
             logger.warning(f"Error rendering text template '{text_template_name}': {e}")
-    
+
     return await send_email(
         recipient=recipient,
         subject=subject,
