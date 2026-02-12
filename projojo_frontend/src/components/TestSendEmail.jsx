@@ -70,7 +70,7 @@ export default function TestSendEmail() {
                     </p>
                 )}
                 <p className="text-xs text-orange-500">
-                    Zie mails in MailHog: <a href="http://localhost:8025" target="_blank" rel="noopener noreferrer" className="underline">http://localhost:8025</a>
+                    Zie mails in MailHog: <a href="http://localhost:10106" target="_blank" rel="noopener noreferrer" className="underline">http://localhost:10106</a>
                 </p>
             </div>
         </div>
