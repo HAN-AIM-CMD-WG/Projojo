@@ -8,16 +8,16 @@
 
 services:
   typedb:
-    # https://github.com/typedb/typedb/releases/tag/3.4.0
+    # https://github.com/typedb/typedb/releases/tag/3.8.0
     # Note: container_name moved to docker-compose.yml for development use only
     # Preview/Dokploy uses auto-generated names to avoid conflicts between projects
-    image: typedb/typedb:3.4.0
+    image: typedb/typedb:3.8.0
     restart: unless-stopped
     ports:
       - "${TYPEDB_PORT}:1729"          # Host:Container - TypeDB listens on 1729 internally
       - "${TYPEDB_STUDIO_PORT}:8000"   # Host:Container - TypeDB Studio listens on 8000 internally
     volumes:
-      - typedb-data:/opt/typedb-all-linux-x86_64/server/data
+      - typedb-data:/var/lib/typedb/data
     platform: linux/amd64
 
   backend:
