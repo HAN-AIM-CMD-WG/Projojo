@@ -202,7 +202,7 @@ Acceptance Criteria:
 
 ### Active Development Coordination
 - **Backend Team**: Actively developing - coordinate changes
-- **Database**: TypeDB 3.4.0 - complex relationships supported
+- **Database**: TypeDB 3.8.0 - complex relationships supported
 - **API**: FastAPI with domain-driven design
 - **Deployment**: Docker Compose setup
 

@@ -402,7 +402,7 @@ All containers use `projojo_` prefix:
 
 ```yaml
 typedb:
-  image: typedb/typedb:3.4.0
+  image: typedb/typedb:3.8.0
   ports:
     - "${TYPEDB_PORT}:1729"         # Database (gRPC)
     - "${TYPEDB_STUDIO_PORT}:8000"  # HTTP API for TypeDB Studio

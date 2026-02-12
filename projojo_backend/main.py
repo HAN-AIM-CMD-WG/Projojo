@@ -5,7 +5,6 @@ from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import logging
-import os
 from contextlib import asynccontextmanager
 from config.settings import IS_PRODUCTION, IS_DEVELOPMENT, SESSIONS_SECRET_KEY
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
@@ -158,7 +157,7 @@ async def send_test_email(request: TestEmailRequest):
     """
     TEST ENDPOINT - Send a test email using the invitation template.
     This endpoint is for development testing only.
-    
+
     REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
     """
     if IS_PRODUCTION:
@@ -177,7 +176,7 @@ async def send_test_email(request: TestEmailRequest):
             "message": "This is a test email to verify the email service is working correctly. If you received this, the mail integration is functioning!",
         }
     )
-    
+
     if result.success:
         return {
             "status": "success",
