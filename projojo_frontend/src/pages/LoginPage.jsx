@@ -41,17 +41,21 @@ export default function LoginPage() {
 
         {/* Logo & Header */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 rounded-3xl neu-pressed flex items-center justify-center text-primary mb-6 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 pointer-events-none"></div>
-            <span className="material-symbols-outlined text-5xl drop-shadow-sm">school</span>
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-2xl neu-pressed flex items-center justify-center text-primary relative overflow-hidden shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/15 pointer-events-none"></div>
+              <span className="material-symbols-outlined text-3xl drop-shadow-sm">school</span>
+            </div>
+            <div>
+              <h1 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight leading-none">
+                Projojo
+              </h1>
+              <p className="text-xs font-bold text-primary uppercase tracking-[0.2em] mt-1">
+                Student Hub
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl text-center font-extrabold text-[var(--text-primary)] tracking-tight">
-            Projojo
-          </h1>
-          <p className="neu-label text-center mt-2">
-            Student Hub
-          </p>
-          <p className="text-text-muted mt-4 text-center text-sm font-semibold">
+          <p className="text-text-muted text-center text-sm font-semibold mt-1">
             Log in om verder te gaan
           </p>
         </div>
@@ -106,34 +110,39 @@ export default function LoginPage() {
         {/* ============================================================================ */}
         {/* EMAIL TEST SECTION - REMOVE AFTER TESTING */}
         {/* ============================================================================ */}
-        <div className="mt-4 pt-4 border-t border-dashed border-orange-300 bg-orange-50 p-3 rounded-lg">
-          <p className="text-xs text-orange-600 font-semibold mb-2">
-            EMAIL TEST (Development Only)
-          </p>
-          <div className="flex flex-col gap-2">
+        <div className="mt-4 neu-pressed rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary text-sm">mail</span>
+            </div>
+            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
+              Email Test
+            </span>
+          </div>
+          <div className="flex gap-2">
             <input
               type="email"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               placeholder="test@example.com"
-              className="w-full px-3 py-2 border border-orange-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="neu-input flex-1 !py-2 !text-sm"
             />
             <button
               onClick={handleSendTestEmail}
               disabled={isLoading}
-              className="w-full bg-orange-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-orange-600 disabled:bg-orange-300 transition-colors duration-200 text-sm"
+              className="neu-btn-primary !py-2 !px-4 text-sm font-bold shrink-0 disabled:opacity-40"
             >
-              {isLoading ? "Sending..." : "Send Test Email"}
+              {isLoading ? "..." : "Verstuur"}
             </button>
-            {emailStatus && (
-              <p className={`text-xs ${emailStatus.type === "success" ? "text-green-600" : "text-red-600"}`}>
-                {emailStatus.message}
-              </p>
-            )}
-            <p className="text-xs text-orange-500">
-              View emails at: <a href="http://localhost:8025" target="_blank" rel="noopener noreferrer" className="underline">http://localhost:8025</a>
-            </p>
           </div>
+          {emailStatus && (
+            <p className={`text-xs mt-2 font-semibold ${emailStatus.type === "success" ? "text-primary" : "text-red-500"}`}>
+              {emailStatus.message}
+            </p>
+          )}
+          <p className="text-[11px] text-[var(--text-muted)] mt-2">
+            Bekijk emails: <a href="http://localhost:8025" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">localhost:8025</a>
+          </p>
         </div>
         {/* ============================================================================ */}
         {/* END EMAIL TEST SECTION - REMOVE AFTER TESTING */}
