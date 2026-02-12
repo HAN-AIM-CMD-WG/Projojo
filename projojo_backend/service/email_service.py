@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Any
 
 import aiosmtplib
+from config.settings import EMAIL_DEFAULT_SENDER, EMAIL_SMTP_HOST, EMAIL_SMTP_PASSWORD, EMAIL_SMTP_USERNAME
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound, select_autoescape
 from pydantic import BaseModel, ConfigDict
 
@@ -159,23 +160,14 @@ def _get_smtp_config() -> dict:
         - TLS is auto-negotiated by aiosmtplib (STARTTLS if server supports it).
         - Authentication is skipped if username/password are None.
     """
-    port_str = os.getenv("EMAIL_SMTP_PORT", "1025")
-    try:
-        port = int(port_str.strip())
-    except (ValueError, AttributeError):
-        logger.warning(f"Invalid EMAIL_SMTP_PORT value '{port_str}', using default 1025")
-        port = 1025
-    
-    # Convert empty strings to None so aiosmtplib skips authentication
-    username = os.getenv("EMAIL_SMTP_USERNAME", "") or None
-    password = os.getenv("EMAIL_SMTP_PASSWORD", "") or None
-    
+    port = 1025
+
     return {
-        "host": os.getenv("EMAIL_SMTP_HOST", "localhost"),
+        "host": EMAIL_SMTP_HOST,
         "port": port,
-        "username": username,
-        "password": password,
-        "default_sender": os.getenv("EMAIL_DEFAULT_SENDER", "noreply@projojo.nl"),
+        "username": EMAIL_SMTP_USERNAME,
+        "password": EMAIL_SMTP_PASSWORD,
+        "default_sender": EMAIL_DEFAULT_SENDER,
     }
 
 
