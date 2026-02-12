@@ -100,6 +100,9 @@ export default function ProjectCard({ project, index = 0 }) {
     return sum;
   }, 0) || 0;
 
+  // Detect if project is archived (completed or end_date in the past)
+  const isArchived = status === 'completed' || (project.end_date && new Date(project.end_date) < new Date());
+
   // Animation delay based on index for staggered entrance
   const animationClass = `fade-in-up-${(index % 4) + 1}`;
 
@@ -107,7 +110,7 @@ export default function ProjectCard({ project, index = 0 }) {
     <article id={`project-${project.id}`} className={`fade-in-up ${animationClass} h-full`}>
       <Link
         to={`/projects/${project.id}`}
-        className="block neu-flat-interactive h-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/30 group"
+        className={`block neu-flat-interactive h-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/30 group ${isArchived ? 'grayscale opacity-65 hover:opacity-85 transition-all duration-300' : ''}`}
       >
         {/* Image section with gradient overlay */}
         <div className="h-40 w-full relative overflow-hidden">
@@ -135,11 +138,19 @@ export default function ProjectCard({ project, index = 0 }) {
             </div>
           )}
           
-          {/* Status badge - only show if NOT open (avoid redundant "OPEN" on every card) */}
-          {status !== 'active' && status !== 'default' && project.status && (
-          <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
-            {statusLabel}
-          </div>
+          {/* Archief badge - prominent for archived projects */}
+          {isArchived && (
+            <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-gray-500/90 text-white shadow-sm flex items-center gap-1">
+              <span className="material-symbols-outlined text-xs" aria-hidden="true">inventory_2</span>
+              Archief
+            </div>
+          )}
+          
+          {/* Status badge - only show if NOT open and NOT archived (avoid redundant badges) */}
+          {!isArchived && status !== 'active' && status !== 'default' && project.status && (
+            <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
+              {statusLabel}
+            </div>
           )}
 
           {/* Title overlay at bottom of image */}

@@ -1,22 +1,149 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { getSkills } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
 import Alert from "./Alert";
-import FilterChip from "./FilterChip";
-import SkillBadge from './SkillBadge';
 import SkillsEditor from "./SkillsEditor";
 import OverviewMap from "./OverviewMap";
 
+/** Map sector names to distinctive Material Symbols icons */
+const SECTOR_ICONS = {
+    'agri': 'agriculture', 'food': 'restaurant', 'agri & food': 'agriculture',
+    'technologie': 'memory', 'tech': 'memory', 'ict': 'dns', 'it': 'dns',
+    'energie': 'bolt', 'energy': 'bolt',
+    'zorg': 'health_and_safety', 'health': 'health_and_safety', 'gezondheid': 'health_and_safety',
+    'bouw': 'construction', 'vastgoed': 'domain',
+    'onderwijs': 'school', 'educatie': 'school',
+    'logistiek': 'local_shipping', 'transport': 'local_shipping',
+    'financ': 'account_balance', 'bank': 'account_balance',
+    'overheid': 'gavel', 'publiek': 'gavel',
+    'retail': 'storefront', 'winkel': 'storefront',
+    'media': 'movie', 'communicatie': 'campaign',
+    'duurzaam': 'eco', 'milieu': 'eco', 'groen': 'eco',
+    'water': 'water_drop',
+    'chemie': 'science', 'farmac': 'biotech',
+    'creatief': 'palette', 'design': 'palette', 'kunst': 'palette',
+    'juridisch': 'balance', 'recht': 'balance',
+    'sport': 'sports_soccer', 'recreatie': 'sports_soccer',
+    'horeca': 'restaurant_menu', 'toerisme': 'travel_explore',
+    'consultancy': 'business_center', 'advies': 'business_center',
+    'industrie': 'factory', 'productie': 'factory', 'maakindustrie': 'precision_manufacturing',
+};
+
+function getSectorIcon(sectorName) {
+    const lower = sectorName.toLowerCase();
+    // Exact match first
+    if (SECTOR_ICONS[lower]) return SECTOR_ICONS[lower];
+    // Partial match
+    for (const [key, icon] of Object.entries(SECTOR_ICONS)) {
+        if (lower.includes(key) || key.includes(lower)) return icon;
+    }
+    return 'category';
+}
+
+/**
+ * Compact dropdown button with popover for scalable filter options.
+ * Shows a search field when there are more than 8 options.
+ * Optionally shows counts per option.
+ */
+function FilterDropdownButton({ label, icon, value, options, optionCounts, isOpen, searchQuery, onSearchChange, onToggle, onSelect }) {
+    const SEARCH_THRESHOLD = 8;
+    const showSearch = options.length > SEARCH_THRESHOLD;
+    const filtered = searchQuery
+        ? options.filter(o => o.toLowerCase().includes(searchQuery.toLowerCase()))
+        : options;
+
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                onClick={onToggle}
+                className={`filter-dropdown-popover flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
+                    value
+                        ? 'neu-pressed text-primary ring-1 ring-primary/20'
+                        : isOpen
+                            ? 'neu-pressed text-[var(--text-primary)]'
+                            : 'neu-btn'
+                }`}
+                aria-expanded={isOpen}
+                aria-haspopup="listbox"
+            >
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">{icon}</span>
+                <span>{value || label}</span>
+                <span className="material-symbols-outlined text-sm transition-transform" style={{ transform: isOpen ? 'rotate(180deg)' : '' }} aria-hidden="true">
+                    expand_more
+                </span>
+            </button>
+
+            {isOpen && (
+                <div
+                    className="filter-dropdown-popover absolute top-full left-0 mt-1.5 z-50 neu-flat rounded-xl p-2 min-w-[200px] max-w-[280px] animate-fade-in"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {showSearch && (
+                        <div className="relative mb-2">
+                            <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm" aria-hidden="true">search</span>
+                            <input
+                                type="text"
+                                placeholder={`Zoek ${label.toLowerCase()}...`}
+                                value={searchQuery}
+                                onChange={(e) => onSearchChange(e.target.value)}
+                                className="neu-input w-full !pl-8 !pr-3 !py-1.5 !text-xs"
+                                autoFocus
+                            />
+                        </div>
+                    )}
+
+                    <div className="max-h-[240px] overflow-y-auto space-y-0.5 scrollbar-thin">
+                        <button
+                            onClick={() => onSelect(null)}
+                            className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                !value
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-[var(--text-secondary)] hover:bg-[var(--gray-100)]'
+                            }`}
+                        >
+                            Alles
+                        </button>
+                        {filtered.map(option => (
+                            <button
+                                key={option}
+                                onClick={() => onSelect(option)}
+                                className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                                    value === option
+                                        ? 'bg-primary text-white'
+                                        : 'text-[var(--text-secondary)] hover:bg-[var(--gray-100)]'
+                                }`}
+                            >
+                                <span>{option}</span>
+                                {optionCounts?.[option] != null && (
+                                    <span className={`text-[10px] ${value === option ? 'text-white/70' : 'text-[var(--text-muted)]'}`}>
+                                        {optionCounts[option]}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                        {filtered.length === 0 && (
+                            <p className="text-xs text-[var(--text-muted)] text-center py-3">Geen resultaten</p>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 /**
 * @param {{
-*  onFilter: ({ searchInput: string, selectedSkills: {skillId: number, name: string, isPending?: boolean}[]}) => void,
-*  businesses?: Array<{id: string, name: string, location: string, projects: Array}>
+*  onFilter: Function,
+*  businesses?: Array<{id: string, name: string, location: string, projects: Array}>,
+*  themes?: Array<{id: string, name: string, icon?: string, color?: string}>,
+*  allBusinesses?: Array
 *  }} props
 * @returns {JSX.Element}
 */
-export default function Filter({ onFilter, businesses = [] }) {
+export default function Filter({ onFilter, businesses = [], themes = [], allBusinesses = [] }) {
     const { studentSkills } = useStudentSkills();
     const { workingBusinessIds } = useStudentWork();
     const [allSkills, setAllSkills] = useState([]);
@@ -25,109 +152,127 @@ export default function Filter({ onFilter, businesses = [] }) {
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState('');
     const [showMap, setShowMap] = useState(false);
-    const [mapView, setMapView] = useState('businesses'); // 'businesses' | 'projects'
+    const [mapView, setMapView] = useState('businesses');
     const [showOnlyMatches, setShowOnlyMatches] = useState(false);
     const [showOnlyMyWork, setShowOnlyMyWork] = useState(false);
     
-    // Quick filter chips state
-    const [selectedCountry, setSelectedCountry] = useState(null);
+    const [selectedTheme, setSelectedTheme] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('all');
+    
     const [selectedSector, setSelectedSector] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedCompanySize, setSelectedCompanySize] = useState(null);
-    const [openDropdown, setOpenDropdown] = useState(null); // 'location' | 'sector' | 'companySize' | null
-    const [showLocationPanel, setShowLocationPanel] = useState(false);
+    const [openDropdown, setOpenDropdown] = useState(null);
+    const [dropdownSearch, setDropdownSearch] = useState('');
     
-    // Create set of student skill IDs for matching
-    // Use skillId for consistent matching with normalized project/task skills
+    // Debounced search ref
+    const searchTimerRef = useRef(null);
+    
     const studentSkillIds = useMemo(() => 
         new Set(studentSkills.map(s => s.skillId).filter(Boolean)), 
         [studentSkills]
     );
 
-    // Get unique filter options from businesses data
+    const sourceBusinesses = allBusinesses.length > 0 ? allBusinesses : businesses;
+
+    // Filter options with counts
     const filterOptions = useMemo(() => {
-        const countries = [...new Set(businesses.map(b => b.country || 'Nederland').filter(Boolean))].sort();
+        const bList = sourceBusinesses.map(b => b.business || b);
         
-        // Filter locations based on selected country (cascading dropdown)
-        const filteredBusinesses = selectedCountry 
-            ? businesses.filter(b => (b.country || 'Nederland') === selectedCountry)
-            : businesses;
+        const sectorCounts = {};
+        const locationCounts = {};
+        const companySizeCounts = {};
         
-        const locations = [...new Set(filteredBusinesses.map(b => {
-            // Extract city from location string (e.g., "Arnhem, centrum" -> "Arnhem")
-            const loc = b.location || '';
-            return loc.split(',')[0].trim();
-        }).filter(Boolean))].sort();
+        bList.forEach(b => {
+            if (b.sector) sectorCounts[b.sector] = (sectorCounts[b.sector] || 0) + 1;
+            const loc = (b.location || '').split(',')[0].trim();
+            if (loc) locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+            if (b.companySize) companySizeCounts[b.companySize] = (companySizeCounts[b.companySize] || 0) + 1;
+        });
         
-        const sectors = [...new Set(businesses.map(b => b.sector).filter(Boolean))].sort();
-        const companySizes = [...new Set(businesses.map(b => b.companySize).filter(Boolean))].sort();
-        
-        return { countries, locations, sectors, companySizes };
-    }, [businesses, selectedCountry]);
+        return {
+            sectors: Object.keys(sectorCounts).sort(),
+            locations: Object.keys(locationCounts).sort(),
+            companySizes: Object.keys(companySizeCounts).sort(),
+            sectorCounts,
+            locationCounts,
+            companySizeCounts
+        };
+    }, [sourceBusinesses]);
+
+    // Theme counts
+    const themeCounts = useMemo(() => {
+        const counts = {};
+        sourceBusinesses.flatMap(b => b.projects || []).forEach(p => {
+            (p.themes || []).forEach(t => { counts[t.id] = (counts[t.id] || 0) + 1; });
+        });
+        return counts;
+    }, [sourceBusinesses]);
 
     // Trigger filter with current state + overrides
     const triggerFilter = (overrides = {}) => {
         onFilter({
             searchInput: search,
             selectedSkills,
-            country: selectedCountry,
             sector: selectedSector,
             location: selectedLocation,
             companySize: selectedCompanySize,
             showOnlyMyWork,
+            selectedTheme,
+            statusFilter,
             ...overrides
         });
     };
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            // Don't close if clicking inside the location panel
-            if (showLocationPanel && e.target.closest('.location-panel')) return;
-            setOpenDropdown(null);
-            setShowLocationPanel(false);
-        };
-        if (openDropdown || showLocationPanel) {
-            document.addEventListener('click', handleClickOutside);
-            return () => document.removeEventListener('click', handleClickOutside);
-        }
-    }, [openDropdown, showLocationPanel]);
-
     useEffect(() => {
         let ignore = false;
-
         getSkills()
             .then(data => {
                 if (ignore) return;
-                // Normalize skills from backend before storing in state
                 setAllSkills((data || []).map(normalizeSkill).filter(Boolean));
             })
             .catch(err => {
                 if (ignore) return;
                 setError(err.message);
             });
-
-        return () => {
-            ignore = true;
-        }
+        return () => { ignore = true; }
     }, []);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        if (!openDropdown) return;
+        const handleClickOutside = (e) => {
+            if (e.target.closest('.filter-dropdown-popover')) return;
+            setOpenDropdown(null);
+            setDropdownSearch('');
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [openDropdown]);
+
+    // Debounced search handler
+    const handleSearchChange = (e) => {
+        const val = e.target.value;
+        setSearch(val);
+        clearTimeout(searchTimerRef.current);
+        searchTimerRef.current = setTimeout(() => {
+            triggerFilter({ searchInput: val });
+        }, 300);
+    };
+
+    const handleSearchClear = () => {
+        clearTimeout(searchTimerRef.current);
+        setSearch('');
+        triggerFilter({ searchInput: '' });
+    };
 
     const handleSave = (skills, keepOpen = false) => {
         const normalized = (skills || []).map(normalizeSkill).filter(Boolean);
         setSelectedSkills(normalized);
-        // Don't close when in instant apply mode (keepOpen from SkillsEditor)
-        if (!keepOpen) {
-        setIsEditing(false);
-        }
+        if (!keepOpen) setIsEditing(false);
         triggerFilter({ selectedSkills: normalized });
     };
 
-    const handleSkillsClear = () => {
-        setSelectedSkills([]);
-        triggerFilter({ selectedSkills: [] });
-    };
-
-    // Remove individual skill filter
     const handleRemoveSkill = (skillToRemove) => {
         const newSkills = selectedSkills.filter(s => 
             (s.skillId || s.id) !== (skillToRemove.skillId || skillToRemove.id)
@@ -136,129 +281,140 @@ export default function Filter({ onFilter, businesses = [] }) {
         triggerFilter({ selectedSkills: newSkills });
     };
 
-    const handleSearch = (e) => {
-        e.preventDefault();
-        triggerFilter();
-    };
-
-    const handleSearchClear = (e) => {
-        e.preventDefault();
-        setSearch('');
-        triggerFilter({ searchInput: '' });
-    };
-
-    // Clear all quick filters
-    const handleClearAllQuickFilters = () => {
-        setSelectedCountry(null);
+    const handleClearAll = () => {
+        clearTimeout(searchTimerRef.current);
         setSelectedSector(null);
         setSelectedLocation(null);
         setSelectedCompanySize(null);
         setShowOnlyMyWork(false);
-        triggerFilter({ country: null, sector: null, location: null, companySize: null, showOnlyMyWork: false });
+        setSelectedTheme(null);
+        setStatusFilter('all');
+        setSelectedSkills([]);
+        setSearch('');
+        triggerFilter({ 
+            sector: null, location: null, companySize: null, 
+            showOnlyMyWork: false, selectedTheme: null, statusFilter: 'all',
+            selectedSkills: [], searchInput: ''
+        });
     };
 
-    // Compute map locations based on view
+    // Map data
     const mapLocations = useMemo(() => {
         if (mapView === 'businesses') {
-            return businesses
-                .filter(b => b.location)
-                .map(b => {
-                    // Calculate skill matches for business
-                    const matchCount = b.topSkills?.filter(s => studentSkillIds.has(s.skillId))?.length || 0;
-                    return {
-                        id: b.id,
-                        name: b.name,
-                        address: b.location,
-                        image: b.image,
-                        type: 'business',
-                        count: b.projects?.length || 0,
-                        matchCount: matchCount
-                    };
-                });
-        } else {
-            // Projects view - use business location for now (projects don't have own location yet)
-            const projectLocations = [];
-            businesses.forEach(b => {
-                if (b.location && b.projects) {
-                    b.projects.forEach(p => {
-                        // Get all skills from project tasks
-                        const projectSkills = p.tasks?.flatMap(t => t.skills || []) || [];
-                        const matchCount = projectSkills.filter(s => studentSkillIds.has(s.skillId || s.id))?.length || 0;
-                        
-                        projectLocations.push({
-                            id: p.projectId || p.id,
-                            name: p.title || p.name,
-                            address: b.location, // Use business location
-                            image: b.image, // Use business image
-                            type: 'project',
-                            businessName: b.name,
-                            matchCount: matchCount
-        });
-                    });
-                }
+            return businesses.filter(b => b.location).map(b => {
+                const matchCount = b.topSkills?.filter(s => studentSkillIds.has(s.skillId))?.length || 0;
+                return { id: b.id, name: b.name, address: b.location, image: b.image, type: 'business', count: b.projects?.length || 0, matchCount };
             });
-            return projectLocations;
         }
+        const locs = [];
+        businesses.forEach(b => {
+            if (b.location && b.projects) {
+                b.projects.forEach(p => {
+                    const projectSkills = p.tasks?.flatMap(t => t.skills || []) || [];
+                    const matchCount = projectSkills.filter(s => studentSkillIds.has(s.skillId || s.id))?.length || 0;
+                    locs.push({ id: p.projectId || p.id, name: p.title || p.name, address: b.location, image: b.image, type: 'project', businessName: b.name, matchCount });
+                });
+            }
+        });
+        return locs;
     }, [businesses, mapView, studentSkillIds]);
 
-    // Count totals for display
-    const totalProjects = useMemo(() => 
-        businesses.reduce((sum, b) => sum + (b.projects?.length || 0), 0),
-        [businesses]
-    );
-
-    // Determine which locations match student skills (for map highlighting)
-    const filteredMapLocations = useMemo(() => {
-        return mapLocations.map(loc => {
-            // A location "matches" if it has skills that match the student's skills
-            const isMatch = loc.matchCount > 0;
-            return { ...loc, isFilterMatch: isMatch };
-        });
-    }, [mapLocations]);
-
-    // Count matching locations
-    const matchingLocationsCount = useMemo(() => 
-        filteredMapLocations.filter(loc => loc.isFilterMatch).length,
-        [filteredMapLocations]
-    );
-
-    // Check if there are active filters (including quick filters)
-    const hasActiveFilters = search.trim() || selectedSkills.length > 0 || selectedCountry || selectedSector || selectedLocation || selectedCompanySize || showOnlyMyWork;
-    const hasQuickFilters = selectedCountry || selectedSector || selectedLocation || selectedCompanySize || showOnlyMyWork;
-    // Show matching toggle only when student has skills (so matching is meaningful)
+    const totalProjects = useMemo(() => businesses.reduce((sum, b) => sum + (b.projects?.length || 0), 0), [businesses]);
+    const filteredMapLocations = useMemo(() => mapLocations.map(loc => ({ ...loc, isFilterMatch: loc.matchCount > 0 })), [mapLocations]);
+    const matchingLocationsCount = useMemo(() => filteredMapLocations.filter(loc => loc.isFilterMatch).length, [filteredMapLocations]);
     const canShowMatching = studentSkills.length > 0;
 
+    // Active filter chips
+    const activeFilterChips = [];
+    if (search.trim()) activeFilterChips.push({ label: `"${search}"`, onClear: handleSearchClear });
+    if (showOnlyMyWork) activeFilterChips.push({ label: 'Mijn werk', onClear: () => { setShowOnlyMyWork(false); triggerFilter({ showOnlyMyWork: false }); } });
+    if (statusFilter !== 'all') activeFilterChips.push({ label: statusFilter === 'active' ? 'Open' : 'Archief', onClear: () => { setStatusFilter('all'); triggerFilter({ statusFilter: 'all' }); } });
+    if (selectedTheme) {
+        const theme = themes.find(t => t.id === selectedTheme);
+        activeFilterChips.push({ label: theme?.name || 'Thema', onClear: () => { setSelectedTheme(null); triggerFilter({ selectedTheme: null }); } });
+    }
+    if (selectedLocation) activeFilterChips.push({ label: selectedLocation, onClear: () => { setSelectedLocation(null); triggerFilter({ location: null }); } });
+    if (selectedSector) activeFilterChips.push({ label: selectedSector, onClear: () => { setSelectedSector(null); triggerFilter({ sector: null }); } });
+    if (selectedCompanySize) activeFilterChips.push({ label: selectedCompanySize, onClear: () => { setSelectedCompanySize(null); triggerFilter({ companySize: null }); } });
+    selectedSkills.forEach(skill => {
+        activeFilterChips.push({ label: skill.name, onClear: () => handleRemoveSkill(skill) });
+    });
+    const hasAnyFilter = activeFilterChips.length > 0;
+
     return (
-        <div className="relative mb-8">
-            <div className="neu-flat p-5 sm:p-6">
-                {/* Quick filter chips - inside the search bar container */}
-                <div className="flex flex-wrap items-center gap-3 mb-4 pb-4 border-b border-[var(--neu-border)]" onClick={(e) => e.stopPropagation()}>
-                    {/* Map toggle button - standalone coral filled */}
+        <div className="relative mb-8 max-w-5xl mx-auto">
+            <div className="neu-flat p-4 sm:p-5">
+
+                {/* === SINGLE ROW: Kaart | Search | Skills | Mijn werk | Status | Count === */}
+                <div className="flex items-center gap-2 flex-wrap mb-4 pb-4 border-b border-[var(--neu-border)]">
+                    {/* Kaart - ORANGE, first element */}
                     {businesses.length > 0 && (
                         <button 
                             type="button"
-                            className={`flex items-center gap-2 !py-2 !px-3 text-sm font-bold rounded-xl transition-all ${
-                                showMap 
-                                    ? 'neu-pressed text-primary' 
-                                    : 'neu-btn-primary'
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
+                                showMap ? 'neu-pressed text-primary' : 'neu-btn-primary'
                             }`}
                             onClick={() => setShowMap(!showMap)}
                             aria-expanded={showMap}
-                            aria-label={showMap ? 'Verberg kaart' : 'Toon kaart'}
                         >
-                            <span className="material-symbols-outlined text-base" aria-hidden="true">map</span>
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">map</span>
                             <span className="hidden sm:inline">Kaart</span>
                         </button>
                     )}
 
-                    {/* My work filter - only show if student has work registrations */}
+                    {/* Search bar - debounced live search */}
+                    <div className="relative flex-1 min-w-[180px] group">
+                        <label className="sr-only" htmlFor="search">Zoek een organisatie of project</label>
+                        <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-lg group-focus-within:text-primary transition-colors" aria-hidden="true">
+                            search
+                        </span>
+                        <input
+                            id="search"
+                            type="text"
+                            placeholder="Zoek organisatie of project..."
+                            value={search}
+                            onChange={handleSearchChange}
+                            maxLength={50}
+                            className="neu-input w-full !pl-11 !pr-10 !py-2 text-sm"
+                        />
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={handleSearchClear}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-primary transition-colors cursor-pointer"
+                                aria-label="Wis zoekopdracht"
+                            >
+                                <span className="material-symbols-outlined text-lg" aria-hidden="true">close</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Skills */}
+                    <button 
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-200 cursor-pointer ${
+                            isEditing ? 'neu-pressed text-primary' : 'neu-btn'
+                        }`}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={() => setIsEditing(!isEditing)}
+                        aria-expanded={isEditing}
+                    >
+                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                            {isEditing ? 'expand_less' : 'filter_list'}
+                        </span>
+                        <span>Skills</span>
+                        {selectedSkills.length > 0 && !isEditing && (
+                            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                                {selectedSkills.length}
+                            </span>
+                        )}
+                    </button>
+
+                    {/* Mijn werk */}
                     {workingBusinessIds.size > 0 && (
                         <button 
                             type="button"
-                            className={`flex items-center gap-2 !py-2 !px-3 text-sm font-bold rounded-xl transition-all ${
-                                showOnlyMyWork 
-                                    ? 'neu-pressed text-emerald-600 ring-2 ring-emerald-500/30' 
-                                    : 'neu-btn hover:ring-2 hover:ring-emerald-500/20'
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
+                                showOnlyMyWork ? 'neu-pressed text-primary ring-1 ring-primary/20' : 'neu-btn'
                             }`}
                             onClick={() => {
                                 const newValue = !showOnlyMyWork;
@@ -266,291 +422,196 @@ export default function Filter({ onFilter, businesses = [] }) {
                                 triggerFilter({ showOnlyMyWork: newValue });
                             }}
                             aria-pressed={showOnlyMyWork}
-                            aria-label={showOnlyMyWork ? 'Toon alle bedrijven' : 'Toon alleen mijn werk'}
                         >
-                            <span className="material-symbols-outlined text-base" aria-hidden="true">work</span>
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">work</span>
                             <span className="hidden sm:inline">Mijn werk</span>
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
-                                showOnlyMyWork 
-                                    ? 'bg-emerald-500 text-white' 
-                                    : 'bg-emerald-100 text-emerald-700'
+                                showOnlyMyWork ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
                             }`}>
                                 {workingBusinessIds.size}
                             </span>
                         </button>
                     )}
 
-                    {/* Location dropdown button with panel */}
-                    <div className="relative">
+                    {/* Status segment */}
+                    <div className="neu-segment-container !p-1">
+                        <button onClick={() => { setStatusFilter('all'); triggerFilter({ statusFilter: 'all' }); }} className={`neu-segment-btn !px-3 !py-1.5 !text-[11px] cursor-pointer ${statusFilter === 'all' ? 'active' : ''}`}>Alle</button>
+                        <button onClick={() => { setStatusFilter('active'); triggerFilter({ statusFilter: 'active' }); }} className={`neu-segment-btn !px-3 !py-1.5 !text-[11px] cursor-pointer ${statusFilter === 'active' ? 'active' : ''}`}>Open</button>
+                        <button onClick={() => { setStatusFilter('completed'); triggerFilter({ statusFilter: 'completed' }); }} className={`neu-segment-btn !px-3 !py-1.5 !text-[11px] cursor-pointer ${statusFilter === 'completed' ? 'active' : ''}`}>Archief</button>
+                    </div>
+
+                    {/* Live result count */}
+                    <span className="text-[11px] text-[var(--text-muted)] font-medium ml-auto shrink-0 tabular-nums">
+                        <span className="text-primary font-bold">{businesses.length}</span> {businesses.length === 1 ? 'organisatie' : 'organisaties'} &middot; <span className="text-primary font-bold">{totalProjects}</span> {totalProjects === 1 ? 'project' : 'projecten'}
+                    </span>
+                </div>
+
+                {/* === Theme pills === */}
+                {themes.length > 0 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 -mx-1 px-1 mb-1">
+                        <span className="neu-label shrink-0 mr-0.5">Thema&apos;s</span>
                         <button
-                            type="button"
-                            className={`flex items-center gap-2 neu-btn !py-2 !px-3 text-sm ${
-                                (selectedCountry || selectedLocation) ? 'ring-2 ring-primary/30' : ''
+                            onClick={() => { setSelectedTheme(null); triggerFilter({ selectedTheme: null }); }}
+                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
+                                !selectedTheme ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
                             }`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowLocationPanel(!showLocationPanel);
-                                setOpenDropdown(null);
-                            }}
-                            aria-expanded={showLocationPanel}
-                            aria-haspopup="true"
                         >
-                            <span className="material-symbols-outlined text-base" aria-hidden="true">location_on</span>
-                            <span className="font-bold">Locatie</span>
-                            {(selectedCountry || selectedLocation) && (
-                                <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                                    {(selectedCountry ? 1 : 0) + (selectedLocation ? 1 : 0)}
-                                </span>
-                            )}
-                            <span className="material-symbols-outlined text-base" aria-hidden="true">
-                                {showLocationPanel ? 'expand_less' : 'expand_more'}
-                            </span>
+                            Alles
                         </button>
-
-                        {/* Location panel dropdown */}
-                        {showLocationPanel && (
-                            <div 
-                                className="location-panel absolute top-full left-0 mt-2 z-50 neu-flat rounded-xl p-4 min-w-[280px] animate-fade-in"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div className="space-y-4">
-                                    {/* Land dropdown */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Land</label>
-                                        <select
-                                            value={selectedCountry || ''}
-                                            onChange={(e) => {
-                                                const val = e.target.value || null;
-                                                setSelectedCountry(val);
-                                                // Reset plaats wanneer land wijzigt
-                                                setSelectedLocation(null);
-                                                triggerFilter({ country: val, location: null });
-                                            }}
-                                            className="w-full px-3 py-2 neu-pressed rounded-lg text-sm text-[var(--text-primary)] font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
-                                        >
-                                            <option value="">Alle landen</option>
-                                            {filterOptions.countries.map(country => (
-                                                <option key={country} value={country}>{country}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Stad dropdown */}
-                                    <div>
-                                        <label className="block text-xs font-bold text-[var(--text-muted)] mb-1.5">Stad</label>
-                                        <select
-                                            value={selectedLocation || ''}
-                                            onChange={(e) => {
-                                                const val = e.target.value || null;
-                                                setSelectedLocation(val);
-                                                triggerFilter({ location: val });
-                                            }}
-                                            className="w-full px-3 py-2 neu-pressed rounded-lg text-sm text-[var(--text-primary)] font-semibold focus:ring-2 focus:ring-primary/20 transition-all"
-                                        >
-                                            <option value="">Alle steden</option>
-                                            {filterOptions.locations.map(loc => (
-                                                <option key={loc} value={loc}>{loc}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    {/* Clear location filters */}
-                                    {(selectedCountry || selectedLocation) && (
-                                        <button 
-                                            type="button"
-                                            className="w-full text-center text-xs text-[var(--text-muted)] hover:text-primary transition-colors py-1"
-                                            onClick={() => {
-                                                setSelectedCountry(null);
-                                                setSelectedLocation(null);
-                                                triggerFilter({ country: null, location: null });
-                                            }}
-                                        >
-                                            Locatiefilters wissen
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                        {themes.map(theme => {
+                            const count = themeCounts[theme.id] || 0;
+                            if (count === 0) return null;
+                            return (
+                                <button
+                                    key={theme.id}
+                                    onClick={() => { 
+                                        const val = selectedTheme === theme.id ? null : theme.id;
+                                        setSelectedTheme(val); 
+                                        triggerFilter({ selectedTheme: val }); 
+                                    }}
+                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
+                                        selectedTheme === theme.id ? 'text-white' : 'text-[var(--text-secondary)] hover:text-primary'
+                                    }`}
+                                    style={selectedTheme === theme.id && theme.color ? { backgroundColor: theme.color } : {}}
+                                >
+                                    {theme.icon && <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{theme.icon}</span>}
+                                    {theme.name}
+                                    <span className="opacity-50">{count}</span>
+                                </button>
+                            );
+                        })}
                     </div>
+                )}
 
-                    {/* Business filters - separate group */}
-                    <div className="flex items-center gap-2">
-                        <FilterChip
-                            label="Sector"
-                            icon="category"
-                            value={selectedSector}
-                            options={filterOptions.sectors}
-                            isOpen={openDropdown === 'sector'}
-                            onToggle={() => {
-                                setOpenDropdown(openDropdown === 'sector' ? null : 'sector');
-                                setShowLocationPanel(false);
-                            }}
-                            onSelect={(val) => {
-                                setSelectedSector(val);
-                                setOpenDropdown(null);
-                                triggerFilter({ sector: val });
-                            }}
-                            onClear={() => {
-                                setSelectedSector(null);
-                                triggerFilter({ sector: null });
-                            }}
-                        />
-
-                        <FilterChip
-                            label="Organisatiegrootte"
-                            icon="apartment"
-                            value={selectedCompanySize}
-                            options={filterOptions.companySizes}
-                            isOpen={openDropdown === 'companySize'}
-                            onToggle={() => {
-                                setOpenDropdown(openDropdown === 'companySize' ? null : 'companySize');
-                                setShowLocationPanel(false);
-                            }}
-                            onSelect={(val) => {
-                                setSelectedCompanySize(val);
-                                setOpenDropdown(null);
-                                triggerFilter({ companySize: val });
-                            }}
-                            onClear={() => {
-                                setSelectedCompanySize(null);
-                                triggerFilter({ companySize: null });
-                            }}
-                        />
-                    </div>
-
-                    {/* Clear all quick filters button */}
-                    {hasQuickFilters && (
-                        <button 
-                            className="neu-btn !py-1.5 !px-3 text-xs ml-auto"
-                            onClick={handleClearAllQuickFilters}
-                            aria-label="Wis alle snelle filters"
+                {/* === Sector pills === */}
+                {filterOptions.sectors.length > 0 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 -mx-1 px-1 mb-1">
+                        <span className="neu-label shrink-0 mr-0.5">Sector</span>
+                        <button
+                            onClick={() => { setSelectedSector(null); triggerFilter({ sector: null }); }}
+                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
+                                !selectedSector ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
+                            }`}
                         >
-                            <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">filter_alt_off</span>
-                            Wis
+                            Alles
+                        </button>
+                        {filterOptions.sectors.map(sector => {
+                            const count = filterOptions.sectorCounts[sector] || 0;
+                            return (
+                                <button
+                                    key={sector}
+                                    onClick={() => { 
+                                        const val = selectedSector === sector ? null : sector;
+                                        setSelectedSector(val); 
+                                        triggerFilter({ sector: val }); 
+                                    }}
+                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
+                                        selectedSector === sector
+                                            ? 'bg-[var(--text-primary)] text-white'
+                                            : 'text-[var(--text-secondary)] hover:text-primary'
+                                    }`}
+                                >
+                                    <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{getSectorIcon(sector)}</span>
+                                    {sector}
+                                    <span className="opacity-50">{count}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Skills editor panel */}
+                <SkillsEditor
+                    allSkills={allSkills}
+                    initialSkills={selectedSkills}
+                    isEditing={isEditing}
+                    onSave={handleSave}
+                    onCancel={() => setIsEditing(false)}
+                    setError={setError}
+                    showOwnSkillsOption={true}
+                    hideSelectedSkills={true}
+                    instantApply={true}
+                >
+                    <></>
+                </SkillsEditor>
+            </div>
+
+            {/* === Active filter chips === */}
+            {hasAnyFilter && !isEditing && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-4 px-1">
+                    <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">Actief:</span>
+                    {activeFilterChips.map((chip, i) => (
+                        <button
+                            key={i}
+                            onClick={chip.onClear}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-all cursor-pointer group"
+                            aria-label={`Verwijder filter: ${chip.label}`}
+                        >
+                            {chip.label}
+                            <span className="material-symbols-outlined text-xs opacity-50 group-hover:opacity-100" aria-hidden="true">close</span>
+                        </button>
+                    ))}
+                    {activeFilterChips.length > 1 && (
+                        <button onClick={handleClearAll} className="text-[11px] font-bold text-[var(--text-muted)] hover:text-primary transition-colors ml-1 cursor-pointer">
+                            Alles wissen
                         </button>
                     )}
                 </div>
+            )}
 
-                {/* Main filter bar */}
-                <div className="flex flex-col justify-between items-stretch gap-5 sm:flex-row sm:items-center">
-                {/* Skills filter - integrated button/panel */}
-                <div className="sm:w-auto relative">
-                    {/* Toggle button - transforms when open */}
-                    <button 
-                        className={`flex items-center gap-2 text-sm transition-all duration-200 ${
-                            isEditing 
-                                ? 'neu-pressed px-4 py-2.5 rounded-xl text-primary' 
-                                : 'neu-btn'
-                        }`}
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onClick={() => setIsEditing(!isEditing)}
-                        aria-expanded={isEditing}
-                        aria-controls="skills-filter-panel"
-                    >
-                        <span className="material-symbols-outlined text-lg" aria-hidden="true">
-                            {isEditing ? 'expand_less' : 'filter_list'}
-                        </span>
-                        <span className="font-bold">Filter op skills</span>
-                        {/* Badge: show selected count only when closed */}
-                        {selectedSkills.length > 0 && !isEditing && (
-                            <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center" aria-label={`${selectedSkills.length} filters actief`}>
-                                {selectedSkills.length}
-                            </span>
-                        )}
-                    </button>
-
-                    {/* Skills editor panel - appears below button */}
-                    <SkillsEditor
-                        allSkills={allSkills}
-                        initialSkills={selectedSkills}
-                        isEditing={isEditing}
-                        onSave={handleSave}
-                        onCancel={() => setIsEditing(false)}
-                        setError={setError}
-                        showOwnSkillsOption={true}
-                        hideSelectedSkills={true}
-                        instantApply={true}
-                    >
-                        {/* Empty children - button is above */}
-                        <></>
-                    </SkillsEditor>
-                </div>
-
-                {/* Search form */}
-                <div className="flex-1 max-w-xl">
-                    <form onSubmit={handleSearch} className="flex w-full gap-3">
-                        <div className="relative flex-1 group">
-                            <label className="sr-only" htmlFor="search">Zoek een organisatie of project</label>
-                            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary transition-colors" aria-hidden="true">
-                                search
-                            </span>
-                            <input
-                                id="search"
-                                type="text"
-                                placeholder="Zoek een organisatie of project..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                maxLength={50}
-                                className="neu-input w-full pl-14 pr-6 text-sm"
-                            />
-                        </div>
-                        <button 
-                            type="submit" 
-                            className="neu-btn-primary !px-5" 
-                            aria-label="Zoeken op organisatie- of projectnaam"
-                        >
-                            <span className="material-symbols-outlined" aria-hidden="true">search</span>
-                        </button>
-
-                        {search && (
-                            <button 
-                                type="button"
-                                className="neu-btn !px-4" 
-                                onClick={handleSearchClear} 
-                                aria-label="Wis zoekopdracht"
-                            >
-                                <span className="material-symbols-outlined" aria-hidden="true">close</span>
-                            </button>
-                        )}
-                    </form>
-                </div>
-
-                </div>
-            </div>
-
-            {/* Map section - expandable */}
+            {/* === Map section with Locatie dropdown in header === */}
             {showMap && businesses.length > 0 && (
                 <div className="mt-4 neu-flat p-4 rounded-2xl animate-fade-in">
-                    {/* View toggle and filter options */}
-                    <div className="flex flex-wrap items-center gap-4 mb-4">
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
                         <div className="neu-segment-container">
-                            <button 
-                                className={`neu-segment-btn ${mapView === 'businesses' ? 'active' : ''}`}
-                                onClick={() => setMapView('businesses')}
-                            >
-                                <span className="material-symbols-outlined text-sm mr-1">business</span>
-                                Bedrijven
+                            <button className={`neu-segment-btn ${mapView === 'businesses' ? 'active' : ''}`} onClick={() => setMapView('businesses')}>
+                                <span className="material-symbols-outlined text-sm mr-1">business</span>Bedrijven
                             </button>
-                            <button 
-                                className={`neu-segment-btn ${mapView === 'projects' ? 'active' : ''}`}
-                                onClick={() => setMapView('projects')}
-                            >
-                                <span className="material-symbols-outlined text-sm mr-1">folder_open</span>
-                                Projecten
+                            <button className={`neu-segment-btn ${mapView === 'projects' ? 'active' : ''}`} onClick={() => setMapView('projects')}>
+                                <span className="material-symbols-outlined text-sm mr-1">folder_open</span>Projecten
                             </button>
                         </div>
+
+                        {/* Locatie dropdown - only in map context */}
+                        {filterOptions.locations.length > 0 && (
+                            <FilterDropdownButton
+                                label="Locatie"
+                                icon="location_on"
+                                value={selectedLocation}
+                                options={filterOptions.locations}
+                                optionCounts={filterOptions.locationCounts}
+                                isOpen={openDropdown === 'location'}
+                                searchQuery={openDropdown === 'location' ? dropdownSearch : ''}
+                                onSearchChange={setDropdownSearch}
+                                onToggle={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === 'location' ? null : 'location'); setDropdownSearch(''); }}
+                                onSelect={(val) => { setSelectedLocation(val); setOpenDropdown(null); setDropdownSearch(''); triggerFilter({ location: val }); }}
+                            />
+                        )}
+
+                        {/* Grootte dropdown - only in map context for businesses */}
+                        {mapView === 'businesses' && filterOptions.companySizes.length > 0 && (
+                            <FilterDropdownButton
+                                label="Grootte"
+                                icon="apartment"
+                                value={selectedCompanySize}
+                                options={filterOptions.companySizes}
+                                optionCounts={filterOptions.companySizeCounts}
+                                isOpen={openDropdown === 'companySize'}
+                                searchQuery={openDropdown === 'companySize' ? dropdownSearch : ''}
+                                onSearchChange={setDropdownSearch}
+                                onToggle={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === 'companySize' ? null : 'companySize'); setDropdownSearch(''); }}
+                                onSelect={(val) => { setSelectedCompanySize(val); setOpenDropdown(null); setDropdownSearch(''); triggerFilter({ companySize: val }); }}
+                            />
+                        )}
                         
-                        {/* Show only matches toggle - only visible when student has skills */}
                         {canShowMatching && (
                             <button 
                                 className={`neu-btn !py-1.5 !px-3 text-xs ${showOnlyMatches ? 'neu-pressed text-primary' : ''}`}
                                 onClick={() => setShowOnlyMatches(!showOnlyMatches)}
                                 aria-pressed={showOnlyMatches}
                             >
-                                <span className="material-symbols-outlined text-sm mr-1">
-                                    {showOnlyMatches ? 'close' : 'filter_alt'}
-                                </span>
-                                {showOnlyMatches ? 'Toon alles' : 'Alleen mijn matches'}
+                                <span className="material-symbols-outlined text-sm mr-1">{showOnlyMatches ? 'close' : 'filter_alt'}</span>
+                                {showOnlyMatches ? 'Toon alles' : 'Alleen matches'}
                             </button>
                         )}
                         
@@ -562,7 +623,7 @@ export default function Filter({ onFilter, businesses = [] }) {
                                     {mapView === 'businesses' 
                                         ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}` 
                                         : `${totalProjects} ${totalProjects === 1 ? 'project' : 'projecten'}`}
-                                    {' matcht jouw skills'}
+                                    {' matcht'}
                                 </>
                             ) : (
                                 mapView === 'businesses' 
@@ -572,38 +633,7 @@ export default function Filter({ onFilter, businesses = [] }) {
                         </span>
                     </div>
                     
-                    {/* Map */}
-                    <OverviewMap 
-                        locations={filteredMapLocations}
-                        showOnlyMatches={showOnlyMatches}
-                        height="350px"
-                    />
-                </div>
-            )}
-
-            {/* Selected skills display with individual remove buttons */}
-            {selectedSkills.length > 0 && !isEditing && (
-                <div className="flex flex-wrap items-center gap-3 mt-5">
-                    <span className="neu-label">Actieve filters:</span>
-                    {selectedSkills.map((skill) => (
-                        <button
-                            key={skill.skillId || skill.id}
-                            onClick={() => handleRemoveSkill(skill)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 hover:border-primary/50 transition-all group"
-                            aria-label={`Verwijder filter ${skill.name}`}
-                        >
-                            {skill.name}
-                            <span className="material-symbols-outlined text-sm opacity-60 group-hover:opacity-100" aria-hidden="true">close</span>
-                        </button>
-                    ))}
-                    {selectedSkills.length > 1 && (
-                        <button className="neu-btn !py-1.5 !px-3 text-xs" onClick={handleSkillsClear} aria-label="Alle filters wissen">
-                            <span className="flex items-center gap-1">
-                                <span className="material-symbols-outlined text-sm" aria-hidden="true">delete_sweep</span>
-                                <span className="font-bold">Alles wissen</span>
-                            </span>
-                        </button>
-                    )}
+                    <OverviewMap locations={filteredMapLocations} showOnlyMatches={showOnlyMatches} height="350px" />
                 </div>
             )}
 

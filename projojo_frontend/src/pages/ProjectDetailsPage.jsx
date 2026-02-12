@@ -66,6 +66,9 @@ export default function ProjectDetailsPage() {
 
     if (!projectId || showNotFound) return <NotFoundPage />
 
+    // Detect archived: explicitly archived, completed status, or end_date in the past
+    const isArchived = project?.is_archived || project?.status === 'completed' || (project?.end_date && new Date(project.end_date) < new Date());
+
     const breadcrumbItems = [
         { label: "Ontdek", to: "/ontdek" },
         ...(project?.business ? [{ label: project.business.name, to: `/business/${project.business.id}` }] : []),
@@ -75,7 +78,16 @@ export default function ProjectDetailsPage() {
     return (
         <>
             <Breadcrumb items={breadcrumbItems} />
-            <div className="neu-flat overflow-hidden">
+
+            {/* Archive banner */}
+            {isArchived && (
+                <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl bg-[var(--neu-bg)] border border-[var(--neu-border)] text-[var(--text-muted)]">
+                    <span className="material-symbols-outlined text-lg">inventory_2</span>
+                    <span className="text-sm font-semibold">Dit project is afgerond en staat in het archief.</span>
+                </div>
+            )}
+
+            <div className={`neu-flat overflow-hidden ${isArchived ? 'grayscale opacity-80' : ''}`}>
                 <ProjectDetails 
                     project={project} 
                     tasks={tasks}

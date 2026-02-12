@@ -1,11 +1,28 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import ProjectCard from './ProjectCard';
+
+function isProjectArchived(project) {
+    if (project.status === 'completed') return true;
+    if (project.end_date && new Date(project.end_date) < new Date()) return true;
+    return false;
+}
 
 export default function ProjectDashboard({ projects, isAlwaysExtended = false }) {
     const [isExpanded, setIsExpanded] = useState(false);
 
+    // Sort: open projects first, archived last
+    const sortedProjects = useMemo(() => {
+        if (!projects) return [];
+        return [...projects].sort((a, b) => {
+            const aArchived = isProjectArchived(a);
+            const bArchived = isProjectArchived(b);
+            if (aArchived === bArchived) return 0;
+            return aArchived ? 1 : -1;
+        });
+    }, [projects]);
+
     const effectivelyExpanded = isExpanded || isAlwaysExtended;
-    const shownProjects = effectivelyExpanded ? projects : projects?.slice(0, 3);
+    const shownProjects = effectivelyExpanded ? sortedProjects : sortedProjects.slice(0, 3);
 
     return (
         <div className="container mx-auto py-4 max-w-7xl">
@@ -30,7 +47,7 @@ export default function ProjectDashboard({ projects, isAlwaysExtended = false })
                     ))}
                 </div>
 
-                {!isAlwaysExtended && projects?.length > 3 && (
+                {!isAlwaysExtended && sortedProjects.length > 3 && (
                     <button className="neu-btn-primary" onClick={() => setIsExpanded(!isExpanded)}>
                         {isExpanded ? 'Bekijk minder' : 'Bekijk meer'}
                     </button>

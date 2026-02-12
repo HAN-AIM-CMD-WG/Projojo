@@ -3,16 +3,17 @@ import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
 import SkeletonOverview from '../components/SkeletonOverview';
-import { getBusinessesComplete } from '../services';
+import { getBusinessesComplete, getThemes, getPublicProjects } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
 
 export default function OverviewPage() {
-  const { studentName, studentSkills } = useStudentSkills();
+  const { studentSkills } = useStudentSkills();
   const { workingBusinessIds } = useStudentWork();
   const [initialBusinesses, setInitialBusinesses] = useState([]);
   const [shownBusinesses, setShownBusinesses] = useState([]);
+  const [themes, setThemes] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,9 +21,29 @@ export default function OverviewPage() {
     let ignore = false;
     setIsLoading(true);
 
-    getBusinessesComplete()
-      .then(data => {
+    Promise.allSettled([getBusinessesComplete(), getThemes(), getPublicProjects()])
+      .then(([businessesResult, themesResult, publicProjectsResult]) => {
         if (ignore) return;
+
+        // Businesses are required - fail if they didn't load
+        if (businessesResult.status !== 'fulfilled') {
+          throw new Error(businessesResult.reason?.message || 'Kon projecten niet laden');
+        }
+        const data = businessesResult.value;
+
+        // Themes and public projects degrade gracefully
+        const themesData = themesResult.status === 'fulfilled' ? themesResult.value : [];
+        const publicProjects = publicProjectsResult.status === 'fulfilled' ? publicProjectsResult.value : [];
+
+        setThemes(themesData || []);
+
+        // Build project -> themes mapping from public projects
+        const projectThemesMap = {};
+        (publicProjects || []).forEach(p => {
+          if (p.id && p.themes) {
+            projectThemesMap[p.id] = p.themes;
+          }
+        });
 
         const formattedBusinesses = data.map(business => {
           // Normalize all task skills for this business
@@ -69,6 +90,7 @@ export default function OverviewPage() {
                 projectId: project.id,
                 title: project.name,
                 location: normalizedProjectLocation,
+                themes: projectThemesMap[project.id] || [],
                 tasks: project.tasks.map(task => ({
                   ...task,
                   skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
@@ -100,12 +122,12 @@ export default function OverviewPage() {
 
   const isSearchInString = (search, string) => string.toLowerCase().includes(search.toLowerCase());
 
-  const handleFilter = ({ searchInput, selectedSkills, country, sector, location, companySize, showOnlyMyWork }) => {
+  const handleFilter = ({ searchInput, selectedSkills, sector, location, companySize, showOnlyMyWork, selectedTheme, statusFilter }) => {
     const formattedSearch = searchInput.trim().replace(/\s+/g, ' ')
     setError(null);
 
     // Check if any filter is active
-    const hasFilters = formattedSearch || selectedSkills.length > 0 || country || sector || location || companySize || showOnlyMyWork;
+    const hasFilters = formattedSearch || selectedSkills.length > 0 || sector || location || companySize || showOnlyMyWork || selectedTheme || (statusFilter && statusFilter !== 'all');
 
     if (!hasFilters) {
       setShownBusinesses(initialBusinesses);
@@ -118,13 +140,6 @@ export default function OverviewPage() {
     if (showOnlyMyWork) {
       filteredData = filteredData.filter(b => 
         workingBusinessIds.has(b.business?.businessId || b.id)
-      );
-    }
-
-    // Country filter
-    if (country) {
-      filteredData = filteredData.filter(b => 
-        b.business.country?.toLowerCase() === country.toLowerCase()
       );
     }
 
@@ -147,6 +162,40 @@ export default function OverviewPage() {
       filteredData = filteredData.filter(b => 
         b.business.companySize?.toLowerCase() === companySize.toLowerCase()
       );
+    }
+
+    // Theme filter - filter businesses that have at least one project with the selected theme
+    if (selectedTheme) {
+      filteredData = filteredData.map(business => {
+        const filteredProjects = business.projects.filter(project =>
+          project.themes?.some(t => t.id === selectedTheme)
+        );
+        if (filteredProjects.length > 0) {
+          return { ...business, projects: filteredProjects };
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    // Status filter - filter projects by their end_date
+    if (statusFilter && statusFilter !== 'all') {
+      const now = new Date();
+      filteredData = filteredData.map(business => {
+        const filteredProjects = business.projects.filter(project => {
+          if (statusFilter === 'active') {
+            // Active: no end_date or end_date in the future
+            return !project.end_date || new Date(project.end_date) >= now;
+          } else if (statusFilter === 'completed') {
+            // Completed: end_date in the past
+            return project.end_date && new Date(project.end_date) < now;
+          }
+          return true;
+        });
+        if (filteredProjects.length > 0) {
+          return { ...business, projects: filteredProjects };
+        }
+        return null;
+      }).filter(Boolean);
     }
 
     // Search filter
@@ -212,10 +261,14 @@ export default function OverviewPage() {
       if (showOnlyMyWork) activeFilters.push('mijn werk');
       if (formattedSearch) activeFilters.push(`"${formattedSearch}"`);
       if (selectedSkills.length > 0) activeFilters.push(selectedSkills.map(s => s.name).join(', '));
-      if (country) activeFilters.push(`land: ${country}`);
       if (sector) activeFilters.push(`sector: ${sector}`);
       if (location) activeFilters.push(`stad: ${location}`);
       if (companySize) activeFilters.push(`grootte: ${companySize}`);
+      if (selectedTheme) {
+        const theme = themes.find(t => t.id === selectedTheme);
+        activeFilters.push(`thema: ${theme?.name || selectedTheme}`);
+      }
+      if (statusFilter && statusFilter !== 'all') activeFilters.push(`status: ${statusFilter}`);
       
       setError(`Geen resultaten gevonden voor ${activeFilters.join(' + ')}.`);
     }
@@ -223,33 +276,26 @@ export default function OverviewPage() {
     setShownBusinesses(filteredData);
   };
 
-  // Get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Goedemorgen';
-    if (hour < 18) return 'Goedemiddag';
-    return 'Goedenavond';
-  };
-
-  // Count OPEN POSITIONS that match student skills (marketplace model)
+  // Count OPEN projects that match student skills (archived excluded)
   const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
+  const now = new Date();
   
-  const { totalOpenPositions, matchingOpenPositions } = shownBusinesses.reduce((acc, business) => {
+  const { totalProjects, matchingProjects } = shownBusinesses.reduce((acc, business) => {
     business.projects.forEach(project => {
-      project.tasks?.forEach(task => {
-        const available = Math.max(0, (task.total_needed || 0) - (task.total_accepted || 0));
-        acc.totalOpenPositions += available;
-        
-        // Check if task matches student skills
+      // Skip archived projects (completed or end_date in the past)
+      const isArchived = project.status === 'completed' || (project.end_date && new Date(project.end_date) < now);
+      if (isArchived) return;
+      
+      acc.totalProjects++;
+      // Check if any task in this project matches student skills
+      const hasMatch = project.tasks?.some(task => {
         const taskSkillIds = new Set(task.skills?.map(s => s.skillId || s.id) || []);
-        const hasMatchingSkill = [...taskSkillIds].some(id => studentSkillIds.has(id));
-        if (hasMatchingSkill) {
-          acc.matchingOpenPositions += available;
-        }
+        return [...taskSkillIds].some(id => studentSkillIds.has(id));
       });
+      if (hasMatch) acc.matchingProjects++;
     });
     return acc;
-  }, { totalOpenPositions: 0, matchingOpenPositions: 0 });
+  }, { totalProjects: 0, matchingProjects: 0 });
 
   return (
     <>
@@ -259,13 +305,13 @@ export default function OverviewPage() {
           Ontdek projecten
         </h1>
         <p className="text-base text-[var(--text-muted)] font-medium mt-2">
-          {matchingOpenPositions > 0 && studentSkills.length > 0 ? (
+          {matchingProjects > 0 && studentSkills.length > 0 ? (
             <>
-              <span className="text-primary font-bold">{matchingOpenPositions}</span> {matchingOpenPositions === 1 ? 'project matcht' : 'projecten matchen'} met jouw skills
+              <span className="text-primary font-bold">{matchingProjects}</span> van {totalProjects} {totalProjects === 1 ? 'project matcht' : 'projecten matchen'} met jouw skills
             </>
-          ) : totalOpenPositions > 0 ? (
+          ) : totalProjects > 0 ? (
             <>
-              <span className="text-[var(--text-primary)] font-bold">{totalOpenPositions}</span> open {totalOpenPositions === 1 ? 'plek' : 'plekken'} beschikbaar
+              <span className="text-[var(--text-primary)] font-bold">{totalProjects}</span> {totalProjects === 1 ? 'project' : 'projecten'} beschikbaar
             </>
           ) : (
             'Vind projecten die passen bij jouw skills en interesses'
@@ -275,6 +321,7 @@ export default function OverviewPage() {
 
       <Filter 
         onFilter={handleFilter} 
+        themes={themes}
         businesses={shownBusinesses.map(b => ({
           id: b.business.businessId,
           name: b.business.name,
@@ -286,6 +333,7 @@ export default function OverviewPage() {
           projects: b.projects,
           topSkills: b.topSkills
         }))}
+        allBusinesses={initialBusinesses}
       />
       <div className={`flex flex-col gap-2 ${(error != null) && 'mb-4'}`}>
         <Alert text={error} isCloseable={false} />

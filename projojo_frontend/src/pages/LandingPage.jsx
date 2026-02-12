@@ -113,8 +113,9 @@ export default function LandingPage() {
                         </a>
                         <Link 
                             to="/publiek" 
-                            className="text-sm font-semibold text-[var(--text-secondary)] hover:text-primary transition-colors"
+                            className="neu-btn-primary !py-2 !px-4 !text-sm inline-flex items-center gap-1.5"
                         >
+                            <span className="material-symbols-outlined text-base" aria-hidden="true">explore</span>
                             <span className="hidden sm:inline">Ontdek projecten</span>
                             <span className="sm:hidden">Ontdek</span>
                         </Link>
