@@ -149,6 +149,20 @@ class TaskRepository(BaseRepository[Task]):
         """
         results = Db.read_transact(query)
         return [Task.model_validate(result) for result in results]
+    def get_business_id_by_task(self, task_id: str) -> str | None:
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $contains isa containsTask (project: $project, task: $task);
+                $hasProjects isa hasProjects (business: $business, project: $project);
+            fetch {
+                'business_id': $business.id
+            };
+        """
+        results = Db.read_transact(query, {"task_id": task_id})
+        if not results:
+            return None
+        return results[0].get("business_id")
 
     def create(self, task: Task) -> Task:
         if not task.project_id:

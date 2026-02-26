@@ -11,6 +11,7 @@ from domain.repositories import (
 
 from domain.models import Business
 from service import save_image
+from service.validation_service import is_valid_length
 
 business_repo = BusinessRepository()
 project_repo = ProjectRepository()
@@ -77,6 +78,12 @@ async def create_business(name: str = Body(...)):
     """
     Create a new business with the given name.
     """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
     try:
         created_business = business_repo.create(name)
         return created_business
@@ -108,6 +115,24 @@ async def update_business(
     existing_business = business_repo.get_by_id(business_id)
     if not existing_business:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
 
     # Handle photo upload if provided
     image_filename = None

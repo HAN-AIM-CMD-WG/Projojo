@@ -7,9 +7,10 @@ import Loading from "./Loading";
 import Modal from "./Modal";
 import RichTextViewer from './RichTextViewer';
 import SkillBadge from './SkillBadge';
+import { filterVisibleSkillsForUser } from '../utils/skills';
 import Tooltip from './Tooltip';
 
-export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false, isArchived = false, onChanged }) {
+export default function BusinessCard({ name, image, location, businessId, topSkills, description, showDescription = false, showUpdateButton = false, showViewButton = false, isArchived = false, onChanged }) {
     const { authData } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inviteLink, setInviteLink] = useState(null);
@@ -37,7 +38,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
         setIsLoading(true);
         createSupervisorInviteKey(businessId)
             .then(data => {
-                const link = `${window.location.origin}/invite?key=${data.key}`;
+                const link = `${window.location.origin}/invite/${data.key}`;
                 const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
 
                 setInviteLink(link);
@@ -99,20 +100,20 @@ export default function BusinessCard({ name, image, location, businessId, topSki
     return (
         <div className="flex flex-col items-center bg-slate-200 border border-gray-200 rounded-lg shadow md:flex-row w-full  ">
             <img className="w-full max-h-64 rounded-t-lg md:h-48 md:w-48 md:rounded-none md:rounded-s-lg object-cover" src={`${IMAGE_BASE_URL}${image}`} alt="Bedrijfslogo" />
-            <div className="flex flex-col justify-between p-4 leading-normal">
+            <div className="flex-1 flex flex-col justify-between p-4 leading-normal min-w-0 break-words w-full">
                 <h2 className="mb-1 text-4xl font-bold tracking-tight text-gray-900">{name}</h2>
                 <h3 className="mb-1 text-xl font-bold tracking-tight text-gray-900 flex gap-1">
-                    <svg className="w-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
-                    {location && location.length > 0 ?
-                        (Array.isArray(location) ? location[0] : location) :
-                        <p className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</p>
+                    <svg className="w-4 shrink-0" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" /></svg>
+                    {location && location.trim().length > 0
+                        ? <span className="break-words min-w-0">{location}</span>
+                        : <span className="italic text-gray-500 text-lg font-normal">Geen locatie bekend</span>
                     }
                 </h3>
                 {showDescription && <div className="mb-1 tracking-tight text-gray-900 "><RichTextViewer text={description} /></div>}
                 {topSkills && (
                     <>
                         <p className="mb-3 font-normal text-gray-700 ">Top {topSkills.length} skills in dit bedrijf: </p><div className="flex flex-wrap gap-2 pt-1 pb-4">
-                            {topSkills.map((skill) => (
+                            {filterVisibleSkillsForUser(authData, topSkills).map((skill) => (
                                 <SkillBadge key={skill.skillId ?? skill.id} skillName={skill.name} isPending={skill.isPending ?? skill.is_pending} />
                             ))}
                         </div>
@@ -121,7 +122,7 @@ export default function BusinessCard({ name, image, location, businessId, topSki
                 }
             </div>
             <div className="md:ml-auto p-4 flex gap-3 flex-col">
-                {!showUpdateButton && <Link to={`/business/${businessId}`} className="btn-primary">Bekijk bedrijf</Link>}
+                {(!showUpdateButton || showViewButton) && <Link to={`/business/${businessId}`} className="btn-primary flex justify-center">Bekijk bedrijf</Link>}
                 {showUpdateButton && authData.businessId === businessId && (
                     <>
                         <Link to={`/projects/add`} className="btn-primary ps-3 flex flex-row gap-2 justify-center">

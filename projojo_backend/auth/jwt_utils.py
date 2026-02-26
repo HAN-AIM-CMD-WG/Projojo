@@ -1,24 +1,20 @@
 from datetime import datetime, timedelta, timezone
-import os
 import jwt
 from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
-from dotenv import load_dotenv
-
-load_dotenv()
+from config.settings import JWT_SECRET_KEY
 
 # Security scheme for extracting Bearer tokens
 security = HTTPBearer()
 
 # JWT configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_TIME_MINUTES = 60 * 8
 
 if (not JWT_SECRET_KEY) or (JWT_SECRET_KEY.strip() == ""):
     raise Exception("JWT_SECRET_KEY is not set in environment variables")
 
-def create_jwt_token(user_id: str, role: str = "student", business_id: str | None = None) -> str:
+def create_jwt_token(user_id: str, role: str, business_id: str | None = None) -> str:
     """
     Create a JWT token containing only the user ID (UUID)
     """
@@ -62,4 +58,4 @@ def get_token_payload(request: Request) -> dict:
         raise HTTPException(status_code=401, detail="Er is iets fout gegaan met je sessie. Log opnieuw in.")
     except Exception as e:
         print(f"Unexpected error while decoding JWT token: {e}")
-        raise HTTPException(status_code=401, detail="Je moet ingelogd zijn")
+        raise HTTPException(status_code=401, detail="Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw.")

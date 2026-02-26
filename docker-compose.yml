@@ -1,33 +1,34 @@
+# This is the Docker Compose file for Projojo, used in development.
+# In preview, use docker-compose.preview.yml, which uses different network and container naming.
+
 services:
   typedb:
-    # https://github.com/typedb/typedb/releases/tag/3.4.0
-    container_name: projojo_typedb
-    image: typedb/typedb:3.4.0
-    restart: unless-stopped
-    ports:
-      - "1729:1729"
-      - "1728:8000" # this is the port used for the new TypeDB Studio
-    volumes:
-      - typedb-data:/opt/typedb-all-linux-x86_64/server/data
-    platform: linux/amd64
+    extends:
+      file: docker-compose.base.yml
+      service: typedb
+    container_name: projojo_typedb  # Explicit name for development
+    env_file:
+      - .env
     networks:
       - projojo-network
 
   backend:
+    extends:
+      file: docker-compose.base.yml
+      service: backend
     container_name: projojo_backend
     depends_on:
       - typedb
+      - mailhog
     build:
-      context: ./projojo_backend
-      dockerfile: Dockerfile # Could be changed to Dockerfile.dev or Dockerfile.prod for different environments
-    ports:
-      - "8000:8000"
+      target: development  # Use development stage
+    env_file:
+      - .env
     volumes:
-      - ./projojo_backend:/app
+      - ./projojo_backend:/app  # Volume mount for development
+      - /app/__pycache__        # Anonymous volume to prevent host __pycache__ from mounting (avoids Python version/platform conflicts)
       - /app/.venv # Anonymous volume to prevent host .venv from mounting
     environment:
-      - TYPEDB_SERVER_ADDR=typedb:1729
-      - TYPEDB_NAME=projojo_db
       - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
       - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
       - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
@@ -35,21 +36,41 @@ services:
       - projojo-network
 
   frontend:
-    container_name: projojo_frontend
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
+    container_name: projojo_frontend  # Explicit name for development
     build:
-      context: ./projojo_frontend
-      dockerfile: Dockerfile # Could be changed to Dockerfile.dev or Dockerfile.prod for different environments
+      target: development  # Use development stage
+    env_file:
+      - .env
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"  # Same port inside and outside container
     volumes:
-      - ./projojo_frontend:/app
-      - /app/node_modules # Anonymous volume to prevent host node_modules from mounting
+      - ./projojo_frontend:/app  # Volume mount for development
+      - /app/node_modules        # Anonymous volume to prevent host node_modules from mounting
     networks:
       - projojo-network
+
+  mailhog:
+    # MailHog - Email testing tool for development
+    # Web UI: http://localhost:${MAILHOG_WEB_PORT} (default: 10106)
+    # SMTP: localhost:${EMAIL_SMTP_PORT} (default: 10105)
+    container_name: projojo_mailhog
+    image: mailhog/mailhog:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${EMAIL_SMTP_PORT}:1025"      # SMTP server (internal port 1025)
+      - "${MAILHOG_WEB_PORT}:8025"     # Web UI (internal port 8025)
+    networks:
+      - projojo-network
+
+volumes:
+  typedb-data:
 
 networks:
   projojo-network:
     driver: bridge
-
-volumes:
-  typedb-data:

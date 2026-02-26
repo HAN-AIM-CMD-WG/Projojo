@@ -1,15 +1,27 @@
-import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 import uvicorn
+import logging
+import os
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-
+from config.settings import IS_PRODUCTION, IS_DEVELOPMENT, SESSIONS_SECRET_KEY
 from exceptions.exceptions import ItemRetrievalException, UnauthorizedException
 from exceptions.global_exception_handler import generic_handler
 from auth.jwt_middleware import JWTMiddleware
+from auth.permissions import auth
+from service.custom_static_files import FallbackStaticFiles
+
+# ============================================================================
+# EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
+from service.email_service import send_templated_email
+from pydantic import BaseModel
+# ============================================================================
+# END EMAIL TEST IMPORTS - REMOVE AFTER TESTING
+# ============================================================================
 
 # Import routers
 from routes.auth_router import router as auth_router
@@ -26,8 +38,8 @@ from routes.user_router import router as user_router
 # Import the TypeDB connection module
 from db.initDatabase import get_database
 
-# Load environment variables from .env file
-load_dotenv()
+# Set up logger
+logger = logging.getLogger('uvicorn.error')
 
 # Initialize TypeDB connection on startup and close on shutdown
 @asynccontextmanager
@@ -52,8 +64,9 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
+    # allow_origin_regex=r"https?://.*",  # Allows all origins with http or https
     allow_origins=["*"],  # Allows all origins
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
@@ -64,8 +77,24 @@ app.add_middleware(JWTMiddleware)
 # Add session middleware (required by authlib for OAuth state)
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSIONS_SECRET_KEY", "supersecretkey123456789abcdefghijklmnop")
+    secret_key=SESSIONS_SECRET_KEY
 )
+
+# Trust proxy headers from Traefik (X-Forwarded-Proto, X-Forwarded-For)
+# This ensures request.url_for() generates HTTPS URLs when behind a reverse proxy
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"]) # type: ignore
+
+@app.middleware("http")
+async def print_headers(request: Request, call_next):
+    logger.debug("Request headers:")
+    for header, value in request.headers.items():
+        logger.debug(f"  {header}: {value}")
+    response = await call_next(request)
+    logger.debug("Response headers:")
+    for header, value in response.headers.items():
+        logger.debug(f"  {header}: {value}")
+    return response
+
 
 # Include routers
 app.include_router(auth_router)
@@ -87,7 +116,7 @@ app.add_exception_handler(UnauthorizedException, generic_handler)
 def get_db():
     return get_database()
 
-app.mount("/image", StaticFiles(directory="static/images"), name="image")
+app.mount("/image", FallbackStaticFiles(directory="static/images", default_file="static/default.svg"), name="image")
 app.mount("/pdf", StaticFiles(directory="static/pdf"), name="pdf")
 
 @app.get("/")
@@ -97,7 +126,7 @@ async def root():
 @app.get("/typedb/status")
 async def typedb_status(db=Depends(get_db)):
     """Check TypeDB connection status"""
-    if os.getenv("ENVIRONMENT", "none").lower() != "development":
+    if not IS_DEVELOPMENT:
         raise HTTPException(status_code=403, detail="Dit kan alleen in de test-omgeving")
 
     try:
@@ -113,6 +142,56 @@ async def typedb_status(db=Depends(get_db)):
             "status": "error",
             "message": str(e)
         }
+
+
+# ============================================================================
+# EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+class TestEmailRequest(BaseModel):
+    """Request model for test email endpoint - REMOVE AFTER TESTING"""
+    recipient_email: str
+
+@app.post("/test/email")
+@auth(role="unauthenticated")
+async def send_test_email(request: TestEmailRequest):
+
+    """
+    TEST ENDPOINT - Send a test email using the invitation template.
+    This endpoint is for development testing only.
+    
+    REMOVE THIS ENDPOINT AFTER TESTING EMAIL FUNCTIONALITY.
+    """
+    if IS_PRODUCTION:
+        raise HTTPException(status_code=403, detail="Dit kan niet de production-omgeving")
+
+    result = await send_templated_email(
+        recipient=request.recipient_email,
+        subject="[TEST] Projojo Email Test - Invitation Template",
+        template_name="invitation.html",
+        context={
+            "user_name": "Test User",
+            "project_name": "Test Project",
+            "business_name": "Test Business B.V.",
+            "task_name": "Test Task",
+            "invite_link": "https://projojo.nl/invite/test123",
+            "message": "This is a test email to verify the email service is working correctly. If you received this, the mail integration is functioning!",
+        }
+    )
+    
+    if result.success:
+        return {
+            "status": "success",
+            "message": f"Test e-mail verstuurd naar {request.recipient_email}. Check je mailbox."
+        }
+    else:
+        return {
+            "status": "error",
+            "message": result.error
+        }
+# ============================================================================
+# END EMAIL TEST ENDPOINT - REMOVE AFTER TESTING
+# ============================================================================
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

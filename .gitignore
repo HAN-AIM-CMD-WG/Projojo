@@ -1,3 +1,11 @@
+# Root Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.preview.local
+.env.production.local
+
 # Frontend Dependencies
 projojo_frontend/node_modules
 projojo_frontend/.pnp
@@ -11,6 +19,7 @@ projojo_frontend/build
 projojo_frontend/dist
 
 # Frontend Environment variables
+.env
 projojo_frontend/.env
 projojo_frontend/.env.local
 projojo_frontend/.env.development.local

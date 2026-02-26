@@ -1,6 +1,29 @@
-export const API_BASE_URL = "http://localhost:8000/";
-export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
-export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
+// Dynamically determine API URL based on current browser location
+const getApiBaseUrl = () => {
+  const backendPort = import.meta.env.VITE_BACKEND_PORT
+  let result
+
+// Check if VITE_BACKEND_HOST is set in environment variables
+  // This allows overriding the default host in development or production builds
+  // Useful for different environments like staging or production
+  // If not set, fallback to the current window location
+  // or a default url for server-side rendering
+
+  if (import.meta.env.VITE_BACKEND_HOST) {
+    result = `https://${import.meta.env.VITE_BACKEND_HOST}:${backendPort}/`
+  } else if (typeof window !== "undefined" && window.location) {
+    const { protocol, hostname } = window.location
+    result = `${protocol}//${hostname}:${backendPort}/`
+  } else {
+    // Fallback for server-side rendering or non-browser environments
+    return `http://localhost:${backendPort}/`
+  }
+  return result
+}
+
+export const API_BASE_URL = getApiBaseUrl()
+export const IMAGE_BASE_URL = `${API_BASE_URL}image/`
+export const PDF_BASE_URL = `${API_BASE_URL}pdf/`
 
 export class HttpError extends Error {
     #statusCode;
@@ -73,12 +96,26 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                 let message;
                 try {
                     const jsonObj = JSON.parse(json);
-                    // checks if detail field exists and is non-empty
-                    if (typeof jsonObj !== "object" || jsonObj.detail === undefined || jsonObj.detail === null || jsonObj.detail === "") {
-                        // doesnt exist or is empty. Go to catch block
+                    const detail = jsonObj?.detail;
+
+                    if (detail === undefined || detail === null || detail === "") {
                         throw new Error();
                     }
-                    message = jsonObj.detail;
+
+                    if (Array.isArray(detail)) {
+                        // FastAPI validation errors: list of objects {loc,msg,type,...}
+                        message = detail.map((d) => {
+                            if (typeof d === "string") return d;
+                            if (typeof d === "object" && d !== null) {
+                                return d.msg || d.message || JSON.stringify(d);
+                            }
+                            return String(d);
+                        }).join("; ");
+                    } else if (typeof detail === "object") {
+                        message = detail.message || detail.msg || JSON.stringify(detail);
+                    } else {
+                        message = String(detail);
+                    }
                 } catch {
                     // assign default message based on status code
                     switch (errorStatus) {
@@ -96,6 +133,9 @@ function fetchWithError(url, request = {}, returnsVoid = false) {
                             break;
                         case 409:
                             message = "Er is een conflict met bestaande gegevens. Controleer je invoer.";
+                            break;
+                        case 422:
+                            message = "Ongeldige invoer. Controleer je gegevens.";
                             break;
                         case 429:
                             message = "Te veel verzoeken. Probeer het later opnieuw.";
@@ -254,7 +294,7 @@ export function getUser(userId) {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}[]>}
  */
 export function getSkills() {
-    return fetchWithError(`${API_BASE_URL}skills`);
+    return fetchWithError(`${API_BASE_URL}skills/`);
 }
 /**
  * @param {string} studentId
@@ -318,7 +358,7 @@ export function getStudentRegistrations() {
  * @returns {Promise<{id: string, name: string, is_pending: boolean}>}
  */
 export function createSkill(skill) {
-    return fetchWithError(`${API_BASE_URL}skills`, {
+    return fetchWithError(`${API_BASE_URL}skills/`, {
         method: "POST",
         body: JSON.stringify(skill),
     });
@@ -338,6 +378,9 @@ export function createProject(project_data) {
     formData.append("description", project_data.description);
     formData.append("supervisor_id", project_data.supervisor_id);
     formData.append("business_id", project_data.business_id);
+    if (project_data.location !== undefined) {
+        formData.append("location", project_data.location);
+    }
 
     // Add image file
     if (project_data.imageFile) {
@@ -427,6 +470,18 @@ export function updateTask(taskId, formData) {
 }
 
 /**
+ * Update a project's full data (name, description, location, image)
+ * @param {string} projectId
+ * @param {FormData} formData
+ */
+export function updateProject(projectId, formData) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}`, {
+        method: "PUT",
+        body: formData,
+    }, true);
+}
+
+/**
  * @param {string} skillId
  * @returns {Promise<void>}
  */
@@ -452,7 +507,6 @@ export function getStudentSkills(studentId) {
 export function getTaskSkills(taskId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/skills`)
 }
-
 
 /**
  *
@@ -492,19 +546,20 @@ export function unarchiveBusiness(businessId) {
  * @returns {Promise<{ key: string, inviteType: "business", isUsed: boolean, createdAt: string, businessId: string }>}
  */
 export function createSupervisorInviteKey(businessId) {
-    return fetchWithError(`${API_BASE_URL}invites/supervisor/${businessId}`, {
+    return fetchWithError(`${API_BASE_URL}invites/${businessId}`, {
         method: "POST",
     });
 }
 
 /**
- * @returns {Promise<{ key: string, inviteType: "teacher", isUsed: boolean, createdAt: string }>}
+ * Validate an invite token
+ * @param {string} token
+ * @returns {Promise<{valid: boolean, business: {id: string, name: string, imagePath: string}}>}
  */
-export function createTeacherInviteKey() {
-    return fetchWithError(`${API_BASE_URL}invites/teacher`, {
-        method: "POST",
-    });
+export function validateInvite(token) {
+    return fetchWithError(`${API_BASE_URL}invites/validate/${token}`);
 }
+
 
 /**
  * @returns {Promise<User[]>}

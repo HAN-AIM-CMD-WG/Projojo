@@ -9,6 +9,7 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
+import { filterVisibleSkillsForUser } from "../utils/skills";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
 
@@ -26,15 +27,17 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
     const [archiveError, setArchiveError] = useState("");
     const [archiveLoading, setArchiveLoading] = useState(false);
+    const [isSavingSkills, setIsSavingSkills] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
     const isFull = task.total_accepted >= task.total_needed;
+    const visibleTaskSkills = filterVisibleSkillsForUser(authData, task.skills || []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!canSubmit) {
+        if (error) {
             return;
         }
 
@@ -106,16 +109,20 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     }
 
     const handleSave = async (skills) => {
-        const skillIds = skills.map((skill) => skill.skillId || skill.id);
+        // Map selected skills to IDs and remove any falsy values (e.g., undefined)
+        const skillIds = skills.map((skill) => skill.skillId || skill.id).filter(Boolean);
 
         setTaskSkillsError("");
+        setIsSavingSkills(true);
 
         try {
             await updateTaskSkills(task.id, skillIds);
-            setIsEditing(false)
+            setIsEditing(false);
             setFetchAmount((currentAmount) => currentAmount + 1);
         } catch (error) {
             setTaskSkillsError(error.message);
+        } finally {
+            setIsSavingSkills(false);
         }
     };
 
@@ -134,8 +141,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     return (
         <div id={`task-${task.id}`} className="group">
             <div className="target flex flex-col sm:flex-row gap-4 justify-between items-center w-full p-5 bg-white rounded-lg shadow-md border border-gray-300 transition hover:shadow-lg">
-                <div className="space-y-3 flex-grow">
-                    <h2 className="text-2xl font-bold text-gray-800">
+                <div className="space-y-3 flex-grow min-w-0 w-full">
+                    <h2 className="text-2xl font-bold text-gray-800 break-words">
                         {task.name}
                     </h2>
                     <RichTextViewer
@@ -150,26 +157,27 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         onCancel={() => setIsEditing(false)}
                         setError={setTaskSkillsError}
                         isAllowedToAddSkill={isOwner}
+                        isSaving={isSavingSkills}
                     >
                         <div className="flex flex-wrap gap-2 items-center">
-                            {task.skills && task.skills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
-                            {task.skills && task.skills.map((skill) => (
+                            {visibleTaskSkills.length === 0 && <span>Er zijn geen skills vereist voor deze taak</span>}
+                            {visibleTaskSkills.map((skill) => (
                                 <SkillBadge
                                     key={skill.skillId ?? skill.id}
                                     skillName={skill.name}
                                     isPending={skill.isPending ?? skill.is_pending}
                                 />
                             ))}
-                            {/* {isOwner && !isEditing && (
+                            {isOwner && !isEditing && (
                                 <button className="btn-secondary py-1 px-3" onClick={() => setIsEditing(true)}>
                                     Aanpassen ✏️
                                 </button>
-                            )} */}
+                            )}
                         </div>
                     </SkillsEditor>
                 </div>
 
-                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto">
+                <div className="flex flex-col min-w-fit items-end gap-3 mb-auto w-xs">
                     <InfoBox>
                         <strong className="text-primary mr-1">
                             {task.total_needed - task.total_accepted}
@@ -210,7 +218,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             <RichTextEditor
                                 label="Motivatiebrief"
                                 onSave={setMotivation}
-                                setCanSubmit={setCanSubmit}
+                                setError={setError}
                             />
                             <div className="col-span-2">
                             </div>

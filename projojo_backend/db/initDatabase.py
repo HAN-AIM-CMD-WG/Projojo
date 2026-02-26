@@ -5,57 +5,112 @@ import re
 import pprint
 from datetime import datetime, date
 import time
-from dotenv import load_dotenv
 from uuid import UUID
-
-# Load environment variables from .env file
-load_dotenv()
+from config.settings import (
+    env,
+    TYPEDB_SERVER_ADDR, TYPEDB_NAME, TYPEDB_USERNAME,
+    TYPEDB_DEFAULT_PASSWORD, TYPEDB_NEW_PASSWORD, RESET_DB
+)
 
 class Db:
-    address = os.getenv("TYPEDB_SERVER_ADDR", "127.0.0.1:1729")
-    name = os.getenv("TYPEDB_NAME", "projojo_db")
-    username = os.getenv("TYPEDB_USERNAME", "admin")
-    password = os.getenv("TYPEDB_PASSWORD", "password")
-    reset = True if str.lower(os.getenv("RESET_DB", "no")) == "yes" else False
+    address = TYPEDB_SERVER_ADDR
+    name = TYPEDB_NAME
+    username = TYPEDB_USERNAME
+    default_password = TYPEDB_DEFAULT_PASSWORD
+    new_password = TYPEDB_NEW_PASSWORD
+    reset = RESET_DB
     base_path = os.path.dirname(os.path.abspath(__file__))
     schema_path = os.path.join(base_path, "schema.tql")
     seed_path = os.path.join(base_path, "seed.tql")
-
-    # Initialize as None - will be connected lazily with retry logic
-    driver = None
-    db = None
+    driver: Any | None = None
+    db: Any | None = None
     _connection_established = False
 
-    @classmethod
-    def connect_with_retry(cls, max_retries=10, initial_delay=1):
+    @staticmethod
+    def initialize_connection():
+        """Initialize the TypeDB connection, updating password if needed"""
+        if Db._connection_established and Db.driver is not None:
+            return # Already connected
+            
+        print(f"Connecting to TypeDB at {Db.address}")
+        print(f"Target user: {Db.username}")
+        
+        # Try new credentials first
+        try:
+            print(f"Trying new credentials... {Db.username}:{Db.new_password}")
+            Db.driver = TypeDB.driver(Db.address, Credentials(Db.username, Db.new_password), DriverOptions(False, None))
+            print("✓ Connected with new credentials - password is already correct")
+            
+        except Exception as new_cred_error:
+            print(f"⚠ New credentials failed: {new_cred_error} {Db.address}::{Db.username}:{Db.new_password}")
+            # TODO: When introducing dev/test/preview/prod environments, this debug logging
+            # should be removed or restricted to development/test/preview environments only.
+            # Printing all environment variables is a security risk as it may expose secrets.
+            print("Loaded by environs:")
+            for key in env.dump():
+                print(f"{key}={env.dump()[key]}")
+            print("-----")
+            print("Environment variables:")
+            for key, value in os.environ.items():
+                print(f"{key}={value}")
+            print("Trying default credentials...")
+            
+            try:
+                Db.driver = TypeDB.driver(Db.address, Credentials(Db.username, Db.default_password), DriverOptions(False, None))
+                print("✓ Connected with default credentials")
+                
+                # Update password if default and new are different
+                if Db.default_password != Db.new_password:
+                    print(f"Updating password... {Db.username}:{Db.default_password}->{Db.new_password}")
+                    try:
+                        current_user = Db.driver.users.get_current_user()
+                        if current_user:
+                            result = current_user.update_password(Db.new_password)
+                            print(f"✓ Password updated successfully {result}")
+
+                            # Reconnect with new password
+                            Db.driver.close()
+                            Db.driver = TypeDB.driver(Db.address, Credentials(Db.username, Db.new_password), DriverOptions(False, None))
+                            print(f"✓ Reconnected with new credentials {Db.address}::{Db.username}:{Db.new_password}")
+                        else:
+                            print("⚠ Could not get current user for password update")
+                    except Exception as password_error:
+                        print(f"⚠ Password update failed: {password_error}")
+                        print("⚠ Continuing with default credentials")
+                else:
+                    print("Default and new passwords are the same - no update needed")
+                    
+            except Exception as default_cred_error:
+                print(f"✗ Could not connect with default credentials either: {default_cred_error}")
+                raise Exception(f"Could not establish TypeDB connection with either default or new credentials for user '{Db.username}'")
+
+
+    @staticmethod
+    def ensure_connection(max_retries=10, initial_delay=1):
         """Connect to TypeDB with retry logic and exponential backoff"""
-        if cls._connection_established and cls.driver is not None:
+        if Db._connection_established and Db.driver is not None:
             return  # Already connected
 
         delay = initial_delay
         for attempt in range(max_retries):
             try:
-                print(f"Attempting to connect to TypeDB at {cls.address} (attempt {attempt + 1}/{max_retries})...")
-                cls.driver = TypeDB.driver(cls.address, Credentials(cls.username, cls.password), DriverOptions(False, None))
-                cls.db = cls.driver.databases.get(cls.name) if cls.driver.databases.contains(cls.name) else None
-                cls._connection_established = True
+                print(f"Attempting to connect to TypeDB at {Db.address} (attempt {attempt + 1}/{max_retries})...")
+                Db.initialize_connection()
+                assert Db.driver is not None
+                Db.db = Db.driver.databases.get(Db.name) if Db.driver.databases.contains(Db.name) else None
+                Db._connection_established = True
                 print("Successfully connected to TypeDB!")
                 return
             except Exception as e:
                 print(f"Connection failed: {e}")
                 if attempt < max_retries - 1:
-                    print(f"Retrying in {delay} seconds...")
+                    print(f"Retrying in {delay} seconds (attempt {attempt + 1})...")
                     time.sleep(delay)
                     delay = min(delay * 1.5, 30)  # Exponential backoff with max 30 seconds
                 else:
                     print(f"Failed to connect to TypeDB after {max_retries} attempts")
                     raise Exception(f"Failed to connect to TypeDB after {max_retries} attempts. Last error: {e}")
 
-    @classmethod
-    def ensure_connection(cls):
-        """Ensure we have a valid connection, reconnect if necessary"""
-        if not cls._connection_established or cls.driver is None:
-            cls.connect_with_retry()
 
     @staticmethod
     def schema_transact(query: str):
@@ -69,12 +124,13 @@ class Db:
             query: TypeQL schema query string
         """
         Db.ensure_connection()
+        assert Db.driver is not None
         with Db.driver.transaction(Db.name, TransactionType.SCHEMA) as tx:
             tx.query(query).resolve()
             tx.commit()
 
     @staticmethod
-    def read_transact(query: str, params: dict[str, Any] = None, sort_fields: bool = True):
+    def read_transact(query: str, params: dict[str, Any] | None = None, sort_fields: bool = True):
         """
         Execute a read transaction.
 
@@ -93,6 +149,7 @@ class Db:
         Db.ensure_connection()
         if params:
             query = build_query(query, params, allow_none=False)
+        assert Db.driver is not None
         with Db.driver.transaction(Db.name, TransactionType.READ) as tx:
             results = list(tx.query(query).resolve())
 
@@ -103,7 +160,7 @@ class Db:
             return results
 
     @staticmethod
-    def write_transact(query: str, params: dict[str, Any] = None):
+    def write_transact(query: str, params: dict[str, Any] | None = None):
         """
         Execute a write transaction.
 
@@ -115,6 +172,7 @@ class Db:
         Db.ensure_connection()
         if params:
             query = build_query(query, params, allow_none=True)
+        assert Db.driver is not None
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
             tx.commit()
@@ -126,12 +184,6 @@ class Db:
         Db.driver = None
         Db.db = None
         Db._connection_established = False
-
-    @staticmethod
-    def reopen():
-        Db.close()
-        Db.connect_with_retry()
-        create_database_if_needed()
 
 def sanitize_string(value: str) -> str:
     r"""
@@ -223,10 +275,10 @@ def _remove_none_clauses(template: str, none_params: list[str]) -> str:
     result = template
 
     for param in none_params:
-        # Remove entire line containing the placeholder
-        # This regex matches a line (with leading whitespace) containing ~param_name
+        # Remove the line/clause containing the ~param_name
+        # This regex matches a line/clause (with leading whitespace/tabs) containing ~param_name
         # and handles both comma-terminated and semicolon-terminated lines
-        pattern = rf'^\s*.*~{re.escape(param)}(?![a-zA-Z0-9_]).*$\n?'
+        pattern = rf'[ \t]*[^;,\n]*~{re.escape(param)}(?![a-zA-Z0-9_])[^;,\n]*[;,]'
         result = re.sub(pattern, '', result, flags=re.MULTILINE)
 
     # Clean up dangling commas before semicolons or closing braces
@@ -304,9 +356,6 @@ def build_query(template: str, params: dict[str, Any], allow_none: bool = False)
 
     return result
 
-
-print(f"Using database: {Db.name}")
-
 def get_database():
     Db.ensure_connection()
     create_database_if_needed()
@@ -330,6 +379,7 @@ def create_database_if_needed():
         with open(Db.seed_path, 'r') as file:
             print("Installing seed data", end="... ")
             seed_query = file.read()
+            assert Db.driver is not None
             with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
                 tx.query(seed_query).resolve()
                 tx.commit()
@@ -337,13 +387,9 @@ def create_database_if_needed():
     Db.reset = False     # prevent re-creating the database again
 
 
-def main():
-    create_database_if_needed()
-
-    # Example: Run a query
-    print()
-    print("Running a sample query")
-    read_query = """
+# Sample queries for testing database connectivity and schema
+SAMPLE_QUERIES = [
+    ("supervisors", """
         match
             $s isa supervisor;
             $ip isa identityProvider;
@@ -358,14 +404,8 @@ def main():
             'location': [$b.location],
             'supervisorLocation': [$m.location],
         };
-    """
-    result = Db.read_transact(read_query)
-    pprint.pp(result)
-
-    # Example 2: Run a second query
-    print()
-    print("Running a sample query for skills")
-    skill_query = """
+    """),
+    ("skills", """
         match
             $sk isa skill;
         fetch {
@@ -373,14 +413,8 @@ def main():
             'isPending': $sk.isPending,
             'createdAt': $sk.createdAt,
         };
-    """
-    skill_result = Db.read_transact(skill_query)
-    pprint.pp(skill_result)
-
-    # Example 3: Run a third query
-    print()
-    print("Running a sample query for projects")
-    project_query = """
+    """),
+    ("projects", """
         match
             $b isa business;
             $p isa project;
@@ -389,14 +423,8 @@ def main():
             'businessName': $b.name,
             'projectName': $p.name,
         };
-    """
-    project_results = Db.read_transact(project_query)
-    pprint.pp(project_results)
-
-    # Example 4: Run a fourth query
-    print()
-    print("Running a sample query for tasks")
-    task_query = """
+    """),
+    ("tasks", """
         match
             $b isa business;
             $p isa project;
@@ -409,14 +437,8 @@ def main():
             'taskName': $t.name,
             'totalNeeded': $t.totalNeeded,
         };
-    """
-    task_results = Db.read_transact(task_query)
-    pprint.pp(task_results)
-
-    # Example 5: Run a fifth query
-    print()
-    print("Running a sample query for task skills")
-    task_skill_query = """
+    """),
+    ("task skills", """
         match
             $t isa task;
             $sk isa skill;
@@ -425,14 +447,8 @@ def main():
             'taskName': $t.name,
             'skillName': $sk.name,
         };
-    """
-    task_skill_results = Db.read_transact(task_skill_query)
-    pprint.pp(task_skill_results)
-
-    # Example 6: Run a sixth query
-    print()
-    print("Running a sample query for student skills")
-    student_query = """
+    """),
+    ("student skills", """
         match
             $s isa student;
             $sk isa skill;
@@ -442,14 +458,8 @@ def main():
             'skillName': $sk.name,
             'description': $stsk.description,
         };
-    """
-    student_results = Db.read_transact(student_query)
-    pprint.pp(student_results)
-
-    # Example 7: Run a seventh query
-    print()
-    print("Running a sample query for task registrations")
-    registration_query = """
+    """),
+    ("task registrations", """
         match
             $s isa student;
             $t isa task;
@@ -461,13 +471,8 @@ def main():
             'isAccepted': $tr.isAccepted,
             'response': $tr.response,
         };
-    """
-    registration_results = Db.read_transact(registration_query)
-    pprint.pp(registration_results)
-
-    print()
-    print("Running a sample query for project creations")
-    projectcreations_query = """
+    """),
+    ("project creations", """
         match
             $s isa supervisor;
             $b isa business;
@@ -484,9 +489,19 @@ def main():
             'createdAt': $c.createdAt,
             'locations': [$m.location]
         };
-    """
-    projectcreations_query_results = Db.read_transact(projectcreations_query)
-    pprint.pp(projectcreations_query_results)
+    """),
+]
+
+
+def main():
+    create_database_if_needed()
+
+    # Run sample queries to verify database connectivity and schema
+    for name, query in SAMPLE_QUERIES:
+        print()
+        print(f"Running sample query for {name}")
+        results = Db.read_transact(query)
+        pprint.pp(results)
 
     Db.close()
 
