@@ -383,6 +383,70 @@ api/
 
 ---
 
+## 🗂️ Business Archiving (Soft Delete) — V5
+
+User Story (NL)
+```
+Als docent wil ik bedrijven kunnen archiveren en herstellen
+Zodat bedrijven, hun projecten en taken uit het overzicht en de zoekfunctie verdwijnen en supervisors niet meer kunnen inloggen
+
+Als supervisor wil ik mijn eigen bedrijf (en gerelateerde entiteiten) kunnen archiveren
+Zodat ik het bedrijf en alle onderliggende items kan verbergen wanneer dat nodig is
+```
+
+Acceptatiecriteria
+- Supervisor (SV):
+  - Als het bedrijf wordt gearchiveerd, worden de supervisor-accounts van dat bedrijf ook gearchiveerd.
+  - Gearchiveerde SV’s van dat bedrijf kunnen niet meer inloggen. (Huidige model is 1:1 business-supervisor; als in de toekomst multi-business SV’s bestaan, dan mag login alleen als er nog ten minste één niet-gearchiveerd bedrijf gelinkt is.)
+  - Supervisor kan zijn eigen bedrijf archiveren (teacher kan dit ook); unarchive blijft teacher-only.
+- Teacher:
+  - In het bedrijvenoverzicht staat per bedrijf een knop om te archiveren.
+  - Klik op archiveren toont een bevestigingsmodal.
+  - Gearchiveerde bedrijven verschijnen onderaan in een uitklapbaar menu, enkel als er gearchiveerde bedrijven zijn.
+  - Alleen teachers kunnen unarchiveren, via de teacher-pagina.
+- Alle gebruikers:
+  - Gearchiveerde bedrijven staan niet meer in overzichten en zijn niet vindbaar.
+  - Bij archiveren worden ook projecten, taken en aanmeldingen gearchiveerd, en supervisors van het bedrijf.
+
+Technische implementatie
+- TypeDB schema: soft-delete via attributen archivedAt (datetime-tz) en archivedBy (string) op:
+  - business, project, task, supervisor; relation registersForTask heeft ook archivedAt/archivedBy.
+- Query default filtering:
+  - Alle lijst/detaiI-leesqueries filteren standaard archived uit via:
+    - not { $entity has archivedAt $ts; }
+  - Teacher krijgt aparte endpoint(s) voor gearchiveerde bedrijven.
+- Cascade archiveren (business → projects → tasks → supervisors → registrations) in één transactie-set, idempotent (zet alleen wanneer nog niet gezet).
+- Unarchive (teacher-only) verwijdert archivedAt/archivedBy (cascade) via delete has.
+
+Backend endpoints
+- GET /businesses/basic → toont alleen actieve (default filter)
+- GET /businesses/archived/basic (teacher-only) → toont gearchiveerde bedrijven
+- POST /businesses/{business_id}/archive (role="supervisor", owner check; teacher mag ook)
+- POST /businesses/{business_id}/unarchive (teacher-only)
+- OAuth-login blokkade voor gearchiveerde supervisors: AuthService checkt archivedAt op supervisor bij callback; bij set → geen token.
+
+Frontend (Teacher)
+- services.js: getArchivedBusinessesBasic(), archiveBusiness(), unarchiveBusiness()
+- TeacherPage.jsx:
+  - Laadt actieve + gearchiveerde bedrijven; toont actieve normaal
+  - “Gearchiveerde bedrijven” sectie is uitklapbaar, verschijnt alleen als er gearchiveerde zijn
+- BusinessCard.jsx:
+  - Archiveerknop (teacher of eigenaar-supervisor) met bevestigingsmodal
+  - Unarchive-knop (alleen teacher) zichtbaar bij items in gearchiveerde sectie
+- UX: modal verduidelijkt consequenties (SV’s kunnen niet meer inloggen).
+
+Migratie/QA
+- Geen harde migratie vereist; ontbreken van archivedAt impliceert actief.
+- Verifiëren:
+  - Archiveren van bedrijf verbergt bedrijf/proj/taken in alle normale lijsten/zoeken
+  - SV-login geblokkeerd na archiveren
+  - “Gearchiveerde bedrijven” verschijnt (teacher) en unarchive werkt
+  - Legacy data blijft zichtbaar als actief (geen archivedAt aanwezig)
+
+Openstaand/nice-to-have
+- Project-/Task-niveau archive/unarchive endpoints (supervisor/teacher granulariteit).
+- archivedReason (optioneel) en audit logging-relaties als later wenselijk.
+
 *Last Updated: $(date)*
 *Version: V4.0*
 *Status: Active Development*

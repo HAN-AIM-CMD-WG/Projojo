@@ -22,6 +22,45 @@ async def get_all_tasks():
     tasks = task_repo.get_all()
     return tasks
 
+@router.get("/archived")
+@auth(role="teacher")
+async def get_archived_tasks():
+    """
+    Get archived tasks (teacher-only)
+    """
+    return task_repo.get_archived()
+
+@router.post("/{task_id}/archive")
+@auth(role="supervisor", owner_id_key="task_id")
+async def archive_task(
+    request: Request,
+    task_id: str = Path(..., description="Task ID")
+):
+    """
+    Archive a single task and its registrations. Teacher and owning supervisor are allowed.
+    """
+    try:
+        task_repo.archive(task_id, request.state.user_id)
+        return {"message": "Taak succesvol gearchiveerd"}
+    except Exception as e:
+        print(f"Error archiving task {task_id}: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het archiveren van de taak.")
+
+@router.post("/{task_id}/unarchive")
+@auth(role="teacher")
+async def unarchive_task(
+    task_id: str = Path(..., description="Task ID")
+):
+    """
+    Unarchive a single task and its registrations. Teacher-only.
+    """
+    try:
+        task_repo.unarchive(task_id)
+        return {"message": "Taak succesvol hersteld"}
+    except Exception as e:
+        print(f"Error unarchiving task {task_id}: {e}")
+        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het herstellen van de taak.")
+
 
 @router.get("/{task_id}/emails/colleagues")
 @auth(role="supervisor", owner_id_key="task_id")

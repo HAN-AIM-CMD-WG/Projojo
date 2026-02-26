@@ -23,6 +23,8 @@ class ProjectRepository(BaseRepository[Project]):
                 has createdAt $createdAt;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $business has id $business_id;
+            not { $project has archivedAt $archivedAt; };
+            not { $business has archivedAt $bArchived; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -49,6 +51,8 @@ class ProjectRepository(BaseRepository[Project]):
                 has createdAt $createdAt;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $business has id $business_id;
+            not { $project has archivedAt $archivedAt; };
+            not { $business has archivedAt $bArchived; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -75,6 +79,8 @@ class ProjectRepository(BaseRepository[Project]):
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
+            not { $business has archivedAt $bArchived; };
+            not { $project has archivedAt $pArchived; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -101,6 +107,8 @@ class ProjectRepository(BaseRepository[Project]):
                 has id ~project_id;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $business has id $business_id;
+            not { $project has archivedAt $pArchived; };
+            not { $business has archivedAt $bArchived; };
             fetch {
                 'id': $business_id,
                 'name': $business.name,
@@ -113,6 +121,30 @@ class ProjectRepository(BaseRepository[Project]):
         if not results:
             return None
         return results[0]
+
+    def get_archived(self) -> list[Project]:
+        query = """
+            match
+                $project isa project,
+                has id $id,
+                has name $name,
+                has description $description,
+                has imagePath $imagePath,
+                has createdAt $createdAt;
+                $hp isa hasProjects(business: $business, project: $project);
+                $business has id $business_id;
+            $project has archivedAt $archivedAt;
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'imagePath': $imagePath,
+                'createdAt': $createdAt,
+                'business': $business_id
+            };
+        """
+        results = Db.read_transact(query)
+        return [self._map_to_model(result) for result in results]
 
     def _map_to_model(self, result: dict[str, Any]) -> Project:
         # Extract relevant information from the query result
@@ -238,6 +270,110 @@ class ProjectRepository(BaseRepository[Project]):
             location=project.location,
             supervisor_id=project.supervisor_id,
         )
+
+    def archive(self, project_id: str, archived_by: str) -> None:
+        """
+        Archive a single project and cascade to its tasks and registrations.
+        """
+        from datetime import datetime
+        ts = datetime.now()
+
+        # Archive project
+        query = """
+            match
+                $p isa project, has id ~project_id;
+            not { $p has archivedAt $x; };
+            update
+                $p has archivedAt ~ts;
+                $p has archivedBy ~by;
+        """
+        Db.write_transact(query, {"project_id": project_id, "ts": ts, "by": archived_by})
+
+        # Archive tasks
+        query = """
+            match
+                $p isa project, has id ~project_id;
+                ($p, $t) isa containsTask;
+                $t isa task;
+            not { $t has archivedAt $x; };
+            update
+                $t has archivedAt ~ts;
+                $t has archivedBy ~by;
+        """
+        Db.write_transact(query, {"project_id": project_id, "ts": ts, "by": archived_by})
+
+        # Archive registrations
+        query = """
+            match
+                $p isa project, has id ~project_id;
+                ($p, $t) isa containsTask;
+                $r isa registersForTask (task: $t, student: $stu);
+            not { $r has archivedAt $x; };
+            update
+                $r has archivedAt ~ts;
+                $r has archivedBy ~by;
+        """
+        Db.write_transact(query, {"project_id": project_id, "ts": ts, "by": archived_by})
+
+    def unarchive(self, project_id: str) -> None:
+        """
+        Teacher-only: unarchive project by removing archivedAt/archivedBy on project, tasks, and registrations.
+        """
+        # Project
+        query = """
+            match
+                $p isa project, has id ~project_id, has archivedAt $ts;
+            delete
+                has $ts of $p;
+        """
+        Db.write_transact(query, {"project_id": project_id})
+        query = """
+            match
+                $p isa project, has id ~project_id, has archivedBy $by;
+            delete
+                has $by of $p;
+        """
+        Db.write_transact(query, {"project_id": project_id})
+
+        # Tasks
+        query = """
+            match
+                $p isa project, has id ~project_id;
+                ($p, $t) isa containsTask;
+                $t has archivedAt $ts;
+            delete
+                has $ts of $t;
+        """
+        Db.write_transact(query, {"project_id": project_id})
+        query = """
+            match
+                $p isa project, has id ~project_id;
+                ($p, $t) isa containsTask;
+                $t has archivedBy $by;
+            delete
+                has $by of $t;
+        """
+        Db.write_transact(query, {"project_id": project_id})
+
+        # Registrations
+        query = """
+            match
+                $p isa project, has id ~project_id;
+                ($p, $t) isa containsTask;
+                $r isa registersForTask (task: $t, student: $stu), has archivedAt $ts;
+            delete
+                has $ts of $r;
+        """
+        Db.write_transact(query, {"project_id": project_id})
+        query = """
+            match
+                $p isa project, has id ~project_id;
+                ($p, $t) isa containsTask;
+                $r isa registersForTask (task: $t, student: $stu), has archivedBy $by;
+            delete
+                has $by of $r;
+        """
+        Db.write_transact(query, {"project_id": project_id})
     def update(self, project_id: str, name: str, description: str, location: str | None, image_filename: str | None = None) -> None:
         update_clauses = [
             '$project has name ~name;',
