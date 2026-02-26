@@ -133,7 +133,16 @@ For the complete documentation on backend dependency management, see the [backen
 
 ### Troubleshooting
 
-If HMR stops working or the frontend container's CPU usage drops significantly:
+**Import errors after git pull (e.g., "Can't resolve 'package-name'")**
+
+If you get import errors for packages that were recently added by a teammate:
+```bash
+# Rebuild the frontend container to install new dependencies
+docker compose build --no-cache frontend
+docker compose up -d frontend
+```
+
+**HMR stops working or frontend container's CPU usage drops**
 1. Restart the frontend container: `docker compose restart frontend`
 2. If the issue persists, try rebuilding: `docker compose build --no-cache frontend`
 

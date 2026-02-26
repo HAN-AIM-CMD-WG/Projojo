@@ -25,16 +25,16 @@ export default function Alert({ text, isCloseable = true, onClose = () => { } })
     }
 
     return (
-        <div className="flex items-center p-4 text-red-800 rounded-lg bg-red-50 border border-red-400" role="alert">
-            <div className="text-sm font-medium">
+        <div className="neu-flat !rounded-2xl flex items-center gap-3 p-4 mt-6 border-l-4 border-primary/60" role="alert">
+            <div className="neu-pressed !rounded-full p-2">
+                <span className="material-symbols-outlined text-primary text-lg" aria-hidden="true">info</span>
+            </div>
+            <div className="text-sm font-medium text-text-secondary flex-1">
                 {text}
             </div>
             {isCloseable && (
-                <button type="button" onClick={handleClose} className="ms-auto -mx-1.5 -my-1.5 bg-red-50 text-red-500 rounded-lg focus:ring-2 focus:ring-red-400 p-1.5 hover:bg-red-200 inline-flex items-center justify-center h-8 w-8" aria-label="Alert sluiten">
-                    <span className="sr-only">Close</span>
-                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                    </svg>
+                <button type="button" onClick={handleClose} className="neu-btn !p-2 !rounded-full focus:outline-none focus:ring-2 focus:ring-primary/50" aria-label="Alert sluiten">
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">close</span>
                 </button>
             )}
         </div>
