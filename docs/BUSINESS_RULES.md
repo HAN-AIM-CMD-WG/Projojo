@@ -1,6 +1,6 @@
 # Projojo — Business Rules Catalog
 
-> **Generated:** 2026-02-12 (updated 2026-02-12 — audit fixes applied)
+> **Generated:** 2026-02-12 (updated 2026-02-26 — audit findings integrated)
 > **Scope:** Full-stack analysis of frontend, backend, database schema, middleware, configuration, and seed data.  
 > **Authoritative domain model:** TypeDB schema at [`schema.tql`](../projojo_backend/db/schema.tql)
 
@@ -34,6 +34,7 @@
 5. [Actions and Integrations](#5-actions-and-integrations)
 6. [Risks, Technical Debt & Observations](#6-risks-technical-debt--observations)
 7. [Summary Statistics](#7-summary-statistics)
+8. [Audit Findings Addendum (2026-02-26)](#8-audit-findings-addendum-2026-02-26)
 
 ---
 
@@ -1121,6 +1122,7 @@ The TypeDB schema ([`schema.tql`](../projojo_backend/db/schema.tql)) defines the
 | — Medium severity | 4 |
 | — Low severity | 8 |
 | **Total Business Rules** | **58** |
+| **Audit Addendum Findings Incorporated** | **60** |
 
 ### Entity Coverage
 
@@ -1144,3 +1146,223 @@ The TypeDB schema ([`schema.tql`](../projojo_backend/db/schema.tql)) defines the
 | `hasProjects` | C-UNIQ-02, OP-PROJ-01 |
 | `containsTask` | C-UNIQ-03, OP-TASK-01 |
 | `businessInvite` | OP-INVITE-01 |
+
+---
+
+## 8. Audit Findings Addendum (2026-02-26)
+
+This addendum integrates all findings from [`BUSINESS_RULES_AUDIT.md`](./BUSINESS_RULES_AUDIT.md) into the business-rules catalog without changing the original baseline numbering in sections 1–7.
+
+### 8.1 Newly Identified Constraints
+
+#### C-AUTH-07 — HTTPS Redirect URI Enforcement
+
+- **Rule Description:** In non-development environments, OAuth callback redirect URIs are forced to HTTPS by replacing `http://` with `https://`.
+- **Code References:** [`auth_router.py:50-51`](../projojo_backend/routes/auth_router.py#L50)
+
+#### C-AUTH-08 — Unsupported OAuth Provider Rejection
+
+- **Rule Description:** Unsupported OAuth providers are rejected in two places: login redirects to frontend with `?error=unsupported_provider`, and callback raises an explicit `ValueError`.
+- **Code References:** [`auth_router.py:62-66`](../projojo_backend/routes/auth_router.py#L62), [`auth_service.py:20-21`](../projojo_backend/service/auth_service.py#L20), [`auth_service.py:57`](../projojo_backend/service/auth_service.py#L57)
+
+#### C-AUTH-09 — Session Cleared After OAuth Completion
+
+- **Rule Description:** Session data (`frontend_url`, `invite_token`) is always cleared after OAuth callback completion, on both success and failure paths.
+- **Code References:** [`auth_router.py:88-89`](../projojo_backend/routes/auth_router.py#L88), [`auth_router.py:97`](../projojo_backend/routes/auth_router.py#L97)
+
+#### C-AUTH-10 — Single OAuth Provider at Account Creation
+
+- **Rule Description:** New account creation requires exactly one OAuth provider: zero providers (`400`) and more than one provider (`400`) are rejected.
+- **Code References:** [`user_repository.py:533-537`](../projojo_backend/domain/repositories/user_repository.py#L533)
+
+#### C-AUTH-11 — OAuth Provider Must Exist in Database
+
+- **Rule Description:** The provider must exist as an `oauthProvider` entity in TypeDB (case-insensitive check), otherwise account creation is rejected.
+- **Code References:** [`user_repository.py:542-554`](../projojo_backend/domain/repositories/user_repository.py#L542), [`seed.tql:38-46`](../projojo_backend/db/seed.tql#L38)
+
+#### C-AUTH-12 — Dynamic Frontend URL Detection for OAuth Redirects
+
+- **Rule Description:** Post-OAuth frontend redirect target is resolved dynamically from `Referer`, then `Origin`, then `FRONTEND_URL`, and persisted in session.
+- **Code References:** [`auth_router.py:19-36`](../projojo_backend/routes/auth_router.py#L19), [`auth_router.py:54-55`](../projojo_backend/routes/auth_router.py#L54)
+
+#### C-AUTH-13 — JWT Issuer Claim
+
+- **Rule Description:** JWTs include `iss="projojo"`. This claim is currently written but not validated during decode.
+- **Code References:** [`jwt_utils.py:31`](../projojo_backend/auth/jwt_utils.py#L31), [`jwt_utils.py:53`](../projojo_backend/auth/jwt_utils.py#L53)
+
+#### C-AUTH-14 — Supervisor Creation Requires Business ID
+
+- **Rule Description:** Supervisor account creation requires a `business_id` argument (normally sourced from invite validation).
+- **Code References:** [`user_repository.py:574-576`](../projojo_backend/domain/repositories/user_repository.py#L574)
+
+#### C-AUTH-15 — Session Secret Key Required for OAuth Flow
+
+- **Rule Description:** OAuth session handling is signed by `SESSIONS_SECRET_KEY`, which is distinct from `JWT_SECRET_KEY`.
+- **Code References:** [`main.py:78-81`](../projojo_backend/main.py#L78), [`settings.py:22`](../projojo_backend/config/settings.py#L22)
+
+#### C-REF-01 — Business Must Exist for Supervisor Creation
+
+- **Rule Description:** During supervisor creation, the referenced business must exist and expose a location; otherwise creation fails with `404`.
+- **Code References:** [`user_repository.py:578-584`](../projojo_backend/domain/repositories/user_repository.py#L578)
+
+#### C-VAL-05 — Task `total_needed` Has No Minimum Constraint (Gap)
+
+- **Rule Description:** Task capacity (`totalNeeded`) has no explicit minimum validation in backend models/routers; values `0` or negative are technically accepted.
+- **Code References:** [`task_router.py:238`](../projojo_backend/routes/task_router.py#L238), [`task.py:12`](../projojo_backend/domain/models/task.py#L12)
+
+#### C-ENV-04 — Three-State Environment Detection
+
+- **Rule Description:** The code distinguishes `development`, `production`, and an implicit third state (anything else), which affects endpoint gating behavior.
+- **Code References:** [`settings.py:14-15`](../projojo_backend/config/settings.py#L14), [`main.py:164`](../projojo_backend/main.py#L164)
+
+#### C-ENV-05 — Environment Variables Sealed at Startup
+
+- **Rule Description:** Environment reads are sealed after startup config load via `env.seal()`, preventing subsequent runtime env access.
+- **Code References:** [`settings.py:53`](../projojo_backend/config/settings.py#L53)
+
+### 8.2 Newly Identified Derivations
+
+#### D-08 — Provider-Specific User Info Extraction
+
+- **Rule Description:** Google, GitHub, and Microsoft use distinct extraction flows for OAuth identity fields and profile-picture behavior.
+- **Code References:** [`auth_service.py:48-147`](../projojo_backend/service/auth_service.py#L48)
+
+#### D-09 — User Type Resolution by Sequential Lookup
+
+- **Rule Description:** Generic user lookup is resolved in sequence (`supervisor` → `student` → `teacher`) until first hit.
+- **Code References:** [`user_repository.py:17-35`](../projojo_backend/domain/repositories/user_repository.py#L17)
+
+### 8.3 Operation Coverage Addendum
+
+#### OP-USER-01 — Read User by ID
+
+- **Endpoint:** `GET /users/{user_id}`
+- **Preconditions:** Authenticated user (`student`, `supervisor`, or `teacher`).
+- **Rule Description:** Any authenticated user can retrieve any user by ID; no ownership restriction is applied.
+- **Code References:** [`user_router.py:22-29`](../projojo_backend/routes/user_router.py#L22), [`user_repository.py:17-35`](../projojo_backend/domain/repositories/user_repository.py#L17)
+
+#### OP-READ-01 — Read Endpoint Inventory (Previously Undocumented)
+
+| Endpoint | Role Required |
+|----------|---------------|
+| `GET /businesses/` | `authenticated` |
+| `GET /businesses/basic` | `authenticated` |
+| `GET /businesses/complete` | `authenticated` |
+| `GET /businesses/{id}` | `authenticated` |
+| `GET /businesses/{id}/projects` | `authenticated` |
+| `GET /projects/` | `authenticated` |
+| `GET /projects/{id}` | `authenticated` |
+| `GET /projects/{id}/complete` | `authenticated` |
+| `GET /projects/{id}/tasks` | `authenticated` |
+| `GET /tasks/` | `authenticated` |
+| `GET /tasks/{id}` | `authenticated` |
+| `GET /tasks/{id}/skills` | `authenticated` |
+| `GET /skills/` | `authenticated` |
+| `GET /skills/{id}` | `authenticated` |
+| `GET /students/` | `authenticated` |
+| `GET /students/{id}/skills` | `authenticated` |
+| `GET /students/registrations` | `student` |
+| `GET /supervisors/` | `authenticated` |
+| `GET /teachers/` | `authenticated` |
+| `GET /users/{id}` | `authenticated` |
+
+Primary router references: [`business_router.py`](../projojo_backend/routes/business_router.py), [`project_router.py`](../projojo_backend/routes/project_router.py), [`task_router.py`](../projojo_backend/routes/task_router.py), [`skill_router.py`](../projojo_backend/routes/skill_router.py), [`student_router.py`](../projojo_backend/routes/student_router.py), [`supervisor_router.py`](../projojo_backend/routes/supervisor_router.py), [`teacher_router.py`](../projojo_backend/routes/teacher_router.py), [`user_router.py`](../projojo_backend/routes/user_router.py)
+
+### 8.4 Additions to Existing Operations/Rules
+
+- **OP-BIZ-01:** Duplicate business names are detected from TypeDB key-constraint violations by checking exception content.
+  - Ref: [`business_router.py:90-95`](../projojo_backend/routes/business_router.py#L90)
+- **OP-BIZ-02:** Update precondition includes explicit business existence check (`404` when missing).
+  - Ref: [`business_router.py:114-117`](../projojo_backend/routes/business_router.py#L114)
+- **C-VAL-03 / OP-PROJ-01:** Project location is optional on create and validated only when provided.
+  - Ref: [`project_router.py:77-81`](../projojo_backend/routes/project_router.py#L77)
+- **OP-PROJ-01:** `supervisor_id` is provided by request body, not derived from JWT.
+  - Ref: [`project_router.py:63`](../projojo_backend/routes/project_router.py#L63)
+- **OP-PROJ-01:** Project creation is implemented as two non-atomic write transactions (`project+hasProjects`, then `creates`).
+  - Ref: [`project_repository.py:185-229`](../projojo_backend/domain/repositories/project_repository.py#L185)
+- **OP-TASK-01:** `project_id` must be non-empty and project must exist.
+  - Ref: [`task_repository.py:135-136`](../projojo_backend/domain/repositories/task_repository.py#L135), [`task_repository.py:160-162`](../projojo_backend/domain/repositories/task_repository.py#L160)
+- **OP-TASK-02:** Update precondition includes explicit task existence check (`404` when missing).
+  - Ref: [`task_router.py:256-258`](../projojo_backend/routes/task_router.py#L256)
+- **OP-TASK-03:** Skill ID list is deduplicated, fully existence-validated, and empty list is supported as a clear-all operation.
+  - Ref: [`task_router.py:98-116`](../projojo_backend/routes/task_router.py#L98)
+- **OP-SKILL-01:** Skill names are normalized by stripping whitespace before persistence.
+  - Ref: [`skill_router.py:49-50`](../projojo_backend/routes/skill_router.py#L49)
+- **OP-SKILL-02:** Request body requires `accepted` boolean; missing field returns `400`.
+  - Ref: [`skill_router.py:64-66`](../projojo_backend/routes/skill_router.py#L64)
+- **OP-STUDENT-01:** CV deletion uses an empty-string convention that triggers attribute deletion in TypeDB.
+  - Ref: [`student_router.py:126-128`](../projojo_backend/routes/student_router.py#L126), [`user_repository.py:472-482`](../projojo_backend/domain/repositories/user_repository.py#L472)
+- **OP-STUDENT-01:** Old files are deleted only after successful DB update (possible orphan files if disk deletion fails).
+  - Ref: [`student_router.py:139-144`](../projojo_backend/routes/student_router.py#L139)
+- **OP-REG-02:** `response` defaults to empty string (`""`) when not supplied.
+  - Ref: [`task.py:36`](../projojo_backend/domain/models/task.py#L36), [`services.js:374`](../projojo_frontend/src/services.js#L374)
+- **OP-INVITE-03:** Invite marking uses TypeDB `insert` for `usedAt` (relying on `@card(0..1)`), and failure to mark does not roll back already-created supervisor accounts.
+  - Ref: [`invite_repository.py:98-116`](../projojo_backend/domain/repositories/invite_repository.py#L98), [`auth_service.py:207-210`](../projojo_backend/service/auth_service.py#L207)
+- **OP-AUTH-01:** OAuth error recovery preserves invite flow by redirecting users back to `/invite/{token}` when token exists.
+  - Ref: [`AuthCallback.jsx:31-34`](../projojo_frontend/src/auth/AuthCallback.jsx#L31)
+- **OP-AUTH-01:** Login success messaging differs for new vs returning users via `is_new_user`.
+  - Ref: [`AuthCallback.jsx:44-48`](../projojo_frontend/src/auth/AuthCallback.jsx#L44)
+- **OP-AUTH-02:** Logout emits explicit success notification.
+  - Ref: [`AuthProvider.jsx:43`](../projojo_frontend/src/auth/AuthProvider.jsx#L43)
+- **C-FILE-01:** URL-based download path enforces size limit by both header pre-check and streamed byte counting.
+  - Ref: [`image_service.py:230-268`](../projojo_backend/service/image_service.py#L230)
+- **C-FILE-02:** File extension is cross-validated against MIME type (including multiple accepted JPEG extensions).
+  - Ref: [`image_service.py:69-114`](../projojo_backend/service/image_service.py#L69)
+- **C-FILE-04:** External image download timeout is 10 seconds.
+  - Ref: [`image_service.py:230`](../projojo_backend/service/image_service.py#L230)
+
+### 8.5 Additional Actions & Integrations
+
+#### A-06 — TypeDB Password Auto-Migration on Startup
+
+- **Rule Description:** Startup first attempts connection with `TYPEDB_NEW_PASSWORD`, falls back to `TYPEDB_DEFAULT_PASSWORD`, then rotates password to new value and reconnects.
+- **Code References:** [`initDatabase.py:30-85`](../projojo_backend/db/initDatabase.py#L30)
+
+#### A-07 — TypeDB Connection Retry Policy
+
+- **Rule Description:** TypeDB connection attempts retry up to 10 times using exponential backoff starting at 1 second.
+- **Code References:** [`initDatabase.py:88-100`](../projojo_backend/db/initDatabase.py#L88)
+
+#### A-08 — Global Frontend Error Handler
+
+- **Rule Description:** A global `unhandledrejection` handler maps `HttpError` messages to notifications and uses a generic fallback for unknown errors.
+- **Code References:** [`App.jsx:30-41`](../projojo_frontend/src/App.jsx#L30)
+
+#### A-09 — Frontend Fallback Error Messages
+
+- **Rule Description:** Non-JSON API errors are mapped by status code (400, 401, 403, 404, 409, 422, 429) to Dutch user-facing fallback messages.
+- **Code References:** [`services.js:121-147`](../projojo_frontend/src/services.js#L121)
+
+### 8.6 Additional Risks from Audit
+
+#### R-15 — Unused Non-Cascading Skill Deletion Method
+
+- **Severity:** Low — Code Integrity Risk
+- **Description:** [`SkillRepository.delete_by_id()`](../projojo_backend/domain/repositories/skill_repository.py#L292) deletes skills without relation cascade and is currently unused.
+
+#### R-16 — Task Skills Return Incorrect `created_at`
+
+- **Severity:** Low — Data Quality Risk
+- **Description:** [`SkillRepository.get_task_skills()`](../projojo_backend/domain/repositories/skill_repository.py#L204) uses `datetime.now()` placeholder instead of persisted `createdAt`.
+
+#### R-17 — ProxyHeaders Middleware Trusts All Hosts
+
+- **Severity:** Medium — Security Concern
+- **Description:** [`main.py:85`](../projojo_backend/main.py#L85) configures `ProxyHeadersMiddleware(trusted_hosts=["*"])`, which trusts forwarded headers from any source.
+
+#### R-18 — `UnauthorizedException` Uses Incorrect HTTP 402 Status
+
+- **Severity:** Medium — API Semantics / Client Compatibility
+- **Description:** [`UnauthorizedException`](../projojo_backend/exceptions/exceptions.py#L7) returns HTTP `402` (Payment Required) instead of `401`/`403` semantics.
+
+### 8.7 Audit Delta Statistics
+
+| Category | Count |
+|----------|-------|
+| Undocumented Business Rules (Constraints/Guards) | 16 |
+| Missing Preconditions/Guards on Documented Rules | 5 |
+| Undocumented Consequences/Side Effects | 8 |
+| Undocumented Read Operations | 20 |
+| Undocumented Infrastructure/Env Behaviors | 7 |
+| New Risks Identified | 4 |
+| **Total Findings Integrated from Audit** | **60** |
