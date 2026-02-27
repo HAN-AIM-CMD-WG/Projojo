@@ -146,21 +146,29 @@ export default function StudentPortfolio({ studentId, studentName = "", isOwnPro
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-blue-500" />
                                 <span className="text-[var(--text-muted)]">
-                                    <strong className="text-[var(--text-primary)]">{portfolio.active_count}</strong> actief
+                                    <strong className="text-[var(--text-primary)]">{portfolio.active_count}</strong> lopend
                                 </span>
                             </div>
                         )}
-                        {portfolio.completed_count > 0 && (
+                        {(portfolio.afgerond_count || portfolio.completed_count) > 0 && (
                             <div className="flex items-center gap-2">
                                 <span className="w-3 h-3 rounded-full bg-green-500" />
                                 <span className="text-[var(--text-muted)]">
-                                    <strong className="text-[var(--text-primary)]">{portfolio.completed_count}</strong> voltooid
+                                    <strong className="text-[var(--text-primary)]">{portfolio.afgerond_count || portfolio.completed_count}</strong> afgerond
+                                </span>
+                            </div>
+                        )}
+                        {portfolio.afgebroken_count > 0 && (
+                            <div className="flex items-center gap-2">
+                                <span className="w-3 h-3 rounded-full bg-gray-400" />
+                                <span className="text-[var(--text-muted)]">
+                                    <strong className="text-[var(--text-primary)]">{portfolio.afgebroken_count}</strong> afgebroken
                                 </span>
                             </div>
                         )}
                         {portfolio.snapshot_count > 0 && (
                             <div className="flex items-center gap-2">
-                                <span className="w-3 h-3 rounded-full bg-gray-400" />
+                                <span className="w-3 h-3 rounded-full bg-gray-300" />
                                 <span className="text-[var(--text-muted)]">
                                     <strong className="text-[var(--text-primary)]">{portfolio.snapshot_count}</strong> archief
                                 </span>
