@@ -149,6 +149,14 @@ async def update_project(
             detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
+    # Check for duplicate project name within the same business
+    existing_project = project_repo.get_by_id(project_id)
+    if existing_project.name != name and project_repo.check_project_exists(name, existing_project.business_id):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Project met de naam '{name}' bestaat al binnen dit bedrijf."
+        )
+
     # Handle photo upload if provided
     image_filename = None
     if image and image.filename:
