@@ -84,15 +84,16 @@ async def create_business(name: str = Body(...)):
             detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
+    if business_repo.check_business_name_exists(name):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
+        )
+
     try:
         created_business = business_repo.create(name)
         return created_business
     except Exception as e:
-        if "has a key constraint violation" in str(e):
-            raise HTTPException(
-                status_code=409,
-                detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
-            )
         print(f"Error creating business with name {name}: {e}")
         raise HTTPException(
             status_code=500,
