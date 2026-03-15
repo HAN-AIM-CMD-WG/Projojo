@@ -206,7 +206,7 @@ export default function OverviewMap({
                     }
 
                     // Small delay to respect Nominatim rate limits
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (err) {
                     console.error('Geocoding error for', loc.address, err);
                 }
