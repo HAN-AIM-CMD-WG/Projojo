@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 from .project import Project
 
@@ -10,6 +11,8 @@ class Business(BaseModel):
     image_path: str
     location: str
     projects: list[Project] | None = None
+    archived_at: datetime | None = None
+    archived_by: str | None = None
 
     class Config:
         from_attributes = True

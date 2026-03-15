@@ -14,6 +14,8 @@ class Task(BaseModel):
     skills: list[Skill] | None = None
     total_registered: int | None = None
     total_accepted: int | None = None
+    archived_at: datetime | None = None
+    archived_by: str | None = None
 
     class Config:
         from_attributes = True

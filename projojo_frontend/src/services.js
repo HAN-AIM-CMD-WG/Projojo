@@ -169,6 +169,33 @@ export function getProjects() {
 }
 
 /**
+ * @returns {Promise<Project[]>}
+ */
+export function getArchivedProjects() {
+    return fetchWithError(`${API_BASE_URL}projects/archived`);
+}
+
+/**
+ * @param {string} projectId
+ * @returns {Promise<void>}
+ */
+export function archiveProject(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/archive`, {
+        method: "POST",
+    }, true);
+}
+
+/**
+ * @param {string} projectId
+ * @returns {Promise<void>}
+ */
+export function unarchiveProject(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/unarchive`, {
+        method: "POST",
+    }, true);
+}
+
+/**
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}[]>}
  */
 export function getBusinessesComplete() {
@@ -180,6 +207,13 @@ export function getBusinessesComplete() {
  */
 export function getBusinessesBasic() {
     return fetchWithError(`${API_BASE_URL}businesses/basic`);
+}
+
+/**
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[]}[]>}
+ */
+export function getArchivedBusinessesBasic() {
+    return fetchWithError(`${API_BASE_URL}businesses/archived/basic`);
 }
 
 /**
@@ -211,6 +245,33 @@ export function getAuthorization() {
  */
 export function getTasks(projectId) {
     return fetchWithError(`${API_BASE_URL}projects/${projectId}/tasks`);
+}
+
+/**
+ * @returns {Promise<Task[]>}
+ */
+export function getArchivedTasks() {
+    return fetchWithError(`${API_BASE_URL}tasks/archived`);
+}
+
+/**
+ * @param {string} taskId
+ * @returns {Promise<void>}
+ */
+export function archiveTask(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/archive`, {
+        method: "POST",
+    }, true);
+}
+
+/**
+ * @param {string} taskId
+ * @returns {Promise<void>}
+ */
+export function unarchiveTask(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/unarchive`, {
+        method: "POST",
+    }, true);
 }
 
 // This function is not available in the backend
@@ -456,6 +517,28 @@ export function createNewBusiness(newBusinessName) {
         method: "POST",
         body: JSON.stringify(newBusinessName),
     });
+}
+
+/**
+ * Archive a business (supervisor of business or teacher)
+ * @param {string} businessId
+ * @returns {Promise<void>}
+ */
+export function archiveBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/archive`, {
+        method: "POST",
+    }, true);
+}
+
+/**
+ * Unarchive a business (teacher-only)
+ * @param {string} businessId
+ * @returns {Promise<void>}
+ */
+export function unarchiveBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/unarchive`, {
+        method: "POST",
+    }, true);
 }
 
 /**

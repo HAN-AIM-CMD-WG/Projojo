@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException
+from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Request
 from typing import Annotated
 from datetime import datetime
 from auth.permissions import auth
@@ -21,6 +21,14 @@ async def get_all_projects():
     """
     projects = project_repo.get_all()
     return projects
+
+@router.get("/archived")
+@auth(role="teacher")
+async def get_archived_projects():
+    """
+    Get archived projects (teacher-only)
+    """
+    return project_repo.get_archived()
 
 @router.get("/{project_id}")
 @auth(role="authenticated")
@@ -118,6 +126,45 @@ async def create_project(
     created_project = project_repo.create(project_creation)
     return created_project
 
+
+@router.post("/{project_id}/archive")
+@auth(role="supervisor", owner_id_key="project_id")
+async def archive_project(
+    request: Request,
+    project_id: str = Path(..., description="Project ID")
+):
+    """
+    Archive a project and cascade to its tasks and registrations.
+    Teacher and owning supervisor are allowed.
+    """
+    try:
+        project_repo.archive(project_id, request.state.user_id)
+        return {"message": "Project succesvol gearchiveerd"}
+    except Exception as e:
+        print(f"Error archiving project {project_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het archiveren van het project."
+        )
+
+@router.post("/{project_id}/unarchive")
+@auth(role="teacher")
+async def unarchive_project(
+    project_id: str = Path(..., description="Project ID")
+):
+    """
+    Unarchive a project and cascade to its tasks and registrations.
+    Teacher-only.
+    """
+    try:
+        project_repo.unarchive(project_id)
+        return {"message": "Project succesvol hersteld"}
+    except Exception as e:
+        print(f"Error unarchiving project {project_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Er is een fout opgetreden bij het herstellen van het project."
+        )
 @router.put("/{project_id}")
 @auth(role="supervisor", owner_id_key="project_id")
 async def update_project(

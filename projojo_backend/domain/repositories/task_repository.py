@@ -18,6 +18,7 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+            not { $task has archivedAt $archivedAt; };
             fetch {
                 'id': $task.id,
                 'name': $name,
@@ -27,6 +28,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
+                    not { $registration has archivedAt $regArchived; };
                     not { $registration has isAccepted $any_value; };
                     return count;
                 ),
@@ -34,6 +36,7 @@ class TaskRepository(BaseRepository[Task]):
                     match
                         $registration isa registersForTask (task: $task, student: $student),
                         has isAccepted true;
+                    not { $registration has archivedAt $regArchived2; };
                     return count;
                 )
             };
@@ -54,6 +57,7 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+            not { $task has archivedAt $archivedAt; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -63,6 +67,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
+                    not { $registration has archivedAt $regArchived; };
                     not { $registration has isAccepted $any_value; };
                     return count;
                 ),
@@ -70,6 +75,7 @@ class TaskRepository(BaseRepository[Task]):
                     match
                         $registration isa registersForTask (task: $task, student: $student),
                         has isAccepted true;
+                    not { $registration has archivedAt $regArchived2; };
                     return count;
                 )
             };
@@ -90,6 +96,8 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+            not { $project has archivedAt $pArchived; };
+            not { $task has archivedAt $archivedAt; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -100,6 +108,7 @@ class TaskRepository(BaseRepository[Task]):
                 'total_registered': (
                     match
                         $registration isa registersForTask (task: $task, student: $student);
+                    not { $registration has archivedAt $regArchived; };
                     not { $registration has isAccepted $any_value; };
                     return count;
                 ),
@@ -107,6 +116,7 @@ class TaskRepository(BaseRepository[Task]):
                     match
                         $registration isa registersForTask (task: $task, student: $student),
                         has isAccepted true;
+                    not { $registration has archivedAt $regArchived2; };
                     return count;
                 )
             };
@@ -116,6 +126,29 @@ class TaskRepository(BaseRepository[Task]):
 
         return tasks
 
+    def get_archived(self) -> list[Task]:
+        query = """
+            match
+                $task isa task,
+                has id $id,
+                has name $name,
+                has description $description,
+                has totalNeeded $totalNeeded,
+                has createdAt $createdAt;
+                $task has archivedAt $archivedAt;
+                # optional: project for context
+                $ct isa containsTask (project: $project, task: $task);
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'total_needed': $totalNeeded,
+                'created_at': $createdAt,
+                'project_id': $project.id
+            };
+        """
+        results = Db.read_transact(query)
+        return [Task.model_validate(result) for result in results]
     def get_business_id_by_task(self, task_id: str) -> str | None:
         query = """
             match
@@ -345,3 +378,70 @@ class TaskRepository(BaseRepository[Task]):
 
         Db.write_transact(query, update_params)
 
+    def archive(self, task_id: str, archived_by: str) -> None:
+        """
+        Archive a single task and its registrations.
+        """
+        from datetime import datetime
+        ts = datetime.now()
+
+        # Archive task
+        query = """
+            match
+                $t isa task, has id ~task_id;
+            not { $t has archivedAt $x; };
+            update
+                $t has archivedAt ~ts;
+                $t has archivedBy ~by;
+        """
+        Db.write_transact(query, {"task_id": task_id, "ts": ts, "by": archived_by})
+
+        # Archive registrations
+        query = """
+            match
+                $t isa task, has id ~task_id;
+                $r isa registersForTask (task: $t, student: $stu);
+            not { $r has archivedAt $x; };
+            update
+                $r has archivedAt ~ts;
+                $r has archivedBy ~by;
+        """
+        Db.write_transact(query, {"task_id": task_id, "ts": ts, "by": archived_by})
+
+    def unarchive(self, task_id: str) -> None:
+        """
+        Teacher-only: unarchive task by removing archivedAt/archivedBy on task and registrations.
+        """
+        # Task
+        query = """
+            match
+                $t isa task, has id ~task_id, has archivedAt $ts;
+            delete
+                has $ts of $t;
+        """
+        Db.write_transact(query, {"task_id": task_id})
+        query = """
+            match
+                $t isa task, has id ~task_id, has archivedBy $by;
+            delete
+                has $by of $t;
+        """
+        Db.write_transact(query, {"task_id": task_id})
+
+        # Registrations
+        query = """
+            match
+                $t isa task, has id ~task_id;
+                $r isa registersForTask (task: $t, student: $stu), has archivedAt $ts;
+            delete
+                has $ts of $r;
+        """
+        Db.write_transact(query, {"task_id": task_id})
+        query = """
+            match
+                $t isa task, has id ~task_id;
+                $r isa registersForTask (task: $t, student: $stu), has archivedBy $by;
+            delete
+                has $by of $r;
+        """
+        Db.write_transact(query, {"task_id": task_id})

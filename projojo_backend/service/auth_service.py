@@ -29,6 +29,19 @@ class AuthService:
         # Get or create user in database
         final_user, is_new_user = self._get_or_create_user(extracted_user, invite_token)
 
+        # Block archived supervisors from logging in
+        try:
+            # final_user may be dict-like or pydantic model; normalize access
+            user_type = getattr(final_user, "type", None) or (final_user.get("type") if isinstance(final_user, dict) else None)
+            user_id = getattr(final_user, "id", None) or (final_user.get("id") if isinstance(final_user, dict) else None)
+
+            if user_type == "supervisor" and user_id:
+                if self.user_repo.is_supervisor_archived(user_id):
+                    raise ValueError("Supervisor account is archived")
+        except Exception as e:
+            # Convert to ValueError so the router redirects with error
+            raise ValueError("Je account is gearchiveerd. Neem contact op met een docent.") from e
+
         # Create JWT token
         # Pass business_id if user is a supervisor
         business_id = None
