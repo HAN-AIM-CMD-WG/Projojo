@@ -84,15 +84,16 @@ async def create_business(name: str = Body(...)):
             detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
         )
 
+    if business_repo.check_business_name_exists(name):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
+        )
+
     try:
         created_business = business_repo.create(name)
         return created_business
     except Exception as e:
-        if "has a key constraint violation" in str(e):
-            raise HTTPException(
-                status_code=409,
-                detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
-            )
         print(f"Error creating business with name {name}: {e}")
         raise HTTPException(
             status_code=500,
@@ -132,6 +133,13 @@ async def update_business(
         raise HTTPException(
             status_code=400,
             detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
+    # Check for duplicate business name
+    if existing_business.name != name and business_repo.check_business_name_exists(name, exclude_business_id=business_id):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Er bestaat al een bedrijf met de naam '{name}'.",
         )
 
     # Handle photo upload if provided
