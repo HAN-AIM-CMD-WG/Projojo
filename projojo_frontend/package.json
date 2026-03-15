@@ -23,10 +23,13 @@
     "clsx": "^2.1.1",
     "dompurify": "^3.2.3",
     "jwt-decode": "^4.0.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.516.0",
     "marked": "^15.0.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-leaflet": "^5.0.0",
+    "react-leaflet-cluster": "^4.0.0",
     "react-router-dom": "^7.6.2",
     "tailwind-merge": "^3.3.1",
     "turndown": "^7.2.0"
