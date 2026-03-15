@@ -15,7 +15,7 @@ export default function ProjectDetails({ project, businessId, refreshData }) {
     const [error, setError] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { authData } = useAuth();
-    const isOwner = authData.type === "supervisor" && authData.businessId === businessId;
+    const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [descriptionError, setDescriptionError] = useState();
     const [formKey, setFormKey] = useState(0);

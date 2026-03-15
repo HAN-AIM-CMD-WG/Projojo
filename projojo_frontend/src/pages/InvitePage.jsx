@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { validateInvite, API_BASE_URL, IMAGE_BASE_URL } from '../services';
-import { notification } from '@/components/notifications/NotifySystem';
+import { notification } from '../components/notifications/NotifySystem';
 
 export default function InvitePage() {
     const { token } = useParams();
