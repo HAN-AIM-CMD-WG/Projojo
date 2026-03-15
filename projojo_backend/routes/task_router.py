@@ -5,6 +5,7 @@ from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
+from service.validation_service import is_valid_length
 from datetime import datetime
 from typing import List, Optional
 
@@ -82,8 +83,14 @@ async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     """
     Get all skills required for a task
     """
-    task_skills = task_service.get_task_with_skills(task_id)
-    return task_skills
+    # Ensure task exists
+    try:
+        task_repo.get_by_id(task_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    skills = skill_repo.get_task_skills(task_id)
+    return skills
 
 @router.put("/{task_id}/skills")
 @auth(role="supervisor", owner_id_key="task_id")
@@ -93,29 +100,46 @@ async def update_task_skills(
 ):
     """
     Update skills for a task.
-    
+
     - Adding skills: always allowed
     - Removing skills: only allowed if no students have registered for the task
-    
+
     Returns information about what was added, removed, and any locked skills.
     """
+    # Verify task exists
     try:
-        # Verify task exists
         task = task_repo.get_by_id(task_id)
         if not task:
             raise HTTPException(status_code=404, detail="Taak niet gevonden")
-        
-        result = skill_repo.update_task_skills(task_id, skill_ids)
-        
-        # If some skills were locked, include a warning message
-        if result.get("locked"):
-            result["message"] = "Sommige skills konden niet worden verwijderd omdat er al aanmeldingen zijn voor deze taak."
-        else:
-            result["message"] = "Skills succesvol bijgewerkt"
-        
-        return result
-    except ItemRetrievalException:
+    except Exception:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    # Validate body
+    if skill_ids is None or not isinstance(skill_ids, list):
+        raise HTTPException(status_code=400, detail="Ongeldige invoer: verwacht een lijst met skill-IDs")
+
+    # Verify that all skill IDs exist
+    missing: list[str] = []
+    for sid in skill_ids:
+        try:
+            skill_repo.get_by_id(sid)
+        except Exception:
+            missing.append(sid)
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Onbekende skill IDs: {', '.join(missing)}")
+
+    try:
+        result = skill_repo.update_task_skills(task_id, skill_ids)
+
+        # If some skills were locked, include a warning message
+        if isinstance(result, dict) and result.get("locked"):
+            result["message"] = "Sommige skills konden niet worden verwijderd omdat er al aanmeldingen zijn voor deze taak."
+        elif isinstance(result, dict):
+            result["message"] = "Skills succesvol bijgewerkt"
+        else:
+            result = {"message": "Skills succesvol bijgewerkt"}
+
+        return result
     except Exception as e:
         print(f"Error updating skills for task {task_id}: {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de skills")
@@ -176,8 +200,10 @@ async def create_registration(
         task_repo.create_registration(task_id, student_id, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
     except Exception as e:
-        print(e)
-        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren")
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
+        print(f"{type(e)} - {e}")
+        raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren.")
 
 @router.put("/{task_id}/registrations/{student_id}")
 @auth(role="supervisor", owner_id_key="task_id")
@@ -201,7 +227,9 @@ async def update_registration(
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
-        print(f"Error updating registration for task {task_id} and student {student_id}: {e}")
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
+        print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie.")
 
 @router.delete("/{task_id}/registrations")
@@ -222,7 +250,7 @@ async def cancel_registration(
         deleted = task_repo.delete_registration(task_id, student_id)
         if not deleted:
             raise HTTPException(
-                status_code=404, 
+                status_code=404,
                 detail="Aanmelding niet gevonden of al verwerkt (geaccepteerd/afgewezen)"
             )
         return {"message": "Aanmelding succesvol geannuleerd"}
@@ -240,23 +268,35 @@ async def create_task(
     """
     Create a new task
     """
+    if not is_valid_length(task_create.name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if not is_valid_length(task_create.description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
     try:
         # Get project to validate dates and potentially inherit them
         project = project_repo.get_by_id(project_id)
         if not project:
             raise HTTPException(status_code=404, detail="Project niet gevonden.")
-        
+
         # Use provided dates or inherit from project
         # Normalize all dates to naive datetimes to avoid comparison issues
         start_date = normalize_datetime(task_create.start_date) or normalize_datetime(project.start_date)
         end_date = normalize_datetime(task_create.end_date) or normalize_datetime(project.end_date)
         project_start = normalize_datetime(project.start_date)
         project_end = normalize_datetime(project.end_date)
-        
+
         # Validate task dates are within project period
         if start_date and project_start and start_date < project_start:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail=f"Taak startdatum ({start_date.strftime('%d-%m-%Y')}) kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen."
             )
         if end_date and project_end and end_date > project_end:
@@ -269,7 +309,7 @@ async def create_task(
                 status_code=400,
                 detail="Startdatum kan niet na de einddatum liggen."
             )
-        
+
         task = Task(
             id=None,  # ID will be generated by repository
             name=task_create.name,
@@ -286,7 +326,9 @@ async def create_task(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error creating task for project {project_id}: {e}")
+        if (hasattr(e, 'status_code')):
+            raise HTTPException(status_code=e.status_code, detail=str(e))
+        print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
 
 @router.put("/{task_id}")
@@ -302,31 +344,43 @@ async def update_task(
     """
     Update task information.
     """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
     # Verify task exists
     existing_task = task_repo.get_by_id(task_id)
     if not existing_task:
         raise HTTPException(status_code=404, detail="Taak niet gevonden.")
-    
+
     # Parse dates if provided
     parsed_start = None
     parsed_end = None
-    
+
     if start_date and start_date.strip():
         try:
             parsed_start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
         except ValueError:
             raise HTTPException(status_code=400, detail="Ongeldige startdatum formaat.")
-    
+
     if end_date and end_date.strip():
         try:
             parsed_end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
         except ValueError:
             raise HTTPException(status_code=400, detail="Ongeldige einddatum formaat.")
-    
+
     # Normalize parsed dates
     parsed_start = normalize_datetime(parsed_start)
     parsed_end = normalize_datetime(parsed_end)
-    
+
     # Get project for date validation
     if existing_task.project_id:
         project = project_repo.get_by_id(existing_task.project_id)
@@ -344,12 +398,12 @@ async def update_task(
                     status_code=400,
                     detail=f"Taak einddatum kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen."
                 )
-    
+
     # Validate start before end
     if parsed_start and parsed_end and parsed_start > parsed_end:
         raise HTTPException(status_code=400, detail="Startdatum kan niet na de einddatum liggen.")
 
-    try:        
+    try:
         task_repo.update(task_id, name, description, total_needed, parsed_start, parsed_end)
         return {"message": "Taak succesvol bijgewerkt"}
     except Exception as e:
@@ -365,7 +419,7 @@ async def mark_registration_started(
 ):
     """
     Mark a registration as started (student begins working on the task).
-    
+
     Can be called by:
     - The student themselves
     - A supervisor (for their business's tasks)
@@ -373,14 +427,14 @@ async def mark_registration_started(
     """
     role = payload["role"]
     user_id = payload["sub"]
-    
+
     # Authorization: student can mark their own, supervisor/teacher can mark any
     if role == "student" and user_id != student_id:
         raise HTTPException(status_code=403, detail="Je kunt alleen je eigen taak als gestart markeren")
-    
+
     if role not in ["student", "supervisor", "teacher"]:
         raise HTTPException(status_code=403, detail="Geen toegang tot deze actie")
-    
+
     try:
         task_repo.mark_registration_started(task_id, student_id)
         return {"message": "Taak gemarkeerd als gestart"}
@@ -397,22 +451,22 @@ async def mark_registration_completed(
     """
     Mark a registration as completed (student finished the task).
     This adds the task to the student's portfolio.
-    
+
     Can be called by:
     - A supervisor (for their business's tasks)
     - A teacher
-    
+
     Note: Students cannot mark their own tasks as completed - must be verified by supervisor/teacher.
     """
     role = payload["role"]
-    
+
     # Only supervisor or teacher can mark as completed
     if role not in ["supervisor", "teacher"]:
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Alleen supervisors of docenten kunnen taken als voltooid markeren"
         )
-    
+
     try:
         task_repo.mark_registration_completed(task_id, student_id)
         return {"message": "Taak gemarkeerd als voltooid en toegevoegd aan portfolio"}
@@ -428,7 +482,7 @@ async def get_registration_timeline(
 ):
     """
     Get the full timeline for a registration.
-    
+
     Returns timestamps for:
     - requested_at: When student applied
     - accepted_at: When supervisor accepted
@@ -436,8 +490,8 @@ async def get_registration_timeline(
     - completed_at: When task was marked complete
     """
     timeline = task_repo.get_registration_timeline(task_id, student_id)
-    
+
     if not timeline:
         raise HTTPException(status_code=404, detail="Registratie niet gevonden")
-    
+
     return timeline

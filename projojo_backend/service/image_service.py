@@ -5,6 +5,7 @@ from fastapi import UploadFile, HTTPException
 import requests
 from urllib.parse import urlparse
 import mimetypes
+from config.settings import IS_DEVELOPMENT
 
 
 # Whitelist of allowed domains for image downloads
@@ -366,7 +367,7 @@ def delete_image(filename: str, directory: str = "static/images") -> bool:
     Returns:
         bool: True if the file was successfully deleted or doesn't exist, False if an error occurred
     """
-    if os.getenv("ENVIRONMENT", "none").lower() == "development":
+    if IS_DEVELOPMENT:
         # Don't delete files in development environment
         return True
 

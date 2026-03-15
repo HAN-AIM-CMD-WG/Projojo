@@ -10,9 +10,9 @@ import Alert from './Alert';
 import Modal from './Modal';
 import RichTextEditorButton from './RichTextEditorButton';
 
-export default function RichTextEditor({ onSave, error = '', defaultText = '', required = false, label, max = 4000, className, setCanSubmit = () => { } }) {
+export default function RichTextEditor({ onSave, error = '', defaultText = '', required = false, label, max = 4000, className, setError = () => { } }) {
     const editorRef = useRef(null);
-    const [charCount, setCharCount] = useState(defaultText.length);
+    const [charCount, setCharCount] = useState(0);
     const [internalError, setInternalError] = useState('');
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
@@ -59,13 +59,6 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
         const content = editor.getHTML();
         const markdownContent = turndownService.turndown(content);
 
-        if (editor.getText().length > max) {
-            setInternalError('Je tekst is te lang.');
-            setCanSubmit(false);
-        } else {
-            setInternalError('');
-            setCanSubmit(true);
-        }
         onSave(markdownContent);
     };
 
@@ -124,13 +117,32 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
         }
 
         if (editor) {
+            // Set initial character count from editor's plain text
+            setCharCount(getPlainText().length);
+
             editor.on('update', () => {
-                const content = editor.getText();
+                const content = getPlainText();
                 setCharCount(content.length);
+
+                // Validate character limit and update error state
+                if (content.length > max) {
+                    const errorMsg = 'Deze tekst mag maximaal ' + max + ' tekens bevatten.';
+                    setInternalError(errorMsg);
+                    setError(errorMsg);
+                } else {
+                    setInternalError('');
+                    setError(undefined);
+                }
+
                 handleSave();
             });
         }
-    }, [editor]);
+    }, [editor, max, required, setError, handleSave, setInternalError]);
+
+    const getPlainText = () => {
+        if (!editor) return '';
+        return editor.getText({ blockSeparator: '\n' }).trim();
+    };
 
     if (!editor) {
         return null;
@@ -143,9 +155,9 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     {label} {required && <span className="text-primary">*</span>}
                 </label>
             )}
-            <div 
+            <div
                 className="rounded-2xl overflow-hidden"
-                style={{ 
+                style={{
                     background: '#EFEEEE',
                     boxShadow: 'inset 4px 4px 8px #D1D9E6, inset -4px -4px 8px #FFFFFF'
                 }}
@@ -229,14 +241,14 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                         }
                     />
                 </div>
-                
+
                 {/* Error message */}
                 {internalError && (
                     <div className="px-4 py-2">
                         <Alert text={internalError} />
                     </div>
                 )}
-                
+
                 {/* Editor content area */}
                 <EditorContent
                     ref={editorRef}
@@ -244,7 +256,6 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     title="Editor content"
                     className="bg-transparent [&>*]:outline-none [&>div]:min-h-[100px] [&>div]:max-h-[300px] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:px-4 [&>div]:py-3 [&>div]:text-[var(--text-primary)] [&>div]:text-sm [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:text-[var(--text-primary)] [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[var(--text-primary)] [&_pre]:bg-gray-700 [&_pre]:text-gray-100 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-primary/50 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-[var(--text-secondary)] [&_a]:text-primary [&_a]:underline [&_a]:font-medium [&_a]:cursor-pointer [&_p]:leading-relaxed"
                 />
-                
                 {/* Character count */}
                 <div className="px-4 py-2 flex items-center justify-between border-t border-gray-200/50 bg-white/30">
                     <span className="text-xs text-[var(--text-muted)]">Gebruik de toolbar voor opmaak</span>
@@ -259,9 +270,9 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                         <label htmlFor="link-ref" className="block text-sm font-bold text-[var(--text-primary)] mb-2">
                             Link naar de website
                         </label>
-                        <div 
+                        <div
                             className={`flex items-center rounded-xl overflow-hidden transition-all ${urlError ? 'ring-2 ring-red-400' : 'focus-within:ring-2 focus-within:ring-primary/50'}`}
-                            style={{ 
+                            style={{
                                 background: '#EFEEEE',
                                 boxShadow: 'inset 3px 3px 6px #D1D9E6, inset -3px -3px 6px #FFFFFF'
                             }}
@@ -281,7 +292,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                             <p className='text-red-500 text-sm mt-2 font-medium'>{urlError}</p>
                         )}
                     </div>
-                    
+
                     <button
                         onClick={handleLinkInsert}
                         className="w-full rounded-xl py-3 font-bold text-white transition-all duration-200 hover:-translate-y-0.5 bg-gradient-to-r from-primary to-orange-600"

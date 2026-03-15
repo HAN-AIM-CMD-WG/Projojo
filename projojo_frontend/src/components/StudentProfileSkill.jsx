@@ -40,14 +40,12 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                 {/* Skill header */}
                 <div className="flex flex-col min-[400px]:flex-row min-[400px]:justify-between gap-2">
                     <div className="flex items-center gap-3">
-                        <div className={`rounded-lg p-2 ${
-                            skill.is_pending 
-                                ? 'neu-pressed' 
+                        <div className={`rounded-lg p-2 ${skill.is_pending
+                                ? 'neu-pressed'
                                 : 'bg-primary/10'
-                        }`}>
-                            <span className={`material-symbols-outlined text-lg ${
-                                skill.is_pending ? 'text-amber-500' : 'text-primary'
                             }`}>
+                            <span className={`material-symbols-outlined text-lg ${skill.is_pending ? 'text-amber-500' : 'text-primary'
+                                }`}>
                                 {skill.is_pending ? 'hourglass_top' : 'verified'}
                             </span>
                         </div>
@@ -67,7 +65,7 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                         </div>
                     </div>
                     {isOwnProfile && !isEditing && (
-                        <button 
+                        <button
                             className="neu-btn !py-1.5 !px-3 text-xs self-start flex items-center gap-1"
                             onClick={() => setIsEditing(true)}
                         >
@@ -89,15 +87,15 @@ export default function StudentProfileSkill({ skill, isOwnProfile }) {
                             placeholder="Beschrijf je ervaring met deze skill..."
                         />
                         <div className="flex gap-2 justify-end">
-                            <button 
-                                type="button" 
-                                className="neu-btn text-sm" 
+                            <button
+                                type="button"
+                                className="neu-btn text-sm"
                                 onClick={handleClose}
                             >
                                 Annuleren
                             </button>
-                            <button 
-                                className="neu-btn-primary text-sm" 
+                            <button
+                                className="neu-btn-primary text-sm"
                                 onClick={handleSubmit}
                             >
                                 <span className="flex items-center gap-1">

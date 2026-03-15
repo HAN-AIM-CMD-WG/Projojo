@@ -8,6 +8,7 @@ from domain.repositories import ProjectRepository, PortfolioRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
 from auth.jwt_utils import get_token_payload
+from service.validation_service import is_valid_length
 
 project_repo = ProjectRepository()
 portfolio_repo = PortfolioRepository()
@@ -110,6 +111,24 @@ async def create_project(
     """
     Create a new project with image upload
     """
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if location and not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+        )
+
     # Validate required fields
     if not image or not image.filename:
         raise HTTPException(
@@ -126,7 +145,7 @@ async def create_project(
     # Parse optional date fields
     parsed_start_date = datetime.fromisoformat(start_date) if start_date else None
     parsed_end_date = datetime.fromisoformat(end_date) if end_date else None
-    
+
     # Validate dates if both provided
     if parsed_start_date and parsed_end_date and parsed_start_date > parsed_end_date:
         raise HTTPException(
@@ -173,12 +192,30 @@ async def update_project(
     # Parse optional date fields
     parsed_start_date = datetime.fromisoformat(start_date) if start_date else None
     parsed_end_date = datetime.fromisoformat(end_date) if end_date else None
-    
+
     # Validate dates if both provided
     if parsed_start_date and parsed_end_date and parsed_start_date > parsed_end_date:
         raise HTTPException(
             status_code=400,
             detail="De startdatum mag niet na de einddatum liggen."
+        )
+
+    if not is_valid_length(name, 100):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
+        )
+
+    if location and not is_valid_length(location, 255):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
+        )
+
+    if not is_valid_length(description, 4000, strip_md=True):
+        raise HTTPException(
+            status_code=400,
+            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Handle photo upload if provided
@@ -213,14 +250,14 @@ async def get_project_students(
     """
     role = payload.get("role")
     user_id = payload.get("sub")
-    
+
     # Check authorization
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten hebben geen toegang tot deze informatie")
-    
+
     if role == "supervisor" and not project_repo.check_project_owner(project_id, user_id):
         raise HTTPException(status_code=403, detail="Je hebt alleen toegang tot je eigen projecten")
-    
+
     students = project_repo.get_students_by_project(project_id)
     return students
 
@@ -235,43 +272,43 @@ async def archive_project(
     Archive a project.
     - Supervisor: only their own projects
     - Teacher: all projects
-    
+
     Returns 409 Conflict with student list if there are registrations and confirm=False.
     With confirm=True: sends notifications and archives the project.
     """
     role = payload.get("role")
     user_id = payload.get("sub")
-    
+
     # Check authorization
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen geen projecten archiveren")
-    
+
     if role == "supervisor":
         if not project_repo.check_project_owner(project_id, user_id):
             raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten archiveren")
     elif role != "teacher":
         raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen projecten archiveren")
-    
+
     # Check if already archived
     if project_repo.is_archived(project_id):
         raise HTTPException(status_code=400, detail="Dit project is al gearchiveerd")
-    
+
     # Check for affected students
     affected_students = project_repo.get_students_by_project(project_id)
-    
+
     if affected_students and not confirm:
         return ProjectActionWarning(
             message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Weet je zeker dat je wilt archiveren?",
             affected_students=affected_students,
             requires_confirmation=True
         )
-    
+
     # Archive the project
     project_repo.archive_project(project_id)
-    
+
     # TODO: Send notifications to affected students and teacher
     notified_count = len(affected_students) if affected_students else 0
-    
+
     return ProjectActionResponse(
         message="Project succesvol gearchiveerd",
         notified_count=notified_count
@@ -291,19 +328,19 @@ async def set_project_visibility(
     """
     role = payload.get("role")
     user_id = payload.get("sub")
-    
+
     # Check authorization
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen de zichtbaarheid niet wijzigen")
-    
+
     if role == "supervisor":
         if not project_repo.check_project_owner(project_id, user_id):
             raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten aanpassen")
     elif role != "teacher":
         raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen de zichtbaarheid wijzigen")
-    
+
     project_repo.set_public(project_id, is_public)
-    
+
     return {"message": f"Project is nu {'publiek zichtbaar' if is_public else 'niet meer publiek zichtbaar'}"}
 
 
@@ -326,20 +363,20 @@ async def set_project_impact(
     """
     role = payload.get("role")
     user_id = payload.get("sub")
-    
+
     # Check authorization
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen de impact niet wijzigen")
-    
+
     if role == "supervisor":
         if not project_repo.check_project_owner(project_id, user_id):
             raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten aanpassen")
     elif role != "teacher":
         raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen de impact wijzigen")
-    
+
     impact_summary = update.impact_summary if update else None
     project_repo.set_impact_summary(project_id, impact_summary)
-    
+
     return {"message": "Impact samenvatting bijgewerkt"}
 
 
@@ -355,24 +392,24 @@ async def restore_project(
     """
     role = payload.get("role")
     user_id = payload.get("sub")
-    
+
     # Check authorization
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen geen projecten herstellen")
-    
+
     if role == "supervisor":
         if not project_repo.check_project_owner(project_id, user_id):
             raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten herstellen")
     elif role != "teacher":
         raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen projecten herstellen")
-    
+
     # Check if actually archived
     if not project_repo.is_archived(project_id):
         raise HTTPException(status_code=400, detail="Dit project is niet gearchiveerd")
-    
+
     # Restore the project
     project_repo.restore_project(project_id)
-    
+
     return {"message": "Project succesvol hersteld"}
 
 
@@ -384,36 +421,36 @@ async def delete_project(
 ):
     """
     Permanently delete a project. Only accessible by teachers.
-    
+
     Before deletion:
     - Creates portfolio snapshots for students with completed tasks
     - Sends notifications to affected students
-    
+
     Returns 409 Conflict with student list if there are registrations and confirm=False.
     """
     role = payload.get("role")
-    
+
     # Only teachers can hard delete
     if role != "teacher":
         raise HTTPException(
-            status_code=403, 
+            status_code=403,
             detail="Alleen docenten kunnen projecten permanent verwijderen"
         )
-    
+
     # Check for affected students
     affected_students = project_repo.get_students_by_project(project_id)
-    
+
     if affected_students and not confirm:
         return ProjectActionWarning(
             message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Deze actie is onomkeerbaar!",
             affected_students=affected_students,
             requires_confirmation=True
         )
-    
+
     # Create portfolio snapshots for completed tasks before deletion
     completed_tasks = project_repo.get_completed_tasks_by_project(project_id)
     snapshots_created = 0
-    
+
     for task_data in completed_tasks:
         try:
             portfolio_repo.create_snapshot(
@@ -443,12 +480,12 @@ async def delete_project(
             snapshots_created += 1
         except Exception as e:
             print(f"Failed to create portfolio snapshot: {e}")
-    
+
     # TODO: Send notifications to affected students and teacher
-    
+
     # Delete the project
     project_repo.delete_project(project_id)
-    
+
     return {
         "message": "Project succesvol verwijderd",
         "snapshots_created": snapshots_created,

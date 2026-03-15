@@ -4,9 +4,9 @@ import { API_BASE_URL } from "../services";
 import { notification } from "./notifications/NotifySystem";
 
 const ROLE_CONFIG = {
-	student:    { icon: 'school',     label: 'Student',    color: 'bg-emerald-500' },
-	supervisor: { icon: 'business',   label: 'Begeleider', color: 'bg-blue-500' },
-	teacher:    { icon: 'menu_book',  label: 'Docent',     color: 'bg-amber-500' },
+	student: { icon: 'school', label: 'Student', color: 'bg-emerald-500' },
+	supervisor: { icon: 'business', label: 'Begeleider', color: 'bg-blue-500' },
+	teacher: { icon: 'menu_book', label: 'Docent', color: 'bg-amber-500' },
 };
 
 export default function TestUserSelector() {
@@ -55,8 +55,8 @@ export default function TestUserSelector() {
 			localStorage.setItem('token', data.access_token);
 			navigate('/home');
 		} catch (error) {
-			console.error("Error logging in with test user:", error);
-			notification.error("Fout bij inloggen met testgebruiker");
+			console.error(error);
+			notification.error(error.message || "Fout bij inloggen met testgebruiker");
 		} finally {
 			setIsLoggingIn(null);
 		}
@@ -97,17 +97,15 @@ export default function TestUserSelector() {
 									<button
 										key={role}
 										onClick={() => setActiveRole(role)}
-										className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-center transition-all duration-200 cursor-pointer ${
-											isActive
+										className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-center transition-all duration-200 cursor-pointer ${isActive
 												? 'bg-primary text-white font-bold shadow-sm'
 												: 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--gray-100)]'
-										}`}
+											}`}
 									>
 										<span className="material-symbols-outlined text-base">{config.icon}</span>
 										<span className="text-xs font-bold">{config.label}</span>
-										<span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
-											isActive ? 'bg-white/25' : 'bg-[var(--gray-200)]'
-										}`}>{count}</span>
+										<span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${isActive ? 'bg-white/25' : 'bg-[var(--gray-200)]'
+											}`}>{count}</span>
 									</button>
 								);
 							})}
@@ -123,13 +121,12 @@ export default function TestUserSelector() {
 										key={user.id}
 										onClick={() => handleLogin(user)}
 										disabled={isLoggingIn !== null}
-										className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-150 cursor-pointer ${
-											isActive
+										className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-150 cursor-pointer ${isActive
 												? 'bg-primary/10'
 												: isLoggingIn !== null
 													? 'opacity-30 cursor-not-allowed'
 													: 'hover:bg-primary/5 hover:translate-x-1'
-										}`}
+											}`}
 									>
 										{user.image_path ? (
 											<img

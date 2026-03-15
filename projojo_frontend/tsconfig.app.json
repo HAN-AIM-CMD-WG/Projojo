@@ -8,6 +8,8 @@
       },
       "jsx": "react-jsx",
       "esModuleInterop": true,
-      "allowSyntheticDefaultImports": true
+      "allowSyntheticDefaultImports": true,
+      "allowJs": true,
+      "noEmit": true
     }
   }

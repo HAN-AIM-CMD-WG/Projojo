@@ -59,13 +59,12 @@ function FilterDropdownButton({ label, icon, value, options, optionCounts, isOpe
             <button
                 type="button"
                 onClick={onToggle}
-                className={`filter-dropdown-popover flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
-                    value
+                className={`filter-dropdown-popover flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${value
                         ? 'neu-pressed text-primary ring-1 ring-primary/20'
                         : isOpen
                             ? 'neu-pressed text-[var(--text-primary)]'
                             : 'neu-btn'
-                }`}
+                    }`}
                 aria-expanded={isOpen}
                 aria-haspopup="listbox"
             >
@@ -98,11 +97,10 @@ function FilterDropdownButton({ label, icon, value, options, optionCounts, isOpe
                     <div className="max-h-[240px] overflow-y-auto space-y-0.5 scrollbar-thin">
                         <button
                             onClick={() => onSelect(null)}
-                            className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                !value
+                            className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${!value
                                     ? 'bg-primary/10 text-primary'
                                     : 'text-[var(--text-secondary)] hover:bg-[var(--gray-100)]'
-                            }`}
+                                }`}
                         >
                             Alles
                         </button>
@@ -110,11 +108,10 @@ function FilterDropdownButton({ label, icon, value, options, optionCounts, isOpe
                             <button
                                 key={option}
                                 onClick={() => onSelect(option)}
-                                className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${
-                                    value === option
+                                className={`w-full text-left px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-between ${value === option
                                         ? 'bg-primary text-white'
                                         : 'text-[var(--text-secondary)] hover:bg-[var(--gray-100)]'
-                                }`}
+                                    }`}
                             >
                                 <span>{option}</span>
                                 {optionCounts?.[option] != null && (
@@ -155,21 +152,21 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
     const [mapView, setMapView] = useState('businesses');
     const [showOnlyMatches, setShowOnlyMatches] = useState(false);
     const [showOnlyMyWork, setShowOnlyMyWork] = useState(false);
-    
+
     const [selectedTheme, setSelectedTheme] = useState(null);
     const [statusFilter, setStatusFilter] = useState('all');
-    
+
     const [selectedSector, setSelectedSector] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState(null);
     const [selectedCompanySize, setSelectedCompanySize] = useState(null);
     const [openDropdown, setOpenDropdown] = useState(null);
     const [dropdownSearch, setDropdownSearch] = useState('');
-    
+
     // Debounced search ref
     const searchTimerRef = useRef(null);
-    
-    const studentSkillIds = useMemo(() => 
-        new Set(studentSkills.map(s => s.skillId).filter(Boolean)), 
+
+    const studentSkillIds = useMemo(() =>
+        new Set(studentSkills.map(s => s.skillId).filter(Boolean)),
         [studentSkills]
     );
 
@@ -178,18 +175,18 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
     // Filter options with counts
     const filterOptions = useMemo(() => {
         const bList = sourceBusinesses.map(b => b.business || b);
-        
+
         const sectorCounts = {};
         const locationCounts = {};
         const companySizeCounts = {};
-        
+
         bList.forEach(b => {
             if (b.sector) sectorCounts[b.sector] = (sectorCounts[b.sector] || 0) + 1;
             const loc = (b.location || '').split(',')[0].trim();
             if (loc) locationCounts[loc] = (locationCounts[loc] || 0) + 1;
             if (b.companySize) companySizeCounts[b.companySize] = (companySizeCounts[b.companySize] || 0) + 1;
         });
-        
+
         return {
             sectors: Object.keys(sectorCounts).sort(),
             locations: Object.keys(locationCounts).sort(),
@@ -274,7 +271,7 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
     };
 
     const handleRemoveSkill = (skillToRemove) => {
-        const newSkills = selectedSkills.filter(s => 
+        const newSkills = selectedSkills.filter(s =>
             (s.skillId || s.id) !== (skillToRemove.skillId || skillToRemove.id)
         );
         setSelectedSkills(newSkills);
@@ -291,8 +288,8 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
         setStatusFilter('all');
         setSelectedSkills([]);
         setSearch('');
-        triggerFilter({ 
-            sector: null, location: null, companySize: null, 
+        triggerFilter({
+            sector: null, location: null, companySize: null,
             showOnlyMyWork: false, selectedTheme: null, statusFilter: 'all',
             selectedSkills: [], searchInput: ''
         });
@@ -349,11 +346,10 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                 <div className="flex items-center gap-2 flex-wrap mb-4 pb-4 border-b border-[var(--neu-border)]">
                     {/* Kaart - ORANGE, first element */}
                     {businesses.length > 0 && (
-                        <button 
+                        <button
                             type="button"
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
-                                showMap ? 'neu-pressed text-primary' : 'neu-btn-primary'
-                            }`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${showMap ? 'neu-pressed text-primary' : 'neu-btn-primary'
+                                }`}
                             onClick={() => setShowMap(!showMap)}
                             aria-expanded={showMap}
                         >
@@ -390,10 +386,9 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                     </div>
 
                     {/* Skills */}
-                    <button 
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-200 cursor-pointer ${
-                            isEditing ? 'neu-pressed text-primary' : 'neu-btn'
-                        }`}
+                    <button
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-200 cursor-pointer ${isEditing ? 'neu-pressed text-primary' : 'neu-btn'
+                            }`}
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={() => setIsEditing(!isEditing)}
                         aria-expanded={isEditing}
@@ -411,11 +406,10 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
 
                     {/* Mijn werk */}
                     {workingBusinessIds.size > 0 && (
-                        <button 
+                        <button
                             type="button"
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${
-                                showOnlyMyWork ? 'neu-pressed text-primary ring-1 ring-primary/20' : 'neu-btn'
-                            }`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all cursor-pointer ${showOnlyMyWork ? 'neu-pressed text-primary ring-1 ring-primary/20' : 'neu-btn'
+                                }`}
                             onClick={() => {
                                 const newValue = !showOnlyMyWork;
                                 setShowOnlyMyWork(newValue);
@@ -425,9 +419,8 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                         >
                             <span className="material-symbols-outlined text-sm" aria-hidden="true">work</span>
                             <span className="hidden sm:inline">Mijn werk</span>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
-                                showOnlyMyWork ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${showOnlyMyWork ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
+                                }`}>
                                 {workingBusinessIds.size}
                             </span>
                         </button>
@@ -452,9 +445,8 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                         <span className="neu-label shrink-0 mr-0.5">Thema&apos;s</span>
                         <button
                             onClick={() => { setSelectedTheme(null); triggerFilter({ selectedTheme: null }); }}
-                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
-                                !selectedTheme ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
-                            }`}
+                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedTheme ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
+                                }`}
                         >
                             Alles
                         </button>
@@ -464,14 +456,13 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                             return (
                                 <button
                                     key={theme.id}
-                                    onClick={() => { 
+                                    onClick={() => {
                                         const val = selectedTheme === theme.id ? null : theme.id;
-                                        setSelectedTheme(val); 
-                                        triggerFilter({ selectedTheme: val }); 
+                                        setSelectedTheme(val);
+                                        triggerFilter({ selectedTheme: val });
                                     }}
-                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
-                                        selectedTheme === theme.id ? 'text-white' : 'text-[var(--text-secondary)] hover:text-primary'
-                                    }`}
+                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${selectedTheme === theme.id ? 'text-white' : 'text-[var(--text-secondary)] hover:text-primary'
+                                        }`}
                                     style={selectedTheme === theme.id && theme.color ? { backgroundColor: theme.color } : {}}
                                 >
                                     {theme.icon && <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{theme.icon}</span>}
@@ -489,9 +480,8 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                         <span className="neu-label shrink-0 mr-0.5">Sector</span>
                         <button
                             onClick={() => { setSelectedSector(null); triggerFilter({ sector: null }); }}
-                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
-                                !selectedSector ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
-                            }`}
+                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedSector ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
+                                }`}
                         >
                             Alles
                         </button>
@@ -500,16 +490,15 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                             return (
                                 <button
                                     key={sector}
-                                    onClick={() => { 
+                                    onClick={() => {
                                         const val = selectedSector === sector ? null : sector;
-                                        setSelectedSector(val); 
-                                        triggerFilter({ sector: val }); 
+                                        setSelectedSector(val);
+                                        triggerFilter({ sector: val });
                                     }}
-                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${
-                                        selectedSector === sector
+                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${selectedSector === sector
                                             ? 'bg-[var(--text-primary)] text-white'
                                             : 'text-[var(--text-secondary)] hover:text-primary'
-                                    }`}
+                                        }`}
                                 >
                                     <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{getSectorIcon(sector)}</span>
                                     {sector}
@@ -603,9 +592,9 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                                 onSelect={(val) => { setSelectedCompanySize(val); setOpenDropdown(null); setDropdownSearch(''); triggerFilter({ companySize: val }); }}
                             />
                         )}
-                        
+
                         {canShowMatching && (
-                            <button 
+                            <button
                                 className={`neu-btn !py-1.5 !px-3 text-xs ${showOnlyMatches ? 'neu-pressed text-primary' : ''}`}
                                 onClick={() => setShowOnlyMatches(!showOnlyMatches)}
                                 aria-pressed={showOnlyMatches}
@@ -614,25 +603,25 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                                 {showOnlyMatches ? 'Toon alles' : 'Alleen matches'}
                             </button>
                         )}
-                        
+
                         <span className="text-xs text-[var(--text-muted)] font-medium ml-auto">
                             {canShowMatching && matchingLocationsCount > 0 ? (
                                 <>
                                     <span className="text-primary font-bold">{matchingLocationsCount}</span>
                                     {' van '}
-                                    {mapView === 'businesses' 
-                                        ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}` 
+                                    {mapView === 'businesses'
+                                        ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}`
                                         : `${totalProjects} ${totalProjects === 1 ? 'project' : 'projecten'}`}
                                     {' matcht'}
                                 </>
                             ) : (
-                                mapView === 'businesses' 
-                                    ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}` 
+                                mapView === 'businesses'
+                                    ? `${businesses.length} ${businesses.length === 1 ? 'organisatie' : 'organisaties'}`
                                     : `${totalProjects} ${totalProjects === 1 ? 'project' : 'projecten'}`
                             )}
                         </span>
                     </div>
-                    
+
                     <OverviewMap locations={filteredMapLocations} showOnlyMatches={showOnlyMatches} height="350px" />
                 </div>
             )}

@@ -16,7 +16,7 @@ export default function SkillBadge({ children, skillName, isPending, isOwn = fal
 
     // Clean skill badge styling - no gradients, consistent across app
     let classNames;
-    
+
     if (isOwn || variant === 'own') {
         // Own skill: coral outline with light fill
         classNames = 'skill-badge-own';

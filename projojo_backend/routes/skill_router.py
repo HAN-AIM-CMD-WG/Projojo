@@ -3,6 +3,7 @@ from auth.permissions import auth
 
 from domain.repositories import SkillRepository
 from domain.models import Skill
+from exceptions import ItemRetrievalException
 
 skill_repo = SkillRepository()
 
@@ -33,6 +34,20 @@ async def create_skill(skill: Skill = Body(...)):
     """
     Create a new skill
     """
+    # Validate name
+    name = (skill.name or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Veld 'name' is verplicht")
+
+    # Check for existing skill by (case-insensitive) exact name
+    existing = skill_repo.get_by_name_case_insensitive(name)
+    if existing:
+        if getattr(existing, "is_pending", False):
+            raise HTTPException(status_code=409, detail=f"De skill '{name}' bestaat al en wacht op beoordeling.")
+        raise HTTPException(status_code=409, detail=f"Er bestaat al een skill met de naam '{name}'.")
+
+    # Normalize name before creating
+    skill.name = name
     created_skill = skill_repo.create(skill)
     return created_skill
 
@@ -53,21 +68,27 @@ async def update_skill_acceptance(
     # Ensure skill exists
     try:
         skill_repo.get_by_id(skill_id)
+    except ItemRetrievalException:
+        raise
     except Exception:
         raise HTTPException(status_code=404, detail="Skill niet gevonden")
 
     try:
+        existing = skill_repo.get_by_id(skill_id)
         if bool(accepted):
             # Accept: mark as approved (isPending -> false)
             skill_repo.update_is_pending(skill_id, False)
             return {"message": "Skill geaccepteerd"}
         else:
-            # Decline: remove the pending skill entirely
-            skill_repo.delete_by_id(skill_id)
+            # Only delete pending skills
+            if not getattr(existing, "is_pending", True):
+                raise HTTPException(status_code=409, detail="Deze skill is al verwerkt en kan niet worden verwijderd.")
+            # Decline: remove relations first, then delete the pending skill
+            skill_repo.delete_with_cascade(skill_id)
             return {"message": "Skill afgewezen en verwijderd"}
     except Exception as e:
         print(f"Error {'updating' if accepted else 'deleting'} skill {skill_id}: {e}")
-        raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken/verwijderen van de skill.")
+        raise HTTPException(status_code=500, detail=f"Er is een fout opgetreden bij het {'accepteren' if accepted else 'verwijderen'} van de skill.")
 
 @router.patch("/{skill_id}/name")
 @auth(role="teacher")
@@ -85,6 +106,8 @@ async def update_skill_name(
     # Ensure skill exists
     try:
         skill_repo.get_by_id(skill_id)
+    except ItemRetrievalException:
+        raise
     except Exception:
         raise HTTPException(status_code=404, detail="Skill niet gevonden")
 

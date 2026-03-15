@@ -1,4 +1,6 @@
 import SkillBadge from './SkillBadge';
+import { useAuth } from '../auth/AuthProvider';
+import { filterVisibleSkillsForUser } from '../utils/skills';
 import { getCountdownText, formatDateShort } from "../utils/dates";
 
 // Status labels in Dutch
@@ -10,11 +12,12 @@ const statusLabels = {
 };
 
 export default function TaskCard({ task, compact = false }) {
+    const { authData } = useAuth();
     // Compact version for inline display
     if (compact) {
         const spotsAvailable = (task.total_needed || 0) - (task.total_accepted || 0);
         const statusKey = task.status || 'open';
-        
+
         return (
             <div className="neu-task-box cursor-pointer hover:bg-white/60 transition-all">
                 <span className="material-symbols-outlined text-primary">assignment</span>
@@ -33,11 +36,10 @@ export default function TaskCard({ task, compact = false }) {
                     </div>
                 </div>
                 {task.status && (
-                    <span className={`shrink-0 ${
-                        statusKey === 'completed' ? 'neu-badge-success' : 
-                        statusKey === 'in_progress' ? 'neu-badge-info' : 
-                        'neu-badge-gray'
-                    }`}>
+                    <span className={`shrink-0 ${statusKey === 'completed' ? 'neu-badge-success' :
+                            statusKey === 'in_progress' ? 'neu-badge-info' :
+                                'neu-badge-gray'
+                        }`}>
                         {statusLabels[statusKey] || 'Open'}
                     </span>
                 )}
@@ -48,10 +50,11 @@ export default function TaskCard({ task, compact = false }) {
     // Full version
     const spotsAvailable = (task.total_needed || 0) - (task.total_accepted || 0);
     const spotsTotal = task.total_needed || 0;
-    const progress = spotsTotal > 0 
-        ? Math.round(((task.total_accepted || 0) / spotsTotal) * 100) 
+    const progress = spotsTotal > 0
+        ? Math.round(((task.total_accepted || 0) / spotsTotal) * 100)
         : 0;
     const statusKey = task.status || 'open';
+    const visibleSkills = filterVisibleSkillsForUser(authData, task.skills || []);
 
     return (
         <div className="neu-flat p-5 hover:ring-2 hover:ring-primary/30 transition-all duration-300 cursor-pointer">
@@ -76,11 +79,10 @@ export default function TaskCard({ task, compact = false }) {
                         </div>
                     </div>
                     {task.status && (
-                        <span className={`shrink-0 ${
-                            statusKey === 'completed' ? 'neu-badge-success-solid' : 
-                            statusKey === 'in_progress' ? 'neu-badge-info' : 
-                            'neu-badge-gray'
-                        }`}>
+                        <span className={`shrink-0 ${statusKey === 'completed' ? 'neu-badge-success-solid' :
+                                statusKey === 'in_progress' ? 'neu-badge-info' :
+                                    'neu-badge-gray'
+                            }`}>
                             {statusLabels[statusKey] || 'Open'}
                         </span>
                     )}
@@ -115,11 +117,11 @@ export default function TaskCard({ task, compact = false }) {
                 )}
 
                 {/* Skills */}
-                {task.skills && task.skills.length > 0 && (
+                {visibleSkills.length > 0 && (
                     <div className="space-y-2">
                         <span className="neu-label">Benodigde skills</span>
                         <div className="flex flex-wrap items-center gap-2">
-                            {task.skills.map((skill) => (
+                            {visibleSkills.map((skill) => (
                                 <SkillBadge
                                     key={skill.skillId || skill.id}
                                     skillName={skill.name}

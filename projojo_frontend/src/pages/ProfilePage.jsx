@@ -29,7 +29,7 @@ export default function ProfilePage() {
             })
             .catch(error => {
                 if (ignore) return;
-                setError(error);
+                setError(error.message);
             });
 
         return () => {

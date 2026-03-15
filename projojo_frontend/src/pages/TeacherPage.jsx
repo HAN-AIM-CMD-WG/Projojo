@@ -1,26 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import FormInput from "../components/FormInput";
-import Loading from "../components/Loading";
 import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import SkeletonList from "../components/SkeletonList";
 import Tooltip from "../components/Tooltip";
-import { createTeacherInviteKey, createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
+import Alert from "../components/Alert";
+import { createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
     const navigation = useNavigate();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [inviteLink, setInviteLink] = useState(null);
-    const [expiry, setExpiry] = useState(null);
     const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [tooltipText, setTooltipText] = useState("Kopieer link");
-    const toolTipRef = useRef(null);
-    const [timeoutRef, setTimeoutRef] = useState(null);
     const [businesses, setBusinesses] = useState([]);
     const [archivedBusinesses, setArchivedBusinesses] = useState([]);
     const [isCreateBusinessModalVisible, setIsCreateBusinessModalVisible] = useState(false);
@@ -37,11 +30,6 @@ export default function TeacherPage() {
             navigation("/not-found");
         }
     }, [authData.isLoading]);
-
-    const formatDate = date => {
-        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        return date.toLocaleDateString("nl-NL", options);
-    };
 
     const onCreateNewBusiness = () => {
         createNewBusiness(newBusinessName, createAsDraft)
@@ -61,45 +49,8 @@ export default function TeacherPage() {
             })
     }
 
-    const openGenerateLinkModel = () => {
-        setInviteLink(null);
-        setExpiry(null);
-        setError(null);
-        setIsModalOpen(true);
-
-        setIsLoading(true);
-        createTeacherInviteKey()
-            .then(data => {
-                const link = `${window.location.origin}/invite?key=${data.key}`;
-                const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
-
-                setInviteLink(link);
-                setExpiry(timestamp);
-            })
-            .catch(error => {
-                setError(error.message);
-            })
-            .finally(() => {
-                setIsLoading(false);
-            });
-    }
-
-    const onCopyLink = () => {
-        navigator.clipboard.writeText(inviteLink);
-        setTooltipText("Gekopieerd!");
-
-        if (timeoutRef) {
-            clearTimeout(timeoutRef);
-        }
-
-        setTimeoutRef(setTimeout(() => {
-            setTooltipText("Kopieer link");
-        }, 5000));
-    }
-
     useEffect(() => {
         let ignore = false;
-        setIsLoading(true);
 
         // Fetch active businesses first
         getBusinessesBasic()
@@ -111,10 +62,6 @@ export default function TeacherPage() {
                 if (ignore) return;
                 setError(err.message);
             })
-            .finally(() => {
-                if (ignore) return;
-                setIsLoading(false);
-            });
 
         // Fetch archived businesses separately (non-blocking)
         getArchivedBusinesses()
@@ -130,13 +77,12 @@ export default function TeacherPage() {
 
         return () => {
             ignore = true;
-            setIsLoading(false);
         }
     }, [numberToReloadBusinesses]);
 
     const handleArchiveBusiness = async () => {
         if (!archiveModalBusiness || isArchiving) return;
-        
+
         setIsArchiving(true);
         try {
             await archiveBusiness(archiveModalBusiness.id);
@@ -162,6 +108,7 @@ export default function TeacherPage() {
 
     return (
         <>
+            <Alert text={error} onClose={() => setError(null)} />
             <PageHeader name={'Beheerpagina'} />
             <div className="flex flex-wrap gap-4 justify-between mb-6">
                 <button onClick={() => openGenerateLinkModel()} className="neu-btn-primary">
@@ -181,7 +128,7 @@ export default function TeacherPage() {
                     Actieve Organisaties
                     <span className="neu-badge-primary ml-2">{businesses.length}</span>
                 </h2>
-                
+
                 {isLoading ? (
                     <SkeletonList count={6} variant="business" />
                 ) : businesses.length === 0 ? (
@@ -195,7 +142,7 @@ export default function TeacherPage() {
                             <div key={business.id} className="neu-flat p-4">
                                 <div className="flex items-start gap-3">
                                     {business.image_path && business.image_path !== 'default.png' ? (
-                                        <img 
+                                        <img
                                             src={`${IMAGE_BASE_URL}${business.image_path}`}
                                             alt={business.name}
                                             className="w-12 h-12 rounded-xl object-cover shrink-0"
@@ -213,7 +160,7 @@ export default function TeacherPage() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-4">
-                                    <Link 
+                                    <Link
                                         to={`/business/${business.id}`}
                                         className="neu-btn flex-1 text-sm justify-center"
                                     >
@@ -235,7 +182,7 @@ export default function TeacherPage() {
 
             {/* Archived Businesses Section */}
             <section className="mb-8">
-                <button 
+                <button
                     onClick={() => setShowArchivedSection(!showArchivedSection)}
                     className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4"
                 >
@@ -247,7 +194,7 @@ export default function TeacherPage() {
                         <span className="neu-badge-outline">{archivedBusinesses.length}</span>
                     )}
                 </button>
-                
+
                 {showArchivedSection && (
                     archivedBusinesses.length === 0 ? (
                         <div className="neu-pressed p-6 text-center">
@@ -260,7 +207,7 @@ export default function TeacherPage() {
                                 <div key={business.id} className="neu-pressed p-4 opacity-75">
                                     <div className="flex items-start gap-3">
                                         {business.image_path && business.image_path !== 'default.png' ? (
-                                            <img 
+                                            <img
                                                 src={`${IMAGE_BASE_URL}${business.image_path}`}
                                                 alt={business.name}
                                                 className="w-12 h-12 rounded-xl object-cover shrink-0 grayscale"
@@ -278,7 +225,7 @@ export default function TeacherPage() {
                                         </div>
                                     </div>
                                     <div className="flex gap-2 mt-4">
-                                        <Link 
+                                        <Link
                                             to={`/business/${business.id}`}
                                             className="neu-btn flex-1 text-sm justify-center"
                                         >
@@ -428,12 +375,12 @@ export default function TeacherPage() {
                         <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Organisatienaam`} placeholder={"Vul de naam van de organisatie in..."} name={`title`} required />
                         <p className="mt-1 text-sm italic text-[var(--text-secondary)]">De rest van de informatie vult de organisatie zelf in.</p>
                     </div>
-                    
+
                     {/* Create as draft checkbox */}
                     <label className="flex items-center gap-3 mb-4 cursor-pointer group">
                         <div className="relative">
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 checked={createAsDraft}
                                 onChange={(e) => setCreateAsDraft(e.target.checked)}
                                 className="sr-only peer"
@@ -449,7 +396,7 @@ export default function TeacherPage() {
                             <p className="text-xs text-[var(--text-muted)]">De organisatie is verborgen totdat je het publiceert</p>
                         </div>
                     </label>
-                    
+
                     {createNewBusinessError && <p className="col-span-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{createNewBusinessError}</p>}
                     <button type="button" onClick={onCreateNewBusiness} name="Organisatie aanmaken" className="neu-btn-primary w-full justify-center">
                         <span className="material-symbols-outlined text-sm mr-2">{createAsDraft ? 'edit_note' : 'add_business'}</span>

@@ -21,6 +21,7 @@ import { getAuthorization, HttpError } from './services';
 import TeacherPage from "./pages/TeacherPage";
 import EmailNotFound from "./pages/EmailNotFoundPage";
 import AuthCallback from "./auth/AuthCallback";
+import InvitePage from "./pages/InvitePage";
 import UpdateTaskPage from "./pages/UpdateTaskPage";
 import { notification } from './components/notifications/NotifySystem.jsx';
 import StudentDashboard from "./pages/StudentDashboard";
@@ -33,11 +34,11 @@ import PublicDiscoveryPage from "./pages/PublicDiscoveryPage";
  */
 function HomePage() {
   const { authData } = useAuth();
-  
+
   if (authData.type === 'supervisor') {
     return <SupervisorDashboard />;
   }
-  
+
   // Default to StudentDashboard (which also handles non-student fallback)
   return <StudentDashboard />;
 }
@@ -75,19 +76,19 @@ export default function App() {
 
   // List pages where scroll position should be saved/restored
   const scrollRestorationPaths = ['/ontdek', '/home', '/teacher'];
-  
+
   // Track scroll position continuously for list pages
   const scrollTimeoutRef = useRef(null);
   const mutationObserverRef = useRef(null);
   const scrollIntervalRef = useRef(null);
-  
+
   useEffect(() => {
-    const isListPage = scrollRestorationPaths.some(path => 
+    const isListPage = scrollRestorationPaths.some(path =>
       location.pathname === path || location.pathname.startsWith(path + '/')
     );
-    
+
     const scrollKey = `scrollPos_${location.pathname}`;
-    
+
     if (isListPage) {
       // Restore scroll position for list pages
       const savedPosition = sessionStorage.getItem(scrollKey);
@@ -96,14 +97,14 @@ export default function App() {
         let restored = false;
         const startTime = Date.now();
         const maxDuration = 10000; // Try for up to 10 seconds
-        
+
         // Function to attempt scroll restoration
         const tryRestoreScroll = () => {
           if (restored) return true;
-          
+
           const currentMaxScroll = document.documentElement.scrollHeight - window.innerHeight;
           const elapsed = Date.now() - startTime;
-          
+
           // Stop trying after maxDuration
           if (elapsed > maxDuration) {
             cleanup();
@@ -113,11 +114,11 @@ export default function App() {
             }
             return true;
           }
-          
+
           if (targetPosition <= currentMaxScroll && targetPosition > 0) {
             // Page is tall enough, restore scroll
             window.scrollTo(0, targetPosition);
-            
+
             // Verify scroll was successful (within 50px tolerance)
             requestAnimationFrame(() => {
               if (Math.abs(window.scrollY - targetPosition) < 50) {
@@ -126,10 +127,10 @@ export default function App() {
               }
             });
           }
-          
+
           return restored;
         };
-        
+
         const cleanup = () => {
           if (mutationObserverRef.current) {
             mutationObserverRef.current.disconnect();
@@ -140,30 +141,30 @@ export default function App() {
             scrollIntervalRef.current = null;
           }
         };
-        
+
         // Use MutationObserver to detect when content is added to the page
         mutationObserverRef.current = new MutationObserver(() => {
           tryRestoreScroll();
         });
-        
+
         // Observe the main content area for changes
         const mainContent = document.getElementById('main-content') || document.body;
         mutationObserverRef.current.observe(mainContent, {
           childList: true,
           subtree: true
         });
-        
+
         // Also poll regularly in case MutationObserver misses something
         scrollIntervalRef.current = setInterval(() => {
           if (tryRestoreScroll()) {
             cleanup();
           }
         }, 200);
-        
+
         // Initial attempts
         tryRestoreScroll();
       }
-      
+
       // Save scroll position on every scroll (debounced)
       const handleScroll = () => {
         if (scrollTimeoutRef.current) {
@@ -173,7 +174,7 @@ export default function App() {
           sessionStorage.setItem(scrollKey, window.scrollY.toString());
         }, 100);
       };
-      
+
       // Save scroll position immediately when any link is clicked (before navigation)
       const handleLinkClick = (e) => {
         // Only save if we're clicking a link that will navigate away
@@ -185,10 +186,10 @@ export default function App() {
           }
         }
       };
-      
+
       window.addEventListener('scroll', handleScroll, { passive: true });
       document.addEventListener('click', handleLinkClick, { capture: true });
-      
+
       return () => {
         window.removeEventListener('scroll', handleScroll);
         document.removeEventListener('click', handleLinkClick, { capture: true });
@@ -211,64 +212,68 @@ export default function App() {
   }, [location.pathname]);
 
   // Pages without navbar/footer (landing, login, auth callback, design demo, public discovery)
-  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname.startsWith("/publiek");
+  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname.startsWith("/publiek") || location.pathname.startsWith("/invite/");
 
   return (
     <ThemeProvider>
-    <StudentSkillsProvider>
-    <StudentWorkProvider>
-        <div className="min-h-screen bg-[var(--neu-bg)] text-[var(--text-primary)] transition-colors duration-300">
-          {/* Skip link for keyboard navigation - WCAG 2.4.1 */}
-          <a 
-            href="#main-content" 
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:font-bold focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
-          >
-            Ga naar hoofdinhoud
-          </a>
-          
-        {!isPublicPage && <Navbar />}
-          <main 
-            id="main-content" 
-            tabIndex="-1"
-            className={isPublicPage ? "" : "max-w-7xl min-h-dvh px-6 mx-auto relative py-6 focus:outline-none"}
-          >
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/email-not-found" element={<EmailNotFound />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/ontdek" element={<OverviewPage />} />
-            <Route path="/projects">
-              <Route path="add" element={<ProjectsAddPage />} />
-              <Route path=":projectId">
-              <Route index element={<ProjectDetailsPage />} />
-                <Route path="update" element={<UpdateProjectPage />} />
-            </Route>
-          </Route>
-            <Route path="/business">
-              <Route path=":businessId" element={<BusinessPage />} />
-              <Route path=":businessId/update" element={<UpdateBusinessPage />} />
-              <Route path="update" element={<UpdateBusinessPage />} />
-            </Route>
-            <Route path="/student">
-              <Route path=":profileId" element={<ProfilePage />} />
-              <Route path="update" element={<UpdateStudentPage />} />
-            </Route>
-            <Route path="/tasks">
-            <Route path=":taskId/update" element={<UpdateTaskPage />} />
-          </Route>
-          <Route path="/teacher" element={<TeacherPage />} />
-            <Route path="/design-demo" element={<DesignDemoPage />} />
-            <Route path="/publiek" element={<PublicDiscoveryPage />} />
-            <Route path="/publiek/:projectId" element={<PublicDiscoveryPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-        {!isPublicPage && <Footer />}
-      </div>
-    </StudentWorkProvider>
-    </StudentSkillsProvider>
+      <StudentSkillsProvider>
+        <StudentWorkProvider>
+          <div className="min-h-screen bg-[var(--neu-bg)] text-[var(--text-primary)] transition-colors duration-300">
+            {/* Skip link for keyboard navigation - WCAG 2.4.1 */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:font-bold focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white"
+            >
+              Ga naar hoofdinhoud
+            </a>
+
+            {!isPublicPage && <Navbar />}
+            <main
+              id="main-content"
+              tabIndex="-1"
+              className={isPublicPage ? "" : "max-w-7xl min-h-dvh px-6 mx-auto relative py-6 focus:outline-none"}
+            >
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/email-not-found" element={<EmailNotFound />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/invite/:token" element={<InvitePage />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/ontdek" element={<OverviewPage />} />
+                <Route path="/projects">
+                  <Route index element={<NotFound />} />
+                  <Route path="add" element={<ProjectsAddPage />} />
+                  <Route path=":projectId">
+                    <Route index element={<ProjectDetailsPage />} />
+                    <Route path="update" element={<UpdateProjectPage />} />
+                  </Route>
+                </Route>
+                <Route path="/business">
+                  <Route index element={<NotFound />} />
+                  <Route path=":businessId" element={<BusinessPage />} />
+                  <Route path=":businessId/update" element={<UpdateBusinessPage />} />
+                  <Route path="update" element={<UpdateBusinessPage />} />
+                </Route>
+                <Route path="/student">
+                  <Route index element={<NotFound />} />
+                  <Route path=":profileId" element={<ProfilePage />} />
+                  <Route path="update" element={<UpdateStudentPage />} />
+                </Route>
+                <Route path="/tasks">
+                  <Route path=":taskId/update" element={<UpdateTaskPage />} />
+                </Route>
+                <Route path="/teacher" element={<TeacherPage />} />
+                <Route path="/design-demo" element={<DesignDemoPage />} />
+                <Route path="/publiek" element={<PublicDiscoveryPage />} />
+                <Route path="/publiek/:projectId" element={<PublicDiscoveryPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </main>
+            {!isPublicPage && <Footer />}
+          </div>
+        </StudentWorkProvider>
+      </StudentSkillsProvider>
     </ThemeProvider>
   )
 }

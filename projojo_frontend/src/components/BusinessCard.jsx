@@ -10,6 +10,7 @@ import LocationMap from "./LocationMap";
 import Modal from "./Modal";
 import RichTextViewer from './RichTextViewer';
 import SkillBadge from './SkillBadge';
+import { filterVisibleSkillsForUser } from '../utils/skills';
 import Tooltip from './Tooltip';
 
 // Check if business has a valid image (not default.png or empty)
@@ -24,12 +25,12 @@ function BusinessPlaceholder({ name, size = 'md' }) {
         md: 'w-14 h-14 text-xl',
         lg: 'w-20 h-20 text-3xl'
     };
-    
+
     // Get initials from business name
     const initials = name
         ? name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()
         : 'B';
-    
+
     return (
         <div className={`${sizeClasses[size]} rounded-[10px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center`}>
             <span className="font-bold text-primary">{initials}</span>
@@ -37,18 +38,19 @@ function BusinessPlaceholder({ name, size = 'md' }) {
     );
 }
 
-export default function BusinessCard({ 
-    name, 
-    image, 
-    location, 
-    businessId, 
-    topSkills, 
-    description, 
+export default function BusinessCard({
+    name,
+    image,
+    location,
+    businessId,
+    topSkills,
+    description,
     sector,
     companySize,
     website,
-    showDescription = false, 
+    showDescription = false,
     showUpdateButton = false,
+    showViewButton = false,
     onSkillClick = null
 }) {
     const { authData } = useAuth();
@@ -78,7 +80,7 @@ export default function BusinessCard({
         setIsLoading(true);
         createSupervisorInviteKey(businessId)
             .then(data => {
-                const link = `${window.location.origin}/invite?key=${data.key}`;
+                const link = `${window.location.origin}/invite/${data.key}`;
                 const timestamp = new Date(new Date(data.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000);
 
                 setInviteLink(link);
@@ -116,7 +118,7 @@ export default function BusinessCard({
         if (!size) return null;
         const sizeMap = {
             "1-10": "1-10",
-            "11-50": "11-50", 
+            "11-50": "11-50",
             "51-200": "51-200",
             "200+": "200+"
         };
@@ -127,7 +129,7 @@ export default function BusinessCard({
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
     const matchingSkills = topSkills?.filter(s => studentSkillIds.has(s.skillId)) || [];
     const otherSkills = topSkills?.filter(s => !studentSkillIds.has(s.skillId)) || [];
-    
+
     // Show more skills (max 6, then +X) - show matching first
     const maxSkillsShown = 6;
     const sortedSkills = [...matchingSkills, ...otherSkills];
@@ -143,15 +145,15 @@ export default function BusinessCard({
                 {/* Header row: Logo + Name + Location */}
                 <div className="flex items-start gap-4">
                     {/* Company logo - clickable */}
-                    <Link 
+                    <Link
                         to={`/business/${businessId}`}
                         className="w-14 h-14 rounded-xl overflow-hidden shrink-0 neu-pressed p-0.5 hover:scale-105 transition-transform"
                     >
                         {hasValidImage(image) ? (
-                            <img 
-                                className="w-full h-full object-cover rounded-[10px]" 
-                                src={`${IMAGE_BASE_URL}${image}`} 
-                                alt={`Logo van ${name}`} 
+                            <img
+                                className="w-full h-full object-cover rounded-[10px]"
+                                src={`${IMAGE_BASE_URL}${image}`}
+                                alt={`Logo van ${name}`}
                             />
                         ) : (
                             <BusinessPlaceholder name={name} size="md" />
@@ -180,31 +182,30 @@ export default function BusinessCard({
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                <Link 
-                                    to={`/business/${businessId}`}
+                                    <Link
+                                        to={`/business/${businessId}`}
                                         className="min-w-0"
-                                >
-                                        <h2 className="text-xl font-extrabold text-[var(--text-primary)] truncate hover:underline">
-                                        {name}
-                                    </h2>
-                                </Link>
-                                {locationText && (
-                                    <button
-                                        onClick={() => setShowMap(!showMap)}
-                                        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition ${
-                                            showMap 
-                                                ? 'bg-primary/10 text-primary' 
-                                                : 'text-[var(--text-muted)] hover:text-primary hover:bg-primary/5'
-                                        }`}
-                                        title={showMap ? "Verberg kaart" : "Toon kaart"}
                                     >
-                                        <span className="material-symbols-outlined text-xs">location_on</span>
-                                        {locationText}
-                                        <span className={`material-symbols-outlined text-xs transition-transform ${showMap ? 'rotate-180' : ''}`}>
-                                            expand_more
-                                        </span>
-                                    </button>
-                                )}
+                                        <h2 className="text-xl font-extrabold text-[var(--text-primary)] truncate hover:underline">
+                                            {name}
+                                        </h2>
+                                    </Link>
+                                    {locationText && (
+                                        <button
+                                            onClick={() => setShowMap(!showMap)}
+                                            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition ${showMap
+                                                    ? 'bg-primary/10 text-primary'
+                                                    : 'text-[var(--text-muted)] hover:text-primary hover:bg-primary/5'
+                                                }`}
+                                            title={showMap ? "Verberg kaart" : "Toon kaart"}
+                                        >
+                                            <span className="material-symbols-outlined text-xs">location_on</span>
+                                            {locationText}
+                                            <span className={`material-symbols-outlined text-xs transition-transform ${showMap ? 'rotate-180' : ''}`}>
+                                                expand_more
+                                            </span>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -214,7 +215,7 @@ export default function BusinessCard({
                 {/* Collapsible Map Section */}
                 {showMap && locationText && (
                     <div className="mt-4 animate-fade-in rounded-xl overflow-hidden border border-[var(--neu-border)]">
-                        <LocationMap 
+                        <LocationMap
                             address={locationText}
                             name={name}
                             height="140px"
@@ -250,8 +251,8 @@ export default function BusinessCard({
                     )}
                     {/* Bekijk organisatie button */}
                     {!showUpdateButton && (
-                        <Link 
-                            to={`/business/${businessId}`} 
+                        <Link
+                            to={`/business/${businessId}`}
                             className="neu-btn-primary !py-2 !px-4 rounded-xl flex items-center gap-2 text-sm"
                         >
                             Bekijk organisatie
@@ -272,9 +273,9 @@ export default function BusinessCard({
                     <div className="mt-5 pt-4 border-t border-[var(--neu-border)]">
                         <div className="flex items-center gap-4 mb-3">
                             <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sm">psychology</span>
-                            Gevraagde skills
-                        </p>
+                                <span className="material-symbols-outlined text-sm">psychology</span>
+                                Gevraagde skills
+                            </p>
                             {matchingSkills.length > 0 && studentSkills.length > 0 && (
                                 <span className="text-xs font-bold text-primary flex items-center gap-1">
                                     <span className="material-symbols-outlined text-sm">check_circle</span>
@@ -298,7 +299,7 @@ export default function BusinessCard({
                                         )}
                                     </SkillBadge>
                                 );
-                                
+
                                 // If onSkillClick callback is provided, wrap in clickable button
                                 if (onSkillClick) {
                                     return (

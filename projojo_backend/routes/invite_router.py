@@ -7,16 +7,18 @@ business_repo = BusinessRepository()
 
 router = APIRouter(prefix="/invites", tags=["Invite Endpoints"])
 
-@router.post("/teacher")
-@auth(role="teacher")
-async def create_teacher_invite_key():
+@router.get("/validate/{token}")
+@auth(role="unauthenticated")
+async def validate_invite(token: str = Path(..., description="Invite Token")):
     """
-    Create an invite key for a teacher
+    Validate an invite token and return business details if valid.
     """
-    invite_key = invite_repo.save_invite_key("teacher")
-    return invite_key
+    result = invite_repo.validate_invite_key(token)
+    if not result:
+        raise HTTPException(status_code=404, detail="Ongeldige of verlopen uitnodiging")
+    return result
 
-@router.post("/supervisor/{business_id}")
+@router.post("/{business_id}")
 @auth(role="supervisor", owner_id_key="business_id")
 async def create_supervisor_invite_key(business_id: str = Path(..., description="Business ID")):
     """
@@ -26,5 +28,5 @@ async def create_supervisor_invite_key(business_id: str = Path(..., description=
     if not business:
         raise HTTPException(status_code=404, detail="Bedrijf is niet gevonden")
 
-    invite_key = invite_repo.save_invite_key("business", business_id)
+    invite_key = invite_repo.save_invite_key(business_id)
     return invite_key
