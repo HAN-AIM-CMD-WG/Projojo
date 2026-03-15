@@ -10,9 +10,9 @@ import Alert from './Alert';
 import Modal from './Modal';
 import RichTextEditorButton from './RichTextEditorButton';
 
-export default function RichTextEditor({ onSave, error = '', defaultText = '', required = false, label, max = 4000, className, setCanSubmit = () => { } }) {
+export default function RichTextEditor({ onSave, error = '', defaultText = '', required = false, label, max = 4000, className, setError = () => { } }) {
     const editorRef = useRef(null);
-    const [charCount, setCharCount] = useState(defaultText.length);
+    const [charCount, setCharCount] = useState(0);
     const [internalError, setInternalError] = useState('');
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
     const [linkUrl, setLinkUrl] = useState('');
@@ -59,13 +59,6 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
         const content = editor.getHTML();
         const markdownContent = turndownService.turndown(content);
 
-        if (editor.getText().length > max) {
-            setInternalError('Je tekst is te lang.');
-            setCanSubmit(false);
-        } else {
-            setInternalError('');
-            setCanSubmit(true);
-        }
         onSave(markdownContent);
     };
 
@@ -124,13 +117,32 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
         }
 
         if (editor) {
+            // Set initial character count from editor's plain text
+            setCharCount(getPlainText().length);
+
             editor.on('update', () => {
-                const content = editor.getText();
+                const content = getPlainText();
                 setCharCount(content.length);
+
+                // Validate character limit and update error state
+                if (content.length > max) {
+                    const errorMsg = 'Deze tekst mag maximaal ' + max + ' tekens bevatten.';
+                    setInternalError(errorMsg);
+                    setError(errorMsg);
+                } else {
+                    setInternalError('');
+                    setError(undefined);
+                }
+
                 handleSave();
             });
         }
-    }, [editor]);
+    }, [editor, max, required, setError, handleSave, setInternalError]);
+
+    const getPlainText = () => {
+        if (!editor) return '';
+        return editor.getText({ blockSeparator: '\n' }).trim();
+    };
 
     if (!editor) {
         return null;
@@ -231,7 +243,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     title="Editor content"
                     className="rounded border border-gray-300 border-solid [&>*]:outline-none [&>div]:min-h-[4.1rem] [&>div]:overflow-y-auto [&>div]:resize-y [&>div]:p-2 [&_ul]:list-disc [&_ul]:pl-10 [&_ol]:list-decimal [&_ol]:pl-10 [&_h1]:text-3xl [&_h1]:font-semibold [&_h2]:text-2xl [&_h2]:font-semibold [&_pre]:bg-gray-200 [&_pre]:p-2 [&_pre]:rounded-lg [&_pre]:overflow-auto [&_pre]:text-sm [&_pre]:shadow-md [&_blockquote]:border-l-4 [&_blockquote]:border-gray-300 [&_blockquote]:pl-2 [&_a]:text-[#0000EE] [&_a]:underline [&_a:visited]:text-[#551A8B] [&_a]:cursor-pointer"
                 />
-                <div className={`text-right text-sm text-gray-500 ${error ? 'text-red-600' : ''}`}>
+                <div className={`text-right text-sm ${charCount > max ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
                     {charCount}/{max} karakters
                 </div>
             </div>
@@ -240,7 +252,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                     Link naar de website
                 </label>
                 <div className="mt-1">
-                    <div className={`flex items-center rounded-md bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 ${urlError ? 'outline-red-500 focus-within:outline-red-600' : ''}`}>
+                    <div className={`flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600 ${urlError ? 'outline-red-500 focus-within:outline-red-600' : ''}`}>
                         <div className="shrink-0 select-none text-base text-gray-500 sm:text-sm/6">https://</div>
                         <input
                             id="link-ref"
@@ -249,7 +261,7 @@ export default function RichTextEditor({ onSave, error = '', defaultText = '', r
                             placeholder="www.voorbeeld.nl"
                             value={linkUrl}
                             onChange={changeLinkUrl}
-                            className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6"
+                            className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-0 sm:text-sm/6"
                         />
                     </div>
                     {urlError && <div className='text-red-600 text-sm mt-1'>

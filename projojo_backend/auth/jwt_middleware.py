@@ -1,20 +1,17 @@
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.routing import Match
 from auth.jwt_utils import get_token_payload
 from auth.permissions import set_request_context
 
 # List of endpoints that should be excluded from JWT validation
-# These can be exact paths or prefixes ending with '*'
-# Paths are relative to the root of the API and should start with a '/'. For example, "/auth/login/*"
+# These are system endpoints or static files that don't use the @auth decorator
 EXCLUDED_ENDPOINTS = [
     "/",  # Root endpoint
     "/docs",  # Swagger UI
     "/redoc",  # ReDoc
     "/openapi.json",  # OpenAPI schema
-
-    "/auth/login/*",  # Login endpoint
-    "/auth/callback/*",  # OAuth callback
 
     "/pdf/*",  # Public PDF access
     "/image/*",  # Public image access
@@ -46,9 +43,11 @@ class JWTMiddleware(BaseHTTPMiddleware):
         request.state.user_role = None
         request.state.business_id = None
 
-        # Check if the request path should be excluded from JWT validation
-        if self._should_skip_jwt_validation(request.url.path):
+        # Check if the request path should be excluded from JWT validation (System endpoints)
+        if self._is_excluded_path(request.url.path):
             return await call_next(request)
+
+        only_unauthenticated_allowed = True if self._get_route_auth_role(request) == "unauthenticated" else False
 
         # Validate JWT token and save payload in request state
         try:
@@ -66,18 +65,21 @@ class JWTMiddleware(BaseHTTPMiddleware):
             request.state.user_role = payload.get("role")
             request.state.business_id = payload.get("businessId")
         except HTTPException as e:
-            return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
+            # ignore validation errors if the endpoint is for unauthenticated users
+            if not only_unauthenticated_allowed:
+                print(f"HTTPException during JWT validation: {e.detail}")
+                return JSONResponse(status_code=e.status_code, content={"detail": e.detail})
         except Exception as e:
-            print(f"JWT validation error: {e}")
-            return JSONResponse(
-                status_code=401,
-                content={"detail": "Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw."}
-            )
+            if not only_unauthenticated_allowed:
+                print(f"JWT validation error: {e}")
+                if (hasattr(e, 'status_code')):
+                    return JSONResponse(status_code=e.status_code, content={"detail": str(e)})
+                return JSONResponse(status_code=401, content={"detail": "Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw."})
 
         # Proceed to the next middleware/route handler
         return await call_next(request)
 
-    def _should_skip_jwt_validation(self, path: str) -> bool:
+    def _is_excluded_path(self, path: str) -> bool:
         """
         Check if the request path should skip JWT validation.
         Supports exact matches and prefix matches (e.g., /auth/*).
@@ -92,3 +94,16 @@ class JWTMiddleware(BaseHTTPMiddleware):
                 if path.startswith(prefix):
                     return True
         return False
+
+    def _get_route_auth_role(self, request: Request) -> str | None:
+        """
+        Inspect the request to find the matching route and check its auth configuration.
+        Returns the required role if found (e.g. "unauthenticated"), or None.
+        """
+        for route in request.app.routes:
+            match, _ = route.matches(request.scope)
+            if match == Match.FULL:
+                # Found the route, check the endpoint for auth_role attribute
+                # The endpoint might be wrapped, but we attached auth_role to the wrapper
+                return getattr(route.endpoint, "auth_role", None)
+        return None
