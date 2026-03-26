@@ -1,24 +1,24 @@
 import BusinessCard from './BusinessCard';
 import ProjectDashboard from './ProjectDashboard';
 
-export default function BusinessProjectDashboard({ business, projects, topSkills, showDescription = false, showUpdateButton = false, isAlwaysExtended = false }) {
-    
+export default function BusinessProjectDashboard({ business, projects, topSkills, showDescription = false, showUpdateButton = false, showViewButton = false, isAlwaysExtended = false }) {
+
     // Handle skill click - scroll to and highlight all projects with matching skill
     const handleSkillClick = (skillId) => {
         if (!projects) return;
-        
+
         // Find ALL projects that have tasks with this skill
-        const projectsWithSkill = projects.filter(project => 
-            project.tasks?.some(task => 
+        const projectsWithSkill = projects.filter(project =>
+            project.tasks?.some(task =>
                 task.skills?.some(s => (s.skillId ?? s.id) === skillId)
             )
         );
-        
+
         if (projectsWithSkill.length > 0) {
             // Scroll to first matching project
             const firstElement = document.getElementById(`project-${projectsWithSkill[0].id}`);
             firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
+
             // Highlight ALL matching projects
             projectsWithSkill.forEach(project => {
                 const projectElement = document.getElementById(`project-${project.id}`);
@@ -31,7 +31,7 @@ export default function BusinessProjectDashboard({ business, projects, topSkills
             });
         }
     };
-    
+
     return (
         <div className="neu-flat overflow-hidden">
             <BusinessCard
@@ -42,6 +42,7 @@ export default function BusinessProjectDashboard({ business, projects, topSkills
                 companySize={business?.company_size}
                 website={business?.website}
                 showUpdateButton={showUpdateButton}
+                showViewButton={showViewButton}
                 businessId={business?.id}
                 showDescription={showDescription}
                 description={business?.description}

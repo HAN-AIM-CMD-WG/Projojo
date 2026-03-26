@@ -8,39 +8,39 @@ import { getCountdownText, formatDateShort } from "../utils/dates";
 // Status mapping - Clean, small badges
 // Green = available (universal), others only for special cases
 const statusConfig = {
-  'active': { 
-    label: 'Open', 
+  'active': {
+    label: 'Open',
     className: 'bg-emerald-500 text-white shadow-sm'
   },
-  'in_progress': { 
-    label: 'Loopt', 
+  'in_progress': {
+    label: 'Loopt',
     className: 'bg-emerald-500 text-white shadow-sm'
   },
-  'planning': { 
-    label: 'Binnenkort', 
+  'planning': {
+    label: 'Binnenkort',
     className: 'bg-gray-500 text-white shadow-sm'
   },
-  'pending': { 
-    label: 'In behandeling', 
+  'pending': {
+    label: 'In behandeling',
     className: 'bg-amber-500 text-white shadow-sm'
   },
-  'review': { 
-    label: 'In review', 
+  'review': {
+    label: 'In review',
     className: 'bg-blue-500 text-white shadow-sm'
   },
-  'completed': { 
-    label: 'Afgerond', 
+  'completed': {
+    label: 'Afgerond',
     className: 'bg-gray-400 text-white shadow-sm'
   },
-  'default': { 
-    label: 'Open', 
+  'default': {
+    label: 'Open',
     className: 'bg-emerald-500 text-white shadow-sm'
   }
 };
 
 /**
  * ProjectCard Component
- * 
+ *
  * Design Principles Applied:
  * - Progressive Disclosure: Card shows summary, detail page shows full info
  * - Recognition over Recall: Consistent layout, no hidden content
@@ -51,7 +51,7 @@ const statusConfig = {
 export default function ProjectCard({ project, index = 0 }) {
   const { studentSkills } = useStudentSkills();
   const { isWorkingOnProject, hasPendingOnProject } = useStudentWork();
-  
+
   // Get status config (Student-friendly Dutch labels)
   const status = project.status?.toLowerCase() || 'default';
   const { label: statusLabel, className: statusClassName } = statusConfig[status] || statusConfig.default;
@@ -88,7 +88,7 @@ export default function ProjectCard({ project, index = 0 }) {
   const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
   const matchingSkills = projectSkills.filter(s => studentSkillIds.has(s.skillId || s.id));
   const missingSkills = projectSkills.filter(s => !studentSkillIds.has(s.skillId || s.id));
-  
+
   // Count positions that match student skills
   const matchingPositions = project.tasks?.reduce((sum, task) => {
     const taskSkillIds = new Set(task.skills?.map(s => s.skillId || s.id) || []);
@@ -121,7 +121,7 @@ export default function ProjectCard({ project, index = 0 }) {
           />
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-          
+
           {/* Active work badge - show if student is working on this project */}
           {isWorkingOnProject(project.id) && (
             <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500 text-white shadow-sm flex items-center gap-1">
@@ -129,7 +129,7 @@ export default function ProjectCard({ project, index = 0 }) {
               Actief
             </div>
           )}
-          
+
           {/* Pending badge - show if student has pending registration (but not active) */}
           {hasPendingOnProject(project.id) && !isWorkingOnProject(project.id) && (
             <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-500 text-white shadow-sm flex items-center gap-1">
@@ -137,7 +137,7 @@ export default function ProjectCard({ project, index = 0 }) {
               Aangevraagd
             </div>
           )}
-          
+
           {/* Archief badge - prominent for archived projects */}
           {isArchived && (
             <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-gray-500/90 text-white shadow-sm flex items-center gap-1">
@@ -145,7 +145,7 @@ export default function ProjectCard({ project, index = 0 }) {
               Archief
             </div>
           )}
-          
+
           {/* Status badge - only show if NOT open and NOT archived (avoid redundant badges) */}
           {!isArchived && status !== 'active' && status !== 'default' && project.status && (
             <div className={`absolute top-3 right-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide ${statusClassName}`}>
@@ -160,7 +160,7 @@ export default function ProjectCard({ project, index = 0 }) {
             </h4>
           </div>
         </div>
-        
+
         {/* Content section */}
         <div className="p-5">
           {/* Open positions - Marketplace model */}
@@ -177,12 +177,12 @@ export default function ProjectCard({ project, index = 0 }) {
                 )}
               </span>
               {/* Match badge - alleen tonen als student skills heeft en er matches zijn */}
-            {studentSkills.length > 0 && matchingPositions > 0 && (
+              {studentSkills.length > 0 && matchingPositions > 0 && (
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-white dark:text-[#1A1512]">
                   Match!
                 </span>
               )}
-              </div>
+            </div>
           </div>
 
           {/* Deadline countdown - only show if we have valid date text */}
@@ -199,8 +199,8 @@ export default function ProjectCard({ project, index = 0 }) {
               <span className="neu-label mb-2 block">Gevraagde skills</span>
               <div className="flex flex-wrap gap-1.5">
                 {matchingSkills.slice(0, 3).map(skill => (
-                  <span 
-                    key={skill.skillId || skill.id} 
+                  <span
+                    key={skill.skillId || skill.id}
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-primary border border-primary bg-primary/5"
                     title={`Je hebt deze skill: ${skill.name}`}
                   >
@@ -209,8 +209,8 @@ export default function ProjectCard({ project, index = 0 }) {
                   </span>
                 ))}
                 {missingSkills.slice(0, 2).map(skill => (
-                  <span 
-                    key={skill.skillId || skill.id} 
+                  <span
+                    key={skill.skillId || skill.id}
                     className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[10px] font-semibold text-[var(--text-muted)] border border-[var(--gray-300)] bg-[var(--neu-bg)]/50"
                     title={`Gevraagde skill: ${skill.name}`}
                   >

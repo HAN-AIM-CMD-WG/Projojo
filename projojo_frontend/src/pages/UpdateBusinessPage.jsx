@@ -28,10 +28,10 @@ export default function UpdateBusinessPage() {
     useEffect(() => {
         if (!authData.isLoading) {
             // Allow supervisors editing their own business, or teachers editing any business
-            const isAllowed = 
+            const isAllowed =
                 (authData.type === 'supervisor' && authData.businessId === targetBusinessId) ||
                 authData.type === 'teacher';
-            
+
             if (!isAllowed) {
                 navigation("/not-found");
             }
@@ -39,7 +39,7 @@ export default function UpdateBusinessPage() {
     }, [authData.isLoading, authData.type, authData.businessId, targetBusinessId])
 
     const { data: business } = useFetch(async () => !authData.isLoading && targetBusinessId && await getBusinessById(targetBusinessId), [targetBusinessId]);
-    
+
     if (business?.description !== undefined && description === undefined) {
         setDescription(business?.description);
     }
@@ -99,7 +99,7 @@ export default function UpdateBusinessPage() {
         <div className="max-w-3xl mx-auto px-4 py-8">
             {/* Header */}
             <div className="mb-8">
-                <Link 
+                <Link
                     to={`/business/${targetBusinessId}`}
                     className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-4"
                 >
@@ -112,7 +112,6 @@ export default function UpdateBusinessPage() {
 
             <form onSubmit={onSubmit}>
                 <Alert text={error} onClose={() => setError("")} />
-                
                 {/* Logo Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
@@ -143,7 +142,7 @@ export default function UpdateBusinessPage() {
                             max={50}
                             required={true}
                         />
-                        
+
                         {description !== undefined
                             ? <RichTextEditor
                                 label="Beschrijving"
@@ -158,7 +157,7 @@ export default function UpdateBusinessPage() {
                                 <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
                             </div>
                         }
-                        
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">
@@ -205,7 +204,7 @@ export default function UpdateBusinessPage() {
                             initialValue={getSingleValue(business?.sector)}
                             max={100}
                         />
-                        
+
                         <div>
                             <label className="block text-sm font-bold text-[var(--text-secondary)] mb-2">
                                 Aantal medewerkers
@@ -220,7 +219,7 @@ export default function UpdateBusinessPage() {
                                 ))}
                             </select>
                         </div>
-                        
+
                         <FormInput
                             label="Website"
                             type="url"
@@ -234,15 +233,15 @@ export default function UpdateBusinessPage() {
 
                 {/* Action Buttons */}
                 <div className="flex gap-4">
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={() => navigation(-1)}
                         className="neu-btn flex-1 py-3 font-bold"
                     >
                         Annuleren
                     </button>
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={isSubmitting}
                         className="neu-btn-primary flex-1 py-3 font-bold flex items-center justify-center gap-2"
                     >

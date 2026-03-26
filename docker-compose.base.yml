@@ -1,0 +1,46 @@
+# This is the base Docker Compose file for Projojo, used in both development and preview.
+#
+# Port Mapping Strategy:
+# - Host ports: Configured via environment variables (10101+ range recommended)
+# - Container ports: Use application defaults (internal ports)
+#
+# See .env.example for recommended port allocation.
+
+services:
+  typedb:
+    # https://github.com/typedb/typedb/releases/tag/3.4.0
+    # Note: container_name moved to docker-compose.yml for development use only
+    # Preview/Dokploy uses auto-generated names to avoid conflicts between projects
+    image: typedb/typedb:3.4.0
+    restart: unless-stopped
+    ports:
+      - "${TYPEDB_PORT}:1729"          # Host:Container - TypeDB listens on 1729 internally
+      - "${TYPEDB_STUDIO_PORT}:8000"   # Host:Container - TypeDB Studio listens on 8000 internally
+    volumes:
+      - typedb-data:/opt/typedb-all-linux-x86_64/server/data
+    platform: linux/amd64
+
+  backend:
+    depends_on:
+      - typedb
+    build:
+      context: ./projojo_backend
+    environment:
+      - PYTHONUNBUFFERED=1 # Ensures Python output is sent straight to terminal without buffering
+      - PYTHONDONTWRITEBYTECODE=1 # Prevents Python from writing .pyc files
+      - PYTHONPATH=/app # Sets the Python path to /app to enable module imports
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"  # Host:Container - Backend uses same port internally
+
+  frontend:
+    build:
+      context: ./projojo_frontend
+    environment:
+      - VITE_BACKEND_HOST=${VITE_BACKEND_HOST}
+      - VITE_BACKEND_PORT=${VITE_BACKEND_PORT}
+      - VITE_APP_NAME=${VITE_APP_NAME}
+      - VITE_APP_VERSION=${VITE_APP_VERSION}
+    # Note: networks defined per environment in docker-compose.yml and docker-compose.preview.yml
+
+volumes:
+  typedb-data:

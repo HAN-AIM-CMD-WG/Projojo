@@ -10,27 +10,28 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
+import { filterVisibleSkillsForUser } from "../utils/skills";
 import Alert from "./Alert";
 import ProjectActionModal from "./ProjectActionModal";
 import { getCountdownText, calculateProgress, formatDate } from "../utils/dates";
 
 export default function ProjectDetails({ project, tasks, businessId, refreshData }) {
     const isLoading = !project;
-    
+
     // Scroll to task with specific skill - highlights ALL matching tasks
     const scrollToTaskWithSkill = (skillId) => {
         if (!tasks) return;
-        
+
         // Find ALL tasks that have this skill
-        const tasksWithSkill = tasks.filter(task => 
+        const tasksWithSkill = tasks.filter(task =>
             task.skills?.some(s => (s.skillId ?? s.id) === skillId)
         );
-        
+
         if (tasksWithSkill.length > 0) {
             // Scroll to first task
             const firstElement = document.getElementById(`task-${tasksWithSkill[0].id}`);
             firstElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
+
             // Highlight ALL matching tasks
             tasksWithSkill.forEach(task => {
                 const taskElement = document.getElementById(`task-${task.id}`);
@@ -58,6 +59,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
     const isTeacher = authData.type === "teacher";
     const canManageProject = isOwner || isTeacher;
     const [newTaskDescription, setNewTaskDescription] = useState("");
+    const [descriptionError, setDescriptionError] = useState();
     const [formKey, setFormKey] = useState(0);
     const [showMap, setShowMap] = useState(false);
     const [isPublicLoading, setIsPublicLoading] = useState(false);
@@ -88,6 +90,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setNewTaskDescription("");
+        setDescriptionError(undefined);
         setFormKey(prev => prev + 1); // Force form remount by changing key
     };
 
@@ -255,7 +258,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                         )}
                     </div>
                 </div>
-                
+
                 {/* Main Info - Right side */}
                 <div className="flex-1 p-4 sm:p-5">
                     {/* Title row */}
@@ -295,11 +298,10 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                     {project.business.location && (
                                         <button
                                             onClick={() => setShowMap(!showMap)}
-                                            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition ${
-                                                showMap 
-                                                    ? 'bg-primary/10 text-primary' 
+                                            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition ${showMap
+                                                    ? 'bg-primary/10 text-primary'
                                                     : 'text-[var(--text-muted)] hover:text-primary hover:bg-primary/5'
-                                            }`}
+                                                }`}
                                             title={showMap ? "Verberg kaart" : "Toon kaart"}
                                         >
                                             <span className="material-symbols-outlined text-xs">location_on</span>
@@ -312,7 +314,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Add task button */}
                         {isOwner && (
                             <button className="neu-btn-primary !py-2 !px-3 text-sm flex-shrink-0" onClick={handleOpenModal}>
@@ -323,7 +325,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             </button>
                         )}
                     </div>
-                    
+
                     {/* Timeline - compact inline */}
                     {!isLoading && (project.start_date || project.end_date) && (
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm mb-3">
@@ -349,17 +351,17 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             )}
                         </div>
                     )}
-                    
+
                     {/* Progress bar - thin */}
                     {!isLoading && project.start_date && project.end_date && (
                         <div className="h-1.5 bg-[var(--gray-200)] rounded-full overflow-hidden mb-3">
-                            <div 
+                            <div
                                 className="h-full bg-gradient-to-r from-primary to-orange-500 rounded-full transition-all duration-500"
                                 style={{ width: `${calculateProgress(project.start_date, project.end_date)}%` }}
                             />
                         </div>
                     )}
-                    
+
                     {/* Description - truncated */}
                     {project.description && (
                         <div className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-3">
@@ -442,7 +444,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             )}
                         </div>
                     )}
-                    
+
                     {/* Skills - inline with label, clickable to jump to task */}
                     {project.topSkills && project.topSkills.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1.5">
@@ -456,8 +458,8 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                         className="cursor-pointer hover:scale-105 transition-transform"
                                         title={`Ga naar taak met ${skill.name}`}
                                     >
-                                        <SkillBadge 
-                                            skillName={skill.name} 
+                                        <SkillBadge
+                                            skillName={skill.name}
                                             isPending={skill.isPending ?? skill.is_pending}
                                             isOwn={isMatch}
                                         />
@@ -473,31 +475,31 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                     )}
                 </div>
             </div>
-            
+
             {/* Collapsible Map Section */}
             {!isLoading && showMap && project.business?.location && (
                 <div className="mx-4 sm:mx-5 mt-2 mb-3 animate-fade-in rounded-xl overflow-hidden border border-[var(--neu-border)]">
-                    <LocationMap 
+                    <LocationMap
                         address={project.business.location}
                         name={project.business.name}
                         height="140px"
                     />
                 </div>
             )}
-            
+
             {/* Success/Error messages */}
             <div className="px-4 sm:px-5">
                 {successMessage && (
-                    <Alert 
-                        text={successMessage} 
-                        type="success" 
-                        onClose={() => setSuccessMessage("")} 
+                    <Alert
+                        text={successMessage}
+                        type="success"
+                        onClose={() => setSuccessMessage("")}
                     />
                 )}
                 {error && (
-                    <Alert 
-                        text={error} 
-                        onClose={() => setError("")} 
+                    <Alert
+                        text={error}
+                        onClose={() => setError("")}
                     />
                 )}
             </div>
@@ -551,13 +553,13 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                                 transition-all duration-200 border
                                 ${isPublicLoading ? 'opacity-50 cursor-wait' : ''}
-                                ${project.is_public 
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300' 
+                                ${project.is_public
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300'
                                     : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:border-gray-300'
                                 }
                             `}
-                            title={project.is_public 
-                                ? 'Zichtbaar op de publieke ontdekpagina voor iedereen. Klik om te verbergen.' 
+                            title={project.is_public
+                                ? 'Zichtbaar op de publieke ontdekpagina voor iedereen. Klik om te verbergen.'
                                 : 'Alleen zichtbaar voor ingelogde gebruikers. Klik om ook publiek vindbaar te maken.'
                             }
                         >
@@ -569,9 +571,9 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
 
                         {/* Archive/Restore button */}
                         {project.is_archived ? (
-                            <button 
+                            <button
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                    bg-green-50 border border-green-200 text-green-700 
+                                    bg-green-50 border border-green-200 text-green-700
                                     hover:bg-green-100 hover:border-green-300 transition-all duration-200"
                                 onClick={handleRestoreClick}
                                 disabled={isActionLoading}
@@ -581,9 +583,9 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 Herstellen
                             </button>
                         ) : (
-                            <button 
+                            <button
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                    bg-amber-50 border border-amber-200 text-amber-700 
+                                    bg-amber-50 border border-amber-200 text-amber-700
                                     hover:bg-amber-100 hover:border-amber-300 transition-all duration-200"
                                 onClick={handleArchiveClick}
                                 disabled={isActionLoading}
@@ -596,9 +598,9 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
 
                         {/* Delete button - teacher only */}
                         {isTeacher && (
-                            <button 
+                            <button
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                    bg-red-50 border border-red-200 text-red-700 
+                                    bg-red-50 border border-red-200 text-red-700
                                     hover:bg-red-100 hover:border-red-300 transition-all duration-200"
                                 onClick={handleDeleteClick}
                                 disabled={isActionLoading}
@@ -622,6 +624,9 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                         className="p-5"
                         onSubmit={(e) => {
                             e.preventDefault();
+                            if (descriptionError != undefined) {
+                                return;
+                            }
                             const formData = new FormData(e.target);
                             formData.append("description", newTaskDescription);
                             handleSubmit(formData);
@@ -629,16 +634,18 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                     >
                         <div className="flex flex-col gap-4 mb-6">
                             {error && <Alert text={error} onClose={() => setError("")} />}
-                            <FormInput type="text" label={`Titel voor nieuwe taak`} placeholder={"Titel"} name={`title`} required />
+                            <FormInput type="text" label={`Titel voor nieuwe taak`} placeholder={"Titel"} name={`title`} max={100} required />
                             <RichTextEditor
                                 onSave={setNewTaskDescription}
                                 label={`Beschrijving`}
                                 required
                                 max={4000}
                                 defaultText={newTaskDescription}
+                                error={descriptionError}
+                                setError={setDescriptionError}
                             />
                             <FormInput name={`totalNeeded`} label={`Aantal plekken`} type="number" min={1} initialValue="1" required />
-                            
+
                             {/* Task dates - auto-inherit from project */}
                             <div className="pt-3 border-t border-[var(--neu-border)]">
                                 <p className="neu-label mb-3 flex items-center gap-2">
@@ -646,15 +653,15 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                     Planning (optioneel)
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <FormInput 
-                                        type="date" 
-                                        label="Startdatum" 
-                                        name="start_date" 
+                                    <FormInput
+                                        type="date"
+                                        label="Startdatum"
+                                        name="start_date"
                                         initialValue={project?.start_date?.split('T')[0] || ''}
                                     />
-                                    <FormInput 
-                                        type="date" 
-                                        label="Einddatum (deadline)" 
+                                    <FormInput
+                                        type="date"
+                                        label="Einddatum (deadline)"
                                         name="end_date"
                                         initialValue={project?.end_date?.split('T')[0] || ''}
                                     />

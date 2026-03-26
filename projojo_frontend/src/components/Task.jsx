@@ -12,6 +12,7 @@ import Modal from "./Modal";
 import RichTextEditor from "./RichTextEditor";
 import RichTextViewer from "./RichTextViewer";
 import SkillBadge from "./SkillBadge";
+import { filterVisibleSkillsForUser } from "../utils/skills";
 import SkillsEditor from "./SkillsEditor";
 import CreateBusinessEmail from "./CreateBusinessEmail";
 import { formatDate, getCountdownText } from "../utils/dates";
@@ -21,10 +22,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const { studentSkills } = useStudentSkills();
     const { isWorkingOnTask, hasPendingOnTask } = useStudentWork();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
-    
+
     // Tab state
     const [activeTab, setActiveTab] = useState('details');
-    
+
     // Modal states
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState("");
@@ -37,7 +38,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [motivation, setMotivation] = useState("");
     const [canSubmit, setCanSubmit] = useState(true);
     const [progressLoading, setProgressLoading] = useState({});
-    
+
     // Task editing state
     const [isSpotsModalOpen, setIsSpotsModalOpen] = useState(false);
     const [newTotalNeeded, setNewTotalNeeded] = useState(task.total_needed);
@@ -48,14 +49,15 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [spotsError, setSpotsError] = useState("");
     const [isSavingTask, setIsSavingTask] = useState(false);
     const [taskSkillsState, setTaskSkillsState] = useState(task.skills || []);
+    const [isSavingSkills, setIsSavingSkills] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
 
     const isFull = task.total_accepted >= task.total_needed;
-    
+
     // Skills are locked (can't be removed) if there are any registrations
     const hasRegistrations = (task.total_registered > 0) || (task.total_accepted > 0);
-    
+
     // Calculate available spots
     const spotsAvailable = task.total_needed - task.total_accepted;
 
@@ -65,7 +67,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         const now = new Date();
         const deadline = new Date(task.end_date);
         const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
-        
+
         if (daysLeft < 0) return { color: 'status-badge-error', text: 'Verlopen', icon: 'error' };
         if (daysLeft <= 3) return { color: 'status-badge-warning', text: `${daysLeft}d`, icon: 'warning' };
         if (daysLeft <= 7) return { color: 'status-badge-warning', text: `${daysLeft}d`, icon: 'schedule' };
@@ -74,11 +76,15 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
     const deadlineStatus = getDeadlineStatus();
 
+    const visibleTaskSkills = filterVisibleSkillsForUser(authData, task.skills || []);
+
     // === HANDLERS (unchanged from original) ===
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!canSubmit) return;
+
+        if (!canSubmit || error) return;
+
         setError("");
 
         try {
@@ -120,7 +126,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 setPendingRegistrations(data.pending || []);
                 setAcceptedRegistrations(data.accepted || []);
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     const handleRegistrationResponse = (e) => {
@@ -140,6 +146,23 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             .catch((error) => {
                 setRegistrationErrors((currentErrors) => [...currentErrors, { userId, error: error.message }]);
             });
+    };
+
+    const handleSave = async (skills) => {
+        // Map selected skills to IDs and remove any falsy values (e.g., undefined)
+        const skillIds = skills.map((skill) => skill.skillId || skill.id).filter(Boolean);
+
+        setTaskSkillsError("");
+        setIsSavingSkills(true);
+        try {
+            await updateTaskSkills(task.id, skillIds);
+            setIsEditing(false);
+            setFetchAmount((currentAmount) => currentAmount + 1);
+        } catch (error) {
+            setTaskSkillsError(error.message);
+        } finally {
+            setIsSavingSkills(false);
+        }
     };
 
     const handleMarkStarted = async (studentId) => {
@@ -191,7 +214,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             formData.append('total_needed', newTotalNeeded);
             if (newStartDate) formData.append('start_date', newStartDate);
             if (newEndDate) formData.append('end_date', newEndDate);
-            
+
             await updateTask(task.id, formData);
             setIsSpotsModalOpen(false);
             setFetchAmount((currentAmount) => currentAmount + 1);
@@ -223,19 +246,19 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         try {
             const skillIds = taskSkillsState.map((skill) => skill.skillId || skill.id);
             const result = await updateTaskSkills(task.id, skillIds);
-            
+
             if (result.locked) {
                 setTaskSkillsError("Skills konden niet worden gewijzigd omdat er al aanmeldingen zijn.");
                 return;
             }
-            
+
             const formData = new FormData();
             formData.append('name', newName.trim());
             formData.append('description', newDescription || '');
             formData.append('total_needed', newTotalNeeded);
             if (newStartDate) formData.append('start_date', newStartDate);
             if (newEndDate) formData.append('end_date', newEndDate);
-            
+
             await updateTask(task.id, formData);
             setIsEditing(false);
             setFetchAmount((currentAmount) => currentAmount + 1);
@@ -265,9 +288,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     // === TAB DEFINITIONS ===
     const tabs = [
         { id: 'details', label: 'Details', icon: 'info' },
-        { 
-            id: 'team', 
-            label: 'Team', 
+        {
+            id: 'team',
+            label: 'Team',
             icon: 'group',
             // Show accepted count, warning badge for pending
             count: acceptedRegistrations.length,
@@ -280,7 +303,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     return (
         <div className="group h-full">
             <div id={`task-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
-                
+
                 {/* === COMPACT HEADER === */}
                 <div className="p-3 sm:p-4 border-b border-[var(--neu-border)] rounded-t-2xl overflow-hidden">
                     <div className="flex items-start justify-between gap-2 sm:gap-3">
@@ -311,7 +334,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 </h2>
                             </div>
                         </div>
-                        
+
                         {/* Right: Status badges + Edit button */}
                         <div className="flex items-center gap-2 shrink-0">
                             {/* Status badges */}
@@ -323,7 +346,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     </span>
                                     {spotsAvailable > 0 ? `${task.total_accepted}/${task.total_needed}` : 'Vol'}
                                 </span>
-                                
+
                                 {/* Deadline badge */}
                                 {deadlineStatus && (
                                     <span className={deadlineStatus.color}>
@@ -331,7 +354,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         {deadlineStatus.text}
                                     </span>
                                 )}
-                                
+
                                 {/* Pending registrations indicator */}
                                 {isOwner && task.total_registered > 0 && (
                                     <span className="status-badge-warning">
@@ -340,10 +363,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     </span>
                                 )}
                             </div>
-                            
+
                             {/* Edit button (owner only) */}
                             {isOwner && (
-                                <button 
+                                <button
                                     onClick={openEditModal}
                                     className="p-2 rounded-lg text-[var(--text-muted)] hover:text-primary hover:bg-[var(--gray-200)] transition-colors"
                                     title="Taak bewerken"
@@ -361,11 +384,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors relative ${
-                                activeTab === tab.id
+                            className={`flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors relative ${activeTab === tab.id
                                     ? 'text-primary'
                                     : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
-                            }`}
+                                }`}
                         >
                             <span className="material-symbols-outlined text-base sm:text-lg">{tab.icon}</span>
                             <span>{tab.label}</span>
@@ -377,9 +399,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             )}
                             {/* Warning/progress badge */}
                             {tab.badge && (
-                                <span className={`ml-1 px-1.5 py-0.5 text-xs font-bold rounded-full ${
-                                    tab.badgeColor || 'bg-primary/10 text-primary'
-                                } ${tab.badgeColor ? 'text-white' : ''}`}>
+                                <span className={`ml-1 px-1.5 py-0.5 text-xs font-bold rounded-full ${tab.badgeColor || 'bg-primary/10 text-primary'
+                                    } ${tab.badgeColor ? 'text-white' : ''}`}>
                                     {tab.badge}
                                 </span>
                             )}
@@ -393,7 +414,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
                 {/* === TAB CONTENT === */}
                 <div className="flex-1 overflow-y-auto p-3 sm:p-4 min-h-[160px] sm:min-h-[180px] max-h-[250px] sm:max-h-[300px] rounded-b-2xl">
-                    
+
                     {/* Details Tab */}
                     {activeTab === 'details' && (
                         <div className="space-y-4">
@@ -404,9 +425,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     <RichTextViewer text={task.description} />
                                 </div>
                             </div>
-                            
+
                             <Alert text={taskSkillsError} onClose={() => setTaskSkillsError("")} />
-                            
+
                             {/* Skills */}
                             <div>
                                 <p className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">Vereiste skills</p>
@@ -433,7 +454,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     )}
                                 </div>
                             </div>
-                            
+
                             {/* Planning */}
                             {(task.start_date || task.end_date) && (
                                 <div>
@@ -475,15 +496,15 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                             const isStarted = !!reg.started_at;
                                             const isCompleted = !!reg.completed_at;
                                             const isLoading = progressLoading[reg.student.id];
-                                            
+
                                             let statusBadge = { color: 'bg-gray-100 text-gray-600', text: 'Wacht' };
                                             if (isCompleted) statusBadge = { color: 'bg-blue-100 text-blue-600', text: 'Klaar' };
                                             else if (isStarted) statusBadge = { color: 'bg-amber-100 text-amber-600', text: 'Bezig' };
-                                            
+
                                             return (
                                                 <div key={reg.student.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--gray-100)] hover:bg-[var(--gray-200)] transition-colors">
                                                     <div className="flex items-center gap-2 min-w-0">
-                                                        <Link 
+                                                        <Link
                                                             to={`/student/${reg.student.id}`}
                                                             className="text-sm font-medium text-[var(--text-primary)] hover:text-primary truncate"
                                                             target="_blank"
@@ -502,7 +523,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                                 className="p-1.5 rounded text-amber-600 hover:bg-amber-100 transition-colors"
                                                                 title="Start"
                                                             >
-                                                                {isLoading === 'starting' 
+                                                                {isLoading === 'starting'
                                                                     ? <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
                                                                     : <span className="material-symbols-outlined text-sm">play_arrow</span>
                                                                 }
@@ -528,7 +549,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Pending registrations preview */}
                             {pendingRegistrations.length > 0 && (
                                 <div>
@@ -545,7 +566,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     </button>
                                 </div>
                             )}
-                            
+
                             {/* Empty state */}
                             {acceptedRegistrations.length === 0 && pendingRegistrations.length === 0 && (
                                 <div className="text-center py-6 text-[var(--text-muted)]">
@@ -560,9 +581,9 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 {/* === FOOTER ACTIONS === */}
                 <div className="p-2.5 sm:p-3 border-t border-[var(--neu-border)] bg-[var(--gray-50)]">
                     {authData.type === "student" && (
-                        <button 
-                            className={`neu-btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "opacity-50 cursor-not-allowed" : ""}`} 
-                            disabled={(studentAlreadyRegistered || isFull)} 
+                        <button
+                            className={`neu-btn-primary w-full ${(studentAlreadyRegistered || isFull) ? "opacity-50 cursor-not-allowed" : ""}`}
+                            disabled={(studentAlreadyRegistered || isFull)}
                             onClick={() => setIsModalOpen(true)}
                         >
                             <span className="flex items-center justify-center gap-2">
@@ -575,8 +596,8 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                     )}
                     {isOwner && (
                         <div className="flex gap-2">
-                            <button 
-                                className="neu-btn flex-1" 
+                            <button
+                                className="neu-btn flex-1"
                                 onClick={() => setIsRegistrationsModalOpen(true)}
                             >
                                 <span className="flex items-center justify-center gap-1.5">
@@ -596,7 +617,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
             </div>
 
             {/* === MODALS (unchanged structure) === */}
-            
+
             {/* Registration modal for students */}
             {!(studentAlreadyRegistered || isFull) && (
                 <Modal
@@ -608,7 +629,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                 >
                     <form onSubmit={handleSubmit}>
                         <div className="flex flex-col gap-5">
-                            <div 
+                            <div
                                 className="flex items-start gap-3 p-4 rounded-xl"
                                 style={{ background: 'rgba(255, 127, 80, 0.05)', border: '1px solid rgba(255, 127, 80, 0.15)' }}
                             >
@@ -633,11 +654,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                             const skillId = skill.skillId ?? skill.id;
                                             const isMatch = studentSkillIds.has(skillId);
                                             return (
-                                                <span 
+                                                <span
                                                     key={skillId}
-                                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg ${
-                                                        isMatch ? 'bg-primary text-white' : 'bg-[var(--gray-200)] text-[var(--text-muted)]'
-                                                    }`}
+                                                    className={`px-3 py-1.5 text-xs font-bold rounded-lg ${isMatch ? 'bg-primary text-white' : 'bg-[var(--gray-200)] text-[var(--text-muted)]'
+                                                        }`}
                                                 >
                                                     {isMatch && '✓ '}{skill.name}
                                                 </span>
@@ -650,7 +670,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             <RichTextEditor
                                 label="Jouw motivatie"
                                 onSave={setMotivation}
-                                setCanSubmit={setCanSubmit}
+                                setError={setError}
                             />
 
                             <div className="flex items-center justify-end gap-3 pt-2 border-t border-[var(--neu-border)]">
@@ -671,12 +691,12 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
             {/* Registrations modal for owners */}
             {isOwner && (
-                <Modal 
-                    maxWidth="max-w-2xl" 
+                <Modal
+                    maxWidth="max-w-2xl"
                     modalHeader="Aanmeldingen beheren"
                     modalSubtitle={task.name}
                     modalIcon="group"
-                    isModalOpen={isRegistrationsModalOpen} 
+                    isModalOpen={isRegistrationsModalOpen}
                     setIsModalOpen={setIsRegistrationsModalOpen}
                 >
                     <div className="flex flex-col gap-6 max-h-[60vh] overflow-y-auto pr-1">
@@ -700,11 +720,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                         const isStarted = !!registration.started_at;
                                         const isCompleted = !!registration.completed_at;
                                         const isLoading = progressLoading[registration.student.id];
-                                        
+
                                         let statusColor = 'text-emerald-600 bg-emerald-100';
                                         let statusIcon = 'schedule';
                                         let statusText = 'Wacht op start';
-                                        
+
                                         if (isCompleted) {
                                             statusColor = 'text-blue-600 bg-blue-100';
                                             statusIcon = 'task_alt';
@@ -714,7 +734,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                             statusIcon = 'play_circle';
                                             statusText = 'Bezig';
                                         }
-                                        
+
                                         return (
                                             <div key={registration.student.id} className="rounded-xl border border-[var(--neu-border)] bg-[var(--neu-bg)] p-4">
                                                 <div className="flex items-center justify-between gap-4">
@@ -772,7 +792,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                     {pendingRegistrations.map((registration) => {
                                         const taskSkillIdsSet = new Set(task.skills?.map(s => s.skillId ?? s.id) || []);
                                         const matchingSkills = registration.student.skills.filter(s => taskSkillIdsSet.has(s.skillId ?? s.id)).length;
-                                        
+
                                         return (
                                             <div key={registration.student.id} className="rounded-2xl overflow-hidden border border-[var(--neu-border)] bg-[var(--neu-bg)]">
                                                 <div className="p-4 border-b border-[var(--neu-border)]" style={{ background: 'linear-gradient(135deg, rgba(255, 127, 80, 0.03) 0%, transparent 100%)' }}>

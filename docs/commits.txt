@@ -1,0 +1,89 @@
+82ea9d5 (HEAD -> next-ui) fix/feat: Add project end date handling in PortfolioRepository
+1894eb3 (origin/next-ui) Merge branch 'next-ui' of https://github.com/HAN-AIM-CMD-WG/Projojo into next-ui
+89efc9d feat: Refactor TestUserSelector and LoginPage for improved user experience
+a6ae561 fix: Adjust LoginPage layout for improved responsiveness
+bca0755 feat: Introduce UX Designer skill with comprehensive design guidance
+730ee14 feat: Revamp DiscoverySection and related components for improved user experience
+468e1e3 next-ui branch analysis
+44bb8ae feat: Add Breadcrumb component and integrate into Business and Project Details pages
+78e1ded feat: Add City Deal initiative data to seed file
+8759f8b feat: Enhance notification system with progress bar and success messages
+4529305 feat: Integrate StudentWorkContext for enhanced work registration management
+edf24ec feat: Update OverviewMap and LandingPage components for improved navigation and responsiveness
+4cb824e feat: Enhance LocationMap and OverviewMap components with expandable functionality
+a0a0fdc refactor: Remove .cursorrules file and update UI components for consistency
+77f1139 feat: Add AI coding guidelines documentation for Projojo project
+a666e34 refactor: Remove subtask (deeltaken) feature from codebase
+ef5738d feat: Add comprehensive user stories and ecosystem strategy documentation
+40be829 feat: Introduce public project discovery and theme management features
+0995c7d feat: Update terminology from "bedrijf" to "organisatie" across components
+37cfa65 feat: Update ProjectDetails component with neumorphic styling and improved image handling
+95d6fbe feat: Enhance task and project components with skill management and UI improvements
+a65cea7 feat: Update TypeDB schema and enhance frontend components for task management
+207bff2 feat: Introduce subtask management features and enhance task functionality
+309356c feat: Add active task management and enhance portfolio features
+308168d feat: Enhance project and task management with date handling and UI improvements
+451e027 feat: Add start and end date fields to projects and tasks
+1aba424 fix: Correct user role check in task registration endpoint
+9ddc152 feat: Enhance task skill management and UI components
+b3d7205 refactor: Update skill ID handling across components and routers
+39a91c6 Merge branch 'main' into next-ui
+81f3449 feat: Implement portfolio management features and enhance project actions
+0a6fb88 fix: Remove celebratory emoji from LandingPage text for clarity
+7e6d45c feat: Enhance LandingPage with theme toggle and neumorphic styling updates
+7254c04 feat: Add business image handling and placeholders for improved visual consistency, when empty
+47ac465 refactor: Improve code formatting and structure for better readability
+a411e3f refactor: Update page headers and text for improved clarity and consistency
+aacf28a fix: Update button class in TaskCard for consistent styling
+66a7ea9 feat: Enhance LocationMap and OverviewMap components with dark mode support
+fb7a9fd fix: Update Filter component button labels for clarity
+ae2d51b feat: Add country field to business entity and enhance filtering options
+03ba0f1 feat: Integrate react-leaflet-cluster for enhanced map functionality and styling
+1ddaa9e feat: Update styling and accessibility across components for improved user experience
+79acc2c feat: Implement theme management with dark mode and high contrast support
+962a688 feat: Enhance accessibility across components and improve user interaction
+ebc91e7 feat: Enhance modal components with improved accessibility and styling
+39290f8 feat: Add Design Demo Page and update routing
+7de71a1 feat: Revamp Landing Page for enhanced user engagement
+b951e29 feat: Add Landing Page and update routing for public pages
+f360021 refactor: Update LocationMap and ProjectTasks components for improved layout and usability
+816d5ea refactor: Improve business archiving logic and error handling
+fd1fa75 feat: Enhance business retrieval with archiving support
+1cd7b3a feat: Implement business archiving and restoration functionality
+b5b32af feat: Enhance user and project information in task registrations
+4b561e1 feat: Add User Stories for Portfolio Feature
+b17674b feat: Add Supervisor Dashboard with pending registrations management
+8a0cd75 feat: Implement cancellation of task registrations
+a4fcf67 fix: Handle task retrieval exceptions in registration endpoints
+08c8f02 fix: Fix registration duplicate check and location field consistency
+a8d8282 feat: Add skill matching visualization across all pages
+4c90c1e refactor: Simplify neu-pill styles by removing hover effects and transitions
+fab6bc0 feat: Show task skills on student dashboard + fix backend bug
+64b56fc feat: Expand TaskCard with more info - description, status badge, slots
+448b42c feat: Redesign dashboard layout - tasks side by side, cleaner buttons
+4e5df09 fix: Scroll to top on route change
+588b7e0 feat: Rename app to Projojo, add PROJECT badge to project page
+71fd4b1 feat: Redesign project header, rename app to Projojo
+cf5a48e fix: Lower z-index of Leaflet map to prevent overlap on scroll
+477002e fix: Load Leaflet CSS via CDN, add troubleshooting docs
+ea923f5 fix: Import Leaflet CSS in main.jsx instead of index.css
+cebf54e fix: Improve dashboard styling and fix task links
+e50ad3d fix: Improve TaskCard styling in StudentDashboard
+fc7bcfc fix: Correct broken links in StudentDashboard
+c6cb73c feat: Add student dashboard and location maps
+b8d3474 fix: SkillsEditor not loading student skills on initial login
+10a56a7 fix: Student skills not loading on initial login
+cf2dc0e style: Improve match text and smaller BusinessCard skills
+6a61bc1 style: Change BusinessCard skills to solid coral pills
+b40ffa7 fix: Add neumorphic shadows to outline button
+efccbf5 feat: Add button hierarchy and gamified match text
+d10cd44 fix: Mobile menu overlay issue in Navbar
+d4d2e29 feat: Redesign BusinessCard and forms with neumorphic style
+1536c79 feat: Redesign student profile page and single-page profile editor
+ee65fb0 feat: improve skill filter UX and neumorphic design refinements
+2332902 feat: Implement marketplace UX model with skill matching
+9221934 feat: Refine neumorphic design system based on Gemini reference
+f069267 feat: Change primary color from Indigo to Coral
+50bd1ea feat: Restore neumorphic design system across all components
+22e3577 feat: Update primary color from HAN pink to Indigo for student focus
+0245feb Merge pull request #240 from HAN-AIM-CMD-WG/main

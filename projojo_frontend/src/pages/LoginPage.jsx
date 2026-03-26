@@ -1,38 +1,17 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import TestUserSelector from "../components/TestUserSelector";
-import { API_BASE_URL, sendTestEmail } from "../services";
+import TestSendEmail from "../components/TestSendEmail";
+import { API_BASE_URL } from "../services";
 
 export default function LoginPage() {
-  // ============================================================================
-  // EMAIL TEST STATE - REMOVE AFTER TESTING
-  // ============================================================================
-  const [testEmail, setTestEmail] = useState("test@example.com");
-  const [emailStatus, setEmailStatus] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSendTestEmail = async () => {
-    setIsLoading(true);
-    setEmailStatus(null);
-    try {
-      const result = await sendTestEmail(testEmail);
-      setEmailStatus({ type: result.status, message: result.message });
-    } catch (error) {
-      setEmailStatus({ type: "error", message: error.message || "Failed to send email" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  // ============================================================================
-  // END EMAIL TEST STATE - REMOVE AFTER TESTING
-  // ============================================================================
 
   return (
     <div className="w-full min-h-dvh flex items-center justify-center bg-neu-bg p-6">
       <div className="neu-card-lg w-full max-w-md sm:max-w-xl fade-in-up">
         {/* Back to landing */}
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-6 text-sm font-semibold"
         >
           <span className="material-symbols-outlined text-lg">arrow_back</span>
@@ -64,8 +43,8 @@ export default function LoginPage() {
 
         {/* OAuth buttons */}
         <div className="flex flex-col gap-4">
-          <a 
-            href={`${API_BASE_URL}auth/login/google`} 
+          <a
+            href={`${API_BASE_URL}auth/login/google`}
             className="neu-btn w-full flex items-center justify-center gap-3 py-4"
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -77,8 +56,8 @@ export default function LoginPage() {
             <span className="font-bold text-sm">Inloggen met Google</span>
           </a>
 
-          <a 
-            href={`${API_BASE_URL}auth/login/microsoft`} 
+          <a
+            href={`${API_BASE_URL}auth/login/microsoft`}
             className="neu-btn w-full flex items-center justify-center gap-3 py-4"
           >
             <svg width="20" height="20" viewBox="0 0 24 24">
@@ -90,8 +69,8 @@ export default function LoginPage() {
             <span className="font-bold text-sm">Inloggen met Microsoft</span>
           </a>
 
-          <a 
-            href={`${API_BASE_URL}auth/login/github`} 
+          <a
+            href={`${API_BASE_URL}auth/login/github`}
             className="neu-btn w-full flex items-center justify-center gap-3 py-4"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -107,46 +86,10 @@ export default function LoginPage() {
             Je wordt doorgestuurd om de authenticatie te voltooien
           </p>
         </div>
-        {/* ============================================================================ */}
-        {/* EMAIL TEST SECTION - REMOVE AFTER TESTING */}
-        {/* ============================================================================ */}
-        <div className="mt-4 neu-pressed rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary text-sm">mail</span>
-            </div>
-            <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
-              Email Test
-            </span>
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              value={testEmail}
-              onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="test@example.com"
-              className="neu-input flex-1 !py-2 !text-sm"
-            />
-            <button
-              onClick={handleSendTestEmail}
-              disabled={isLoading}
-              className="neu-btn-primary !py-2 !px-4 text-sm font-bold shrink-0 disabled:opacity-40"
-            >
-              {isLoading ? "..." : "Verstuur"}
-            </button>
-          </div>
-          {emailStatus && (
-            <p className={`text-xs mt-2 font-semibold ${emailStatus.type === "success" ? "text-primary" : "text-red-500"}`}>
-              {emailStatus.message}
-            </p>
-          )}
-          <p className="text-[11px] text-[var(--text-muted)] mt-2">
-            Bekijk emails: <a href="http://localhost:8025" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-semibold">localhost:8025</a>
-          </p>
+
+        <div className="mt-4">
+          <TestSendEmail />
         </div>
-        {/* ============================================================================ */}
-        {/* END EMAIL TEST SECTION - REMOVE AFTER TESTING */}
-        {/* ============================================================================ */}
 
       </div>
     </div>

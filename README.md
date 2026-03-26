@@ -1,11 +1,12 @@
 # Projojo
 
 A full-stack application with a Python backend, React frontend, and TypeDB database.
-# Softwareguidebook
 
-In de docs directory.
+## Documentation
 
-## dit is een toetsje
+- **[Software Guidebook]()** - [NOT MADE YET] Architecture, code patterns, data model
+- **[Deployment Infrastructure](./docs/DEPLOYMENT_INFRASTRUCTURE.md)** - Docker setup, ports, environments
+- **[OAuth Setup Guide](./projojo_backend/auth/README.md)**
 
 ## Prerequisites
 
@@ -38,34 +39,36 @@ For Mac/Linux (Bash):
 ```
 
 These scripts will:
-1. Clean up any existing containers
-2. Start all services with Docker Compose
-3. Open your browser to the frontend application
-4. Display container logs in the terminal
+1. Start all services with Docker Compose (use `-reset` to clean up first)
+2. Wait for services to initialize
+3. Open your browser to http://localhost:10101
+4. Display container logs for backend and frontend
 
 The `-reset` flag will completely reset all containers (including volumes) for when you want a fresh start. i.e. when the image versions change or you want to clear all data.
 
 ### Docker Services
 
-| Service      | Container Name   | Description            | Port |
-| ------------ | ---------------- | ---------------------- | ---- |
-| **TypeDB**   | projojo_typedb   | TypeDB database server | 1729 |
-|              |                  | TypeDB Studio          | 1728 |
-| **Backend**  | projojo_backend  | FastAPI application    | 8000 |
-| **Frontend** | projojo_frontend | Vite/React application | 5173 |
+| Service | Container Name | Description | Host Port |
+|---------|---------------|-------------|-----------|
+| **Frontend** | projojo_frontend | Vite/React application | 10101 |
+| **Backend** | projojo_backend | FastAPI application | 10102 |
+| **TypeDB** | projojo_typedb | TypeDB database server | 10103 |
+| | | TypeDB Studio | 10104 |
+| **MailHog** | projojo_mailhog | Email testing (SMTP) | 10105 |
+| | | Email testing (Web UI) | 10106 |
+
+> **Note**: Ports use the 10101+ range to avoid conflicts with macOS AirPlay (5000, 7000) and common dev tools.
+> See [Deployment Infrastructure](./docs/DEPLOYMENT_INFRASTRUCTURE.md) for details.
 
 ### Accessing TypeDB Studio
 
-As of TypeDB version 3.3.0, TypeDB Studio is a web-based application. Our project is already configured to use TypeDB v3.3.0.
+TypeDB Studio is an external web application (TypeDB v3.4.0+).
 
 To access TypeDB Studio:
-1. Go to [studio.typedb.com/connect](https://studio.typedb.com/connect) in your web browser.
-2. In the "Address" field, enter: `http://localhost:1728`
-4. Click "Connect".
-
-You can also switch to "**Use connection URL**" mode and enter: `typedb://admin:password@http://localhost:1728` to log in with the default credentials.
-
-This will connect you to the TypeDB instance running in your local Docker container.
+1. Go to [studio.typedb.com](https://studio.typedb.com)
+2. In the "Address" field, enter: `localhost:10104`
+3. Enter credentials: username `admin`, password from your `.env` file (`TYPEDB_NEW_PASSWORD`)
+4. Click "Connect"
 
 ### Managing the Database
 
@@ -119,7 +122,7 @@ npm install package-name --save-dev     # For dev dependencies
 # Exit container
 exit
 ```
-> **Note:** When you install packages directly in the container (Method 2), your changes **will persist** after container restarts. The `package.json` file gets updated on both your host machine and in the container due to Docker volume mapping, so Git will track these dependency changes and you can commit them to version control. However, the `node_modules` folder uses an anonymous Docker volume, therefore this folder will not sync between your host machine and the container.
+> **Note:** When you install packages directly in the container (Method 2), your `package.json` changes **will persist** because it's part of the volume-mounted directory. Git will track these dependency changes. However, the `node_modules` folder uses an anonymous Docker volume that stays isolated in the container and does not sync to your host machine.
 
 ### Backend Dependencies Management
 

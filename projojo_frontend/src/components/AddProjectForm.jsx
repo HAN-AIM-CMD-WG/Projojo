@@ -70,7 +70,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
         <div className="max-w-3xl mx-auto px-4 py-8">
             {/* Header */}
             <div className="mb-8">
-                <Link 
+                <Link
                     to={`/business/${authData.businessId}`}
                     className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-primary transition-colors mb-4"
                 >
@@ -83,7 +83,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
             <form onSubmit={handleSubmit} aria-label="Project aanmaken form">
                 <Alert text={serverErrorMessage} />
-                
+
                 {/* Project Image Section */}
                 <div className="neu-flat rounded-2xl p-6 mb-6">
                     <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
@@ -168,15 +168,15 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
                 {/* Action Buttons */}
                 <div className="flex gap-4">
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={() => navigation(-1)}
                         className="neu-btn flex-1 py-3 font-bold"
                     >
                         Annuleren
                     </button>
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={isSubmitting}
                         className="neu-btn-primary flex-1 py-3 font-bold flex items-center justify-center gap-2"
                     >

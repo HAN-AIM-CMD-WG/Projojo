@@ -477,29 +477,29 @@ class ProjectRepository(BaseRepository[Project]):
         update_clauses = [
             '$project has name ~name;',
             '$project has description ~description;',
-            '$project has location ~location;',             
+            '$project has location ~location;',
         ]
-        
+
         params = {
             'project_id': project_id,
             'name': name,
             'description': description,
             'location': location,
         }
-        
+
         if image_filename:
             update_clauses.append('$project has imagePath ~image_filename;')
             params['image_filename'] = image_filename
-        
+
         # Handle optional date fields
         if start_date is not None:
             update_clauses.append('$project has startDate ~start_date;')
             params['start_date'] = start_date
-            
+
         if end_date is not None:
             update_clauses.append('$project has endDate ~end_date;')
             params['end_date'] = end_date
-            
+
         query = f'''
             match
                 $project isa project, has id ~project_id;
