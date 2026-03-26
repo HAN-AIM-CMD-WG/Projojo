@@ -92,10 +92,10 @@ export default function FormInput({
         }
     }
 
-    const inputClass = type !== "checkbox" && type !== "radio" ? `block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 placeholder:text-gray-400 sm:text-sm sm:leading-6 p-3${readonly ? " bg-gray-100 ring-0 focus:outline-none" : ""}` :
-        "w-4 h-4 border-gray-300 rounded focus:ring-blue-500 focus:ring-2";
+    const inputClass = type !== "checkbox" && type !== "radio" ? `neu-input w-full${readonly ? " opacity-70 cursor-not-allowed" : ""}` :
+        "w-4 h-4 accent-primary rounded";
 
-    const labelComponent = <label className={`text-sm font-medium leading-6 text-gray-900 ${type !== "radio" ? "block" : ""}`} htmlFor={id}>
+    const labelComponent = <label className={`text-sm font-bold leading-6 text-text-primary ${type !== "radio" ? "block mb-1" : ""}`} htmlFor={id}>
         {label} {required && <span className="text-primary">*</span>}
     </label>;
 
@@ -132,7 +132,7 @@ export default function FormInput({
                 />
             )}
             {type === "radio" || type === "checkbox" ? labelComponent : <></>}
-            {internalError && <span className="block text-primary">{internalError}</span>}
+            {internalError && <span className="block text-red-600 text-sm mt-1 font-medium">{internalError}</span>}
         </div>
     );
 }

@@ -169,6 +169,149 @@ export function getProjects() {
 }
 
 /**
+ * Get all public projects for the discovery page (no authentication required)
+ * @returns {Promise<{id: string, name: string, description: string, image_path: string, business: object, open_positions: number, skills: string[]}[]>}
+ */
+export function getPublicProjects() {
+    // Fetch without authentication
+    return fetch(`${API_BASE_URL}projects/public`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Failed to fetch public projects", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Get a specific public project by ID (no authentication required)
+ * @param {string} projectId
+ * @returns {Promise<object>}
+ */
+export function getPublicProject(projectId) {
+    return fetch(`${API_BASE_URL}projects/public/${projectId}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Project niet gevonden", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Set project visibility (public/private)
+ * @param {string} projectId
+ * @param {boolean} isPublic
+ */
+export function setProjectVisibility(projectId, isPublic) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/visibility?is_public=${isPublic}`, {
+        method: 'PATCH'
+    });
+}
+
+/**
+ * Set project impact summary
+ * @param {string} projectId
+ * @param {string|null} impactSummary
+ */
+export function setProjectImpact(projectId, impactSummary) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/impact`, {
+        method: 'PATCH',
+        body: JSON.stringify({ impact_summary: impactSummary })
+    });
+}
+
+// ============================================================================
+// THEME ENDPOINTS
+// ============================================================================
+
+/**
+ * Get all themes (public endpoint)
+ * @returns {Promise<{id: string, name: string, sdg_code?: string, icon?: string, description?: string, color?: string, display_order?: number}[]>}
+ */
+export function getThemes() {
+    return fetch(`${API_BASE_URL}themes/`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Failed to fetch themes", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Get themes for a specific project (public endpoint)
+ * @param {string} projectId
+ * @returns {Promise<object[]>}
+ */
+export function getProjectThemes(projectId) {
+    return fetch(`${API_BASE_URL}themes/project/${projectId}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Failed to fetch project themes", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
+ * Create a new theme (teacher only)
+ * @param {object} theme
+ * @returns {Promise<object>}
+ */
+export function createTheme(theme) {
+    return fetchWithError(`${API_BASE_URL}themes`, {
+        method: 'POST',
+        body: JSON.stringify(theme)
+    });
+}
+
+/**
+ * Update a theme (teacher only)
+ * @param {string} themeId
+ * @param {object} theme
+ * @returns {Promise<object>}
+ */
+export function updateTheme(themeId, theme) {
+    return fetchWithError(`${API_BASE_URL}themes/${themeId}`, {
+        method: 'PUT',
+        body: JSON.stringify(theme)
+    });
+}
+
+/**
+ * Delete a theme (teacher only)
+ * @param {string} themeId
+ * @returns {Promise<object>}
+ */
+export function deleteTheme(themeId) {
+    return fetchWithError(`${API_BASE_URL}themes/${themeId}`, {
+        method: 'DELETE'
+    });
+}
+
+/**
+ * Link a project to themes (replaces existing links)
+ * @param {string} projectId
+ * @param {string[]} themeIds
+ * @returns {Promise<object>}
+ */
+export function linkProjectThemes(projectId, themeIds) {
+    return fetchWithError(`${API_BASE_URL}themes/project/${projectId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ theme_ids: themeIds })
+    });
+}
+
+/**
  * @returns {Promise<{id: string, name: string, description: string, image_path: string, location: string[], projects: any[]}[]>}
  */
 export function getBusinessesComplete() {
@@ -256,7 +399,8 @@ export function updateStudentSkills(studentId, skillIds) {
 }
 
 export function updateStudentSkillDescription(studentId, skill) {
-    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills/${skill.id}`, {
+    const skillId = skill.skillId || skill.id;
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/skills/${skillId}`, {
         method: "PATCH",
         body: JSON.stringify(skill),
     });
@@ -281,6 +425,19 @@ export function updateStudent(email, formData) {
  */
 export function getRegistrations(taskId) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`);
+}
+
+/**
+ * Get all registrations for a task (pending and accepted) with full timeline.
+ * Used for task progress management UI.
+ * @param {string} taskId
+ * @returns {Promise<{
+ *   pending: Array<{student: {id: string, full_name: string, skills: Array}, reason: string, requested_at: string}>,
+ *   accepted: Array<{student: {id: string, full_name: string, skills: Array}, reason: string, requested_at: string, accepted_at: string, started_at: string|null, completed_at: string|null}>
+ * }>}
+ */
+export function getAllRegistrations(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/all`);
 }
 
 /**
@@ -321,6 +478,14 @@ export function createProject(project_data) {
         formData.append("location", project_data.location);
     }
 
+    // Add date fields (as ISO strings)
+    if (project_data.start_date) {
+        formData.append("start_date", project_data.start_date);
+    }
+    if (project_data.end_date) {
+        formData.append("end_date", project_data.end_date);
+    }
+
     // Add image file
     if (project_data.imageFile) {
         formData.append("image", project_data.imageFile);
@@ -337,7 +502,9 @@ export function createTask(projectId, formDataObj) {
     const taskData = {
         name: formDataObj.title,
         description: formDataObj.description,
-        total_needed: formDataObj.totalNeeded
+        total_needed: formDataObj.totalNeeded,
+        start_date: formDataObj.start_date || null,
+        end_date: formDataObj.end_date || null
     };
 
     return fetchWithError(`${API_BASE_URL}tasks/${projectId}`, {
@@ -374,6 +541,25 @@ export function updateRegistration(registration) {
             response: registration.response || ""
         }),
     });
+}
+
+/**
+ * Cancel a pending registration for a task
+ * @param {string} taskId - The ID of the task
+ * @returns {Promise<void>}
+ */
+export function cancelRegistration(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations`, {
+        method: "DELETE",
+    });
+}
+
+/**
+ * Get dashboard data for the authenticated supervisor
+ * @returns {Promise<{business_id: string, projects: Array, pending_registrations: Array, active_students: Array, stats: Object}>}
+ */
+export function getSupervisorDashboard() {
+    return fetchWithError(`${API_BASE_URL}supervisors/dashboard`);
 }
 
 //Not implemented in the backend yet
@@ -448,13 +634,16 @@ export function getTaskSkills(taskId) {
 }
 
 /**
- *
  * @param {string} newBusinessName
+ * @param {boolean} asDraft - If true, create as archived (hidden from students)
  */
-export function createNewBusiness(newBusinessName) {
+export function createNewBusiness(newBusinessName, asDraft = false) {
     return fetchWithError(`${API_BASE_URL}businesses/`, {
         method: "POST",
-        body: JSON.stringify(newBusinessName),
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: newBusinessName, as_draft: asDraft }),
     });
 }
 
@@ -512,6 +701,36 @@ export function getAllTeachers() {
  */
 export function getBusinessById(businessId) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessId}`);
+}
+
+/**
+ * Get all archived businesses (teacher only)
+ * @returns {Promise<Array>}
+ */
+export function getArchivedBusinesses() {
+    return fetchWithError(`${API_BASE_URL}businesses/archived`);
+}
+
+/**
+ * Archive a business (teacher only)
+ * @param {string} businessId
+ * @returns {Promise<{message: string}>}
+ */
+export function archiveBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/archive`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Restore an archived business (teacher only)
+ * @param {string} businessId
+ * @returns {Promise<{message: string}>}
+ */
+export function restoreBusiness(businessId) {
+    return fetchWithError(`${API_BASE_URL}businesses/${businessId}/restore`, {
+        method: "PATCH",
+    });
 }
 
 /**
@@ -575,4 +794,120 @@ export function updateSkillName(skillId, name) {
         method: "PATCH",
         body: JSON.stringify({ name }),
     }, true);
+}
+
+// ============================================================================
+// EMAIL TEST FUNCTION - REMOVE AFTER TESTING
+// ============================================================================
+/**
+ * Send a test email to verify MailHog integration
+ * @param {string} recipientEmail - Email address to send the test email to
+ * @returns {Promise<{status: string, message: string}>}
+ *
+ * REMOVE THIS FUNCTION AFTER TESTING EMAIL FUNCTIONALITY
+ */
+export function sendTestEmail(recipientEmail) {
+    return fetchWithError(`${API_BASE_URL}test/email`, {
+        method: "POST",
+        body: JSON.stringify({ recipient_email: recipientEmail }),
+    });
+}
+// ============================================================================
+// END EMAIL TEST FUNCTION - REMOVE AFTER TESTING
+// ============================================================================
+
+// ============================================
+// Project Archive/Delete Functions
+// ============================================
+
+/**
+ * Get all students registered for tasks in a project
+ * @param {string} projectId
+ * @returns {Promise<Array<{student_id: string, student_name: string, student_email: string, task_id: string, task_name: string, is_accepted: boolean, is_completed: boolean}>>}
+ */
+export function getProjectStudents(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/students`);
+}
+
+/**
+ * Archive a project (supervisor: own projects, teacher: all)
+ * @param {string} projectId
+ * @param {boolean} confirm - Set to true to confirm despite affected students
+ * @returns {Promise<{message: string, notified_count?: number} | {message: string, affected_students: Array, requires_confirmation: boolean}>}
+ */
+export function archiveProject(projectId, confirm = false) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/archive?confirm=${confirm}`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Restore an archived project (supervisor: own projects, teacher: all)
+ * @param {string} projectId
+ * @returns {Promise<{message: string}>}
+ */
+export function restoreProject(projectId) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/restore`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Permanently delete a project (teacher only)
+ * Creates portfolio snapshots for completed tasks before deletion
+ * @param {string} projectId
+ * @param {boolean} confirm - Set to true to confirm despite affected students
+ * @returns {Promise<{message: string, snapshots_created?: number, notified_count?: number} | {message: string, affected_students: Array, requires_confirmation: boolean}>}
+ */
+export function deleteProject(projectId, confirm = false) {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}?confirm=${confirm}`, {
+        method: "DELETE",
+    });
+}
+
+/**
+ * Get student portfolio (completed tasks + snapshots)
+ * @param {string} studentId
+ * @returns {Promise<{student_id: string, student_name: string, items: Array, total_count: number, live_count: number, snapshot_count: number}>}
+ */
+export function getStudentPortfolio(studentId) {
+    return fetchWithError(`${API_BASE_URL}students/${studentId}/portfolio`);
+}
+
+// ============================================
+// Task Timeline Functions
+// ============================================
+
+/**
+ * Mark a task registration as started
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{message: string}>}
+ */
+export function markTaskStarted(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/start`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Mark a task registration as completed (supervisor/teacher only)
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{message: string}>}
+ */
+export function markTaskCompleted(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/complete`, {
+        method: "PATCH",
+    });
+}
+
+/**
+ * Get the timeline for a task registration
+ * @param {string} taskId
+ * @param {string} studentId
+ * @returns {Promise<{requested_at: string, accepted_at: string, started_at: string, completed_at: string, is_accepted: boolean}>}
+ */
+export function getRegistrationTimeline(taskId, studentId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/timeline`);
 }

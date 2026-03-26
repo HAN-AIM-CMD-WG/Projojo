@@ -114,8 +114,8 @@ export const Default = {
         expect(canvas.getAllByText('Verfilming van een boek')).toHaveLength(2);
         expect(canvas.getAllByText('Reserveringen applicatie')).toHaveLength(2);
         expect(canvas.getAllByText('Ontwerp voor vergaderruimte')).toHaveLength(2);
-        expect(canvas.getByText('Top 2 skills in dit bedrijf:')).toBeInTheDocument();
-        expect(canvas.getByText('Top 1 skills in dit bedrijf:')).toBeInTheDocument();
+        expect(canvas.getByText('Top 2 skills in deze organisatie:')).toBeInTheDocument();
+        expect(canvas.getByText('Top 1 skills in deze organisatie:')).toBeInTheDocument();
         const images = canvas.getAllByRole('img');
         expect(images).toHaveLength(5);
     }
@@ -132,7 +132,7 @@ export const OneBusiness = {
         expect(canvas.getByText('Gemeente Arnhem')).toBeInTheDocument();
         expect(canvas.getByText('Arnhem')).toBeInTheDocument();
         expect(canvas.getAllByText('Verfilming van een boek')).toHaveLength(2);
-        expect(canvas.getByText('Top 2 skills in dit bedrijf:')).toBeInTheDocument();
+        expect(canvas.getByText('Top 2 skills in deze organisatie:')).toBeInTheDocument();
         const images = canvas.getAllByRole('img');
         expect(images).toHaveLength(2);
     }

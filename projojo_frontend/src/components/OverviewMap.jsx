@@ -25,10 +25,10 @@ const dimmedMarkerSvg = `
 // Create marker icon with optional badge
 const createMarkerIcon = (isMatch, matchCount = 0) => {
     const svg = isMatch ? coralMarkerSvg : dimmedMarkerSvg;
-    const badgeHtml = isMatch && matchCount > 0 
-        ? `<span class="marker-badge">${matchCount}</span>` 
+    const badgeHtml = isMatch && matchCount > 0
+        ? `<span class="marker-badge">${matchCount}</span>`
         : '';
-    
+
     return L.divIcon({
         html: `<div class="marker-with-badge">${svg}${badgeHtml}</div>`,
         className: isMatch ? 'coral-marker' : 'coral-marker dimmed-marker',
@@ -52,7 +52,7 @@ const createClusterCustomIcon = (cluster) => {
     const count = cluster.getChildCount();
     let size = 'small';
     let dimension = 36;
-    
+
     if (count >= 10) {
         size = 'large';
         dimension = 48;
@@ -60,7 +60,7 @@ const createClusterCustomIcon = (cluster) => {
         size = 'medium';
         dimension = 42;
     }
-    
+
     return L.divIcon({
         html: `<div class="coral-cluster coral-cluster-${size}"><span>${count}</span></div>`,
         className: 'coral-cluster-wrapper',
@@ -71,21 +71,21 @@ const createClusterCustomIcon = (cluster) => {
 // Component to fit map bounds to all markers
 function FitBounds({ positions }) {
     const map = useMap();
-    
+
     useEffect(() => {
         if (positions.length > 0) {
             const bounds = L.latLngBounds(positions.map(p => [p.lat, p.lng]));
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
         }
     }, [map, positions]);
-    
+
     return null;
 }
 
 // Component to handle map resize when expanding/collapsing
 function InvalidateSizeOnResize({ isExpanded }) {
     const map = useMap();
-    
+
     useEffect(() => {
         // Wait for CSS transition to complete (300ms), then invalidate size
         const timer = setTimeout(() => {
@@ -93,14 +93,14 @@ function InvalidateSizeOnResize({ isExpanded }) {
         }, 350);
         return () => clearTimeout(timer);
     }, [map, isExpanded]);
-    
+
     return null;
 }
 
 /**
  * OverviewMap component - Shows an interactive map with multiple markers
  * Uses Nominatim API for geocoding addresses to coordinates
- * 
+ *
  * @param {Object} props
  * @param {Array} props.locations - Array of {id, name, address, type: 'business'|'project', count?, businessName?, isFilterMatch?, matchCount?}
  * @param {boolean} [props.showOnlyMatches=false] - If true, only show matching locations
@@ -109,13 +109,13 @@ function InvalidateSizeOnResize({ isExpanded }) {
  * @param {boolean} [props.expandable=true] - Whether to show expand/collapse button
  * @param {string} [props.className] - Additional CSS classes
  */
-export default function OverviewMap({ 
-    locations = [], 
-    showOnlyMatches = false, 
-    height = "300px", 
+export default function OverviewMap({
+    locations = [],
+    showOnlyMatches = false,
+    height = "300px",
     expandedHeight = "calc(100vh - 240px)",
     expandable = true,
-    className = "" 
+    className = ""
 }) {
     const { isDark } = useTheme();
     const [geocodedLocations, setGeocodedLocations] = useState([]);
@@ -123,10 +123,10 @@ export default function OverviewMap({
     const [error, setError] = useState(null);
     const [isExpanded, setIsExpanded] = useState(false);
     const containerRef = useRef(null);
-    
+
     // Calculate current height based on expanded state
     const currentHeight = isExpanded ? expandedHeight : height;
-    
+
     // Scroll into view when expanding
     useEffect(() => {
         if (isExpanded && containerRef.current) {
@@ -145,12 +145,12 @@ export default function OverviewMap({
 
     // Default center (Netherlands)
     const defaultCenter = [52.1326, 5.2913];
-    
+
     // Map tile URLs - Stadia Maps (faster CDN than OSM)
-    const tileUrl = isDark 
+    const tileUrl = isDark
         ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
         : 'https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png';
-    
+
     const tileAttribution = '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
     // Geocode all locations
@@ -165,16 +165,16 @@ export default function OverviewMap({
             setError(null);
 
             const results = [];
-            
+
             // Process locations in batches to avoid rate limiting
             for (const loc of locations) {
                 if (!loc.address) continue;
-                
+
                 try {
                     // Check cache first (simple in-memory cache)
                     const cacheKey = `geocode_${loc.address}`;
                     const cached = sessionStorage.getItem(cacheKey);
-                    
+
                     if (cached) {
                         const coords = JSON.parse(cached);
                         results.push({ ...loc, lat: coords.lat, lng: coords.lng });
@@ -198,10 +198,10 @@ export default function OverviewMap({
                             lat: parseFloat(data[0].lat),
                             lng: parseFloat(data[0].lon)
                         };
-                        
+
                         // Cache the result
                         sessionStorage.setItem(cacheKey, JSON.stringify(coords));
-                        
+
                         results.push({ ...loc, ...coords });
                     }
 
@@ -220,7 +220,7 @@ export default function OverviewMap({
     }, [locations]);
 
     // Memoize positions for FitBounds
-    const positions = useMemo(() => 
+    const positions = useMemo(() =>
         geocodedLocations.filter(loc => loc.lat && loc.lng),
         [geocodedLocations]
     );
@@ -232,7 +232,7 @@ export default function OverviewMap({
     }, [positions, showOnlyMatches]);
 
     // Check if any location has filter info (to decide if we should show badges)
-    const hasFilterInfo = useMemo(() => 
+    const hasFilterInfo = useMemo(() =>
         positions.some(loc => loc.isFilterMatch !== undefined),
         [positions]
     );
@@ -249,9 +249,9 @@ export default function OverviewMap({
     }
 
     return (
-        <div 
+        <div
             ref={containerRef}
-            className={`neu-pressed rounded-xl overflow-hidden relative z-0 transition-all duration-300 ease-out ${className}`} 
+            className={`neu-pressed rounded-xl overflow-hidden relative z-0 transition-all duration-300 ease-out ${className}`}
             style={{ height: currentHeight }}
         >
             {loading ? (
@@ -278,10 +278,10 @@ export default function OverviewMap({
                         url={tileUrl}
                         key={isDark ? 'dark' : 'light'}
                     />
-                    
+
                     <FitBounds positions={positions} />
                     <InvalidateSizeOnResize isExpanded={isExpanded} />
-                    
+
                     <MarkerClusterGroup
                         chunkedLoading
                         iconCreateFunction={createClusterCustomIcon}
@@ -293,78 +293,78 @@ export default function OverviewMap({
                         {visiblePositions.map((loc) => {
                             // Determine the icon to use
                             const isMatch = loc.isFilterMatch !== false;
-                            const icon = hasFilterInfo 
+                            const icon = hasFilterInfo
                                 ? createMarkerIcon(isMatch, isMatch ? loc.matchCount : 0)
                                 : coralIcon;
-                            
+
                             return (
-                            <Marker 
-                                key={`${loc.type}-${loc.id}`} 
-                                position={[loc.lat, loc.lng]}
-                                icon={icon}
-                            >
-                                <Popup>
-                                    <div className="font-sans min-w-[200px]">
-                                        <div className="flex items-start gap-3">
-                                            {/* Business logo */}
-                                            {loc.image && loc.image !== 'default.png' ? (
-                                                <img 
-                                                    src={`${IMAGE_BASE_URL}${loc.image}`}
-                                                    alt=""
-                                                    className="w-10 h-10 rounded-lg object-cover shrink-0"
-                                                />
-                                            ) : (
-                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(255,127,80,0.2) 0%, rgba(255,127,80,0.05) 100%)' }}>
-                                                    <span className="font-bold text-sm" style={{ color: '#FF7F50' }}>
-                                                        {loc.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
-                                                    </span>
+                                <Marker
+                                    key={`${loc.type}-${loc.id}`}
+                                    position={[loc.lat, loc.lng]}
+                                    icon={icon}
+                                >
+                                    <Popup>
+                                        <div className="font-sans min-w-[200px]">
+                                            <div className="flex items-start gap-3">
+                                                {/* Business logo */}
+                                                {loc.image && loc.image !== 'default.png' ? (
+                                                    <img
+                                                        src={`${IMAGE_BASE_URL}${loc.image}`}
+                                                        alt=""
+                                                        className="w-10 h-10 rounded-lg object-cover shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(255,127,80,0.2) 0%, rgba(255,127,80,0.05) 100%)' }}>
+                                                        <span className="font-bold text-sm" style={{ color: '#FF7F50' }}>
+                                                            {loc.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <strong className="block text-gray-900 text-sm leading-tight">
+                                                        {loc.name}
+                                                    </strong>
+                                                    {loc.businessName && (
+                                                        <span className="text-gray-500 text-xs block">
+                                                            {loc.businessName}
+                                                        </span>
+                                                    )}
                                                 </div>
-                                            )}
-                                            <div className="flex-1 min-w-0">
-                                                <strong className="block text-gray-900 text-sm leading-tight">
-                                                    {loc.name}
-                                                </strong>
-                                                {loc.businessName && (
-                                                    <span className="text-gray-500 text-xs block">
-                                                        {loc.businessName}
+                                            </div>
+                                            <span className="text-gray-500 text-xs mt-2 flex items-center gap-1">
+                                                <span className="material-symbols-outlined text-xs">location_on</span>
+                                                {loc.address}
+                                            </span>
+                                            <div className="flex items-center gap-3 mt-2">
+                                                {loc.count !== undefined && loc.count > 0 && (
+                                                    <span className="text-xs font-bold text-[var(--text-secondary)]">
+                                                        {loc.count} {loc.count === 1 ? 'project' : 'projecten'}
+                                                    </span>
+                                                )}
+                                                {loc.matchCount > 0 && (
+                                                    <span className="text-xs font-bold flex items-center gap-0.5 text-primary">
+                                                        <span className="material-symbols-outlined text-xs">check_circle</span>
+                                                        {loc.matchCount} {loc.matchCount === 1 ? 'match' : 'matches'}
                                                     </span>
                                                 )}
                                             </div>
+                                            <Link
+                                                to={loc.linkTo || (loc.type === 'project' ? `/projects/${loc.id}` : `/business/${loc.id}`)}
+                                                className="mt-2 inline-flex items-center gap-1 text-xs font-bold hover:underline"
+                                                style={{ color: '#FF7F50' }}
+                                            >
+                                                Bekijk {loc.type === 'project' ? 'project' : 'organisatie'}
+                                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                            </Link>
                                         </div>
-                                        <span className="text-gray-500 text-xs mt-2 flex items-center gap-1">
-                                            <span className="material-symbols-outlined text-xs">location_on</span>
-                                            {loc.address}
-                                        </span>
-                                        <div className="flex items-center gap-3 mt-2">
-                                            {loc.count !== undefined && loc.count > 0 && (
-                                                <span className="text-xs font-bold text-[var(--text-secondary)]">
-                                                    {loc.count} {loc.count === 1 ? 'project' : 'projecten'}
-                                                </span>
-                                            )}
-                                            {loc.matchCount > 0 && (
-                                                <span className="text-xs font-bold flex items-center gap-0.5 text-primary">
-                                                    <span className="material-symbols-outlined text-xs">check_circle</span>
-                                                    {loc.matchCount} {loc.matchCount === 1 ? 'match' : 'matches'}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <Link 
-                                            to={loc.linkTo || (loc.type === 'project' ? `/projects/${loc.id}` : `/business/${loc.id}`)}
-                                            className="mt-2 inline-flex items-center gap-1 text-xs font-bold hover:underline"
-                                            style={{ color: '#FF7F50' }}
-                                        >
-                                            Bekijk {loc.type === 'project' ? 'project' : 'organisatie'}
-                                            <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                                        </Link>
-                                    </div>
-                                </Popup>
-                            </Marker>
+                                    </Popup>
+                                </Marker>
                             );
                         })}
                     </MarkerClusterGroup>
                 </MapContainer>
             )}
-            
+
             {/* Expand/Collapse button */}
             {expandable && !loading && positions.length > 0 && (
                 <button
@@ -377,14 +377,14 @@ export default function OverviewMap({
                     </span>
                 </button>
             )}
-            
+
             {/* Legend */}
             {!loading && visiblePositions.length > 0 && (
                 <div className="absolute bottom-2 left-2 z-[1000] bg-white/90 dark:bg-[#2D221C]/90 backdrop-blur-sm rounded-lg px-3 py-1.5 text-xs font-bold text-[var(--text-muted)]">
                     {visiblePositions.length} {visiblePositions.length === 1 ? 'locatie' : 'locaties'}
                 </div>
             )}
-            
+
             {/* Quick link to Google Maps */}
             {!loading && positions.length > 0 && (
                 <a
