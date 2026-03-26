@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 /**
  * Creates a PagedComponent component
  */
-export default function PagedComponent({ children, nextButtonText = "Volgende", finishButtonText = "Beëindigen", previousButtonText = "Vorige", nextButtonClass = "btn-secondary", finishButtonClass = "btn-primary", previousButtonClass = "btn-secondary", onNext = () => { } }) {
-    const [page, setPage] = useState(0);
+export default function PagedComponent({ children, nextButtonText = "Volgende", finishButtonText = "Beëindigen", previousButtonText = "Vorige", nextButtonClass = "btn-secondary", finishButtonClass = "btn-primary", previousButtonClass = "btn-secondary", onNext = () => { }, initialPage = 0 }) {
+    const [page, setPage] = useState(initialPage);
     const navigate = useNavigate();
 
     if (Children.count(children) !== 0 && children.type?.toString() === "Symbol(react.fragment)") {

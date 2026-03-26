@@ -20,11 +20,9 @@ export default function ProjectsAddPage() {
     }
 
     return (
-        <div className="max-w-2xl mx-auto">
-            <AddProjectForm
-                onSubmit={onSubmit}
-                serverErrorMessage={serverErrorMessage}
-            />
-        </div>
+        <AddProjectForm
+            onSubmit={onSubmit}
+            serverErrorMessage={serverErrorMessage}
+        />
     )
 }

@@ -1,21 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../services";
 import { notification } from "./notifications/NotifySystem";
+
+const ROLE_CONFIG = {
+	student: { icon: 'school', label: 'Student', color: 'bg-emerald-500' },
+	supervisor: { icon: 'business', label: 'Begeleider', color: 'bg-blue-500' },
+	teacher: { icon: 'menu_book', label: 'Docent', color: 'bg-amber-500' },
+};
 
 export default function TestUserSelector() {
 	const navigate = useNavigate();
 	const [testUsers, setTestUsers] = useState([]);
 	const [isTestUsersLoading, setIsTestUsersLoading] = useState(false);
-	const [isLoggingIn, setIsLoggingIn] = useState(false);
-	const [isOpen, setIsOpen] = useState(false);
-	const [selectedUser, setSelectedUser] = useState(null);
-	const dropdownRef = useRef(null);
+	const [isLoggingIn, setIsLoggingIn] = useState(null); // user id being logged in
+	const [activeRole, setActiveRole] = useState(null);
 
-	// Only show test functionality on localhost
-	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
-	// Fetch test users when component mounts (only on localhost)
 	useEffect(() => {
 		if (!isLocalhost) return;
 		const fetchTestUsers = async () => {
@@ -25,6 +27,9 @@ export default function TestUserSelector() {
 				if (response.ok) {
 					const data = await response.json();
 					setTestUsers(data);
+					// Auto-select first available role
+					const roles = [...new Set(data.map(u => u.type))].sort();
+					if (roles.length > 0) setActiveRole(roles[0]);
 				} else {
 					const data = await response.json();
 					notification.error(data.detail, response.status);
@@ -35,175 +40,119 @@ export default function TestUserSelector() {
 				setIsTestUsersLoading(false);
 			}
 		};
-
 		fetchTestUsers();
 	}, [isLocalhost]);
 
-	// Close dropdown when clicking outside
-	useEffect(() => {
-		const handleClickOutside = (event) => {
-			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-				setIsOpen(false);
-			}
-		};
-
-		if (isOpen) {
-			document.addEventListener('mousedown', handleClickOutside);
-		}
-
-		return () => {
-			document.removeEventListener('mousedown', handleClickOutside);
-		};
-	}, [isOpen]);
-	// Handle test user selection
-	const handleTestUserSelect = async (user) => {
-		if (!user) {
-			setSelectedUser(null);
-			setIsOpen(false);
-			return;
-		}
-
-		setSelectedUser(user);
-		setIsOpen(false);
-		setIsLoggingIn(true);
-
+	const handleLogin = async (user) => {
+		setIsLoggingIn(user.id);
 		try {
-			// Call the test login endpoint to get a JWT token
 			const response = await fetch(`${API_BASE_URL}auth/test/login/${user.id}`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				}
+				headers: { 'Content-Type': 'application/json' }
 			});
-
+			if (!response.ok) throw new Error('Kan testtoken niet genereren');
 			const data = await response.json();
-			if (!response.ok) {
-				throw new Error(`${data.detail || 'Fout bij inloggen met testgebruiker'}`);
-			}
-
-			const token = data.access_token;
-
-			// Store the token in localStorage
-			localStorage.setItem('token', token);
-
+			localStorage.setItem('token', data.access_token);
 			navigate('/home');
-
 		} catch (error) {
 			console.error(error);
 			notification.error(error.message || "Fout bij inloggen met testgebruiker");
 		} finally {
-			setIsLoggingIn(false);
+			setIsLoggingIn(null);
 		}
 	};
 
-	// Don't render anything if not on localhost
-	if (!isLocalhost) {
-		return null;
-	}
+	if (!isLocalhost) return null;
 
-	return (<div className="w-full max-w-md p-3 border-2 border-dashed border-orange-400 bg-orange-50 rounded-md">
-		<h3 className="font-bold text-orange-700 mb-2">
-			TEST GEBRUIKERS (Development Only)
-		</h3>
-		<div>
-			<label className="block text-sm font-medium text-orange-700 mb-1">
-				Selecteer een testgebruiker om direct in te loggen:
-			</label>
-			<div className="relative mt-2" ref={dropdownRef}>
-				<button
-					type="button"
-					className="grid w-full cursor-default grid-cols-1 rounded-md bg-white py-1.5 pr-2 pl-3 text-left text-gray-900 outline-1 -outline-offset-1 outline-orange-300 focus:outline-2 focus:-outline-offset-2 focus:outline-orange-600 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-					aria-haspopup="listbox"
-					aria-expanded={isOpen}
-					onClick={() => !isTestUsersLoading && !isLoggingIn && setIsOpen(!isOpen)}
-					disabled={isTestUsersLoading || isLoggingIn}
-					title={selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : ""}
-				>
-					<span className="col-start-1 row-start-1 flex items-center gap-3 pr-6">
-						{selectedUser && selectedUser.image_path && (
-							<img
-								src={`${API_BASE_URL}image/${selectedUser.image_path}`}
-								alt={selectedUser.full_name}
-								className="h-6 w-6 rounded-full object-cover flex-shrink-0"
-							/>
-						)}
-						<span className="block truncate">
-							{isLoggingIn ? "Inloggen..." : selectedUser ? `${selectedUser.full_name} - ${selectedUser.email}` : "-- Selecteer een gebruiker --"}
-						</span>
+	const availableRoles = [...new Set(testUsers.map(u => u.type))].sort();
+	const filteredUsers = testUsers.filter(u => u.type === activeRole);
+
+	return (
+		<div className="mb-8">
+			<div className="neu-pressed rounded-2xl p-4">
+				{/* Header */}
+				<div className="flex items-center gap-2 mb-4">
+					<div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+						<span className="material-symbols-outlined text-primary text-sm">bug_report</span>
+					</div>
+					<span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wide">
+						Demo Login
 					</span>
-					<svg className="col-start-1 row-start-1 size-5 self-center justify-self-end text-gray-500 sm:size-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-						<path fillRule="evenodd" d="M5.22 10.22a.75.75 0 0 1 1.06 0L8 11.94l1.72-1.72a.75.75 0 1 1 1.06 1.06l-2.25 2.25a.75.75 0 0 1-1.06 0l-2.25-2.25a.75.75 0 0 1 0-1.06ZM10.78 5.78a.75.75 0 0 1-1.06 0L8 4.06 6.28 5.78a.75.75 0 0 1-1.06-1.06l2.25-2.25a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06Z" clipRule="evenodd" />
-					</svg>
-				</button>
+				</div>
 
-				{isOpen && (
-					<ul className="absolute z-10 mt-1 max-h-96 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-hidden sm:text-sm" tabIndex="-1" role="listbox">
-						{/* Default option */}
-						<li
-							className="relative cursor-pointer py-2 pr-9 pl-3 text-gray-900 select-none hover:bg-orange-100"
-							onClick={() => handleTestUserSelect(null)}
-						>
-							<div className="flex items-center gap-3">
-								<span className="block truncate font-normal">-- Selecteer een gebruiker --</span>
-							</div>
-							{!selectedUser && (
-								<span className="absolute inset-y-0 right-0 flex items-center pr-4 text-orange-600">
-									<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-										<path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-									</svg>
-								</span>
-							)}
-						</li>
+				{/* Role tabs */}
+				{isTestUsersLoading ? (
+					<div className="flex items-center justify-center gap-2 py-4">
+						<div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+						<span className="text-xs font-semibold text-[var(--text-muted)]">Gebruikers laden...</span>
+					</div>
+				) : (
+					<>
+						<div className="grid mb-4 gap-2" style={{ gridTemplateColumns: `repeat(${availableRoles.length}, 1fr)` }}>
+							{availableRoles.map(role => {
+								const config = ROLE_CONFIG[role] || { icon: 'person', label: role, color: 'bg-gray-500' };
+								const count = testUsers.filter(u => u.type === role).length;
+								const isActive = activeRole === role;
+								return (
+									<button
+										key={role}
+										onClick={() => setActiveRole(role)}
+										className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-center transition-all duration-200 cursor-pointer ${isActive
+												? 'bg-primary text-white font-bold shadow-sm'
+												: 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--gray-100)]'
+											}`}
+									>
+										<span className="material-symbols-outlined text-base">{config.icon}</span>
+										<span className="text-xs font-bold">{config.label}</span>
+										<span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${isActive ? 'bg-white/25' : 'bg-[var(--gray-200)]'
+											}`}>{count}</span>
+									</button>
+								);
+							})}
+						</div>
 
-						{/* Dynamically create groups based on available user types */}
-						{[...new Set(testUsers.map(user => user.type))]
-							.sort()
-							.map(userType => (
-								<div key={userType}>
-									{/* Group header */}
-									<li className="py-1 px-3 text-xs font-semibold text-orange-700 bg-orange-50 border-b border-orange-200">
-										{userType.charAt(0).toUpperCase() + userType.slice(1) + "s"}
-									</li>
-									{/* Group items */}
-									{testUsers
-										.filter(user => user.type === userType)
-										.map(user => (
-											<li
-												key={user.id}
-												className="relative cursor-pointer py-2 px-3 text-gray-900 select-none hover:bg-orange-100"
-												onClick={() => handleTestUserSelect(user)}
-												title={`${user.full_name} - ${user.email}`}
-											>
-												<div className="flex items-center gap-3">
-													{user.image_path && (
-														<img
-															src={`${API_BASE_URL}image/${user.image_path}`}
-															alt={user.full_name}
-															className="h-6 w-6 rounded-full object-cover flex-shrink-0"
-														/>
-													)}
-													<span className="block truncate font-normal">
-														{user.full_name} - {user.email}
-													</span>
-												</div>
-												{selectedUser?.id === user.id && (
-													<span className="absolute inset-y-0 right-0 flex items-center pr-4 text-orange-600">
-														<svg className="size-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-															<path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-														</svg>
-													</span>
-												)}
-											</li>
-										))}
-								</div>
-							))
-						}
-					</ul>
+						{/* User list for active role */}
+						<div className="space-y-1 max-h-[156px] overflow-y-auto overflow-x-hidden scrollbar-thin">
+							{filteredUsers.map(user => {
+								const config = ROLE_CONFIG[user.type] || { color: 'bg-gray-500' };
+								const isActive = isLoggingIn === user.id;
+								return (
+									<button
+										key={user.id}
+										onClick={() => handleLogin(user)}
+										disabled={isLoggingIn !== null}
+										className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-all duration-150 cursor-pointer ${isActive
+												? 'bg-primary/10'
+												: isLoggingIn !== null
+													? 'opacity-30 cursor-not-allowed'
+													: 'hover:bg-primary/5 hover:translate-x-1'
+											}`}
+									>
+										{user.image_path ? (
+											<img
+												src={`${API_BASE_URL}image/${user.image_path}`}
+												alt={user.full_name}
+												className="w-8 h-8 rounded-full object-cover shrink-0"
+											/>
+										) : (
+											<div className={`w-8 h-8 rounded-full ${config.color} flex items-center justify-center shrink-0`}>
+												<span className="material-symbols-outlined text-white text-sm">person</span>
+											</div>
+										)}
+										<div className="min-w-0 flex-1">
+											<p className="text-sm font-bold text-[var(--text-primary)] truncate">{user.full_name}</p>
+											<p className="text-[11px] text-[var(--text-muted)] truncate">{user.email}</p>
+										</div>
+										{isActive && (
+											<div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin shrink-0"></div>
+										)}
+									</button>
+								);
+							})}
+						</div>
+					</>
 				)}
 			</div>
 		</div>
-		{isTestUsersLoading && <p className="text-xs text-orange-600 mt-1">Gebruikers laden...</p>}
-		{isLoggingIn && <p className="text-xs text-orange-600 mt-1">Inloggen met geselecteerde gebruiker...</p>}
-	</div>
 	);
 }

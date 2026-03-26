@@ -11,8 +11,8 @@ export default {
             "description": "Project beschrijving. lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet.",
             "business": {
                 "businessId": 12,
-                "name": "Bedrijfsnaam",
-                "description": "Dit bedrijf is een bedrijf dat ...",
+                "name": "Organisatienaam",
+                "description": "Deze organisatie is een organisatie die ...",
                 "photo": "/image.png",
                 "location": "Arnhem"
             },
@@ -37,7 +37,7 @@ export const Default = {
 
         expect(canvas.getByText('Project titel')).toBeInTheDocument();
         expect(canvas.getByText(/Project beschrijving./)).toBeInTheDocument();
-        expect(canvas.getByText('Bedrijfsnaam')).toBeInTheDocument();
+        expect(canvas.getByText('Organisatienaam')).toBeInTheDocument();
         expect(canvas.getByText('Arnhem')).toBeInTheDocument();
         expect(canvas.getByText(/2/)).toBeInTheDocument();
         expect(canvas.getByText('adobe premiere pro')).toBeInTheDocument();

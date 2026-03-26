@@ -5,20 +5,38 @@ import Tooltip from "./Tooltip";
  * @param {{
  * children: React.ReactNode,
  * skillName: string,
- * isPending?: boolean
+ * isPending?: boolean,
+ * isOwn?: boolean,
+ * variant?: 'default' | 'subtle' | 'outline' | 'own' | 'pending'
  * }} props
  * @returns {JSX.Element}
  */
-export default function SkillBadge({ children, skillName, isPending, onClick = null, ariaLabel = null }) {
+export default function SkillBadge({ children, skillName, isPending, isOwn = false, onClick = null, ariaLabel = null, variant = 'default' }) {
     const toolTipRef = useRef(null);
 
-    let classNames = isPending ? 'bg-gray-300 text-black border border-gray-400' : 'bg-primary text-white';
-    classNames += ' px-3 py-1 break-words whitespace-normal text-start text-sm font-medium rounded-2xl shadow-md inline-block max-w-full';
+    // Clean skill badge styling - no gradients, consistent across app
+    let classNames;
+
+    if (isOwn || variant === 'own') {
+        // Own skill: coral outline with light fill
+        classNames = 'skill-badge-own';
+    } else if (isPending || variant === 'pending') {
+        // Pending: dashed coral border
+        classNames = 'skill-badge-pending';
+    } else {
+        // Default: solid coral background
+        classNames = 'skill-badge';
+    }
+
+    // Add cursor pointer if clickable
+    if (onClick) {
+        classNames += ' cursor-pointer hover:opacity-80 transition-opacity';
+    }
 
     const content = (
         <>
-            {skillName}
             {children}
+            {skillName}
             {isPending && (
                 <Tooltip parentRef={toolTipRef}>
                     In afwachting van goedkeuring
