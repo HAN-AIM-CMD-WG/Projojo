@@ -1,0 +1,499 @@
+/* DEMO GUIDE SYSTEM */
+
+/* Guide banner at top of page */
+.guide-banner {
+  background: linear-gradient(135deg, #FF7F50 0%, #FF6347 100%);
+  color: #fff;
+  padding: 0;
+  font-family: 'Nunito', sans-serif;
+  position: relative;
+  z-index: 90;
+  box-shadow: 0 4px 12px rgba(255,127,80,0.3);
+}
+.guide-banner-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+}
+.guide-banner-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.guide-banner-content { flex: 1; }
+.guide-banner h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0 0 .35rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.guide-banner h2 .material-symbols-rounded { font-size: 1.3rem; }
+.guide-banner p {
+  font-size: .88rem;
+  line-height: 1.5;
+  margin: 0;
+  opacity: .95;
+}
+.guide-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s;
+}
+.guide-close:hover { background: rgba(255,255,255,0.35); }
+
+/* Role tabs */
+.guide-roles {
+  display: flex;
+  gap: .35rem;
+  margin-top: .75rem;
+  flex-wrap: wrap;
+}
+.guide-role-tab {
+  padding: .3rem .85rem;
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 700;
+  border: 2px solid rgba(255,255,255,0.4);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all .2s;
+}
+.guide-role-tab:hover { background: rgba(255,255,255,0.15); }
+.guide-role-tab.active {
+  background: #fff;
+  color: #FF7F50;
+  border-color: #fff;
+}
+
+/* Role content */
+.guide-role-content {
+  margin-top: .6rem;
+  padding: .6rem .85rem;
+  background: rgba(255,255,255,0.12);
+  border-radius: .75rem;
+  font-size: .85rem;
+  line-height: 1.55;
+  display: none;
+}
+.guide-role-content.visible { display: block; }
+.guide-role-content strong { font-weight: 800; }
+
+/* Floating guide toggle button */
+.guide-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF7F50, #FF6347);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(255,99,71,0.4);
+  z-index: 300;
+  transition: all .25s;
+  font-family: 'Material Symbols Rounded';
+}
+.guide-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(255,99,71,0.5);
+}
+
+/* Tooltips */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #2D3748;
+  color: #fff;
+  padding: .45rem .85rem;
+  border-radius: .6rem;
+  font-size: .78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  max-width: 280px;
+  white-space: normal;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s, transform .2s;
+  z-index: 150;
+  font-family: 'Nunito', sans-serif;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+[data-tooltip]::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #2D3748;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .2s;
+  z-index: 150;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+[data-tooltip]:hover::before {
+  transform: translateX(-50%);
+}
+
+/* Tooltip position variants */
+[data-tooltip-pos="right"]::after {
+  bottom: auto;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+}
+[data-tooltip-pos="right"]:hover::after {
+  transform: translateY(-50%) translateX(0);
+}
+[data-tooltip-pos="right"]::before {
+  bottom: auto;
+  left: calc(100% + 2px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-right-color: #2D3748;
+}
+
+/* Highlight pulse for annotated elements */
+.guide-highlight {
+  animation: guideGlow 2s ease-in-out infinite;
+  position: relative;
+}
+@keyframes guideGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255,127,80,0); }
+  50% { box-shadow: 0 0 0 4px rgba(255,127,80,0.25); }
+}
+
+/* ======================
+   TOUR / RONDLEIDING
+   ====================== */
+
+/* Backdrop overlay — covers entire page */
+.tour-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s;
+}
+.tour-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Spotlight cutout — positioned over the target element */
+.tour-spotlight {
+  position: absolute;
+  z-index: 401;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+  pointer-events: none;
+  transition: all .4s cubic-bezier(.4,0,.2,1);
+}
+.tour-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 3px solid #FF7F50;
+  animation: tourPulse 1.5s ease-in-out infinite;
+}
+@keyframes tourPulse {
+  0%, 100% { border-color: rgba(255,127,80,0.8); transform: scale(1); }
+  50% { border-color: rgba(255,127,80,0.4); transform: scale(1.01); }
+}
+
+/* Popover card */
+.tour-popover {
+  position: absolute;
+  z-index: 402;
+  background: #fff;
+  border-radius: 1.25rem;
+  padding: 1.5rem;
+  width: 340px;
+  max-width: calc(100vw - 2rem);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  font-family: 'Nunito', sans-serif;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+  opacity: 0;
+  transform: translateY(8px);
+}
+.tour-popover.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.tour-popover-arrow {
+  position: absolute;
+  width: 16px; height: 16px;
+  background: #fff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(0,0,0,0.05);
+}
+.tour-popover-arrow.top { top: -8px; left: 2rem; }
+.tour-popover-arrow.bottom { bottom: -8px; left: 2rem; }
+.tour-popover-arrow.left { left: -8px; top: 1.5rem; }
+.tour-popover-arrow.right { right: -8px; top: 1.5rem; }
+
+/* Popover header */
+.tour-header {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-bottom: .5rem;
+}
+.tour-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF7F50, #FF6347);
+  color: #fff;
+  font-size: .78rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.tour-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #2D3748;
+  line-height: 1.3;
+}
+.tour-role-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .7rem;
+  font-weight: 700;
+  color: #FF7F50;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  margin-bottom: .35rem;
+}
+.tour-role-label .material-symbols-rounded { font-size: .85rem; }
+.tour-text {
+  font-size: .88rem;
+  color: #4A5568;
+  line-height: 1.55;
+  margin-bottom: 1rem;
+}
+
+/* Tour footer: nav buttons + progress */
+.tour-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+.tour-dots {
+  display: flex;
+  gap: .35rem;
+  flex: 1;
+  justify-content: center;
+}
+.tour-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #D1D5DB;
+  transition: all .2s;
+}
+.tour-dot.active { background: #FF7F50; transform: scale(1.25); }
+.tour-dot.done { background: #FFA07A; }
+
+.tour-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .4rem .9rem;
+  border-radius: .6rem;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  font-family: 'Nunito', sans-serif;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.tour-btn-prev {
+  background: transparent;
+  color: #718096;
+}
+.tour-btn-prev:hover { color: #2D3748; }
+.tour-btn-next {
+  background: #FF7F50;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(255,127,80,0.3);
+}
+.tour-btn-next:hover { background: #FF6347; transform: translateY(-1px); }
+.tour-btn-close {
+  position: absolute;
+  top: .75rem; right: .75rem;
+  background: none;
+  border: none;
+  color: #A0AEC0;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: .15rem;
+  line-height: 1;
+}
+.tour-btn-close:hover { color: #2D3748; }
+
+/* Start tour button — inside guide role content */
+.tour-start-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: .5rem;
+  padding: .35rem 1rem;
+  border-radius: 999px;
+  background: #fff;
+  color: #FF7F50;
+  font-size: .8rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all .2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+.tour-start-btn:hover { background: #fff5f0; transform: translateY(-1px); }
+.tour-start-btn .material-symbols-rounded { font-size: 1rem; }
+
+/* Demo label badge — positioned inside the nav, not overlapping links */
+.demo-badge {
+  position: absolute;
+  top: 4px;
+  right: 80px;
+  background: #2D3748;
+  color: #fff;
+  padding: .15rem .6rem;
+  border-radius: 999px;
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  z-index: 101;
+  font-family: 'Nunito', sans-serif;
+  pointer-events: none;
+  opacity: .6;
+}
+
+/* Page intro overlay */
+.guide-intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.guide-intro-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.guide-intro-card {
+  background: #EFEEEE;
+  border-radius: 1.5rem;
+  padding: 2.5rem;
+  max-width: 520px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  font-family: 'Nunito', sans-serif;
+}
+.guide-intro-card h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #2D3748;
+  margin-bottom: .5rem;
+}
+.guide-intro-card p {
+  color: #718096;
+  font-size: .95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+.guide-intro-card .guide-intro-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.guide-intro-role {
+  padding: .4rem 1rem;
+  border-radius: .75rem;
+  font-size: .82rem;
+  font-weight: 700;
+  background: rgba(255,127,80,0.1);
+  color: #E06A3D;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+.guide-intro-role .material-symbols-rounded { font-size: 1.1rem; }
+.guide-intro-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .7rem 2rem;
+  border-radius: .75rem;
+  background: #FF7F50;
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all .2s;
+}
+.guide-intro-btn:hover { background: #FF6347; transform: translateY(-2px); }
+
+@media (max-width: 768px) {
+  .guide-banner-inner { padding: .75rem 1rem; }
+  .guide-banner h2 { font-size: .95rem; }
+  .guide-banner p { font-size: .82rem; }
+  .guide-roles { gap: .25rem; }
+  .guide-role-tab { padding: .25rem .6rem; font-size: .72rem; }
+  .guide-fab { width: 44px; height: 44px; font-size: 1.3rem; bottom: 1rem; right: 1rem; }
+  [data-tooltip]::after { max-width: 200px; font-size: .72rem; }
+}

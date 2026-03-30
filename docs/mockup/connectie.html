@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connecties & Berichten — Projojo 2.0</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
+  <style>
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* 3-STEP FLOW */
+    .steps-row {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1.5rem;
+      position: relative;
+    }
+    .step-card {
+      flex: 1;
+      border-top: 4px solid var(--primary);
+      text-align: center;
+      padding: 2rem 1.5rem;
+      position: relative;
+    }
+    .step-card .step-icon {
+      font-size: 48px;
+      color: var(--primary);
+      margin-bottom: .75rem;
+    }
+    .step-card h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: .5rem;
+    }
+    .step-card p {
+      font-size: .9rem;
+      color: var(--text-secondary);
+      line-height: 1.55;
+    }
+    .step-note {
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-top: .75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .3rem;
+    }
+    .step-card:not(:last-child)::after {
+      content: '→';
+      position: absolute;
+      right: -1.35rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      z-index: 2;
+    }
+
+    /* AVG GRID */
+    .avg-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    .avg-item {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: 1rem;
+    }
+    .avg-item .material-symbols-rounded {
+      font-size: 1.5rem;
+      color: var(--primary);
+      flex-shrink: 0;
+      margin-top: .1rem;
+    }
+    .avg-item span {
+      font-size: .88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* DEMO SECTION */
+    .demo-layout {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.25rem;
+    }
+    .demo-left { flex: 3; }
+    .demo-right { flex: 2; }
+
+    /* CONNECTION FORM */
+    .contact-target {
+      margin-bottom: 1.25rem;
+    }
+    .contact-target-label {
+      font-size: .88rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: .5rem;
+    }
+    .message-area {
+      min-height: 120px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .92rem;
+      color: var(--text-primary);
+      line-height: 1.6;
+      resize: none;
+      width: 100%;
+      border: none;
+      background: transparent;
+      outline: none;
+    }
+    .message-area::placeholder { color: var(--text-muted); }
+
+    .checkbox-row {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+      margin: 1.25rem 0;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      font-size: .85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .checkbox-neu {
+      width: 22px;
+      height: 22px;
+      border-radius: .4rem;
+      background: var(--neu-bg);
+      box-shadow: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all .2s;
+    }
+    .checkbox-neu.checked {
+      background: var(--primary);
+      box-shadow: none;
+    }
+    .checkbox-neu.checked .material-symbols-rounded {
+      color: #fff;
+      font-size: 16px;
+    }
+
+    /* INBOX */
+    .inbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .inbox-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .inbox-count {
+      background: var(--primary);
+      color: #fff;
+      font-size: .75rem;
+      font-weight: 700;
+      padding: .15rem .55rem;
+      border-radius: 999px;
+    }
+    .thread-list {
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    .thread-item {
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .thread-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 4px 4px 8px var(--neu-shadow-dark), -4px -4px 8px var(--neu-shadow-light);
+    }
+    .thread-header {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .35rem;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.active { background: #4CAF50; }
+    .status-dot.pending { background: var(--primary); }
+    .thread-preview {
+      font-size: .83rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      margin-top: .2rem;
+    }
+    .thread-time {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: .25rem;
+    }
+    .thread-actions {
+      display: flex;
+      gap: .5rem;
+      margin-top: .6rem;
+    }
+
+    /* MODAL CHAT */
+    .chat-profile-header {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: .25rem;
+    }
+    .chat-profile-header .profile-avatar {
+      width: 48px;
+      height: 48px;
+      font-size: .95rem;
+    }
+    .chat-profile-name {
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: var(--text-primary);
+    }
+    .chat-profile-role {
+      font-size: .82rem;
+      color: var(--text-muted);
+    }
+    .chat-connected {
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+    }
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: .85rem;
+      margin-bottom: 1.25rem;
+      max-height: 340px;
+      overflow-y: auto;
+      padding-right: .25rem;
+    }
+    .chat-bubble {
+      max-width: 80%;
+      padding: .75rem 1rem;
+      border-radius: 1rem;
+      font-size: .88rem;
+      line-height: 1.55;
+    }
+    .chat-bubble.them {
+      align-self: flex-start;
+      background: rgba(0,0,0,0.04);
+      border-bottom-left-radius: .3rem;
+    }
+    .chat-bubble.me {
+      align-self: flex-end;
+      background: rgba(255,127,80,0.12);
+      border-bottom-right-radius: .3rem;
+    }
+    .chat-timestamp {
+      font-size: .72rem;
+      color: var(--text-muted);
+      margin-top: .2rem;
+    }
+    .chat-bubble.them .chat-timestamp { text-align: left; }
+    .chat-bubble.me .chat-timestamp { text-align: right; }
+    .chat-input-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .chat-input-row .neu-pressed { flex: 1; }
+    .chat-input-row input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: 'Nunito', sans-serif;
+      font-size: .9rem;
+      color: var(--text-primary);
+      outline: none;
+    }
+    .chat-input-row input::placeholder { color: var(--text-muted); }
+    .chat-send-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: var(--primary);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background .2s;
+    }
+    .chat-send-btn:hover { background: var(--primary-hover); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .steps-row {
+        flex-direction: column;
+        gap: 1.25rem;
+      }
+      .step-card::after {
+        content: '↓' !important;
+        position: static !important;
+        display: block;
+        transform: none !important;
+        margin-top: .5rem;
+        right: auto !important;
+        top: auto !important;
+      }
+      .step-card:last-child::after { display: none !important; }
+      .avg-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .demo-layout {
+        flex-direction: column;
+      }
+    }
+    @media (max-width: 600px) {
+      .avg-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="discovery.html" class="nav-logo">Projojo <span>2.0</span></a>
+    <ul class="nav-links">
+      <li><a href="discovery.html">Ontdek</a></li>
+      <li><a href="programma.html">Programma's</a></li>
+      <li><a href="kennisbank.html">Kennisbank</a></li>
+      <li><a href="courseprofiel.html">Courses</a></li>
+    </ul>
+    <div class="nav-profile">NE</div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header fade-in">
+    <h1>Connecties &amp; Berichten</h1>
+    <p>Veilig contact leggen zonder persoonlijke gegevens te delen</p>
+  </div>
+
+  <!-- HOW IT WORKS: 3 STEPS -->
+  <div class="section fade-in fade-in-d1">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">route</span>
+      Hoe het werkt
+    </div>
+    <div class="steps-row" data-tooltip="Dit is de volledige connectieflow — van eerste contact tot gesprek">
+
+      <div class="step-card neu-card fade-in fade-in-d2">
+        <span class="material-symbols-rounded step-icon">person_search</span>
+        <h3>1. Interesse tonen</h3>
+        <p>Je ziet een interessant profiel of project. Klik 'Neem contact op' en schrijf een kort bericht over waarom je wilt samenwerken.</p>
+        <div class="step-note">
+          <span class="material-symbols-rounded" style="font-size:14px">lock</span>
+          Geen persoonlijke gegevens zichtbaar
+        </div>
+      </div>
+
+      <div class="step-card neu-card fade-in fade-in-d3">
+        <span class="material-symbols-rounded step-icon">mark_email_read</span>
+        <h3>2. Verzoek beoordelen</h3>
+        <p>De ontvanger ziet je naam, rol en organisatie — plus je bericht. Zij kiezen: accepteren of afwijzen.</p>
+        <div class="step-note">
+          <span class="material-symbols-rounded" style="font-size:14px">lock</span>
+          E-mailadressen blijven verborgen
+        </div>
+      </div>
+
+      <div class="step-card neu-card fade-in fade-in-d4">
+        <span class="material-symbols-rounded step-icon">forum</span>
+        <h3>3. Gesprek starten</h3>
+        <p>Na acceptatie: een berichtenthread via het platform. Voor vervolgcontact verwijs je naar e-mail, Teams of een fysieke afspraak.</p>
+        <div class="step-note">
+          <span class="material-symbols-rounded" style="font-size:14px">lock</span>
+          Platform faciliteert de introductie
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AVG-WAARBORGEN -->
+  <div class="section fade-in fade-in-d2">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">shield</span>
+      AVG-waarborgen
+    </div>
+    <div class="neu-card">
+      <div class="avg-grid">
+        <div class="avg-item">
+          <span class="material-symbols-rounded">visibility_off</span>
+          <span>Profielen alleen zichtbaar voor ingelogde gebruikers</span>
+        </div>
+        <div class="avg-item">
+          <span class="material-symbols-rounded">mail_lock</span>
+          <span>E-mailadressen nooit zichtbaar voor andere gebruikers</span>
+        </div>
+        <div class="avg-item">
+          <span class="material-symbols-rounded">handshake</span>
+          <span>Connectie-verzoek vereist wederzijds akkoord</span>
+        </div>
+        <div class="avg-item">
+          <span class="material-symbols-rounded">person_off</span>
+          <span>Profiel onzichtbaar maken op elk moment</span>
+        </div>
+        <div class="avg-item">
+          <span class="material-symbols-rounded">data_usage</span>
+          <span>Data-minimalisatie: alleen noodzakelijke velden verplicht</span>
+        </div>
+        <div class="avg-item">
+          <span class="material-symbols-rounded">edit_note</span>
+          <span>Studenten kiezen zelf anonieme of naamsvermelding bij publicaties</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE DEMO -->
+  <div class="section fade-in fade-in-d3">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">electric_bolt</span>
+      Connectie in actie
+    </div>
+
+    <div class="demo-layout">
+
+      <!-- LEFT: CONNECTION REQUEST FORM -->
+      <div class="demo-left">
+        <div class="neu-card">
+          <div class="contact-target">
+            <div class="contact-target-label">Je wilt contact opnemen met:</div>
+            <a href="profiel.html" class="link" style="text-decoration: none;">
+              <div class="profile-mini">
+                <div class="profile-avatar">JW</div>
+                <div class="profile-info">
+                  <div class="profile-name">Jeroen Willems</div>
+                  <div class="profile-role">Wijkmanager Klarendal · Gemeente Arnhem</div>
+                </div>
+                <span class="material-symbols-rounded" style="color:var(--text-muted);font-size:1.2rem">open_in_new</span>
+              </div>
+            </a>
+          </div>
+
+          <div class="neu-pressed" style="margin-bottom:1rem">
+            <textarea class="message-area" rows="5" placeholder="Schrijf je bericht...">Ik ben geïnteresseerd in samenwerking rondom gezondheidschecks in Klarendal. Als docent-onderzoeker aan de HAN zou ik graag...</textarea>
+          </div>
+
+          <div class="checkbox-row">
+            <label class="checkbox-item" onclick="toggleCheck(this)">
+              <div class="checkbox-neu checked">
+                <span class="material-symbols-rounded">check</span>
+              </div>
+              Ik begrijp dat alleen mijn naam, rol en organisatie worden gedeeld
+            </label>
+            <label class="checkbox-item" onclick="toggleCheck(this)">
+              <div class="checkbox-neu checked">
+                <span class="material-symbols-rounded">check</span>
+              </div>
+              Ik ga akkoord met de gebruiksvoorwaarden
+            </label>
+          </div>
+
+          <button class="btn btn-primary">
+            <span class="material-symbols-rounded" style="font-size:18px">send</span>
+            Verstuur connectieverzoek
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: INBOX -->
+      <div class="demo-right">
+        <div class="neu-card">
+          <div class="inbox-header">
+            <div class="inbox-title">Mijn connecties</div>
+            <span class="inbox-count">3</span>
+          </div>
+
+          <div class="thread-list">
+
+            <!-- Thread 1: active -->
+            <div class="thread-item neu-card-flat" id="threadIlse" onclick="openChat()">
+              <div class="thread-header">
+                <span class="status-dot active"></span>
+                <div class="profile-avatar" style="width:34px;height:34px;font-size:.75rem">IB</div>
+                <div class="profile-info">
+                  <div class="profile-name" style="font-size:.85rem">Ilse Brouwer</div>
+                  <div class="profile-role" style="font-size:.72rem">Docent HAN</div>
+                </div>
+              </div>
+              <div class="thread-preview">Goed idee! Laten we volgende week overleggen over de koppeling met mijn minor.</div>
+              <div class="thread-time">2 uur geleden</div>
+            </div>
+
+            <!-- Thread 2 -->
+            <div class="thread-item neu-card-flat">
+              <div class="thread-header">
+                <div class="profile-avatar" style="width:34px;height:34px;font-size:.75rem">NE</div>
+                <div class="profile-info">
+                  <div class="profile-name" style="font-size:.85rem">Nadia El Amrani</div>
+                  <div class="profile-role" style="font-size:.72rem">CDKM Arnhem</div>
+                </div>
+              </div>
+              <div class="thread-preview">Welkom bij het programma. Ik stuur je de planning.</div>
+              <div class="thread-time">Gisteren</div>
+            </div>
+
+            <!-- Thread 3: pending -->
+            <div class="thread-item neu-card-flat">
+              <div class="thread-header">
+                <span class="status-dot pending"></span>
+                <div class="profile-avatar" style="width:34px;height:34px;font-size:.75rem">SM</div>
+                <div class="profile-info">
+                  <div class="profile-name" style="font-size:.85rem">Sanne Mulder</div>
+                  <div class="profile-role" style="font-size:.72rem">Student HVHL</div>
+                </div>
+              </div>
+              <div class="thread-preview" style="font-style:italic">Connectieverzoek ontvangen</div>
+              <div class="thread-time">3 dagen geleden</div>
+              <div class="thread-actions">
+                <button class="btn btn-sm btn-primary">Accepteren</button>
+                <button class="btn btn-sm btn-outline">Afwijzen</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- CHAT MODAL -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeChat()">&times;</button>
+
+    <div class="chat-profile-header">
+      <div class="profile-avatar">IB</div>
+      <div>
+        <div class="chat-profile-name">Ilse Brouwer</div>
+        <div class="chat-profile-role">Docent Minor Overheid &amp; Beleid, HAN</div>
+      </div>
+    </div>
+    <div class="chat-connected text-xs text-muted">Geconnect sinds 15 januari 2026</div>
+
+    <div class="chat-messages">
+      <div class="chat-bubble them">
+        Hoi! Leuk dat je contact opneemt. Ik werk aan de Minor Overheid &amp; Beleid en we zoeken inderdaad samenwerking in Klarendal.
+        <div class="chat-timestamp">15 jan, 10:32</div>
+      </div>
+      <div class="chat-bubble me">
+        Super! We hebben een nieuw project rondom gezondheidschecks. Past dat bij jullie minor?
+        <div class="chat-timestamp">15 jan, 14:15</div>
+      </div>
+      <div class="chat-bubble them">
+        Goed idee! Laten we volgende week overleggen over de koppeling met mijn minor.
+        <div class="chat-timestamp">15 jan, 16:48</div>
+      </div>
+    </div>
+
+    <div class="chat-input-row">
+      <div class="neu-pressed" style="padding:.6rem 1rem">
+        <input type="text" placeholder="Schrijf een bericht...">
+      </div>
+      <button class="chat-send-btn">
+        <span class="material-symbols-rounded" style="font-size:20px">send</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openChat() {
+    document.getElementById('chatModal').classList.add('visible');
+  }
+  function closeChat() {
+    document.getElementById('chatModal').classList.remove('visible');
+  }
+  document.getElementById('chatModal').addEventListener('click', function(e) {
+    if (e.target === this) closeChat();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeChat();
+  });
+
+  function toggleCheck(label) {
+    var box = label.querySelector('.checkbox-neu');
+    box.classList.toggle('checked');
+  }
+</script>
+
+<script src="guide.js"></script>
+
+</body>
+</html>

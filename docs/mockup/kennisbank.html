@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kennisbank — Projojo 2.0</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
+  <style>
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .pub-card {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .pub-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .pub-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+    .pub-card-meta {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .pub-card-meta .material-symbols-rounded {
+      font-size: 1rem;
+    }
+    .pub-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin-top: auto;
+      padding-top: .35rem;
+    }
+
+    .result-count {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: .75rem;
+    }
+
+    .modal-badge {
+      margin-bottom: .5rem;
+    }
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.3;
+      margin-bottom: .75rem;
+    }
+    .modal-desc {
+      font-size: .95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+    .modal-section-label {
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      margin-bottom: .5rem;
+      margin-top: 1rem;
+    }
+    .modal-section-label:first-of-type {
+      margin-top: 0;
+    }
+    .modal-authors {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .modal-detail-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .9rem;
+      color: var(--text-secondary);
+    }
+    .modal-detail-row .material-symbols-rounded {
+      font-size: 1.15rem;
+      color: var(--primary);
+    }
+    .modal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .25rem;
+    }
+    .modal-actions {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: .75rem;
+    }
+
+    .card-hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="discovery.html" class="nav-logo">Projojo <span>2.0</span></a>
+    <ul class="nav-links">
+      <li><a href="discovery.html">Ontdek</a></li>
+      <li><a href="programma.html">Programma's</a></li>
+      <li><a href="kennisbank.html" class="active">Kennisbank</a></li>
+      <li><a href="courseprofiel.html">Courses</a></li>
+    </ul>
+    <div class="nav-profile">NE</div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="page-header fade-in">
+    <h1>Kennisbank</h1>
+    <p>Ontdek publicaties, rapporten en inzichten uit projecten</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar fade-in fade-in-d1" data-tooltip="Zoek op titel, auteur of trefwoord">
+    <span class="material-symbols-rounded search-icon">search</span>
+    <input type="text" id="searchInput" placeholder="Zoek in publicaties...">
+  </div>
+
+  <!-- FILTER CHIPS -->
+  <div class="filter-row fade-in fade-in-d2" id="filterChips">
+    <button class="chip active" data-filter="alles" data-tooltip="Filter op type publicatie of thema">Alles</button>
+    <button class="chip" data-filter-type="rapport">Rapport</button>
+    <button class="chip" data-filter-type="video">Video</button>
+    <button class="chip" data-filter-type="presentatie">Presentatie</button>
+    <button class="chip" data-filter-type="flyer">Flyer</button>
+    <button class="chip" data-filter-tag="gezondheid">Gezondheid &amp; Welzijn</button>
+    <button class="chip" data-filter-tag="kennisdeling">Kennisdeling</button>
+    <button class="chip" data-filter-tag="klarendal">Klarendal</button>
+  </div>
+
+  <!-- RESULT COUNT -->
+  <div class="result-count fade-in fade-in-d3" id="resultCount">6 publicaties gevonden</div>
+
+  <!-- PUBLICATION GRID -->
+  <div class="grid-3" id="pubGrid">
+
+    <!-- 1. Foto van de Wijk -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d3" data-type="rapport" data-tags="gezondheid,klarendal" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-rapport">Rapport</span>
+        <span class="text-xs text-muted">Februari 2025</span>
+      </div>
+      <div class="pub-card-title">Foto van de Wijk Klarendal — Visual Appraisal Rapport</div>
+      <p class="text-sm text-muted truncate-2">Visueel en kwalitatief onderzoek naar de leefomgeving, sociale cohesie en gezondheid in Klarendal door de ogen van HVHL-studenten.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Rosa van den Broek et al.
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Foto van de Wijk Klarendal</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+        <span class="tag tag-location">Klarendal</span>
+      </div>
+    </div>
+
+    <!-- 2. Omgaan met Verward Gedrag -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d4" data-type="rapport" data-tags="gezondheid,klarendal" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-rapport">Rapport</span>
+        <span class="text-xs text-muted">Maart 2025</span>
+      </div>
+      <div class="pub-card-title">Omgaan met Verward Gedrag — Beleidsaanbevelingen</div>
+      <p class="text-sm text-muted truncate-2">Kwalitatief onderzoek met beleidsaanbevelingen voor professionals en beleidsmakers over de omgang met verward gedrag in de wijk.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Sanne Mulder et al.
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Omgaan met Verward Gedrag in Klarendal</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+        <span class="tag tag-location">Klarendal</span>
+      </div>
+    </div>
+
+    <!-- 3. Niet-gebruik van Regelingen -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d5" data-type="rapport" data-tags="kennisdeling,klarendal" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-rapport">Rapport</span>
+        <span class="text-xs text-muted">April 2025</span>
+      </div>
+      <div class="pub-card-title">Niet-gebruik van Regelingen — Drempels en Oplossingen</div>
+      <p class="text-sm text-muted truncate-2">Onderzoek naar waarom bewoners bestaande regelingen niet benutten. Identificeert juridische, sociale en praktische drempels.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Rick Vermeer
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Niet-gebruik van Regelingen Klarendal</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-education">Kennisdeling</span>
+        <span class="tag tag-location">Klarendal</span>
+      </div>
+    </div>
+
+    <!-- 4. Studentensteunpunt -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d4" data-type="rapport" data-tags="kennisdeling,klarendal" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-rapport">Rapport</span>
+        <span class="text-xs text-muted">Juli 2025</span>
+      </div>
+      <div class="pub-card-title">Studentensteunpunt Klarendal — Haalbaarheidsonderzoek</div>
+      <p class="text-sm text-muted truncate-2">Haalbaarheidsonderzoek voor een structureel studentensteunpunt. Inventarisatie van behoeften bij bewoners en wijkprofessionals.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Sanne Mulder, Thijs van der Linden
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Studentensteunpunt Klarendal</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-education">Kennisdeling</span>
+        <span class="tag tag-location">Klarendal</span>
+      </div>
+    </div>
+
+    <!-- 5. Wijkportret Klarendal -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d5" data-type="video" data-tags="gezondheid,klarendal" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-video">Video</span>
+        <span class="text-xs text-muted">Februari 2025</span>
+      </div>
+      <div class="pub-card-title">Wijkportret Klarendal</div>
+      <p class="text-sm text-muted truncate-2">Korte documentaire die het leven in Klarendal vastlegt door de ogen van studenten. Interviews met bewoners en professionals.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Max Timmermans
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Foto van de Wijk Klarendal</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+        <span class="tag tag-location">Klarendal</span>
+      </div>
+    </div>
+
+    <!-- 6. Gezond in de Wijk -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d6" data-type="flyer" data-tags="gezondheid,klarendal" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-flyer">Flyer</span>
+        <span class="text-xs text-muted">November 2025</span>
+      </div>
+      <div class="pub-card-title">Gezond in de Wijk — Flyer Gezondheidschecks</div>
+      <p class="text-sm text-muted truncate-2">Informatieflyer voor bewoners over het aanbod van preventieve gezondheidschecks in Klarendal. Laagdrempelig en meertalig.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Merel Kuijpers
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Gezondheidschecks Klarendal</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+        <span class="tag tag-location">Klarendal</span>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal(event)">&times;</button>
+
+    <div class="modal-badge">
+      <span class="badge badge-rapport">Rapport</span>
+    </div>
+    <div class="modal-title">Foto van de Wijk Klarendal — Visual Appraisal Rapport</div>
+    <p class="modal-desc">Visueel en kwalitatief onderzoek naar de leefomgeving, sociale cohesie en gezondheid in Klarendal door de ogen van HVHL-studenten. Het rapport brengt in kaart hoe bewoners hun wijk ervaren op het gebied van veiligheid, groenvoorziening, sociale interactie en toegang tot voorzieningen. Studenten hebben de Visual Appraisal methode toegepast om systematisch observaties vast te leggen en te analyseren.</p>
+
+    <div class="modal-section-label">Auteurs</div>
+    <div class="modal-authors">
+      <div class="profile-mini">
+        <div class="profile-avatar">RB</div>
+        <div class="profile-info">
+          <div class="profile-name">Rosa van den Broek</div>
+          <div class="profile-role">Student Verpleegkunde · HVHL</div>
+        </div>
+      </div>
+      <div class="profile-mini">
+        <div class="profile-avatar">MT</div>
+        <div class="profile-info">
+          <div class="profile-name">Max Timmermans</div>
+          <div class="profile-role">Student Fysiotherapie · HVHL</div>
+        </div>
+      </div>
+      <div class="profile-mini">
+        <div class="profile-avatar">YB</div>
+        <div class="profile-info">
+          <div class="profile-name">Yara Bakker</div>
+          <div class="profile-role">Student Verpleegkunde · HVHL</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-section-label">Begeleiders</div>
+    <div class="modal-detail-row">
+      <span class="material-symbols-rounded">school</span>
+      Dr. Anke Visserman (HVHL)
+    </div>
+
+    <div class="modal-section-label">Project</div>
+    <div class="modal-detail-row">
+      <span class="material-symbols-rounded">folder</span>
+      <a href="#" class="link">Foto van de Wijk Klarendal</a>
+    </div>
+
+    <div class="modal-section-label">Programma</div>
+    <div class="modal-detail-row">
+      <span class="material-symbols-rounded">hub</span>
+      <a href="programma.html" class="link">City Deal Kennis Maken — Klarendal</a>
+    </div>
+
+    <div class="modal-section-label">Thema's</div>
+    <div class="modal-tags">
+      <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+      <span class="tag tag-location">Klarendal</span>
+    </div>
+
+    <div class="modal-section-label">Datum</div>
+    <div class="modal-detail-row">
+      <span class="material-symbols-rounded">calendar_month</span>
+      Februari 2025
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary">
+        <span class="material-symbols-rounded">download</span>
+        Download PDF
+      </button>
+      <button class="btn btn-outline">
+        <span class="material-symbols-rounded">share</span>
+        Delen
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var chips = document.querySelectorAll('#filterChips .chip');
+  var cards = document.querySelectorAll('#pubGrid .pub-card');
+  var countEl = document.getElementById('resultCount');
+  var searchInput = document.getElementById('searchInput');
+
+  function getActiveFilters() {
+    var types = [];
+    var tags = [];
+    var isAlles = false;
+    chips.forEach(function(c) {
+      if (!c.classList.contains('active')) return;
+      if (c.dataset.filter === 'alles') isAlles = true;
+      if (c.dataset.filterType) types.push(c.dataset.filterType);
+      if (c.dataset.filterTag) tags.push(c.dataset.filterTag);
+    });
+    return { types: types, tags: tags, isAlles: isAlles };
+  }
+
+  function filterCards() {
+    var f = getActiveFilters();
+    var query = searchInput.value.trim().toLowerCase();
+    var visible = 0;
+
+    cards.forEach(function(card) {
+      var cardType = card.dataset.type;
+      var cardTags = card.dataset.tags.split(',');
+      var cardText = card.textContent.toLowerCase();
+
+      var matchType = f.isAlles || f.types.length === 0 || f.types.indexOf(cardType) !== -1;
+      var matchTag = f.isAlles || f.tags.length === 0 || f.tags.some(function(t) { return cardTags.indexOf(t) !== -1; });
+      var matchSearch = !query || cardText.indexOf(query) !== -1;
+
+      if (matchType && matchTag && matchSearch) {
+        card.classList.remove('card-hidden');
+        visible++;
+      } else {
+        card.classList.add('card-hidden');
+      }
+    });
+
+    countEl.textContent = visible + ' publicatie' + (visible !== 1 ? 's' : '') + ' gevonden';
+  }
+
+  chips.forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      var isAllesChip = chip.dataset.filter === 'alles';
+
+      if (isAllesChip) {
+        chips.forEach(function(c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+      } else {
+        chips.forEach(function(c) {
+          if (c.dataset.filter === 'alles') c.classList.remove('active');
+        });
+        chip.classList.toggle('active');
+
+        var anyActive = Array.prototype.slice.call(chips).some(function(c) {
+          return c.classList.contains('active');
+        });
+        if (!anyActive) {
+          chips[0].classList.add('active');
+        }
+      }
+
+      filterCards();
+    });
+  });
+
+  searchInput.addEventListener('input', filterCards);
+
+  // Modal
+  var overlay = document.getElementById('modalOverlay');
+
+  window.openModal = function() {
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeModal = function(e) {
+    if (e.target === overlay || e.currentTarget.classList.contains('modal-close')) {
+      overlay.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+  };
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('visible')) {
+      overlay.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+  });
+})();
+</script>
+
+<script src="guide.js"></script>
+
+</body>
+</html>

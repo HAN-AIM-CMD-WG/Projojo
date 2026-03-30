@@ -2039,3 +2039,818 @@ insert
     $pt_theme_arn4 isa hasTheme (project: $p_arn2, theme: $theme5);
     $pt_theme_arn5 isa hasTheme (project: $p_arn3, theme: $theme6);
     $pt_theme_arn6 isa hasTheme (project: $p_arn3, theme: $theme3);
+
+    # ============================================
+    # Klarendal — City Deal Kennis Maken (CDKM)
+    # Twee lijnen: Positieve Gezondheid & Studentensteunpunt
+    # ============================================
+
+    # --- Theme: Gezondheid & Welzijn (nieuw) ---
+    $theme7 isa theme,
+        has id "theme-gezondheid",
+        has name "Gezondheid & Welzijn",
+        has sdgCode "SDG3",
+        has icon "health_and_safety",
+        has themeDescription "Projecten gericht op positieve gezondheid, welzijn en sociale veerkracht in wijken",
+        has color "#F44336",
+        has displayOrder 7;
+
+    # --- Skills: Klarendal-domein (sk16-sk24) ---
+    $sk16 isa skill,
+        has id "124525a1-186b-43c1-be98-e83dc255a677",
+        has name "Wijkanalyse",
+        has isPending false,
+        has createdAt 2025-03-10T09:00:00+0000;
+
+    $sk17 isa skill,
+        has id "d6f5f953-a73b-4984-b8d8-b4694f69701c",
+        has name "Positieve Gezondheid",
+        has isPending false,
+        has createdAt 2025-03-10T09:15:00+0000;
+
+    $sk18 isa skill,
+        has id "f0817f1f-11b4-404d-b50e-dbef1813b5ac",
+        has name "Kwalitatief Onderzoek",
+        has isPending false,
+        has createdAt 2025-03-10T09:30:00+0000;
+
+    $sk19 isa skill,
+        has id "fd4f0071-1fac-43bd-a6a7-0a78053ab7c3",
+        has name "Visual Appraisal",
+        has isPending false,
+        has createdAt 2025-03-10T09:45:00+0000;
+
+    $sk20 isa skill,
+        has id "eedd3937-b8c7-4634-a54b-5367bced7808",
+        has name "Beleidsadvies",
+        has isPending false,
+        has createdAt 2025-03-10T10:00:00+0000;
+
+    $sk21 isa skill,
+        has id "05e51b43-31a3-405e-b662-8d0ddff5e277",
+        has name "Sociaal-Juridische Dienstverlening",
+        has isPending false,
+        has createdAt 2025-03-10T10:15:00+0000;
+
+    $sk22 isa skill,
+        has id "7dda5cfe-fed5-4e6d-aab3-b81f8d52e2b5",
+        has name "Financiele Dienstverlening",
+        has isPending false,
+        has createdAt 2025-03-10T10:30:00+0000;
+
+    $sk23 isa skill,
+        has id "39b1f176-8357-4f87-b5b4-bb65bc357664",
+        has name "Zorg & Welzijn",
+        has isPending false,
+        has createdAt 2025-03-10T10:45:00+0000;
+
+    $sk24 isa skill,
+        has id "3b274ed8-74ce-4b8b-aa4f-c9f9bde8bb33",
+        has name "Gemeentelijk Beleid",
+        has isPending false,
+        has createdAt 2025-03-10T11:00:00+0000;
+
+    # --- Businesses ---
+
+    # CDKM Arnhem (City Deal Kennis Maken)
+    $b_cdkm isa business,
+        has id "d92d4401-6a6e-4399-92ec-47c2028a81df",
+        has name "CDKM Arnhem",
+        has description "City Deal Kennis Maken Arnhem verbindt hogescholen, gemeente en wijkprofessionals om studenten betekenisvol in te zetten in wijken. Studenten doen praktijkervaring op, professionals krijgen frisse perspectieven.",
+        has imagePath "logo_citydeal.png",
+        has location "Arnhem, Gelderland",
+        has sector "Overheid & Publiek",
+        has companySize "11-50",
+        has website "https://citydealkennismaken.nl";
+
+    # RijnStad (welzijnsorganisatie)
+    $b_rijnstad isa business,
+        has id "16a6d50d-0807-4b31-8515-265900366440",
+        has name "RijnStad",
+        has description "RijnStad is de welzijnsorganisatie van Arnhem. Wij ondersteunen bewoners bij zelfredzaamheid, participatie en sociale samenhang in de wijk.",
+        has imagePath "logo_placeholder.png",
+        has location "Arnhem, Gelderland",
+        has sector "Zorg & Welzijn",
+        has companySize "200+",
+        has website "https://rijnstad.nl";
+
+    # Volkshuisvesting Arnhem (woningcorporatie)
+    $b_volksh isa business,
+        has id "62ffa1f0-cfbf-4eb0-a14a-0dd135133d57",
+        has name "Volkshuisvesting Arnhem",
+        has description "Volkshuisvesting Arnhem is een woningcorporatie die zorgt voor betaalbare en leefbare woningen in Arnhemse wijken, met focus op duurzaamheid en wijkontwikkeling.",
+        has imagePath "logo_placeholder.png",
+        has location "Arnhem, Gelderland",
+        has sector "Vastgoed & Woningbouw",
+        has companySize "51-200",
+        has website "https://volkshuisvestingarnhem.nl";
+
+    # --- Supervisors ---
+
+    # Gemeente Arnhem supervisors (extra, $b_arnhem already exists)
+    $s_kl1 isa supervisor,
+        has id "65958356-38d1-48ad-826a-2a8607741ea4",
+        has fullName "Jeroen Willems (Wijkmanager Klarendal)",
+        has imagePath "supervisor_male.png",
+        has email "j.willems@arnhem.nl";
+
+    $s_kl2 isa supervisor,
+        has id "231c1af7-9181-4e64-b5e7-f4d4450f5e77",
+        has fullName "Frank Hendriksen (Beleidsadviseur Sociaal Domein)",
+        has imagePath "supervisor_male.png",
+        has email "f.hendriksen@arnhem.nl";
+
+    $s_kl3 isa supervisor,
+        has id "e44a707b-3b36-413f-9fbd-ac23e47dba5c",
+        has fullName "Anouk Peters (Wijkcoach Klarendal)",
+        has imagePath "supervisor_female.png",
+        has email "a.peters@arnhem.nl";
+
+    $s_kl4 isa supervisor,
+        has id "97ca9633-0b19-4098-9b2b-e22c30038eb7",
+        has fullName "Sandra van Dijk (Gebiedsmanager Klarendal)",
+        has imagePath "supervisor_female.png",
+        has email "s.vandijk@arnhem.nl";
+
+    $s_kl5 isa supervisor,
+        has id "231eb018-d68d-487c-a57c-f7e5c69c3a0c",
+        has fullName "Bas Vermeer (Gebiedsmanager Presikhaaf)",
+        has imagePath "supervisor_male.png",
+        has email "b.vermeer@arnhem.nl";
+
+    # CDKM Arnhem supervisor
+    $s_cdkm isa supervisor,
+        has id "318c69a2-b7b4-4475-9f49-2c618a168739",
+        has fullName "Nadia El Amrani (Projectleider CDKM)",
+        has imagePath "supervisor_female.png",
+        has email "n.elamrani@cdkm-arnhem.nl";
+
+    # RijnStad supervisor
+    $s_rijnstad isa supervisor,
+        has id "0936b7bc-64d2-4a72-aac6-807c1b3ec0be",
+        has fullName "Tom de Groot (Sociaal Werker)",
+        has imagePath "supervisor_male.png",
+        has email "t.degroot@rijnstad.nl";
+
+    # Volkshuisvesting supervisor
+    $s_volksh isa supervisor,
+        has id "f25d6a2b-800c-472f-8e54-8d321b1b59ff",
+        has fullName "Peter van Leeuwen (Wijkconsulent)",
+        has imagePath "supervisor_male.png",
+        has email "p.vanleeuwen@volkshuisvestingarnhem.nl";
+
+    # OAuth for Klarendal supervisors
+    $auth_kl1 isa oauthAuthentication (user: $s_kl1, provider: $op2),
+        has oauthSub "dad21d48-7b4a-42de-8f2f-bb54a4385f3e";
+    $auth_kl2 isa oauthAuthentication (user: $s_kl2, provider: $op2),
+        has oauthSub "0f99b428-73ed-469c-87b6-2f5eda611bb3";
+    $auth_kl3 isa oauthAuthentication (user: $s_kl3, provider: $op2),
+        has oauthSub "251f91c3-2695-4dab-9fcf-9b27a9f35ac3";
+    $auth_kl4 isa oauthAuthentication (user: $s_kl4, provider: $op2),
+        has oauthSub "d9b0f197-3e66-4926-8e88-999541a67659";
+    $auth_kl5 isa oauthAuthentication (user: $s_kl5, provider: $op2),
+        has oauthSub "de503cad-bc5c-459b-b471-eeb0d3cc43e1";
+    $auth_cdkm isa oauthAuthentication (user: $s_cdkm, provider: $op2),
+        has oauthSub "11143509-87cb-47c4-91df-9cc561ceca8f";
+    $auth_rijnstad isa oauthAuthentication (user: $s_rijnstad, provider: $op2),
+        has oauthSub "7a25e47a-b75f-462f-9e52-a0c2eea92685";
+    $auth_volksh isa oauthAuthentication (user: $s_volksh, provider: $op2),
+        has oauthSub "cf3fd44e-12ba-4d1c-9112-573c01369fdc";
+
+    # Manages relations
+    $m_kl1 isa manages (supervisor: $s_kl1, business: $b_arnhem),
+        has location "Klarendal, Arnhem";
+    $m_kl2 isa manages (supervisor: $s_kl2, business: $b_arnhem),
+        has location "Klarendal, Arnhem";
+    $m_kl3 isa manages (supervisor: $s_kl3, business: $b_arnhem),
+        has location "Klarendal, Arnhem";
+    $m_kl4 isa manages (supervisor: $s_kl4, business: $b_arnhem),
+        has location "Klarendal, Arnhem";
+    $m_kl5 isa manages (supervisor: $s_kl5, business: $b_arnhem),
+        has location "Presikhaaf, Arnhem";
+    $m_cdkm isa manages (supervisor: $s_cdkm, business: $b_cdkm),
+        has location "Arnhem";
+    $m_rijnstad isa manages (supervisor: $s_rijnstad, business: $b_rijnstad),
+        has location "Arnhem";
+    $m_volksh isa manages (supervisor: $s_volksh, business: $b_volksh),
+        has location "Arnhem";
+
+    # --- Teachers ---
+
+    $teach_kl1 isa teacher,
+        has id "c4ecaa5e-fe26-49cb-8e26-dba68ab39dd9",
+        has fullName "Dr. Karin de Boer (Docent HAN)",
+        has imagePath "teacher_profile.png",
+        has email "k.deboer@han.nl";
+
+    $teach_kl2 isa teacher,
+        has id "8d51d415-bdc3-4469-ae90-60f5e22b3ec2",
+        has fullName "Martijn Scholten (Docent HAN)",
+        has imagePath "teacher_profile.png",
+        has email "m.scholten@han.nl";
+
+    $teach_kl3 isa teacher,
+        has id "718612d1-5573-4d05-a321-3b20749a6d36",
+        has fullName "Ilse Brouwer (Docent Minor Overheid & Beleid)",
+        has imagePath "teacher_profile.png",
+        has email "i.brouwer@han.nl";
+
+    $teach_kl4 isa teacher,
+        has id "99ee179a-a718-4109-9b7a-e731e820581b",
+        has fullName "Pieter van Veen (Docent HAN)",
+        has imagePath "teacher_profile.png",
+        has email "p.vanveen@han.nl";
+
+    $teach_kl5 isa teacher,
+        has id "540a0ef6-5fdd-41eb-a45c-cdf1f6eaaaeb",
+        has fullName "Renate Dijkstra (Docent PZW)",
+        has imagePath "teacher_profile.png",
+        has email "r.dijkstra@han.nl";
+
+    $teach_kl6 isa teacher,
+        has id "03156468-cfc3-4ce1-9161-e50f56863581",
+        has fullName "Prof. dr. Marc Janssen (Lector HAN AFMR)",
+        has imagePath "teacher_profile.png",
+        has email "m.janssen@han.nl";
+
+    $teach_kl7 isa teacher,
+        has id "07a5d1d6-ddf2-4963-9bae-3150e48a45f9",
+        has fullName "Dr. Linda Kosters (Associate Lector AFMR)",
+        has imagePath "teacher_profile.png",
+        has email "l.kosters@han.nl";
+
+    $teach_kl8 isa teacher,
+        has id "5237585a-407e-415f-8262-fe93287fba37",
+        has fullName "Femke Aalbers (Docent HVHL)",
+        has imagePath "teacher_profile.png",
+        has email "f.aalbers@hvhl.nl";
+
+    $teach_kl9 isa teacher,
+        has id "c8dc804e-8c5d-4c43-8ed2-aa955746ebdb",
+        has fullName "Geert-Jan de Wit (Docent Management Leefomgeving)",
+        has imagePath "teacher_profile.png",
+        has email "gj.dewit@hvhl.nl";
+
+    $teach_kl10 isa teacher,
+        has id "9e70b5ea-2d67-4a91-a606-4836b165bf2e",
+        has fullName "Annemarie Vos (Docent Visual Appraisal)",
+        has imagePath "teacher_profile.png",
+        has email "a.vos@hvhl.nl";
+
+    # OAuth for teachers
+    $auth_tkl1 isa oauthAuthentication (user: $teach_kl1, provider: $op1),
+        has oauthSub "95286ed6-c604-49d0-a13a-fbf61ae15fa7";
+    $auth_tkl2 isa oauthAuthentication (user: $teach_kl2, provider: $op1),
+        has oauthSub "7eaf984c-2254-45a4-b568-983c20c65c36";
+    $auth_tkl3 isa oauthAuthentication (user: $teach_kl3, provider: $op1),
+        has oauthSub "dcb03fe8-d208-41fe-ae0d-8c68cc9f1e8e";
+    $auth_tkl4 isa oauthAuthentication (user: $teach_kl4, provider: $op1),
+        has oauthSub "97a83f49-1776-4061-8e70-a692a1f99877";
+    $auth_tkl5 isa oauthAuthentication (user: $teach_kl5, provider: $op1),
+        has oauthSub "e355355a-34fc-48f5-8c48-c792f7ce8a5d";
+    $auth_tkl6 isa oauthAuthentication (user: $teach_kl6, provider: $op1),
+        has oauthSub "9555fc2a-be46-4eaf-a8f0-e0ba843f2eb2";
+    $auth_tkl7 isa oauthAuthentication (user: $teach_kl7, provider: $op1),
+        has oauthSub "d242d8b3-3214-48fc-acb1-6a16f8c0fab0";
+    $auth_tkl8 isa oauthAuthentication (user: $teach_kl8, provider: $op1),
+        has oauthSub "cac6b249-4701-4b7d-8646-975ed10d2da5";
+    $auth_tkl9 isa oauthAuthentication (user: $teach_kl9, provider: $op1),
+        has oauthSub "7d59769a-6c6d-477b-8490-9b942b07145e";
+    $auth_tkl10 isa oauthAuthentication (user: $teach_kl10, provider: $op1),
+        has oauthSub "1382064b-3272-4a19-b254-f48796c619d3";
+
+    # --- Students ---
+
+    # HVHL students
+    $stu_kl1 isa student,
+        has id "8fe00541-00b0-4220-9df8-59aa107bff3e",
+        has fullName "Rosa van den Broek",
+        has imagePath "student_female.png",
+        has description "Derdejaars studente **Management van de Leefomgeving** bij HVHL. Geïnteresseerd in wijkanalyse en ruimtelijke ordening.",
+        has email "r.vandenbroek@student.hvhl.nl";
+
+    $stu_kl2 isa student,
+        has id "2557d996-262a-44a9-b465-31077776bfca",
+        has fullName "Max Timmermans",
+        has imagePath "student_male.png",
+        has description "Derdejaars student **Management van de Leefomgeving** bij HVHL met interesse in visuele onderzoeksmethoden.",
+        has email "m.timmermans@student.hvhl.nl";
+
+    $stu_kl3 isa student,
+        has id "96d47839-7a0b-428e-ac1b-62d65010276a",
+        has fullName "Yara Bakker",
+        has imagePath "student_female.png",
+        has description "Derdejaars studente **Management van de Leefomgeving** bij HVHL. Passie voor duurzame wijkontwikkeling.",
+        has email "y.bakker@student.hvhl.nl";
+
+    $stu_kl4 isa student,
+        has id "063d256b-d051-4006-9410-82a482b58055",
+        has fullName "Noah Hendriks",
+        has imagePath "student_male.png",
+        has description "Vierdejaars student **HVHL** met een eigen projectidee voor wijkontwikkeling in Klarendal.",
+        has email "n.hendriks@student.hvhl.nl";
+
+    # HAN students
+    $stu_kl5 isa student,
+        has id "508d69d4-52db-4576-9400-f2968efb910c",
+        has fullName "Sanne Mulder",
+        has imagePath "student_female.png",
+        has description "Vierdejaars studente **Bestuurskunde** aan de HAN. Minor Overheid, Bestuur en Beleid. Ervaring met kwalitatief onderzoek.",
+        has email "s.mulder@student.han.nl";
+
+    $stu_kl6 isa student,
+        has id "a3a9d993-a72d-49a3-8f71-0abff829d526",
+        has fullName "Thijs van der Linden",
+        has imagePath "student_male.png",
+        has description "Vierdejaars student **Bestuurskunde** aan de HAN. Geïnteresseerd in lokaal sociaal beleid en wijkgericht werken.",
+        has email "t.vanderlinden@student.han.nl";
+
+    $stu_kl7 isa student,
+        has id "826f1d91-531a-4d15-a801-12cf2b2f2443",
+        has fullName "Fleur de Jong",
+        has imagePath "student_female.png",
+        has description "Derdejaars studente aan de HAN in de **Minor Overheid, Bestuur en Beleid**. Focus op zorg en veiligheid.",
+        has email "f.dejong@student.han.nl";
+
+    $stu_kl8 isa student,
+        has id "9a2986fd-3ac2-441d-8c6f-c417e4f37460",
+        has fullName "Rick Vermeer",
+        has imagePath "student_male.png",
+        has description "Afstudeerder **HBO Rechten** aan de HAN. Onderzoekt niet-gebruik van regelingen in kwetsbare wijken.",
+        has email "r.vermeer@student.han.nl";
+
+    $stu_kl9 isa student,
+        has id "9e17873a-dc09-48da-bed2-b656dde42402",
+        has fullName "Merel Kuijpers",
+        has imagePath "student_female.png",
+        has description "Afstudeerder **Verpleegkunde** aan de HAN. Richt zich op preventieve gezondheidschecks in de wijk.",
+        has email "m.kuijpers@student.han.nl";
+
+    $stu_kl10 isa student,
+        has id "c6c95d50-7bd2-4d0e-b6f9-96d52e45e0d4",
+        has fullName "Bram Schouten",
+        has imagePath "student_male.png",
+        has description "Afstudeerder **Toegepaste Gerontologie** aan de HAN. Interesse in gezondheidsbevordering bij ouderen.",
+        has email "b.schouten@student.han.nl";
+
+    # OU student
+    $stu_kl11 isa student,
+        has id "bfc10268-78d4-4810-b8e5-85d48c9b9cc2",
+        has fullName "Charlotte Gerritsen",
+        has imagePath "student_female.png",
+        has description "Masterstudente **Psychologie** aan de Open Universiteit. Onderzoekt zingeving bij specifieke doelgroepen in Klarendal.",
+        has email "c.gerritsen@student.ou.nl";
+
+    # OAuth for students
+    $auth_skl1 isa oauthAuthentication (user: $stu_kl1, provider: $op1),
+        has oauthSub "b0c2d5a6-6ee7-49bb-b8dd-b56feacc8727";
+    $auth_skl2 isa oauthAuthentication (user: $stu_kl2, provider: $op1),
+        has oauthSub "626aab5e-93ff-4eb6-b528-f8eeb826ecc0";
+    $auth_skl3 isa oauthAuthentication (user: $stu_kl3, provider: $op1),
+        has oauthSub "0a9679ad-62a2-40b2-ab85-d6293538e56b";
+    $auth_skl4 isa oauthAuthentication (user: $stu_kl4, provider: $op1),
+        has oauthSub "424a7963-00b9-4674-852c-50636de7ac6c";
+    $auth_skl5 isa oauthAuthentication (user: $stu_kl5, provider: $op1),
+        has oauthSub "5926434e-a734-44e8-85c7-1f7dae4c9cda";
+    $auth_skl6 isa oauthAuthentication (user: $stu_kl6, provider: $op1),
+        has oauthSub "077588b2-d5b4-4c74-a398-5f8c7139f0fd";
+    $auth_skl7 isa oauthAuthentication (user: $stu_kl7, provider: $op1),
+        has oauthSub "c6913031-7122-4287-b172-97dd313743be";
+    $auth_skl8 isa oauthAuthentication (user: $stu_kl8, provider: $op1),
+        has oauthSub "3ad1f0eb-4268-4f7a-8369-06a77d38b87e";
+    $auth_skl9 isa oauthAuthentication (user: $stu_kl9, provider: $op1),
+        has oauthSub "89d4faeb-6508-496e-bcd7-5f8bc1d5bf61";
+    $auth_skl10 isa oauthAuthentication (user: $stu_kl10, provider: $op1),
+        has oauthSub "4bce4889-ab93-4fa2-85fe-99c8a27395b5";
+    $auth_skl11 isa oauthAuthentication (user: $stu_kl11, provider: $op1),
+        has oauthSub "8bc94d68-eb56-46d7-8929-667d35591285";
+
+    # Student skills
+    $stsk_kl1 isa hasSkill (student: $stu_kl1, skill: $sk16),
+        has description "Wijkanalyse geleerd tijdens veldwerk Management Leefomgeving";
+    $stsk_kl2 isa hasSkill (student: $stu_kl1, skill: $sk19),
+        has description "Visual appraisal methodes toegepast in keuzeblok";
+    $stsk_kl3 isa hasSkill (student: $stu_kl2, skill: $sk16),
+        has description "Wijkanalyse als onderdeel van opleiding HVHL";
+    $stsk_kl4 isa hasSkill (student: $stu_kl2, skill: $sk19),
+        has description "Visuele onderzoeksmethoden in de praktijk";
+    $stsk_kl5 isa hasSkill (student: $stu_kl3, skill: $sk16),
+        has description "Wijkanalyse en duurzame ontwikkeling";
+    $stsk_kl6 isa hasSkill (student: $stu_kl4, skill: $sk16),
+        has description "Wijkontwikkeling als specialisatie";
+    $stsk_kl7 isa hasSkill (student: $stu_kl5, skill: $sk18),
+        has description "Kwalitatief onderzoek tijdens minor Overheid & Beleid";
+    $stsk_kl8 isa hasSkill (student: $stu_kl5, skill: $sk20),
+        has description "Beleidsadvies in bestuurskunde opleiding";
+    $stsk_kl9 isa hasSkill (student: $stu_kl6, skill: $sk18),
+        has description "Onderzoeksmethoden toegepast in wijkcontext";
+    $stsk_kl10 isa hasSkill (student: $stu_kl6, skill: $sk24),
+        has description "Gemeentelijk beleid als focus in bestuurskunde";
+    $stsk_kl11 isa hasSkill (student: $stu_kl7, skill: $sk18),
+        has description "Kwalitatief onderzoek in de minor";
+    $stsk_kl12 isa hasSkill (student: $stu_kl7, skill: $sk23),
+        has description "Zorg & welzijn als nevenrichting";
+    $stsk_kl13 isa hasSkill (student: $stu_kl8, skill: $sk21),
+        has description "Sociaal-juridische dienstverlening in HBO Rechten";
+    $stsk_kl14 isa hasSkill (student: $stu_kl8, skill: $sk17),
+        has description "Positieve gezondheid als kader voor regelingenonderzoek";
+    $stsk_kl15 isa hasSkill (student: $stu_kl9, skill: $sk17),
+        has description "Positieve gezondheid als verpleegkundig kader";
+    $stsk_kl16 isa hasSkill (student: $stu_kl9, skill: $sk23),
+        has description "Zorg & welzijn in de wijk";
+    $stsk_kl17 isa hasSkill (student: $stu_kl10, skill: $sk17),
+        has description "Gezondheidsbevordering bij ouderen";
+    $stsk_kl18 isa hasSkill (student: $stu_kl10, skill: $sk18),
+        has description "Toegepast onderzoek in gerontologie";
+    $stsk_kl19 isa hasSkill (student: $stu_kl11, skill: $sk18),
+        has description "Wetenschappelijk onderzoek in psychologie";
+    $stsk_kl20 isa hasSkill (student: $stu_kl11, skill: $sk23),
+        has description "Zingeving en welzijn als onderzoeksthema";
+
+    # ============================================
+    # Klarendal Projecten — Lijn 1: Positieve Gezondheid
+    # ============================================
+
+    # Project 1: Foto van de Wijk Klarendal
+    $p_kl1 isa project,
+        has id "37f8e1a7-4cbd-4e1a-b980-19adaeb36176",
+        has name "Foto van de Wijk Klarendal",
+        has description "Studenten maken een 'foto van de wijk' — een visueel en kwalitatief onderzoek naar de situatie in Klarendal door de ogen van studenten. Met visual appraisal methoden brengen zij de leefomgeving, sociale cohesie en gezondheid in kaart.",
+        has imagePath "project_monitoring.png",
+        has createdAt 2024-09-15T09:00:00+0000,
+        has startDate 2024-10-01T00:00:00+0000,
+        has endDate 2025-02-28T23:59:00+0000,
+        has isPublic true;
+
+    # Project 2: Omgaan met Verward Gedrag
+    $p_kl2 isa project,
+        has id "48a195a1-b849-4a07-b036-458f61a1e04e",
+        has name "Omgaan met Verward Gedrag in Klarendal",
+        has description "Onderzoek naar hoe wijkprofessionals en bewoners in Klarendal omgaan met verward gedrag. Studenten van de HAN minor Overheid, Bestuur en Beleid voeren kwalitatief onderzoek uit en komen met beleidsaanbevelingen.",
+        has imagePath "project_sustainability.png",
+        has createdAt 2024-09-20T10:00:00+0000,
+        has startDate 2024-10-15T00:00:00+0000,
+        has endDate 2025-03-31T23:59:00+0000,
+        has isPublic true;
+
+    # Project 3: Niet-gebruik van Regelingen Klarendal
+    $p_kl3 isa project,
+        has id "48ae120a-4f0d-41c2-84f0-052fdb0353d1",
+        has name "Niet-gebruik van Regelingen Klarendal",
+        has description "Stageonderzoek naar waarom bewoners van Klarendal bestaande regelingen en voorzieningen niet benutten. Vanuit het lectoraat HBO Rechten wordt onderzocht welke drempels er zijn en hoe de toegankelijkheid verbeterd kan worden.",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2024-10-01T09:00:00+0000,
+        has startDate 2024-10-15T00:00:00+0000,
+        has endDate 2025-04-30T23:59:00+0000,
+        has isPublic true;
+
+    # Project 4: Wijkontwikkeling Klarendal
+    $p_kl4 isa project,
+        has id "75987b0b-93ab-4d32-a07e-5f9948f7321e",
+        has name "Wijkontwikkeling Klarendal",
+        has description "Studentgericht initiatief voor wijkontwikkeling in Klarendal. Een HVHL-student ontwikkelt samen met gemeente en bewoners een plan voor duurzame verbetering van de leefomgeving in de wijk.",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-01-10T09:00:00+0000,
+        has startDate 2025-02-01T00:00:00+0000,
+        has endDate 2025-07-31T23:59:00+0000,
+        has isPublic true;
+
+    # Project 5: Gezondheidschecks Klarendal
+    $p_kl5 isa project,
+        has id "c35ea1d7-e878-4bde-8594-0403b510f461",
+        has name "Gezondheidschecks Klarendal",
+        has description "Afstudeeropdracht rondom het uitvoeren en evalueren van preventieve gezondheidschecks in Klarendal. Studenten werken samen met de gemeente en wijkprofessionals aan een laagdrempelig gezondheidsaanbod voor bewoners.",
+        has imagePath "project_monitoring.png",
+        has createdAt 2025-09-01T09:00:00+0000,
+        has startDate 2025-09-15T00:00:00+0000,
+        has endDate 2026-03-31T23:59:00+0000,
+        has isPublic true;
+
+    # Project 6: Zingeving en Doelgroepen Klarendal
+    $p_kl6 isa project,
+        has id "02c145de-a967-4250-95ea-b208e03f5e20",
+        has name "Zingeving en Doelgroepen Klarendal",
+        has description "Onderzoeksopdracht van een Open Universiteit studente naar zingeving bij specifieke doelgroepen in Klarendal. Het onderzoek richt zich op hoe bewoners betekenis ervaren en hoe dit bijdraagt aan positieve gezondheid.",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-09-10T10:00:00+0000,
+        has startDate 2025-10-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000,
+        has isPublic true;
+
+    # ============================================
+    # Klarendal Projecten — Lijn 2: Studentensteunpunt
+    # ============================================
+
+    # Project 7: Studentensteunpunt Klarendal
+    $p_kl7 isa project,
+        has id "e55d547b-4a09-43c3-b007-123c47758a60",
+        has name "Studentensteunpunt Klarendal",
+        has description "Verkenning en opzet van een studentensteunpunt in Klarendal. HAN-studenten Finance, Tax and Advice onderzoeken hoe een steunpunt bewoners kan helpen met financiële vragen, toeslagen en schuldenpreventie.",
+        has imagePath "project_mobile_app.png",
+        has createdAt 2025-02-01T09:00:00+0000,
+        has startDate 2025-02-15T00:00:00+0000,
+        has endDate 2025-07-31T23:59:00+0000,
+        has isPublic true;
+
+    # Project 8: Studentensteunpunt Vervolg — Klarendal & Presikhaaf
+    $p_kl8 isa project,
+        has id "033cc431-ade5-476a-9620-38b52c7d6c37",
+        has name "Studentensteunpunt Vervolg — Klarendal & Presikhaaf",
+        has description "Vervolg op het studentensteunpunt-onderzoek met verbreding naar Presikhaaf. In samenwerking met gemeente, Volkshuisvesting, RijnStad en meerdere HAN-opleidingen wordt gewerkt aan een structureel steunpunt voor bewoners.",
+        has imagePath "project_sustainability.png",
+        has createdAt 2025-09-01T10:00:00+0000,
+        has startDate 2025-09-15T00:00:00+0000,
+        has endDate 2026-06-30T23:59:00+0000,
+        has isPublic true;
+
+    # --- Tasks ---
+
+    # Tasks Lijn 1
+    $t_kl1 isa task,
+        has id "7c03897b-4747-48a3-93e5-630f3056ac1d",
+        has name "Wijkfotograaf & Visual Appraisal",
+        has description "Maak een visueel portret van wijk Klarendal met visual appraisal methoden. Documenteer de leefomgeving, ontmoetingsplekken en sociale dynamiek. Lever een rapport, presentatie en beeldmateriaal op.",
+        has totalNeeded 3,
+        has createdAt 2024-09-15T10:00:00+0000,
+        has startDate 2024-10-01T00:00:00+0000,
+        has endDate 2025-02-28T23:59:00+0000;
+
+    $t_kl2 isa task,
+        has id "6995cfc2-fc98-4be2-b5fc-e381f1f9277d",
+        has name "Onderzoeker Verward Gedrag",
+        has description "Voer kwalitatief onderzoek uit naar hoe bewoners en professionals in Klarendal omgaan met verward gedrag. Interview betrokkenen en schrijf een rapport met beleidsaanbevelingen.",
+        has totalNeeded 3,
+        has createdAt 2024-09-20T10:30:00+0000,
+        has startDate 2024-10-15T00:00:00+0000,
+        has endDate 2025-03-31T23:59:00+0000;
+
+    $t_kl3 isa task,
+        has id "a1e2d3c4-b5f6-4789-abcd-111111111111",
+        has name "Onderzoeker Niet-gebruik Regelingen",
+        has description "Onderzoek waarom bewoners van Klarendal bestaande regelingen en voorzieningen niet benutten. Breng drempels in kaart en doe aanbevelingen voor betere toegankelijkheid.",
+        has totalNeeded 1,
+        has createdAt 2024-10-01T09:30:00+0000,
+        has startDate 2024-10-15T00:00:00+0000,
+        has endDate 2025-04-30T23:59:00+0000;
+
+    $t_kl4 isa task,
+        has id "b2f3e4d5-c6a7-4890-bcde-222222222222",
+        has name "Wijkontwikkelaar Klarendal",
+        has description "Ontwikkel samen met bewoners en gemeente een plan voor duurzame verbetering van de leefomgeving in Klarendal. Combineer ruimtelijke analyse met bewonersparticipatie.",
+        has totalNeeded 1,
+        has createdAt 2025-01-10T09:30:00+0000,
+        has startDate 2025-02-01T00:00:00+0000,
+        has endDate 2025-07-31T23:59:00+0000;
+
+    $t_kl5 isa task,
+        has id "c3a4b5c6-d7e8-4901-cdef-333333333333",
+        has name "Uitvoerder Gezondheidschecks",
+        has description "Voer preventieve gezondheidschecks uit bij bewoners van Klarendal. Evalueer de resultaten en doe aanbevelingen voor een structureel gezondheidsaanbod in de wijk.",
+        has totalNeeded 3,
+        has createdAt 2025-09-01T10:00:00+0000,
+        has startDate 2025-09-15T00:00:00+0000,
+        has endDate 2026-03-31T23:59:00+0000;
+
+    $t_kl6 isa task,
+        has id "d4b5c6d7-e8f9-4012-defa-444444444444",
+        has name "Onderzoeker Zingeving",
+        has description "Onderzoek hoe bewoners van Klarendal zingeving ervaren en hoe dit bijdraagt aan positieve gezondheid. Richt je op specifieke doelgroepen en lever een wetenschappelijk onderbouwd rapport op.",
+        has totalNeeded 1,
+        has createdAt 2025-09-10T10:30:00+0000,
+        has startDate 2025-10-01T00:00:00+0000,
+        has endDate 2026-04-30T23:59:00+0000;
+
+    # Tasks Lijn 2
+    $t_kl7 isa task,
+        has id "e5c6d7e8-f9a0-4123-efab-555555555555",
+        has name "Onderzoeker Studentensteunpunt",
+        has description "Onderzoek de haalbaarheid en inrichting van een studentensteunpunt in Klarendal. Inventariseer behoeften bij bewoners en professionals. Lever een afstudeerrapport op met concrete aanbevelingen.",
+        has totalNeeded 2,
+        has createdAt 2025-02-01T09:30:00+0000,
+        has startDate 2025-02-15T00:00:00+0000,
+        has endDate 2025-07-31T23:59:00+0000;
+
+    $t_kl8 isa task,
+        has id "f6d7e8f9-a0b1-4234-fabc-666666666666",
+        has name "Coördinator Steunpunt Vervolg",
+        has description "Werk mee aan de opzet van een structureel studentensteunpunt in Klarendal en Presikhaaf. Coördineer met gemeente, Volkshuisvesting, RijnStad en bewoners. Multidisciplinaire samenwerking.",
+        has totalNeeded 2,
+        has createdAt 2025-09-01T10:30:00+0000,
+        has startDate 2025-09-15T00:00:00+0000,
+        has endDate 2026-06-30T23:59:00+0000;
+
+    # --- Project creation relations ---
+    $c_kl1 isa creates (supervisor: $s_kl1, project: $p_kl1),
+        has createdAt 2024-09-15T09:00:00+0000;
+    $c_kl2 isa creates (supervisor: $s_kl2, project: $p_kl2),
+        has createdAt 2024-09-20T10:00:00+0000;
+    $c_kl3 isa creates (supervisor: $s_kl1, project: $p_kl3),
+        has createdAt 2024-10-01T09:00:00+0000;
+    $c_kl4 isa creates (supervisor: $s_kl4, project: $p_kl4),
+        has createdAt 2025-01-10T09:00:00+0000;
+    $c_kl5 isa creates (supervisor: $s_kl1, project: $p_kl5),
+        has createdAt 2025-09-01T09:00:00+0000;
+    $c_kl6 isa creates (supervisor: $s_kl2, project: $p_kl6),
+        has createdAt 2025-09-10T10:00:00+0000;
+    $c_kl7 isa creates (supervisor: $s_cdkm, project: $p_kl7),
+        has createdAt 2025-02-01T09:00:00+0000;
+    $c_kl8 isa creates (supervisor: $s_cdkm, project: $p_kl8),
+        has createdAt 2025-09-01T10:00:00+0000;
+
+    # --- Business-project relations ---
+    # Lijn 1 under Gemeente Arnhem
+    $bp_kl1 isa hasProjects (business: $b_arnhem, project: $p_kl1);
+    $bp_kl2 isa hasProjects (business: $b_arnhem, project: $p_kl2);
+    $bp_kl3 isa hasProjects (business: $b_arnhem, project: $p_kl3);
+    $bp_kl4 isa hasProjects (business: $b_arnhem, project: $p_kl4);
+    $bp_kl5 isa hasProjects (business: $b_arnhem, project: $p_kl5);
+    $bp_kl6 isa hasProjects (business: $b_arnhem, project: $p_kl6);
+    # Lijn 2 under CDKM Arnhem
+    $bp_kl7 isa hasProjects (business: $b_cdkm, project: $p_kl7);
+    $bp_kl8 isa hasProjects (business: $b_cdkm, project: $p_kl8);
+
+    # --- Project-task relations ---
+    $pt_kl1 isa containsTask (project: $p_kl1, task: $t_kl1);
+    $pt_kl2 isa containsTask (project: $p_kl2, task: $t_kl2);
+    $pt_kl3 isa containsTask (project: $p_kl3, task: $t_kl3);
+    $pt_kl4 isa containsTask (project: $p_kl4, task: $t_kl4);
+    $pt_kl5 isa containsTask (project: $p_kl5, task: $t_kl5);
+    $pt_kl6 isa containsTask (project: $p_kl6, task: $t_kl6);
+    $pt_kl7 isa containsTask (project: $p_kl7, task: $t_kl7);
+    $pt_kl8 isa containsTask (project: $p_kl8, task: $t_kl8);
+
+    # --- Task-skill relations ---
+    $ts_kl1 isa requiresSkill (task: $t_kl1, skill: $sk16);
+    $ts_kl2 isa requiresSkill (task: $t_kl1, skill: $sk19);
+    $ts_kl3 isa requiresSkill (task: $t_kl2, skill: $sk18);
+    $ts_kl4 isa requiresSkill (task: $t_kl2, skill: $sk20);
+    $ts_kl5 isa requiresSkill (task: $t_kl3, skill: $sk21);
+    $ts_kl6 isa requiresSkill (task: $t_kl3, skill: $sk18);
+    $ts_kl7 isa requiresSkill (task: $t_kl4, skill: $sk16);
+    $ts_kl8 isa requiresSkill (task: $t_kl5, skill: $sk17);
+    $ts_kl9 isa requiresSkill (task: $t_kl5, skill: $sk23);
+    $ts_kl10 isa requiresSkill (task: $t_kl6, skill: $sk18);
+    $ts_kl11 isa requiresSkill (task: $t_kl6, skill: $sk23);
+    $ts_kl12 isa requiresSkill (task: $t_kl7, skill: $sk22);
+    $ts_kl13 isa requiresSkill (task: $t_kl7, skill: $sk21);
+    $ts_kl14 isa requiresSkill (task: $t_kl8, skill: $sk22);
+    $ts_kl15 isa requiresSkill (task: $t_kl8, skill: $sk24);
+
+    # --- Theme relations ---
+    # Lijn 1: Gezondheid & Welzijn + Kennisdeling
+    $pt_theme_kl1 isa hasTheme (project: $p_kl1, theme: $theme7);
+    $pt_theme_kl2 isa hasTheme (project: $p_kl2, theme: $theme7);
+    $pt_theme_kl3 isa hasTheme (project: $p_kl3, theme: $theme7);
+    $pt_theme_kl4 isa hasTheme (project: $p_kl3, theme: $theme6);
+    $pt_theme_kl5 isa hasTheme (project: $p_kl4, theme: $theme7);
+    $pt_theme_kl6 isa hasTheme (project: $p_kl5, theme: $theme7);
+    $pt_theme_kl7 isa hasTheme (project: $p_kl6, theme: $theme7);
+    # Lijn 2: Kennisdeling
+    $pt_theme_kl8 isa hasTheme (project: $p_kl7, theme: $theme6);
+    $pt_theme_kl9 isa hasTheme (project: $p_kl8, theme: $theme6);
+    $pt_theme_kl10 isa hasTheme (project: $p_kl8, theme: $theme7);
+
+    # --- Student registrations ---
+
+    # Project 1: Foto van de Wijk (afgerond)
+    $reg_kl1 isa registersForTask (student: $stu_kl1, task: $t_kl1),
+        has description "Ik wil graag bijdragen aan het visueel in kaart brengen van de wijk. Visual appraisal past perfect bij mijn opleiding.",
+        has isAccepted true,
+        has response "Welkom Rosa, je ervaring met wijkanalyse is precies wat we zoeken.",
+        has createdAt 2024-09-20T14:00:00+0000,
+        has requestedAt 2024-09-20T14:00:00+0000,
+        has acceptedAt 2024-09-25T10:00:00+0000,
+        has startedAt 2024-10-01T09:00:00+0000,
+        has completedAt 2025-02-15T16:00:00+0000;
+
+    $reg_kl2 isa registersForTask (student: $stu_kl2, task: $t_kl1),
+        has description "Visual appraisal is een methode die ik graag in de praktijk wil toepassen. Klarendal lijkt een interessante wijk.",
+        has isAccepted true,
+        has response "Goed dat je je aanmeldt Max, samen met je medestudenten vormen jullie een sterk team.",
+        has createdAt 2024-09-21T10:00:00+0000,
+        has requestedAt 2024-09-21T10:00:00+0000,
+        has acceptedAt 2024-09-25T10:15:00+0000,
+        has startedAt 2024-10-01T09:00:00+0000,
+        has completedAt 2025-02-15T16:00:00+0000;
+
+    $reg_kl3 isa registersForTask (student: $stu_kl3, task: $t_kl1),
+        has description "Ik ben geïnteresseerd in duurzame wijkontwikkeling en wil graag meedoen aan dit visueel onderzoek.",
+        has isAccepted true,
+        has response "Welkom Yara, je passie voor duurzaamheid voegt waarde toe aan het team.",
+        has createdAt 2024-09-22T09:00:00+0000,
+        has requestedAt 2024-09-22T09:00:00+0000,
+        has acceptedAt 2024-09-25T10:30:00+0000,
+        has startedAt 2024-10-01T09:00:00+0000,
+        has completedAt 2025-02-15T16:00:00+0000;
+
+    # Project 2: Verward Gedrag (afgerond)
+    $reg_kl4 isa registersForTask (student: $stu_kl5, task: $t_kl2),
+        has description "Dit onderwerp sluit aan bij mijn minor. Ik heb ervaring met kwalitatief onderzoek en interviewtechnieken.",
+        has isAccepted true,
+        has response "Fijn Sanne, je onderzoekservaring is waardevol voor dit project.",
+        has createdAt 2024-09-25T11:00:00+0000,
+        has requestedAt 2024-09-25T11:00:00+0000,
+        has acceptedAt 2024-09-30T09:00:00+0000,
+        has startedAt 2024-10-15T09:00:00+0000,
+        has completedAt 2025-03-15T16:00:00+0000;
+
+    $reg_kl5 isa registersForTask (student: $stu_kl6, task: $t_kl2),
+        has description "Lokaal sociaal beleid is mijn interesse. Dit project biedt mij de kans om theorie in de praktijk te brengen.",
+        has isAccepted true,
+        has response "Welkom Thijs, je beleidsmatige blik is een goede aanvulling.",
+        has createdAt 2024-09-26T10:00:00+0000,
+        has requestedAt 2024-09-26T10:00:00+0000,
+        has acceptedAt 2024-09-30T09:15:00+0000,
+        has startedAt 2024-10-15T09:00:00+0000,
+        has completedAt 2025-03-15T16:00:00+0000;
+
+    $reg_kl6 isa registersForTask (student: $stu_kl7, task: $t_kl2),
+        has description "Zorg en veiligheid zijn mijn focusgebieden. Verward gedrag is een thema waar ik meer over wil leren.",
+        has isAccepted true,
+        has response "Goed dat je meedoet Fleur, je achtergrond in zorg versterkt het team.",
+        has createdAt 2024-09-27T09:00:00+0000,
+        has requestedAt 2024-09-27T09:00:00+0000,
+        has acceptedAt 2024-09-30T09:30:00+0000,
+        has startedAt 2024-10-15T09:00:00+0000,
+        has completedAt 2025-03-15T16:00:00+0000;
+
+    # Project 3: Niet-gebruik Regelingen (afgerond)
+    $reg_kl7 isa registersForTask (student: $stu_kl8, task: $t_kl3),
+        has description "Als HBO Rechten student wil ik onderzoeken waarom regelingen niet worden benut. Dit is relevant voor mijn afstuderen.",
+        has isAccepted true,
+        has response "Uitstekend Rick, jouw juridische achtergrond is precies wat we nodig hebben.",
+        has createdAt 2024-10-05T10:00:00+0000,
+        has requestedAt 2024-10-05T10:00:00+0000,
+        has acceptedAt 2024-10-10T09:00:00+0000,
+        has startedAt 2024-10-15T09:00:00+0000,
+        has completedAt 2025-04-15T16:00:00+0000;
+
+    # Project 4: Wijkontwikkeling (afgerond)
+    $reg_kl8 isa registersForTask (student: $stu_kl4, task: $t_kl4),
+        has description "Ik heb een eigen projectidee voor wijkontwikkeling in Klarendal en wil dit graag uitwerken in samenwerking met de gemeente.",
+        has isAccepted true,
+        has response "Geweldig initiatief Noah! We koppelen je aan de gebiedsmanager voor begeleiding.",
+        has createdAt 2025-01-15T10:00:00+0000,
+        has requestedAt 2025-01-15T10:00:00+0000,
+        has acceptedAt 2025-01-20T09:00:00+0000,
+        has startedAt 2025-02-01T09:00:00+0000,
+        has completedAt 2025-07-01T16:00:00+0000;
+
+    # Project 5: Gezondheidschecks (lopend)
+    $reg_kl9 isa registersForTask (student: $stu_kl8, task: $t_kl5),
+        has description "Na mijn stage over regelingen wil ik nu gezondheidschecks helpen opzetten. Ik ken de wijk al goed.",
+        has isAccepted true,
+        has response "Mooi dat je terugkomt Rick, je kennis van de wijk is waardevol.",
+        has createdAt 2025-09-05T10:00:00+0000,
+        has requestedAt 2025-09-05T10:00:00+0000,
+        has acceptedAt 2025-09-10T09:00:00+0000,
+        has startedAt 2025-09-15T09:00:00+0000;
+
+    $reg_kl10 isa registersForTask (student: $stu_kl9, task: $t_kl5),
+        has description "Als verpleegkundestudent wil ik bijdragen aan preventieve gezondheidszorg in de wijk.",
+        has isAccepted true,
+        has response "Welkom Merel, je verpleegkundige achtergrond is essentieel voor dit project.",
+        has createdAt 2025-09-06T11:00:00+0000,
+        has requestedAt 2025-09-06T11:00:00+0000,
+        has acceptedAt 2025-09-10T09:15:00+0000,
+        has startedAt 2025-09-15T09:00:00+0000;
+
+    $reg_kl11 isa registersForTask (student: $stu_kl10, task: $t_kl5),
+        has description "Gezondheidsbevordering bij ouderen is mijn afstudeerthema. Dit project biedt een perfecte praktijkcontext.",
+        has isAccepted true,
+        has response "Goed om je erbij te hebben Bram, je kennis van gerontologie versterkt het team.",
+        has createdAt 2025-09-07T09:00:00+0000,
+        has requestedAt 2025-09-07T09:00:00+0000,
+        has acceptedAt 2025-09-10T09:30:00+0000,
+        has startedAt 2025-09-15T09:00:00+0000;
+
+    # Project 6: Zingeving (lopend)
+    $reg_kl12 isa registersForTask (student: $stu_kl11, task: $t_kl6),
+        has description "Mijn masteronderzoek gaat over zingeving bij kwetsbare doelgroepen. Klarendal is een geschikte onderzoekslocatie.",
+        has isAccepted true,
+        has response "Welkom Charlotte, je wetenschappelijke aanpak past goed bij dit onderzoek.",
+        has createdAt 2025-09-15T10:00:00+0000,
+        has requestedAt 2025-09-15T10:00:00+0000,
+        has acceptedAt 2025-09-20T09:00:00+0000,
+        has startedAt 2025-10-01T09:00:00+0000;
+
+    # Project 7: Studentensteunpunt (afgerond)
+    $reg_kl13 isa registersForTask (student: $stu_kl5, task: $t_kl7),
+        has description "Na mijn onderzoek over verward gedrag wil ik nu bijdragen aan financiële ondersteuning voor wijkbewoners.",
+        has isAccepted true,
+        has response "Fijn dat je weer meedoet Sanne, je kennis van de wijk is onmisbaar.",
+        has createdAt 2025-02-05T10:00:00+0000,
+        has requestedAt 2025-02-05T10:00:00+0000,
+        has acceptedAt 2025-02-10T09:00:00+0000,
+        has startedAt 2025-02-15T09:00:00+0000,
+        has completedAt 2025-07-15T16:00:00+0000;
+
+    $reg_kl14 isa registersForTask (student: $stu_kl6, task: $t_kl7),
+        has description "Studentensteunpunten combineren beleid en praktijk. Dat sluit aan bij mijn bestuurskunde-achtergrond.",
+        has isAccepted true,
+        has response "Welkom terug Thijs, je beleidsmatige insteek is waardevol voor dit onderzoek.",
+        has createdAt 2025-02-06T10:00:00+0000,
+        has requestedAt 2025-02-06T10:00:00+0000,
+        has acceptedAt 2025-02-10T09:15:00+0000,
+        has startedAt 2025-02-15T09:00:00+0000,
+        has completedAt 2025-07-15T16:00:00+0000;

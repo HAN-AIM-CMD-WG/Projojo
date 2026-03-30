@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jeroen Willems — Projojo 2.0</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
+  <style>
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    /* Profile type switcher pills */
+    .profile-type-switcher {
+      display: flex;
+      gap: .25rem;
+      padding: .2rem;
+      background: var(--neu-bg);
+      border-radius: .75rem;
+      box-shadow: inset 2px 2px 5px var(--neu-shadow-dark), inset -2px -2px 5px var(--neu-shadow-light);
+    }
+    .profile-pill {
+      padding: .3rem .75rem;
+      border-radius: .5rem;
+      font-size: .75rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: 'Nunito', sans-serif;
+      transition: all .2s;
+    }
+    .profile-pill:hover { color: var(--text-primary); }
+    .profile-pill.active {
+      background: var(--neu-bg);
+      color: var(--primary);
+      box-shadow: 3px 3px 6px var(--neu-shadow-dark), -3px -3px 6px var(--neu-shadow-light);
+    }
+
+    /* Hero layout */
+    .profile-hero {
+      display: flex;
+      align-items: flex-start;
+      gap: 2rem;
+      position: relative;
+    }
+    .profile-hero-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .profile-hero-info {
+      flex: 1;
+    }
+    .profile-hero-name {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .profile-hero-function {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      font-weight: 600;
+      margin-top: .25rem;
+    }
+    .profile-hero-org {
+      font-size: .9rem;
+      color: var(--text-muted);
+      margin-top: .15rem;
+    }
+    .profile-hero-org a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .profile-hero-org a:hover { text-decoration: underline; }
+    .profile-hero-location {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      font-size: .85rem;
+      color: var(--text-muted);
+      margin-top: .4rem;
+    }
+    .profile-hero-location .material-symbols-rounded { font-size: 1rem; color: var(--primary); }
+    .profile-hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      margin-top: .75rem;
+    }
+    .profile-hero-actions {
+      display: flex;
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+    .profile-hero-top-right {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+
+    /* Three-column grid for zoek/bied/help */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .info-card-title {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-weight: 800;
+      font-size: 1rem;
+      color: var(--text-primary);
+      margin-bottom: .6rem;
+    }
+    .info-card-title .material-symbols-rounded {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+    .info-card ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+    }
+    .info-card li {
+      font-size: .88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      padding-left: 1rem;
+      position: relative;
+    }
+    .info-card li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    /* Publication rows */
+    .pub-list {
+      display: flex;
+      flex-direction: column;
+      gap: .5rem;
+    }
+    .pub-item {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .65rem 1rem;
+      border-radius: .75rem;
+      background: var(--neu-bg);
+      box-shadow: 2px 2px 5px var(--neu-shadow-dark), -2px -2px 5px var(--neu-shadow-light);
+      transition: all .2s;
+    }
+    .pub-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 3px 3px 8px var(--neu-shadow-dark), -3px -3px 8px var(--neu-shadow-light);
+    }
+    .pub-icon {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+    .pub-title {
+      flex: 1;
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .pub-date {
+      font-size: .78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Project card title */
+    .project-card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: .4rem 0 .25rem;
+    }
+    .project-card-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .project-card-title a:hover { color: var(--primary); }
+    .project-card-role {
+      font-size: .82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .project-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin-top: .5rem;
+    }
+
+    /* Programme card */
+    .programme-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.5rem;
+    }
+    .programme-card-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: .15rem;
+    }
+    .programme-card-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .programme-card-title a:hover { color: var(--primary); }
+    .programme-card-role {
+      font-size: .82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .programme-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .35rem;
+      margin-top: .5rem;
+    }
+
+    @media (max-width: 768px) {
+      .profile-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .profile-hero-tags { justify-content: center; }
+      .profile-hero-actions { justify-content: center; }
+      .profile-hero-location { justify-content: center; }
+      .profile-hero-top-right {
+        position: static;
+        margin-bottom: .75rem;
+        align-self: center;
+      }
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+      .programme-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="discovery.html" class="nav-logo">Projojo <span>2.0</span></a>
+    <ul class="nav-links">
+      <li><a href="discovery.html">Ontdek</a></li>
+      <li><a href="programma.html">Programma's</a></li>
+      <li><a href="kennisbank.html">Kennisbank</a></li>
+      <li><a href="courseprofiel.html">Courses</a></li>
+    </ul>
+    <div class="nav-profile">NE</div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- PROFILE HERO -->
+  <div class="neu-card fade-in" style="position: relative;">
+    <div class="profile-hero-top-right">
+      <div class="profile-type-switcher" data-tooltip="Projojo kent 4 profieltypes — elk met eigen rechten en mogelijkheden">
+        <button class="profile-pill active">Professional</button>
+        <button class="profile-pill">Docent</button>
+        <button class="profile-pill">Student</button>
+        <button class="profile-pill">Inwoner</button>
+      </div>
+    </div>
+
+    <div class="profile-hero">
+      <div class="profile-hero-avatar">JW</div>
+      <div class="profile-hero-info">
+        <div class="profile-hero-name">Jeroen Willems</div>
+        <span class="badge" style="background: rgba(255,127,80,0.15); color: var(--primary-dark); margin-top: .35rem; display: inline-block;">PROFESSIONAL</span>
+        <div class="profile-hero-function">Wijkmanager Klarendal</div>
+        <div class="profile-hero-org"><a href="organisatie.html">Gemeente Arnhem</a></div>
+        <div class="profile-hero-location">
+          <span class="material-symbols-rounded">location_on</span>
+          Klarendal, Arnhem
+        </div>
+        <div class="profile-hero-tags">
+          <span class="tag">Wijkanalyse</span>
+          <span class="tag">Positieve Gezondheid</span>
+          <span class="tag">Wijkgericht Werken</span>
+          <span class="tag">Beleidsadvies</span>
+        </div>
+        <div class="profile-hero-actions">
+          <a href="connectie.html" class="btn btn-primary">
+            <span class="material-symbols-rounded" style="font-size:1.1rem;">mail</span>
+            Neem contact op
+          </a>
+          <a href="#" class="btn btn-outline">
+            <span class="material-symbols-rounded" style="font-size:1.1rem;">open_in_new</span>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IK ZOEK / IK BIED / IK HELP -->
+  <div class="info-grid fade-in fade-in-d1" data-tooltip="Deze velden maken je vindbaar voor anderen op het platform">
+    <div class="neu-card neu-card-sm info-card">
+      <div class="info-card-title">
+        <span class="material-symbols-rounded">search</span>
+        Ik zoek...
+      </div>
+      <ul>
+        <li>Studenten met onderzoekservaring</li>
+        <li>Docenten die willen samenwerken in Klarendal</li>
+        <li>Bewoners die mee willen denken over wijkontwikkeling</li>
+      </ul>
+    </div>
+    <div class="neu-card neu-card-sm info-card">
+      <div class="info-card-title">
+        <span class="material-symbols-rounded">volunteer_activism</span>
+        Ik bied...
+      </div>
+      <ul>
+        <li>Kennis van de wijk Klarendal</li>
+        <li>Toegang tot bewonersnetwerk</li>
+        <li>Begeleiding voor studenten bij praktijkopdrachten</li>
+      </ul>
+    </div>
+    <div class="neu-card neu-card-sm info-card">
+      <div class="info-card-title">
+        <span class="material-symbols-rounded">handshake</span>
+        Ik help graag mee met...
+      </div>
+      <ul>
+        <li>Wijkanalyses en veldonderzoek</li>
+        <li>Verbinding leggen tussen bewoners en professionals</li>
+        <li>Projecten op het gebied van Positieve Gezondheid</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STATISTICS -->
+  <div class="stat-row fade-in fade-in-d2" style="justify-content: center;">
+    <div class="stat-item">
+      <div class="stat-number">5</div>
+      <div class="stat-label">Projecten</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">3</div>
+      <div class="stat-label">Programma's</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">12</div>
+      <div class="stat-label">Publicaties</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">8</div>
+      <div class="stat-label">Connecties</div>
+    </div>
+  </div>
+
+  <!-- EXPERTISE & THEMA'S -->
+  <div class="section fade-in fade-in-d3">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">psychology</span>
+      Expertise &amp; Thema's
+    </div>
+    <div class="neu-card">
+      <div class="detail-list">
+        <div class="detail-item">
+          <div class="detail-icon">
+            <span class="material-symbols-rounded">work</span>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">Vakgebied</div>
+            <div class="detail-value">Wijkmanagement, Sociaal Domein</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon">
+            <span class="material-symbols-rounded">interests</span>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">Thema's</div>
+            <div class="detail-value" style="display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .15rem;">
+              <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+              <span class="tag tag-education">Kennisdeling</span>
+              <span class="tag tag-sustainability">Duurzaamheid</span>
+            </div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon">
+            <span class="material-symbols-rounded">school</span>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">Opleiding</div>
+            <div class="detail-value">Bestuurskunde, Radboud Universiteit</div>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-icon">
+            <span class="material-symbols-rounded">calendar_month</span>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">Beschikbaarheid</div>
+            <div class="detail-value">4 dagen per week beschikbaar voor projecten</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIEVE PROJECTEN -->
+  <div class="section fade-in fade-in-d4">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">folder_open</span>
+      Actieve projecten
+    </div>
+    <div class="grid-3">
+      <a href="project.html" class="neu-card neu-card-interactive neu-card-sm" style="text-decoration: none; color: inherit;">
+        <span class="badge badge-active">Actief</span>
+        <div class="project-card-title">Gezondheidschecks Klarendal</div>
+        <div class="project-card-role">Rol: Begeleider, Opdrachtgever</div>
+        <div class="project-card-tags">
+          <span class="tag tag-sm tag-health">Gezondheid &amp; Welzijn</span>
+        </div>
+      </a>
+      <a href="project.html" class="neu-card neu-card-interactive neu-card-sm" style="text-decoration: none; color: inherit;">
+        <span class="badge badge-active">Actief</span>
+        <div class="project-card-title">Zingeving en Doelgroepen Klarendal</div>
+        <div class="project-card-role">Rol: Begeleider</div>
+        <div class="project-card-tags">
+          <span class="tag tag-sm tag-health">Gezondheid &amp; Welzijn</span>
+        </div>
+      </a>
+      <a href="project.html" class="neu-card neu-card-interactive neu-card-sm" style="text-decoration: none; color: inherit;">
+        <span class="badge badge-open">Open</span>
+        <div class="project-card-title">Studentensteunpunt Vervolg</div>
+        <div class="project-card-role">Rol: Opdrachtgever</div>
+        <div class="project-card-tags">
+          <span class="tag tag-sm tag-education">Kennisdeling</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- PROGRAMMA'S -->
+  <div class="section fade-in fade-in-d5">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">hub</span>
+      Programma's
+    </div>
+    <div class="programme-grid">
+      <a href="programma.html" class="neu-card neu-card-interactive neu-card-sm" style="text-decoration: none; color: inherit;">
+        <div class="programme-card-title">City Deal Kennis Maken — Klarendal</div>
+        <div class="programme-card-role">Coordinator</div>
+        <div class="programme-card-tags">
+          <span class="tag tag-sm tag-health">Gezondheid &amp; Welzijn</span>
+          <span class="tag tag-sm tag-education">Kennisdeling</span>
+        </div>
+      </a>
+      <div class="neu-card neu-card-interactive neu-card-sm">
+        <div class="programme-card-title">NPAO Arnhem</div>
+        <div class="programme-card-role">Partner</div>
+        <div class="programme-card-tags">
+          <span class="tag tag-sm tag-sustainability">Duurzaamheid</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PUBLICATIES -->
+  <div class="section fade-in fade-in-d6">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">library_books</span>
+      Recente publicaties
+    </div>
+    <div class="pub-list">
+      <div class="pub-item">
+        <span class="material-symbols-rounded pub-icon">description</span>
+        <span class="badge badge-rapport">Rapport</span>
+        <span class="pub-title">Foto van de Wijk — Visual Appraisal Rapport</span>
+        <span class="pub-date">Feb 2025</span>
+      </div>
+      <div class="pub-item">
+        <span class="material-symbols-rounded pub-icon">description</span>
+        <span class="badge badge-rapport">Rapport</span>
+        <span class="pub-title">Studentensteunpunt — Haalbaarheidsonderzoek</span>
+        <span class="pub-date">Jul 2025</span>
+      </div>
+      <div class="pub-item">
+        <span class="material-symbols-rounded pub-icon">play_circle</span>
+        <span class="badge badge-video">Video</span>
+        <span class="pub-title">Wijkportret Klarendal</span>
+        <span class="pub-date">Feb 2025</span>
+      </div>
+    </div>
+    <div style="margin-top: 1rem;">
+      <a href="kennisbank.html" class="link">Bekijk alle publicaties →</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="guide.js"></script>
+</body>
+</html>

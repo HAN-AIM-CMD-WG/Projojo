@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City Deal Kennis Maken — Klarendal | Projojo 2.0</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap">
+  <style>
+    .breadcrumb { display: flex; align-items: center; gap: .4rem; margin-bottom: 1rem; }
+    .breadcrumb a { color: var(--text-muted); text-decoration: none; font-weight: 600; }
+    .breadcrumb a:hover { color: var(--primary); }
+    .breadcrumb .sep { color: var(--text-muted); }
+
+    .program-meta { display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: .75rem; }
+    .program-meta-item { display: flex; align-items: center; gap: .35rem; font-size: .9rem; color: var(--text-secondary); }
+    .program-meta-item .material-symbols-rounded { font-size: 1.15rem; color: var(--primary); }
+
+    .tags-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+
+    .coordinators-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+    .timeline-grid-wrapper { overflow-x: auto; padding-bottom: .5rem; }
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 4px;
+      min-width: 760px;
+    }
+    .sem-label {
+      padding: .6rem .75rem;
+      text-align: center;
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      background: var(--neu-bg);
+      border-radius: .75rem;
+      box-shadow: inset 2px 2px 4px var(--neu-shadow-dark), inset -2px -2px 4px var(--neu-shadow-light);
+    }
+    .sem-label small { display: block; font-weight: 600; font-size: .7rem; opacity: .75; text-transform: none; letter-spacing: 0; }
+
+    .tl-bar {
+      padding: .5rem .75rem;
+      border-radius: .65rem;
+      font-size: .78rem;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .tl-bar:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .tl-completed { background: linear-gradient(135deg, #4CAF50, #66BB6A); }
+    .tl-active { background: linear-gradient(135deg, var(--primary), var(--primary-light)); }
+    .tl-open { background: linear-gradient(135deg, #42A5F5, #64B5F6); }
+
+    .project-card-title { font-weight: 700; font-size: 1rem; margin-bottom: .35rem; color: var(--text-primary); }
+    .project-card-desc { font-size: .85rem; color: var(--text-secondary); margin-bottom: .75rem; }
+    .project-card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">Projojo <span>2.0</span></a>
+    <ul class="nav-links">
+      <li><a href="discovery.html">Ontdek</a></li>
+      <li><a href="programma.html" class="active">Programma's</a></li>
+      <li><a href="kennisbank.html">Kennisbank</a></li>
+      <li><a href="courseprofiel.html">Courses</a></li>
+    </ul>
+    <div class="nav-profile">NE</div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- PROGRAM HEADER -->
+  <div class="neu-card fade-in" style="margin-bottom: 2rem;">
+    <div class="breadcrumb text-sm text-muted">
+      <a href="discovery.html">Ontdek</a>
+      <span class="sep">›</span>
+      <a href="#">Programma's</a>
+      <span class="sep">›</span>
+      <span>CDKM Klarendal</span>
+    </div>
+
+    <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text-primary); margin-bottom: .5rem;">
+      City Deal Kennis Maken — Klarendal
+    </h1>
+
+    <p style="color: var(--text-secondary); font-size: .95rem; max-width: 720px; line-height: 1.65;">
+      City Deal Kennis Maken Arnhem verbindt hogescholen, gemeente en wijkprofessionals om studenten betekenisvol in te zetten in wijken. Twee hoofdlijnen: Positieve Gezondheid en Studentensteunpunt.
+    </p>
+
+    <div class="program-meta">
+      <div class="program-meta-item">
+        <span class="material-symbols-rounded">location_on</span>
+        Klarendal, Arnhem
+      </div>
+      <div class="program-meta-item">
+        <span class="material-symbols-rounded">calendar_month</span>
+        September 2024 — Juni 2026
+      </div>
+    </div>
+
+    <div class="tags-row">
+      <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+      <span class="tag tag-education">Kennisdeling</span>
+    </div>
+  </div>
+
+  <!-- STATISTICS -->
+  <div class="stat-row fade-in fade-in-d1" data-tooltip="Kerncijfers van dit programma">
+    <div class="stat-item">
+      <div class="stat-number">8</div>
+      <div class="stat-label">Projecten</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">11</div>
+      <div class="stat-label">Studenten</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">6</div>
+      <div class="stat-label">Organisaties</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">14</div>
+      <div class="stat-label">Publicaties</div>
+    </div>
+  </div>
+
+  <!-- PARTNER ORGANISATIONS -->
+  <div class="section fade-in fade-in-d2">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">handshake</span>
+      Partnerorganisaties
+    </div>
+    <div class="partner-row">
+      <div class="partner-chip">
+        <div class="partner-icon">GA</div>
+        Gemeente Arnhem
+      </div>
+      <div class="partner-chip">
+        <div class="partner-icon">CD</div>
+        CDKM Arnhem
+      </div>
+      <div class="partner-chip">
+        <div class="partner-icon">HA</div>
+        HAN
+      </div>
+      <div class="partner-chip">
+        <div class="partner-icon">HV</div>
+        HVHL
+      </div>
+      <div class="partner-chip">
+        <div class="partner-icon">RS</div>
+        RijnStad
+      </div>
+      <div class="partner-chip">
+        <div class="partner-icon">VH</div>
+        Volkshuisvesting
+      </div>
+    </div>
+  </div>
+
+  <!-- COORDINATORS -->
+  <div class="section fade-in fade-in-d3">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">supervisor_account</span>
+      Coördinatoren
+    </div>
+    <div class="coordinators-row">
+      <div class="profile-mini">
+        <div class="profile-avatar">NE</div>
+        <div class="profile-info">
+          <div class="profile-name">Nadia El Amrani</div>
+          <div class="profile-role">Projectleider CDKM · CDKM Arnhem</div>
+        </div>
+      </div>
+      <div class="profile-mini">
+        <div class="profile-avatar">JW</div>
+        <div class="profile-info">
+          <div class="profile-name">Jeroen Willems</div>
+          <div class="profile-role">Wijkmanager Klarendal · Gemeente Arnhem</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section fade-in fade-in-d4">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">timeline</span>
+      Tijdlijn
+    </div>
+    <div class="timeline-grid-wrapper" data-tooltip="Scroll horizontaal om de volledige tijdlijn te zien">
+      <div class="timeline-grid">
+        <!-- Semester labels -->
+        <div class="sem-label">24-25 Sem 1<small>Sep 2024 – Jan 2025</small></div>
+        <div class="sem-label">24-25 Sem 2<small>Feb 2025 – Jul 2025</small></div>
+        <div class="sem-label">25-26 Sem 1<small>Sep 2025 – Jan 2026</small></div>
+        <div class="sem-label">25-26 Sem 2<small>Feb 2026 – Jun 2026</small></div>
+
+        <!-- Row 1: Foto van de Wijk — Sem 1 only -->
+        <div class="tl-bar tl-completed" style="grid-column: 1 / 2;">Foto van de Wijk</div>
+        <div style="grid-column: 2 / 5;"></div>
+
+        <!-- Row 2: Verward Gedrag — Sem 1 into Sem 2 -->
+        <div class="tl-bar tl-completed" style="grid-column: 1 / 3;">Verward Gedrag</div>
+        <div style="grid-column: 3 / 5;"></div>
+
+        <!-- Row 3: Niet-gebruik Regelingen — Sem 1 into Sem 2 -->
+        <div class="tl-bar tl-completed" style="grid-column: 1 / 3;">Niet-gebruik Regelingen</div>
+        <div style="grid-column: 3 / 5;"></div>
+
+        <!-- Row 4: Wijkontwikkeling — Sem 2 only -->
+        <div style="grid-column: 1 / 2;"></div>
+        <div class="tl-bar tl-completed" style="grid-column: 2 / 3;">Wijkontwikkeling</div>
+        <div style="grid-column: 3 / 5;"></div>
+
+        <!-- Row 5: Studentensteunpunt — Sem 2 only -->
+        <div style="grid-column: 1 / 2;"></div>
+        <div class="tl-bar tl-completed" style="grid-column: 2 / 3;">Studentensteunpunt</div>
+        <div style="grid-column: 3 / 5;"></div>
+
+        <!-- Row 6: Gezondheidschecks — 25-26 Sem 1 into Sem 2 -->
+        <div style="grid-column: 1 / 3;"></div>
+        <div class="tl-bar tl-active" style="grid-column: 3 / 5;">Gezondheidschecks</div>
+
+        <!-- Row 7: Zingeving — 25-26 Sem 1 into Sem 2 -->
+        <div style="grid-column: 1 / 3;"></div>
+        <div class="tl-bar tl-active" style="grid-column: 3 / 5;">Zingeving</div>
+
+        <!-- Row 8: Steunpunt Vervolg — 25-26 Sem 1 into Sem 2 -->
+        <div style="grid-column: 1 / 3;"></div>
+        <div class="tl-bar tl-open" style="grid-column: 3 / 5;">Steunpunt Vervolg</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="section fade-in fade-in-d5">
+    <div class="section-title">
+      <span class="material-symbols-rounded icon">folder_open</span>
+      Projecten
+    </div>
+    <div class="grid-3">
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Foto van de Wijk Klarendal</div>
+        <p class="project-card-desc truncate-2">Fotografische verkenning van Klarendal door studenten, gericht op het vastleggen van de sociale dynamiek en leefomgeving.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-completed">Afgerond</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-health">Gezondheid</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Omgaan met Verward Gedrag</div>
+        <p class="project-card-desc truncate-2">Onderzoek naar effectieve benaderingen voor verward gedrag in de wijk, in samenwerking met wijkprofessionals.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-completed">Afgerond</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-health">Gezondheid</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Niet-gebruik van Regelingen</div>
+        <p class="project-card-desc truncate-2">Analyse waarom bewoners bestaande regelingen niet benutten en aanbevelingen voor betere toegankelijkheid.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-completed">Afgerond</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-education">Kennisdeling</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Wijkontwikkeling Klarendal</div>
+        <p class="project-card-desc truncate-2">Participatief onderzoek naar kansen voor wijkontwikkeling, met focus op bewonersinitiatieven en leefbaarheid.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-completed">Afgerond</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-health">Gezondheid</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Studentensteunpunt Klarendal</div>
+        <p class="project-card-desc truncate-2">Opzetten van een laagdrempelig steunpunt waar studenten bewoners helpen met praktische vragen en ondersteuning.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-completed">Afgerond</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-education">Kennisdeling</span>
+          </div>
+        </div>
+      </div>
+
+      <a href="project.html" style="text-decoration:none;color:inherit;">
+        <div class="neu-card neu-card-interactive">
+          <div class="project-card-title">Gezondheidschecks Klarendal</div>
+          <p class="project-card-desc truncate-2">Studenten voeren gezondheidschecks uit bij bewoners op basis van het concept Positieve Gezondheid.</p>
+          <div class="project-card-footer">
+            <span class="badge badge-active">Actief</span>
+            <div class="flex gap-sm">
+              <span class="tag tag-sm tag-health">Gezondheid</span>
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Zingeving en Doelgroepen</div>
+        <p class="project-card-desc truncate-2">Onderzoek naar zingeving onder verschillende doelgroepen in Klarendal, gekoppeld aan welzijnsinterventies.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-active">Actief</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-health">Gezondheid</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="neu-card neu-card-interactive">
+        <div class="project-card-title">Studentensteunpunt Vervolg</div>
+        <p class="project-card-desc truncate-2">Doorontwikkeling van het steunpunt met uitgebreid aanbod en borging in de wijkstructuur.</p>
+        <div class="project-card-footer">
+          <span class="badge badge-open">Open</span>
+          <div class="flex gap-sm">
+            <span class="tag tag-sm tag-education">Kennisdeling</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="guide.js"></script>
+
+</body>
+</html>

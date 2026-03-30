@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ontdek — Projojo 2.0</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" />
+  <style>
+    .discovery-layout {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .discovery-results { flex: 2; display: flex; flex-direction: column; gap: 1.25rem; }
+    .discovery-map { flex: 1; min-width: 350px; position: sticky; top: 80px; align-self: flex-start; }
+    .discovery-map .map-container { height: 480px; }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: .5rem 0 .35rem;
+    }
+    .card-title a {
+      color: inherit;
+      text-decoration: none;
+    }
+    .card-title a:hover { color: var(--primary); }
+    .card-desc {
+      font-size: .88rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .card-tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+    .card-stats {
+      font-size: .82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: .6rem;
+    }
+
+    .people-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .profile-mini .card-tags { margin-top: .4rem; }
+
+    .badge-program { background: #E3F2FD; color: #1565C0; }
+    .badge-course { background: #F3E5F5; color: #7B1FA2; }
+
+    .result-group { display: flex; flex-direction: column; gap: 1.25rem; }
+    .result-group[hidden] { display: none; }
+
+    .group-label {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-top: .5rem;
+    }
+
+    .material-symbols-rounded {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .coral-marker {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid #fff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    @media (max-width: 900px) {
+      .discovery-layout { flex-direction: column; }
+      .discovery-map {
+        min-width: unset;
+        position: static;
+        order: -1;
+      }
+      .discovery-map .map-container { height: 280px; }
+      .people-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="discovery.html" class="nav-logo">Projojo <span>2.0</span></a>
+    <ul class="nav-links">
+      <li><a href="discovery.html" class="active">Ontdek</a></li>
+      <li><a href="programma.html">Programma's</a></li>
+      <li><a href="kennisbank.html">Kennisbank</a></li>
+      <li><a href="courseprofiel.html">Courses</a></li>
+    </ul>
+    <div class="nav-profile">NE</div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="page-header fade-in">
+    <h1>Ontdek</h1>
+    <p>Vind projecten, programma's, mensen en courses op thema, locatie en expertise</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-bar fade-in fade-in-d1" data-tooltip="Zoek op thema, locatie, expertise of naam">
+    <span class="material-symbols-rounded search-icon">search</span>
+    <input type="text" placeholder="Zoek op thema, locatie, expertise...">
+  </div>
+
+  <!-- FILTER CHIPS -->
+  <div class="filter-row fade-in fade-in-d2" id="filterChips">
+    <button class="chip active" data-filter="alles" data-tooltip="Toon alle resultaten zonder filter">Alles</button>
+    <button class="chip" data-filter="gezondheid">Gezondheid &amp; Welzijn</button>
+    <button class="chip" data-filter="kennisdeling">Kennisdeling</button>
+    <button class="chip" data-filter="duurzaamheid">Duurzaamheid</button>
+    <button class="chip" data-filter="klarendal">Klarendal</button>
+    <button class="chip" data-filter="arnhem">Arnhem</button>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs fade-in fade-in-d3" id="tabs" data-tooltip="Wissel tussen categorieën om specifieke resultaten te zien">
+    <button class="tab active" data-tab="all">Alles</button>
+    <button class="tab" data-tab="projecten">Projecten</button>
+    <button class="tab" data-tab="programmas">Programma's</button>
+    <button class="tab" data-tab="mensen">Mensen</button>
+    <button class="tab" data-tab="courses">Courses</button>
+  </div>
+
+  <!-- TWO-COLUMN LAYOUT -->
+  <div class="discovery-layout fade-in fade-in-d4">
+
+    <!-- LEFT: RESULTS -->
+    <div class="discovery-results">
+
+      <!-- PROGRAMMA'S -->
+      <div class="result-group" data-group="programmas">
+        <div class="group-label">Programma's</div>
+        <a href="programma.html" style="text-decoration:none;color:inherit;">
+          <div class="neu-card neu-card-interactive">
+            <span class="badge badge-program">Programma</span>
+            <div class="card-title">City Deal Kennis Maken — Klarendal</div>
+            <p class="card-desc truncate-2">Verbindt hogescholen, gemeente en wijkprofessionals om studenten in te zetten bij maatschappelijke vraagstukken in de wijk Klarendal, Arnhem.</p>
+            <div class="card-tags">
+              <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+              <span class="tag tag-education">Kennisdeling</span>
+            </div>
+            <div class="card-stats">8 projecten · 11 studenten · 6 organisaties</div>
+          </div>
+        </a>
+      </div>
+
+      <!-- PROJECTEN -->
+      <div class="result-group" data-group="projecten">
+        <div class="group-label">Projecten</div>
+
+        <div class="neu-card neu-card-interactive">
+          <div class="flex items-center justify-between">
+            <span class="badge badge-completed">Afgerond</span>
+          </div>
+          <div class="card-title">Foto van de Wijk Klarendal</div>
+          <p class="card-desc truncate-2">Visuele wijkanalyse door studenten met de Visual Appraisal methode. Geeft inzicht in de leefomgeving en ervaren gezondheid van bewoners.</p>
+          <div class="card-tags">
+            <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+            <span class="tag tag-location">Klarendal</span>
+          </div>
+        </div>
+
+        <a href="project.html" style="text-decoration:none;color:inherit;">
+          <div class="neu-card neu-card-interactive">
+            <span class="badge badge-active">Lopend</span>
+            <div class="card-title">Gezondheidschecks Klarendal</div>
+            <p class="card-desc truncate-2">Laagdrempelige gezondheidschecks voor wijkbewoners uitgevoerd door studenten verpleegkunde in samenwerking met het wijkteam.</p>
+            <div class="card-tags">
+              <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+            </div>
+          </div>
+        </a>
+
+        <div class="neu-card neu-card-interactive">
+          <span class="badge badge-completed">Afgerond</span>
+          <div class="card-title">Studentensteunpunt Klarendal</div>
+          <p class="card-desc truncate-2">Informatieloket in het wijkcentrum waar studenten bewoners helpen met formulieren, digitale vaardigheden en doorverwijzing.</p>
+          <div class="card-tags">
+            <span class="tag tag-education">Kennisdeling</span>
+          </div>
+        </div>
+
+        <div class="neu-card neu-card-interactive">
+          <span class="badge badge-active">Lopend</span>
+          <div class="card-title">Zingeving en Doelgroepen Klarendal</div>
+          <p class="card-desc truncate-2">Onderzoek naar zingeving en sociale cohesie bij diverse doelgroepen in Klarendal, uitgevoerd door studenten Social Work.</p>
+          <div class="card-tags">
+            <span class="tag tag-health">Gezondheid &amp; Welzijn</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENSEN -->
+      <div class="result-group" data-group="mensen">
+        <div class="group-label">Mensen</div>
+        <div class="people-grid">
+
+          <a href="profiel.html" style="text-decoration:none;color:inherit;">
+            <div class="profile-mini neu-card-interactive">
+              <div class="profile-avatar">JW</div>
+              <div class="profile-info">
+                <div class="profile-name">Jeroen Willems</div>
+                <div class="profile-role">Wijkmanager Klarendal · Gemeente Arnhem</div>
+                <div class="card-tags">
+                  <span class="tag tag-sm">Wijkanalyse</span>
+                  <span class="tag tag-sm tag-health">Positieve Gezondheid</span>
+                </div>
+              </div>
+            </div>
+          </a>
+
+          <div class="profile-mini neu-card-interactive">
+            <div class="profile-avatar">IB</div>
+            <div class="profile-info">
+              <div class="profile-name">Ilse Brouwer</div>
+              <div class="profile-role">Docent Minor Overheid &amp; Beleid · HAN</div>
+              <div class="card-tags">
+                <span class="tag tag-sm">Beleidsadvies</span>
+                <span class="tag tag-sm tag-education">Kwalitatief Onderzoek</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-mini neu-card-interactive">
+            <div class="profile-avatar">RB</div>
+            <div class="profile-info">
+              <div class="profile-name">Rosa van den Broek</div>
+              <div class="profile-role">Student · HVHL</div>
+              <div class="card-tags">
+                <span class="tag tag-sm">Visual Appraisal</span>
+                <span class="tag tag-sm">Wijkanalyse</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- COURSES -->
+      <div class="result-group" data-group="courses">
+        <div class="group-label">Courses</div>
+        <a href="courseprofiel.html" style="text-decoration:none;color:inherit;">
+          <div class="neu-card neu-card-interactive">
+            <span class="badge badge-course">Course</span>
+            <div class="card-title">Minor Overheid, Bestuur en Beleid</div>
+            <p class="card-desc">HAN · Semester 2 · 15 studenten</p>
+            <div class="card-tags">
+              <span class="tag tag-education">Beleidsadvies</span>
+              <span class="tag tag-education">Kwalitatief Onderzoek</span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: MAP -->
+    <div class="discovery-map">
+      <div class="neu-card" data-tooltip="Interactieve kaart — klik op markers voor projectdetails">
+        <div class="map-container" id="map"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function() {
+  // Tab switching
+  const tabs = document.querySelectorAll('#tabs .tab');
+  const groups = document.querySelectorAll('.result-group');
+  const tabMap = {
+    all: null,
+    projecten: 'projecten',
+    programmas: 'programmas',
+    mensen: 'mensen',
+    courses: 'courses'
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.tab;
+      groups.forEach(g => {
+        if (target === 'all') {
+          g.hidden = false;
+        } else {
+          g.hidden = g.dataset.group !== tabMap[target];
+        }
+      });
+    });
+  });
+
+  // Filter chips
+  const chips = document.querySelectorAll('#filterChips .chip');
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const wasActive = chip.classList.contains('active');
+      const isAlles = chip.dataset.filter === 'alles';
+
+      if (isAlles) {
+        chips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      } else {
+        chips.forEach(c => {
+          if (c.dataset.filter === 'alles') c.classList.remove('active');
+        });
+        chip.classList.toggle('active');
+        const anyActive = [...chips].some(c => c.classList.contains('active'));
+        if (!anyActive) {
+          chips[0].classList.add('active');
+        }
+      }
+    });
+  });
+
+  // Leaflet map
+  const map = L.map('map', { scrollWheelZoom: false }).setView([51.985, 5.91], 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18
+  }).addTo(map);
+
+  function coralIcon() {
+    return L.divIcon({
+      className: '',
+      html: '<div class="coral-marker"></div>',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+      popupAnchor: [0, -16]
+    });
+  }
+
+  const markers = [
+    { lat: 51.987, lng: 5.908, name: 'City Deal Kennis Maken — Klarendal' },
+    { lat: 51.986, lng: 5.912, name: 'Foto van de Wijk' },
+    { lat: 51.984, lng: 5.906, name: 'Gezondheidschecks' },
+    { lat: 51.988, lng: 5.910, name: 'Studentensteunpunt' }
+  ];
+
+  markers.forEach(m => {
+    L.marker([m.lat, m.lng], { icon: coralIcon() })
+      .addTo(map)
+      .bindPopup('<strong>' + m.name + '</strong>');
+  });
+
+  setTimeout(() => map.invalidateSize(), 300);
+})();
+</script>
+<script src="guide.js"></script>
+
+</body>
+</html>
