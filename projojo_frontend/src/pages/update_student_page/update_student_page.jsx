@@ -23,7 +23,6 @@ export default function UpdateStudentPage() {
     // Photo state
     const [photoFile, setPhotoFile] = useState(null);
     const [photoPreview, setPhotoPreview] = useState(null);
-    
     // CV state
     const [cvFile, setCvFile] = useState(null);
     const [cvPreview, setCvPreview] = useState(null);
@@ -120,10 +119,7 @@ export default function UpdateStudentPage() {
                 navigate(`/student/${authData.userId}`);
             })
             .catch(error => {
-                setServerError(createErrorMessage(error, {
-                    400: "Er is een fout ontstaan bij het versturen van de data.",
-                    ...authErrorMessages,
-                }));
+                setServerError(error?.message || "Er is een fout ontstaan bij het versturen van de data.");
             })
             .finally(() => {
                 setIsSubmitting(false);
@@ -150,7 +146,7 @@ export default function UpdateStudentPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                    <Link 
+                    <Link
                         to={`/student/${authData.userId}`}
                         className="neu-btn !p-3 !rounded-full"
                         title="Terug naar profiel"
@@ -173,15 +169,14 @@ export default function UpdateStudentPage() {
                             <span className="material-symbols-outlined text-primary">photo_camera</span>
                             Profielfoto
                         </h2>
-                        
                         <div className="flex flex-col items-center">
                             {/* Photo Preview */}
                             <div className="relative group mb-4">
                                 <div className="w-32 h-32 rounded-full neu-pressed p-1 overflow-hidden">
                                     {photoPreview ? (
-                                        <img 
-                                            src={photoPreview} 
-                                            alt="Profielfoto" 
+                                        <img
+                                            src={photoPreview}
+                                            alt="Profielfoto"
                                             className="w-full h-full object-cover rounded-full"
                                         />
                                     ) : (
@@ -190,15 +185,15 @@ export default function UpdateStudentPage() {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 {/* Hover Overlay */}
-                                <label 
+                                <label
                                     className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center"
                                 >
                                     <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
+                                    <input
+                                        type="file"
+                                        accept="image/*"
                                         onChange={handlePhotoChange}
                                         className="hidden"
                                     />
@@ -209,16 +204,16 @@ export default function UpdateStudentPage() {
                             <label className="neu-btn text-sm cursor-pointer flex items-center gap-2">
                                 <span className="material-symbols-outlined text-lg">upload</span>
                                 Foto wijzigen
-                                <input 
-                                    type="file" 
-                                    accept="image/*" 
+                                <input
+                                    type="file"
+                                    accept="image/*"
                                     onChange={handlePhotoChange}
                                     className="hidden"
                                 />
                             </label>
-                            
+
                             <p className="text-xs text-[var(--text-muted)] mt-3 text-center">
-                                JPG, PNG of GIF<br/>Max 5MB
+                                JPG, PNG of GIF<br />Max 5MB
                             </p>
                         </div>
                     </div>
@@ -269,10 +264,10 @@ export default function UpdateStudentPage() {
                             Curriculum Vitae
                             <span className="text-xs font-normal text-[var(--text-muted)] ml-1">(optioneel)</span>
                         </h2>
-                        
+
                         {cvPreview && (
                             <div className="flex items-center gap-2">
-                                <a 
+                                <a
                                     href={cvPreview}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -314,9 +309,9 @@ export default function UpdateStudentPage() {
                                     </p>
                                 </div>
                             </div>
-                            <input 
-                                type="file" 
-                                accept="application/pdf" 
+                            <input
+                                type="file"
+                                accept="application/pdf"
                                 onChange={handleCvChange}
                                 className="hidden"
                             />
@@ -334,16 +329,16 @@ export default function UpdateStudentPage() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between pt-4">
-                    <Link 
+                    <Link
                         to={`/student/${authData.userId}`}
                         className="neu-btn flex items-center gap-2"
                     >
                         <span className="material-symbols-outlined">close</span>
                         Annuleren
                     </Link>
-                    
-                    <button 
-                        type="submit" 
+
+                    <button
+                        type="submit"
                         disabled={isSubmitting}
                         className="neu-btn-primary flex items-center gap-2 disabled:opacity-50"
                     >
