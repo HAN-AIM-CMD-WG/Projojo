@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import Breadcrumb from "../components/Breadcrumb";
 import ProjectDetails from "../components/ProjectDetails";
 import ProjectTasks from "../components/ProjectTasks";
-import { getProject, getProjectsWithBusinessId, getTasks, getTaskSkills } from "../services";
+import { getProject } from "../services";
 import { normalizeSkill } from "../utils/skills";
 import NotFoundPage from "./NotFound";
-import PageHeader from '../components/PageHeader';
 
 
 export default function ProjectDetailsPage() {
@@ -66,14 +66,37 @@ export default function ProjectDetailsPage() {
 
     if (!projectId || showNotFound) return <NotFoundPage />
 
+    // Detect archived: explicitly archived, completed status, or end_date in the past
+    const isArchived = project?.is_archived || project?.status === 'completed' || (project?.end_date && new Date(project.end_date) < new Date());
+
+    const breadcrumbItems = [
+        { label: "Ontdek", to: "/ontdek" },
+        ...(project?.business ? [{ label: project.business.name, to: `/business/${project.business.id}` }] : []),
+        { label: project?.name || "Laden..." },
+    ];
+
     return (
         <>
-            <PageHeader name={'Projectpagina'} />
-            <div className="bg-gray-100 rounded-lg">
-                <ProjectDetails project={project} businessId={project?.business_id} refreshData={() => {
-                    fetchProjectAndTasks();
-                    scrollToLastTask();
-                }} />
+            <Breadcrumb items={breadcrumbItems} />
+
+            {/* Archive banner */}
+            {isArchived && (
+                <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl bg-[var(--neu-bg)] border border-[var(--neu-border)] text-[var(--text-muted)]">
+                    <span className="material-symbols-outlined text-lg">inventory_2</span>
+                    <span className="text-sm font-semibold">Dit project is afgerond en staat in het archief.</span>
+                </div>
+            )}
+
+            <div className={`neu-flat overflow-hidden ${isArchived ? 'grayscale opacity-80' : ''}`}>
+                <ProjectDetails 
+                    project={project} 
+                    tasks={tasks}
+                    businessId={project?.business_id} 
+                    refreshData={() => {
+                        fetchProjectAndTasks();
+                        scrollToLastTask();
+                    }} 
+                />
                 <ProjectTasks tasks={tasks} fetchAmount={fetchAmount} setFetchAmount={setFetchAmount} businessId={project?.business_id} lastTaskRef={lastTaskRef} />
             </div>
         </>

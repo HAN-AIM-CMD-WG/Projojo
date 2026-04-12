@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import Alert from "../components/Alert";
+import Breadcrumb from "../components/Breadcrumb";
 import BusinessProjectDashboard from '../components/BusinessProjectDashboard';
 import Loading from '../components/Loading';
 import { getBusinessById, getProjectsWithBusinessId, getTasks, HttpError } from '../services';
@@ -19,8 +20,8 @@ export default function BusinessPage() {
         const promises = [];
         for (let i = 0; i < projects.length; i++) {
             const project = projects[i];
-            // Fetch tasks for each project
-            promises.push(getTasks(project.id));
+            // Fetch tasks for each project, gracefully fail to empty array
+            promises.push(getTasks(project.id).catch(() => []));
         }
 
         const awaited = await Promise.all(promises);
@@ -91,9 +92,15 @@ export default function BusinessPage() {
             .map(({ skillId, name, isPending }) => ({ skillId, name, isPending }));
     })();
 
+    const breadcrumbItems = [
+        { label: "Ontdek", to: "/ontdek" },
+        { label: businessData?.name || "Organisatie" },
+    ];
+
     return (
         <>
-            <PageHeader name={'Bedrijfspagina'} />
+            <Breadcrumb items={breadcrumbItems} />
+            <PageHeader name={'Organisatiepagina'} />
             <div className={`flex flex-col gap-2 ${(businessErrorMessage !== undefined || projectsErrorMessage !== undefined) && 'mb-4'}`}>
                 <Alert text={businessErrorMessage} />
                 <Alert text={projectsErrorMessage} />
@@ -101,14 +108,16 @@ export default function BusinessPage() {
             {isBusinessLoading ? (
                 <Loading />
             ) : (
-                <BusinessProjectDashboard
-                    showDescription={true}
-                    showUpdateButton={true}
-                    isAlwaysExtended={true}
-                    business={businessData}
-                    projects={projectsData}
-                    topSkills={computedTopSkills}
-                />
+                <>
+                    <BusinessProjectDashboard
+                        showDescription={true}
+                        showUpdateButton={true}
+                        isAlwaysExtended={true}
+                        business={businessData}
+                        projects={projectsData}
+                        topSkills={computedTopSkills}
+                    />
+                </>
             )}
         </>
     );

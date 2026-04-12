@@ -4,11 +4,16 @@ import StudentProfileSkills from "./StudentProfileSkills";
 
 export default function StudentProfile({ student, setFetchAmount }) {
     return (
-        <div className="bg-slate-100">
-            <StudentProfileHeader student={student} />
-            <div className="flex flex-col gap-4 p-4 lg:flex-row">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* LEFT COLUMN: Skills + CV (8 cols on desktop) */}
+            <div className="lg:col-span-8 space-y-6">
                 <StudentProfileSkills student={student} setFetchAmount={setFetchAmount} />
-                <StudentProfileCv cv={student?.cv_path} />
+                <StudentProfileCv cv={student?.cv_path} studentId={student?.id} />
+            </div>
+
+            {/* RIGHT COLUMN: Profile Stats Widget (4 cols on desktop) */}
+            <div className="lg:col-span-4">
+                <StudentProfileHeader student={student} />
             </div>
         </div>
     )

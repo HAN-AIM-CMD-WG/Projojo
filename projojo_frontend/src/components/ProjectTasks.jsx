@@ -72,25 +72,46 @@ export default function ProjectTasks({ tasks, fetchAmount, setFetchAmount, busin
     }, [fetchAmount, location.hash, tasks]);
 
     return (
-        <div className="flex flex-col gap-4 w-full p-4 rounded-b-lg">
+        <div className="p-6 pt-0">
+            {/* Section header */}
+            <div className="mb-6">
+                <h2 className="text-xl font-extrabold text-[var(--text-primary)]">Beschikbare taken</h2>
+                <span className="text-sm text-[var(--text-muted)]">{tasks?.length || 0} {tasks?.length === 1 ? 'taak' : 'taken'}</span>
+            </div>
+
             <Alert text={error} />
-            {isEmpty
-                ? <h2>Er zijn geen taken om weer te geven</h2>
-                : tasks.map((task, index) => {
-                    const isLast = index === tasks.length - 1;
-                    // Ensure task has the expected format for the components
-                    return (
-                        <div
-                            ref={(el) => {
-                                taskRefs.current[task.id] = el;
-                                if (isLast && lastTaskRef) lastTaskRef.current = el;
-                            }}
-                            key={task.id}
-                            id={`task-${task.id}`}>
-                            <Task task={task} setFetchAmount={setFetchAmount} businessId={businessId} allSkills={allSkills} studentAlreadyRegistered={currentRegistrations.includes(task.id)} />
-                        </div >
-                    )
-                })}
-        </div >
+            
+            {isEmpty ? (
+                <div className="neu-pressed p-8 rounded-2xl text-center">
+                    <span className="material-symbols-outlined text-4xl text-gray-300 mb-2">inbox</span>
+                    <p className="text-[var(--text-muted)]">Er zijn nog geen taken voor dit project</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    {tasks.map((task, index) => {
+                        const isLast = index === tasks.length - 1;
+                        return (
+                            <div
+                                ref={(el) => {
+                                    taskRefs.current[task.id] = el;
+                                    if (isLast && lastTaskRef) lastTaskRef.current = el;
+                                }}
+                                key={task.id}
+                                id={`task-${task.id}`}
+                                className="h-full"
+                            >
+                                <Task 
+                                    task={task} 
+                                    setFetchAmount={setFetchAmount} 
+                                    businessId={businessId} 
+                                    allSkills={allSkills} 
+                                    studentAlreadyRegistered={currentRegistrations.includes(task.id)} 
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
     )
 }

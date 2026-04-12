@@ -1,36 +1,134 @@
-import InfoBox from './InfoBox';
 import SkillBadge from './SkillBadge';
 import { useAuth } from '../auth/AuthProvider';
 import { filterVisibleSkillsForUser } from '../utils/skills';
+import { getCountdownText, formatDateShort } from "../utils/dates";
 
-export default function TaskCard({ task }) {
+// Status labels in Dutch
+const statusLabels = {
+    'completed': 'Voltooid',
+    'in_progress': 'Bezig',
+    'open': 'Open',
+    'pending': 'In afwachting'
+};
+
+export default function TaskCard({ task, compact = false }) {
     const { authData } = useAuth();
+    // Compact version for inline display
+    if (compact) {
+        const spotsAvailable = (task.total_needed || 0) - (task.total_accepted || 0);
+        const statusKey = task.status || 'open';
+
+        return (
+            <div className="neu-task-box cursor-pointer hover:bg-white/60 transition-all">
+                <span className="material-symbols-outlined text-primary">assignment</span>
+                <div className="flex-1 min-w-0">
+                    <span className="block truncate font-bold text-[var(--text-secondary)]">{task.name}</span>
+                    <div className="flex items-center gap-2 text-[10px] text-[var(--text-muted)]">
+                        <span className="uppercase tracking-wide">
+                            {spotsAvailable > 0 ? `${spotsAvailable} plekken` : 'Vol'}
+                        </span>
+                        {task.end_date && getCountdownText(task.end_date) && (
+                            <>
+                                <span>•</span>
+                                <span>{getCountdownText(task.end_date)}</span>
+                            </>
+                        )}
+                    </div>
+                </div>
+                {task.status && (
+                    <span className={`shrink-0 ${statusKey === 'completed' ? 'neu-badge-success' :
+                            statusKey === 'in_progress' ? 'neu-badge-info' :
+                                'neu-badge-gray'
+                        }`}>
+                        {statusLabels[statusKey] || 'Open'}
+                    </span>
+                )}
+            </div>
+        );
+    }
+
+    // Full version
+    const spotsAvailable = (task.total_needed || 0) - (task.total_accepted || 0);
+    const spotsTotal = task.total_needed || 0;
+    const progress = spotsTotal > 0
+        ? Math.round(((task.total_accepted || 0) / spotsTotal) * 100)
+        : 0;
+    const statusKey = task.status || 'open';
     const visibleSkills = filterVisibleSkillsForUser(authData, task.skills || []);
+
     return (
-        <div className="max-w-sm bg-slate-100 border border-gray-200 rounded-lg shadow-lg hover:rounded-lg hover:ring-4 hover:ring-pink-300 transition-all duration-300 ease-in-out">
-            <div className="flex flex-col gap-3 p-4">
-                <h5 className="text-xl font-bold tracking-tight text-slate-800 group-hover:text-slate-700 transition-colors break-words">
-                    Taak: {task.name}
-                </h5>
-                <InfoBox className="flex flex-col px-2 py-[0.25rem]">
-                    <span className="text-md font-semibold text-slate-700"><strong className="text-primary">{task.total_needed - task.total_accepted}</strong> van de {task.total_needed} plekken beschikbaar</span>
-                    {task.total_registered !== undefined && (
-                        <>
-                            <hr className="my-1 border border-gray-300" />
-                            <span className="text-md font-semibold text-slate-700"><strong className="text-primary">{task.total_registered}</strong> openstaande aanmelding</span>
-                        </>
+        <div className="neu-flat p-5 hover:ring-2 hover:ring-primary/30 transition-all duration-300 cursor-pointer">
+            <div className="flex flex-col gap-4">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="neu-icon-container-sm text-primary">
+                            <span className="material-symbols-outlined">assignment</span>
+                        </div>
+                        <div>
+                            <h5 className="text-lg font-extrabold tracking-tight text-[var(--text-primary)]">
+                                {task.name}
+                            </h5>
+                            <span className="neu-label">Taak</span>
+                            {task.end_date && getCountdownText(task.end_date) && (
+                                <div className="flex items-center gap-1.5 text-xs text-[var(--text-muted)] mt-1">
+                                    <span className="material-symbols-outlined text-xs">schedule</span>
+                                    <span>{getCountdownText(task.end_date)} • {formatDateShort(task.end_date)}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    {task.status && (
+                        <span className={`shrink-0 ${statusKey === 'completed' ? 'neu-badge-success-solid' :
+                                statusKey === 'in_progress' ? 'neu-badge-info' :
+                                    'neu-badge-gray'
+                            }`}>
+                            {statusLabels[statusKey] || 'Open'}
+                        </span>
                     )}
-                </InfoBox>
+                </div>
+
+                {/* Availability progress */}
+                {spotsTotal > 0 && (
+                    <div>
+                        <div className="flex justify-between text-xs font-bold text-[var(--text-muted)] mb-2">
+                            <span>Bezetting</span>
+                            <span className="text-primary">{task.total_accepted || 0} van {spotsTotal} plekken</span>
+                        </div>
+                        <div className="neu-progress">
+                            <div className="neu-progress-bar" style={{ width: `${progress}%` }} />
+                        </div>
+                        {spotsAvailable > 0 && (
+                            <p className="text-[10px] text-green-600 font-semibold mt-1.5">
+                                {spotsAvailable} {spotsAvailable === 1 ? 'plek' : 'plekken'} beschikbaar
+                            </p>
+                        )}
+                    </div>
+                )}
+
+                {/* Registration info */}
+                {task.total_registered !== undefined && task.total_registered > 0 && (
+                    <div className="neu-task-box !bg-amber-50 !border-amber-200">
+                        <span className="material-symbols-outlined text-amber-600">schedule</span>
+                        <span className="text-amber-700">
+                            <strong>{task.total_registered}</strong> {task.total_registered === 1 ? 'aanmelding' : 'aanmeldingen'} in behandeling
+                        </span>
+                    </div>
+                )}
+
+                {/* Skills */}
                 {visibleSkills.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-lg font-semibold text-slate-700">Skills:</span>
-                        {visibleSkills.map((skill) => (
-                            <SkillBadge
-                                key={skill.skillId || skill.id}
-                                skillName={skill.name}
-                                isPending={skill.isPending || skill.is_pending}
-                            />
-                        ))}
+                    <div className="space-y-2">
+                        <span className="neu-label">Benodigde skills</span>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {visibleSkills.map((skill) => (
+                                <SkillBadge
+                                    key={skill.skillId || skill.id}
+                                    skillName={skill.name}
+                                    isPending={skill.isPending || skill.is_pending}
+                                />
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
