@@ -10,6 +10,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
     const [nameError, setNameError] = useState();
     const [descriptionError, setDescriptionError] = useState();
     const [locationError, setLocationError] = useState();
+    const [dateError, setDateError] = useState();
     const { authData } = useAuth();
     const navigation = useNavigate();
 
@@ -25,6 +26,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
     const handleSubmit = event => {
         event.preventDefault();
+        setDateError(undefined);
+
         if (nameError != undefined || descriptionError != undefined || locationError != undefined) {
             return;
         }
@@ -45,6 +48,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
         // Validate dates
         if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            setDateError("De einddatum moet na de startdatum liggen.");
             setIsSubmitting(false);
             return;
         }
@@ -83,9 +87,10 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
 
             <form onSubmit={handleSubmit} aria-label="Project aanmaken form">
                 <Alert text={serverErrorMessage} />
+                <Alert text={dateError} onClose={() => setDateError(undefined)} />
 
                 {/* Project Image Section */}
-                <div className="neu-flat rounded-2xl p-6 mb-6">
+                <div className="neu-flat rounded-2xl p-6 my-6">
                     <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                         <span className="material-symbols-outlined text-primary">image</span>
                         Projectafbeelding

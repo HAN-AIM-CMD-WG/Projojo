@@ -38,7 +38,7 @@ export default function UpdateBusinessPage() {
         }
     }, [authData.isLoading, authData.type, authData.businessId, targetBusinessId])
 
-    const { data: business } = useFetch(async () => !authData.isLoading && targetBusinessId && await getBusinessById(targetBusinessId), [targetBusinessId]);
+    const { data: business } = useFetch(async () => !authData.isLoading && targetBusinessId && await getBusinessById(targetBusinessId), [authData.isLoading, targetBusinessId]);
 
     if (business?.description !== undefined && description === undefined) {
         setDescription(business?.description);
@@ -66,14 +66,7 @@ export default function UpdateBusinessPage() {
             .then(() => {
                 navigation(`/business/${targetBusinessId}`);
             }).catch(error => {
-                setError(createErrorMessage(
-                    error,
-                    {
-                        401: "De organisatiepagina kan niet aangepast worden als je niet bent ingelogd",
-                        403: "Je bent niet geautoriseerd om de organisatiepagina aan te passen",
-                        404: "De organisatiepagina kan niet gevonden worden",
-                    }
-                ));
+                setError(error?.message || "Er is iets misgegaan bij het aanpassen van de organisatiepagina.");
             }).finally(() => {
                 setIsSubmitting(false);
             });
@@ -173,17 +166,17 @@ export default function UpdateBusinessPage() {
                                     ))}
                                 </select>
                             </div>
-                        <FormInput
+                            <FormInput
                                 label="Stad / Plaats"
-                            type="text"
-                            name="location"
+                                type="text"
+                                name="location"
                                 placeholder="bijv. Amsterdam, Centrum"
-                            initialValue={getSingleValue(business?.location)}
-                            error={locationError}
-                            setError={setLocationError}
-                            max={255}
-                            required={true}
-                        />
+                                initialValue={getSingleValue(business?.location)}
+                                error={locationError}
+                                setError={setLocationError}
+                                max={255}
+                                required={true}
+                            />
                         </div>
                     </div>
                 </div>
