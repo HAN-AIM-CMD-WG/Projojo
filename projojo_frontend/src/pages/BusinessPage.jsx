@@ -20,8 +20,8 @@ export default function BusinessPage() {
         const promises = [];
         for (let i = 0; i < projects.length; i++) {
             const project = projects[i];
-            // Fetch tasks for each project
-            promises.push(getTasks(project.id));
+            // Fetch tasks for each project, gracefully fail to empty array
+            promises.push(getTasks(project.id).catch(() => []));
         }
 
         const awaited = await Promise.all(promises);

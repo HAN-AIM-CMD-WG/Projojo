@@ -6,7 +6,7 @@ import SkeletonList from './SkeletonList';
 
 /**
  * DiscoverySection Component
- * 
+ *
  * Compact discovery section for the landing page.
  * Shows public projects with neumorphic-consistent filters.
  */
@@ -23,8 +23,10 @@ export default function DiscoverySection() {
 
     useEffect(() => {
         setIsLoading(true);
-        Promise.all([getPublicProjects(), getThemes()])
-            .then(([projectsData, themesData]) => {
+        Promise.allSettled([getPublicProjects(), getThemes()])
+            .then((results) => {
+                const projectsData = results[0].status === 'fulfilled' ? results[0].value : [];
+                const themesData = results[1].status === 'fulfilled' ? results[1].value : [];
                 setProjects(projectsData);
                 setFilteredProjects(projectsData);
                 setThemes(themesData);
@@ -45,7 +47,7 @@ export default function DiscoverySection() {
     // Apply filters
     useEffect(() => {
         let result = [...projects];
-        
+
         if (activeFilter === 'active') {
             result = result.filter(p => {
                 if (!p.end_date) return true;
@@ -57,20 +59,20 @@ export default function DiscoverySection() {
                 return new Date(p.end_date) < new Date();
             });
         }
-        
+
         if (selectedTheme) {
-            result = result.filter(p => 
+            result = result.filter(p =>
                 p.themes?.some(t => t.id === selectedTheme)
             );
         }
-        
+
         if (selectedLocation) {
             result = result.filter(p => p.business?.location === selectedLocation);
         }
-        
+
         if (searchTerm.trim()) {
             const term = searchTerm.toLowerCase();
-            result = result.filter(p => 
+            result = result.filter(p =>
                 p.name.toLowerCase().includes(term) ||
                 p.description?.toLowerCase().includes(term) ||
                 p.business?.name?.toLowerCase().includes(term) ||
@@ -78,7 +80,7 @@ export default function DiscoverySection() {
                 p.themes?.some(t => t.name.toLowerCase().includes(term))
             );
         }
-        
+
         setFilteredProjects(result);
     }, [projects, activeFilter, searchTerm, selectedTheme, selectedLocation]);
 
@@ -180,11 +182,10 @@ export default function DiscoverySection() {
                             <span className="neu-label shrink-0 mr-0.5">Thema&apos;s</span>
                             <button
                                 onClick={() => setSelectedTheme(null)}
-                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                                    !selectedTheme
+                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${!selectedTheme
                                         ? 'bg-primary text-white'
                                         : 'text-[var(--text-muted)] hover:text-primary'
-                                }`}
+                                    }`}
                             >
                                 Alles
                             </button>
@@ -195,11 +196,10 @@ export default function DiscoverySection() {
                                     <button
                                         key={theme.id}
                                         onClick={() => setSelectedTheme(selectedTheme === theme.id ? null : theme.id)}
-                                        className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                                            selectedTheme === theme.id
+                                        className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${selectedTheme === theme.id
                                                 ? 'text-white'
                                                 : 'text-[var(--text-secondary)] hover:text-primary'
-                                        }`}
+                                            }`}
                                         style={selectedTheme === theme.id && theme.color ? { backgroundColor: theme.color } : {}}
                                     >
                                         {theme.icon && (
@@ -219,11 +219,10 @@ export default function DiscoverySection() {
                             <span className="material-symbols-outlined text-xs text-[var(--text-muted)] shrink-0" aria-hidden="true">location_on</span>
                             <button
                                 onClick={() => setSelectedLocation('')}
-                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                                    !selectedLocation
+                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${!selectedLocation
                                         ? 'bg-primary text-white'
                                         : 'text-[var(--text-muted)] hover:text-primary'
-                                }`}
+                                    }`}
                             >
                                 Alle locaties
                             </button>
@@ -231,11 +230,10 @@ export default function DiscoverySection() {
                                 <button
                                     key={loc}
                                     onClick={() => setSelectedLocation(selectedLocation === loc ? '' : loc)}
-                                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
-                                        selectedLocation === loc
+                                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${selectedLocation === loc
                                             ? 'bg-primary text-white'
                                             : 'text-[var(--text-muted)] hover:text-primary'
-                                    }`}
+                                        }`}
                                 >
                                     {loc}
                                 </button>
