@@ -3,7 +3,7 @@ import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
 import SkeletonOverview from '../components/SkeletonOverview';
-import { getBusinessesComplete, getThemes, getPublicProjects } from '../services';
+import { getBusinessesComplete, getThemes, getProjectThemes } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
@@ -21,8 +21,8 @@ export default function OverviewPage() {
     let ignore = false;
     setIsLoading(true);
 
-    Promise.allSettled([getBusinessesComplete(), getThemes(), getPublicProjects()])
-      .then(([businessesResult, themesResult, publicProjectsResult]) => {
+    Promise.allSettled([getBusinessesComplete(), getThemes()])
+      .then(async ([businessesResult, themesResult]) => {
         if (ignore) return;
 
         // Businesses are required - fail if they didn't load
@@ -31,17 +31,22 @@ export default function OverviewPage() {
         }
         const data = businessesResult.value;
 
-        // Themes and public projects degrade gracefully
+        // Themes degrade gracefully
         const themesData = themesResult.status === 'fulfilled' ? themesResult.value : [];
-        const publicProjects = publicProjectsResult.status === 'fulfilled' ? publicProjectsResult.value : [];
 
         setThemes(themesData || []);
 
-        // Build project -> themes mapping from public projects
+        // Fetch themes for ALL projects (public and non-public)
+        const allProjectIds = data.flatMap(b => (b.projects || []).map(p => p.id)).filter(Boolean);
+        const themeResults = await Promise.allSettled(
+          allProjectIds.map(id => getProjectThemes(id))
+        );
+
+        // Build project -> themes mapping from per-project results
         const projectThemesMap = {};
-        (publicProjects || []).forEach(p => {
-          if (p.id && p.themes) {
-            projectThemesMap[p.id] = p.themes;
+        allProjectIds.forEach((id, index) => {
+          if (themeResults[index].status === 'fulfilled') {
+            projectThemesMap[id] = themeResults[index].value;
           }
         });
 

@@ -397,7 +397,6 @@ function PublicProjectList() {
                                         address: p.business.location,
                                         type: 'project',
                                         businessName: p.business.name,
-                                        image: p.business.image_path,
                                         linkTo: `/publiek/${p.id}`
                                     }))}
                                 height="260px"
