@@ -171,6 +171,23 @@ class BusinessRepository(BaseRepository[Business]):
         """
         return Db.read_transact(query)
 
+    def check_business_name_exists(self, name: str, exclude_business_id: str = None) -> bool:
+        """Check if a business with the given name already exists, optionally excluding a specific business ID."""
+        query = """
+            match
+                $business isa business, has name ~name;
+            fetch {
+                'id': $business.id
+            };
+        """
+        results = Db.read_transact(query, {"name": name})
+        if not results:
+            return False
+        # If excluding a business ID, check if the found business is the same one
+        if exclude_business_id:
+            return any(r.get("id") != exclude_business_id for r in results)
+        return True
+
     def create(self, name: str) -> Business:
         id = generate_uuid()
 
