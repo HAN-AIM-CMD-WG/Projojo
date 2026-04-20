@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import useBookmarks from '../hooks/useBookmarks';
-import { getStudentRegistrations, getTaskSkills, cancelRegistration, getProject, IMAGE_BASE_URL } from '../services';
+import { getStudentRegistrations, getTaskSkills, cancelRegistration, getProject, IMAGE_BASE_URL, getBusinessLogoUrl } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
@@ -482,15 +482,19 @@ function TeacherDashboard() {
                                     {/* Business info */}
                                     {project.business && (
                                         <div className="flex items-center gap-2 mb-2">
-                                            {project.business.image_path && project.business.image_path !== 'default.png' ? (
-                                                <img
-                                                    src={`${IMAGE_BASE_URL}${project.business.image_path}`}
-                                                    alt=""
-                                                    className="w-5 h-5 rounded object-cover"
-                                                />
-                                            ) : (
-                                                <span className="material-symbols-outlined text-sm text-[var(--text-muted)]">business</span>
-                                            )}
+                                            {(() => {
+                                                const logoUrl = getBusinessLogoUrl(project.business.image_path, project.business.website, { size: 64 });
+                                                return logoUrl ? (
+                                                    <img
+                                                        src={logoUrl}
+                                                        alt=""
+                                                        className="w-5 h-5 rounded object-cover"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                ) : (
+                                                    <span className="material-symbols-outlined text-sm text-[var(--text-muted)]">business</span>
+                                                );
+                                            })()}
                                             <span className="text-xs text-[var(--text-muted)] truncate">{project.business.name}</span>
                                         </div>
                                     )}

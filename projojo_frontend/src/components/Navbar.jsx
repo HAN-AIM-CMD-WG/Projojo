@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { IMAGE_BASE_URL, getUser, getBusinessById } from "../services";
 import { useAuth } from "../auth/AuthProvider";
+import BusinessLogo from "./BusinessLogo";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
@@ -188,20 +189,14 @@ export default function Navbar() {
                                         >
                                             {/* Neumorphic container */}
                                             <div className="relative flex items-center neu-pressed rounded-xl p-1 group-hover:shadow-[inset_2px_2px_4px_rgba(209,217,230,0.8),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] transition-all duration-300">
-                                                {/* Logo */}
-                                                {businessData.image_path && businessData.image_path !== 'default.png' ? (
-                                                    <img 
-                                                        src={`${IMAGE_BASE_URL}${businessData.image_path}`}
-                                                        alt={businessData.name}
-                                                        className="w-8 h-8 rounded-lg object-cover shrink-0"
+                                                <div className="w-8 h-8 shrink-0 overflow-hidden rounded-lg">
+                                                    <BusinessLogo
+                                                        image={businessData.image_path}
+                                                        website={businessData.website}
+                                                        name={businessData.name}
+                                                        size="sm"
                                                     />
-                                                ) : (
-                                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
-                                                        <span className="font-bold text-primary text-xs">
-                                                            {businessData.name?.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'B'}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                                </div>
                                                 
                                                 {/* Expanding text container - hidden on mobile */}
                                                 <div className="hidden md:block overflow-hidden max-w-0 group-hover:max-w-[120px] transition-all duration-300 ease-out">

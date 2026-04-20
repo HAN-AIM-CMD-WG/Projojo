@@ -153,12 +153,16 @@
     <button class="chip" data-filter-type="presentatie">Presentatie</button>
     <button class="chip" data-filter-type="flyer">Flyer</button>
     <button class="chip" data-filter-tag="gezondheid">Gezondheid &amp; Welzijn</button>
-    <button class="chip" data-filter-tag="kennisdeling">Kennisdeling</button>
+    <button class="chip" data-filter-tag="kansengelijkheid">Kansengelijkheid</button>
+    <button class="chip" data-filter-tag="klimaat">Klimaatadaptatie</button>
+    <button class="chip" data-filter-tag="kunst">Kunst &amp; Cultuur</button>
     <button class="chip" data-filter-tag="klarendal">Klarendal</button>
+    <button class="chip" data-filter-tag="malburgen">Malburgen</button>
+    <button class="chip" data-filter-tag="presikhaaf">Presikhaaf</button>
   </div>
 
   <!-- RESULT COUNT -->
-  <div class="result-count fade-in fade-in-d3" id="resultCount">6 publicaties gevonden</div>
+  <div class="result-count fade-in fade-in-d3" id="resultCount">9 publicaties gevonden</div>
 
   <!-- PUBLICATION GRID -->
   <div class="grid-3" id="pubGrid">
@@ -295,6 +299,72 @@
       </div>
     </div>
 
+    <!-- 7. Zwanebloemlaan Ontwerp -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d4" data-type="rapport" data-tags="klimaat,malburgen" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-rapport">Ontwerprapport</span>
+        <span class="text-xs text-muted">Juni 2025</span>
+      </div>
+      <div class="pub-card-title">Zwanebloemlaan — Hittebestendige Binnenpleintjes</div>
+      <p class="text-sm text-muted truncate-2">Bouwkunde-studenten HVHL ontwerpen samen met Volkshuisvesting, Kinderwijkteam en stadstuinier vergroeningsscenario's voor versteende pleintjes in Malburgen.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        Thomas Janssen, Fenna Schreuder
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Zwanebloemlaan — Binnenpleintjes Vergroenen</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-sustainability">Klimaatadaptatie</span>
+        <span class="tag tag-location">Malburgen</span>
+      </div>
+    </div>
+
+    <!-- 8. MOVING (HI)STORIES Video -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d5" data-type="video" data-tags="kunst" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-video">Video</span>
+        <span class="text-xs text-muted">Juni 2025</span>
+      </div>
+      <div class="pub-card-title">MOVING (HI)STORIES — Wijkverhalen in Beeld</div>
+      <p class="text-sm text-muted truncate-2">Compilatie van kunstprojecten door ArtEZ Artisteducator-collectieven rond persoonlijke verhalen uit 't Arnhemse Broek. Think Global, Act Local.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        ArtEZ Collectieven onder leiding van Ines Sauer
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">MOVING (HI)STORIES — 't Arnhemse Broek</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-education">Kunst &amp; Cultuur</span>
+        <span class="tag tag-location">'t Arnhemse Broek</span>
+      </div>
+    </div>
+
+    <!-- 9. Move je Buurt Reflectieverslag -->
+    <div class="neu-card neu-card-interactive pub-card fade-in fade-in-d6" data-type="rapport" data-tags="kansengelijkheid,presikhaaf" onclick="openModal()">
+      <div class="pub-card-header">
+        <span class="badge badge-rapport">Reflectieverslag</span>
+        <span class="text-xs text-muted">Juni 2025</span>
+      </div>
+      <div class="pub-card-title">Move je Buurt Presikhaaf — Bereik &amp; Impact</div>
+      <p class="text-sm text-muted truncate-2">HAN-studenten rapporteren over bereik, leerervaringen en impact van de co-creatiesessies met kinderen van een Presikhaafse basisschool en Stichting Move.</p>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">person</span>
+        HAN Lab Presikhaaf o.l.v. Nabela Zinad
+      </div>
+      <div class="pub-card-meta">
+        <span class="material-symbols-rounded">folder</span>
+        <a href="#" class="link" onclick="event.stopPropagation()">Move je Buurt — HAN Lab Presikhaaf</a>
+      </div>
+      <div class="pub-card-tags">
+        <span class="tag tag-education">Kansengelijkheid</span>
+        <span class="tag tag-location">Presikhaaf</span>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -350,7 +420,7 @@
     <div class="modal-section-label">Programma</div>
     <div class="modal-detail-row">
       <span class="material-symbols-rounded">hub</span>
-      <a href="programma.html" class="link">City Deal Kennis Maken — Klarendal</a>
+      <a href="programma.html" class="link">City Deal Kennis Maken — Arnhem</a>
     </div>
 
     <div class="modal-section-label">Thema's</div>

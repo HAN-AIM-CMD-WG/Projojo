@@ -1,40 +1,8 @@
 insert
 
-    # Teacher user
-    $u1 isa teacher,
-        has id "4198c8e8-a160-4d9e-95f3-930089dc97d2", # Generated with terminal command: `python -c "import uuid; [print(f'{i+1}:\t{uuid.uuid4()}') for i in range(15)]"`
-        has fullName "Henk van der Berg",
-        has imagePath "teacher_profile.png",
-        has email "h.vandeberg@han.nl";
-
-    # Student users
-    $u2 isa student,
-        has id "f544fec0-b4ff-4133-bc5d-4c95f34518bd",
-        has fullName "Emma Jansen",
-        has imagePath "student_female.png",
-        has description "Enthousiaste student **landbouwtechnologie** met passie voor _duurzame_ **landbouwpraktijken**.",
-        has email "em.jansen@student.han.nl",
-        has cvPath "cv_emma_jansen.pdf";
-
-    $u3 isa student,
-        has id "b0d7e3ca-dad8-4b40-83dd-02a970aebce3",
-        has fullName "Lucas de Vries",
-        has imagePath "student_male.png",
-        has email "l.devries@student.han.nl";
-
-    $u4 isa student,
-        has id "9c98b49c-5c99-4959-86d1-0d3d79b98902",
-        has fullName "Sophie Bakker",
-        has imagePath "student_female.png",
-        has email "sr.bakker@student.han.nl";
-
-    $u5 isa student,
-        has id "b3afaca3-f714-432e-ac97-c437600b163a",
-        has fullName "Daan Vermeulen",
-        has imagePath "student_male.png",
-        has email "d.vermeulen@student.han.nl";
-
-    # Identity providers
+    # ============================================
+    # Identity providers (gedeeld)
+    # ============================================
     $op1 isa oauthProvider,
         has name "microsoft";
 
@@ -44,306 +12,10 @@ insert
     $op3 isa oauthProvider,
         has name "github";
 
-    # Businesses
-    $b1 isa business,
-        has id "978556ff-3c15-4b7a-b559-5e7e131a4c28",
-        has name "De Gouden Akker",
-        has description "Biologische akkerbouw en duurzame gewasproductie",
-        has imagePath "logo_gouden_akker.png",
-        has location "Gelderland",
-        has sector "Agri & Food",
-        has companySize "11-50",
-        has website "https://goudenakker.nl";
-
-    $b2 isa business,
-        has id "13d56397-fdd5-4846-a333-007ab188f403",
-        has name "Veeteelt Groep Nederland",
-        has description "Moderne rundveehouderij en melkproductie optimalisatie",
-        has imagePath "logo_veeteelt_groep.png",
-        has location "Noord-Brabant",
-        has sector "Agri & Food",
-        has companySize "51-200",
-        has website "https://veeteeltgroep.nl";
-
-    $b3 isa business,
-        has id "a9986c4d-60b6-404c-9eb3-2e6d16822852",
-        has name "SmartFarm Solutions",
-        has description "Agtech innovaties voor precisie landbouw",
-        has imagePath "logo_smartfarm.png",
-        has location "Zuid-Holland",
-        has sector "Technology",
-        has companySize "11-50",
-        has website "https://smartfarmsolutions.nl";
-
-    $b4 isa business,
-        has id "1b9bd6a1-3b32-4309-8b0a-6acaf611bcad",
-        has name "Groene Kassen BV",
-        has description "Hightech glastuinbouw en vertical farming",
-        has imagePath "logo_groene_kassen.png",
-        has location "Limburg",
-        has sector "Agri & Food",
-        has companySize "51-200",
-        has website "https://groenekassen.nl";
-
-    $b5 isa business,
-        has id "abebaa2f-711b-4558-80ca-a9ac9ee6d558",
-        has name "Bodemexperts Nederland",
-        has description "Bodemanalyse en bemestingsadvies",
-        has imagePath "logo_bodemexperts.png",
-        has location "Overijssel",
-        has sector "Advies & Consultancy",
-        has companySize "1-10",
-        has website "https://bodemexperts.nl";
-
-    $b6 isa business,
-        has id "31baf4a8-c4be-4d63-9e0c-c71bea59d144",
-        has name "AquaCultuur Innovatie",
-        has description "Duurzame viskweek en aquaponics systemen",
-        has imagePath "logo_aquacultuur.png",
-        has location "Flevoland",
-        has sector "Agri & Food",
-        has companySize "11-50",
-        has website "https://aquacultuurinnovatie.nl";
-
-    $b7 isa business,
-        has id "70a5d893-6368-4833-ab12-48703670117d",
-        has name "Fruitboomgaarden Van Dijk",
-        has description "Moderne fruitteelt en oogstoptimalisatie",
-        has imagePath "logo_fruitboom.png",
-        has location "Zeeland",
-        has sector "Agri & Food",
-        has companySize "11-50",
-        has website "https://fruitboomgaardenvandijk.nl";
-
-    $b8 isa business,
-        has id "f9a953b8-dec4-4ebf-b04a-12b24a3911c6",
-        has name "Akkerbouw Mechanisatie",
-        has description "Landbouwmachines en automatisering",
-        has imagePath "logo_mechanisatie.png",
-        has location "Groningen",
-        has sector "Technology",
-        has companySize "51-200",
-        has website "https://akkerbouwmechanisatie.nl";
-
-    $b9 isa business,
-        has id "3205714b-859c-4ecb-aea3-c6f736e6f8db",
-        has name "Biodynamische Boerderij",
-        has description "Holistische landbouw en biodiversiteit",
-        has imagePath "logo_biodynamisch.png",
-        has location "Friesland",
-        has sector "Agri & Food",
-        has companySize "1-10",
-        has website "https://biodynamischeboerderij.nl";
-
-    $b10 isa business,
-        has id "7a48c8c1-2d4a-498a-adb4-4198032de610",
-        has name "Agri-Logistiek Centrum",
-        has description "Transport en opslag van landbouwproducten",
-        has imagePath "logo_agrilogistiek.png",
-        has location "Utrecht",
-        has sector "Logistiek",
-        has companySize "51-200",
-        has website "https://agrilogistiek.nl";
-
-    # Supervisor users (1 per business, 10 total)
-    $s1 isa supervisor,
-        has id "98f07817-9ede-4e4f-8f1b-0fd65ac33322",
-        has fullName "Jan Boersma",
-        has imagePath "supervisor_male1.png",
-        has email "j.boersma@goudakker.nl";
-
-    $s2 isa supervisor,
-        has id "bb4d39d3-68f0-4484-ac7e-8f5ee97f65c7",
-        has fullName "Pieter Koster",
-        has imagePath "supervisor_male2.png",
-        has email "p.koster@veeteeltgroep.nl";
-
-    $s3 isa supervisor,
-        has id "a7877a75-2559-4703-8904-ec82370050a5",
-        has fullName "Rob Hendriks",
-        has imagePath "supervisor_male1.png",
-        has email "r.hendriks@smartfarm.nl";
-
-    $s4 isa supervisor,
-        has id "cf555071-1e0a-475c-bb66-fb647bac6887",
-        has fullName "Bert Scholten",
-        has imagePath "supervisor_male2.png",
-        has email "b.scholten@groenekassen.nl";
-
-    $s5 isa supervisor,
-        has id "a4a87085-4e88-49d8-9ce7-7667ed2d9583",
-        has fullName "Henk van Leeuwen",
-        has imagePath "supervisor_male1.png",
-        has email "h.vanleeuwen@bodemexperts.nl";
-
-    $s6 isa supervisor,
-        has id "dea05349-5e94-4d09-9a08-75551ba8703c",
-        has fullName "Tom van der Meer",
-        has imagePath "supervisor_female.png",
-        has email "t.vandermeer@aquacultuur.nl";
-
-    $s7 isa supervisor,
-        has id "70d0ed1d-617d-4477-9969-979c0c34636a",
-        has fullName "Willem van Dijk",
-        has imagePath "supervisor_male2.png",
-        has email "w.vandijk@fruitboom.nl";
-
-    $s8 isa supervisor,
-        has id "9e790315-e167-40fe-a37a-6f644809a84a",
-        has fullName "Gerrit Hoffman",
-        has imagePath "supervisor_male1.png",
-        has email "g.hoffman@mechanisatie.nl";
-
-    $s9 isa supervisor,
-        has id "23692031-7502-4927-8c98-b503966824ea",
-        has fullName "Klaas Dijkstra",
-        has imagePath "supervisor_male2.png",
-        has email "k.dijkstra@biodynamisch.nl";
-
-    $s10 isa supervisor,
-        has id "b63b20c4-14cf-42b8-a473-2fe1b607eea5",
-        has fullName "Jaap Koning",
-        has imagePath "supervisor_female.png",
-        has email "j.koning@agrilogistiek.nl";
-
-    # oauthAuthentication relations (each user has at least one, current max is 10, students and teachers can only have Microsoft)
-    $auth1 isa oauthAuthentication (user: $u1, provider: $op1),
-        has oauthSub "693888b2-2895-4b76-9e0e-d436b92a60a7";
-
-    $auth2 isa oauthAuthentication (user: $u2, provider: $op1),
-        has oauthSub "8e9ade83-393f-4af6-abe3-cf84750c204b";
-
-    $auth3 isa oauthAuthentication (user: $u3, provider: $op1),
-        has oauthSub "532abbac-e4cd-4bbb-817c-8a74f63f0336";
-
-    $auth4 isa oauthAuthentication (user: $u4, provider: $op1),
-        has oauthSub "30efa333-270b-434e-85ea-ea698f172db0";
-
-    $auth5 isa oauthAuthentication (user: $u5, provider: $op1),
-        has oauthSub "c7db864b-df3c-4f0a-b60d-b7ee41c9dff6";
-
-    $auth6 isa oauthAuthentication (user: $s1, provider: $op2),
-        has oauthSub "d8eac5e6-c028-4d46-bd47-dfd10cbe2b2d";
-
-    $auth7 isa oauthAuthentication (user: $s2, provider: $op3),
-        has oauthSub "6154f59b-0606-4255-a7f7-43e807b29f3c";
-
-    $auth8 isa oauthAuthentication (user: $s3, provider: $op2),
-        has oauthSub "96a4d60b-3a9c-4a8a-a85d-7907734d85fe";
-
-    $auth9 isa oauthAuthentication (user: $s4, provider: $op3),
-        has oauthSub "cf94bda9-84e4-4fc1-ba58-03461e9a8362";
-
-    $auth10 isa oauthAuthentication (user: $s5, provider: $op2),
-        has oauthSub "2d03ce23-6b1c-4d7d-b258-49b265b6afc8";
-
-    $auth11 isa oauthAuthentication (user: $s6, provider: $op3),
-        has oauthSub "44457bb7-dc92-4dce-99f4-e7d7fd70afa3";
-
-    $auth12 isa oauthAuthentication (user: $s7, provider: $op2),
-        has oauthSub "84892a7a-3efa-439f-a803-b4386135266d";
-
-    $auth13 isa oauthAuthentication (user: $s8, provider: $op3),
-        has oauthSub "6ee72385-22b0-4f13-b3ec-c901a8c0f28d";
-
-    $auth14 isa oauthAuthentication (user: $s9, provider: $op2),
-        has oauthSub "448af3a9-48c9-4a34-9bf5-7e9744431808";
-
-    $auth15 isa oauthAuthentication (user: $s10, provider: $op3),
-        has oauthSub "f265ad97-dd3c-4c52-82b8-1874d1f9675c";
-
-    # Business management relations
-    $m1 isa manages (supervisor: $s1, business: $b1),
-        has location "Gelderland";
-
-    $m2 isa manages (supervisor: $s2, business: $b2),
-        has location "Noord-Brabant";
-
-    $m3 isa manages (supervisor: $s3, business: $b3),
-        has location "Zuid-Holland";
-
-    $m4 isa manages (supervisor: $s4, business: $b4),
-        has location "Limburg";
-
-    $m5 isa manages (supervisor: $s5, business: $b5),
-        has location "Overijssel";
-
-    $m6 isa manages (supervisor: $s6, business: $b6),
-        has location "Flevoland";
-
-    $m7 isa manages (supervisor: $s7, business: $b7),
-        has location "Zeeland";
-
-    $m8 isa manages (supervisor: $s8, business: $b8),
-        has location "Groningen";
-
-    $m9 isa manages (supervisor: $s9, business: $b9),
-        has location "Friesland";
-
-    $m10 isa manages (supervisor: $s10, business: $b10),
-        has location "Utrecht";
-
-    # Skills (agri-related)
-    $sk1 isa skill,
-        has id "c7852c64-eb33-4e82-9e42-d11f4108de03",
-        has name "Bodemanalyse",
-        has isPending false,
-        has createdAt 2025-01-15T09:00:00+0000;
-
-    $sk2 isa skill,
-        has id "238bcbb1-9f91-48d0-a972-cdcddfd81aa7",
-        has name "Gewasmonitoring",
-        has isPending false,
-        has createdAt 2025-01-15T09:15:00+0000;
-
-    $sk3 isa skill,
-        has id "29a025c8-651d-45f8-9465-d489f08509b1",
-        has name "Melkveebeheer",
-        has isPending false,
-        has createdAt 2025-01-15T09:30:00+0000;
-
-    $sk4 isa skill,
-        has id "ae6a26c1-46fe-4b6b-8126-e210086255d1",
-        has name "Precisie Landbouw",
-        has isPending false,
-        has createdAt 2025-01-15T09:45:00+0000;
-
-    $sk5 isa skill,
-        has id "f9bd0201-74a3-413a-9528-05b0d56a19de",
-        has name "Kasklimaat Optimalisatie",
-        has isPending false,
-        has createdAt 2025-01-15T10:00:00+0000;
-
-    $sk6 isa skill,
-        has id "a65013c1-c658-4931-998e-68fe2b2c6ca2",
-        has name "Bemestingsadvies",
-        has isPending false,
-        has createdAt 2025-01-15T10:15:00+0000;
-
-    $sk7 isa skill,
-        has id "b73492d9-b818-4a19-b3fc-53cdb125460d",
-        has name "Aquaponics",
-        has isPending false,
-        has createdAt 2025-01-15T10:30:00+0000;
-
-    $sk8 isa skill,
-        has id "1bf0e923-def3-4e46-83af-fb5fe5439d5e",
-        has name "Fruitteelt Techniek",
-        has isPending false,
-        has createdAt 2025-01-15T10:45:00+0000;
-
-    $sk9 isa skill,
-        has id "1d9fb327-ae1e-4043-9974-e9dcabed56bb",
-        has name "Landbouwmachine Onderhoud",
-        has isPending false,
-        has createdAt 2025-01-15T11:00:00+0000;
-
-    $sk10 isa skill,
-        has id "c7d2cf94-e849-4677-9ef9-6586cfb5325f",
-        has name "Biodiversiteit Beheer",
-        has isPending false,
-        has createdAt 2025-01-15T11:15:00+0000;
-
+    # ============================================
+    # Gedeelde skills (Data Analytics & IoT Sensoren)
+    # Gebruikt door City Deal en Gemeente Arnhem taken
+    # ============================================
     $sk11 isa skill,
         has id "8ca48042-c1be-419b-a976-928ff7ed2eb6",
         has name "Data Analytics",
@@ -356,1311 +28,9 @@ insert
         has isPending false,
         has createdAt 2025-01-15T11:45:00+0000;
 
-    $sk13 isa skill,
-        has id "a3b250fb-4b8a-44bb-9a6d-cc4ec688b2e0",
-        has name "Supply Chain Management",
-        has isPending false,
-        has createdAt 2025-01-15T12:00:00+0000;
-
-    $sk14 isa skill,
-        has id "d34defe6-aa19-44b8-8692-de27db86024f",
-        has name "Biologische Certificering",
-        has isPending false,
-        has createdAt 2025-01-15T12:15:00+0000;
-
-    $sk15 isa skill,
-        has id "c82ec5ef-1004-4a75-b768-2962ac46d70d",
-        has name "Voedingsstoffen Balancing",
-        has isPending false,
-        has createdAt 2025-01-15T12:30:00+0000;
-
-    $psk1 isa skill,
-        has id "7b5d3a2e-0e8a-4d3c-8c02-3f2c6d8a9f10",
-        has name "Kas Klimaat Test",
-        has isPending true,
-        has createdAt 2025-02-22T10:00:00+0000;
-
-    $psk2 isa skill,
-        has id "c3f2a4d1-9a8b-47f5-bc1e-9e3a2c1d5f77",
-        has name "Drone Inspectie",
-        has isPending true,
-        has createdAt 2025-02-22T10:05:00+0000;
-
-    $psk3 isa skill,
-        has id "e9a1b5c3-4d7f-4b2e-9c18-1a2b3c4d5e6f",
-        has name "AI Validatie mettypfout",
-        has isPending true,
-        has createdAt 2025-02-22T10:10:00+0000;
-
-    $psk4 isa skill,
-        has id "f0e1d2c3-b4a5-6789-9abc-def012345678",
-        has name "Data Schoonmaak (Pending)",
-        has isPending true,
-        has createdAt 2025-02-22T10:15:00+0000;
-
-    $psk5 isa skill,
-        has id "a1b2c3d4-e5f6-4789-abcd-0123456789ff",
-        has name "Nieuwe Skill Voor Review (Pending)",
-        has isPending true,
-        has createdAt 2025-02-22T10:20:00+0000;
-
-    # Projects - 33 total (2-6 per business)
-    # De Gouden Akker projects (4) - Period: 2025-06-15 to 2026-03-31
-    $p1 isa project,
-        has id "98b721e4-b9d4-4b42-9d3c-d66ffdf9ed15",
-        has name "Biologische Graan Monitoring Systeem",
-        has description "Ontwikkeling van een IoT-systeem voor real-time monitoring van biologische graanteelt",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-01-20T09:00:00+0000,
-        has startDate 2025-06-15T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000,
-        has isPublic true;
-
-    $p2 isa project,
-        has id "b6260d01-f570-4eea-b0ae-8cfedf2eb6b2",
-        has name "Bodemkwaliteit Dashboard",
-        has description "Analytics platform voor bodemgezondheid en nutriënten tracking",
-        has imagePath "project_analytics.png",
-        has createdAt 2025-01-21T10:30:00+0000,
-        has startDate 2025-07-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $p3 isa project,
-        has id "b9f1a256-3f37-4ae3-9577-38bc2683b9e3",
-        has name "Certificering Management Tool",
-        has description "Digitaal systeem voor biologische certificering en compliance",
-        has imagePath "project_mobile_app.png",
-        has createdAt 2025-01-22T14:15:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $p4 isa project,
-        has id "b9417fd1-6b28-4106-95b8-c1552f604d46",
-        has name "Weersvoorspelling Integratie",
-        has description "AI-gedreven weersvoorspelling specifiek voor akkerbouw",
-        has imagePath "project_ai_technology.png",
-        has createdAt 2025-01-23T11:45:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    # Veeteelt Groep Nederland projects (3) - Period: 2025-07-01 to 2026-02-28
-    $p5 isa project,
-        has id "780b3672-fd8e-4055-8c9f-8977e0218d67",
-        has name "Melkproductie Optimalisatie Platform",
-        has description "Data analytics voor melkveebeheer en productie verbetering",
-        has imagePath "project_analytics.png",
-        has createdAt 2025-01-24T08:30:00+0000,
-        has startDate 2025-07-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $p6 isa project,
-        has id "4496b7a8-130f-41b7-888f-032011bfbaaf",
-        has name "Voedersamenstelling Calculator",
-        has description "Automatische berekening van optimale voederratio's",
-        has imagePath "project_mobile_app.png",
-        has createdAt 2025-01-25T13:20:00+0000,
-        has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $p7 isa project,
-        has id "2591f54c-b9c6-4169-a293-f139d6bde444",
-        has name "Dierenwelzijn Monitoring",
-        has description "Sensor-gebaseerd systeem voor dierenwelzijn tracking",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-01-26T16:00:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    # SmartFarm Solutions projects (5) - Period: 2025-06-01 to 2026-04-30
-    $p8 isa project,
-        has id "6bb5d292-a551-476c-a242-d7b079a6d842",
-        has name "Drone Gewasanalyse Systeem",
-        has description "AI-gedreven analyse van gewassen via drone beeldherkenning",
-        has imagePath "project_ai_technology.png",
-        has createdAt 2025-01-27T09:15:00+0000,
-        has startDate 2025-06-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000,
-        has isPublic true;
-
-    $p9 isa project,
-        has id "202bf45b-42ec-4e50-9ae1-bae161d56b25",
-        has name "Precisie Irrigatie Controller",
-        has description "Automatisch irrigatiesysteem met bodemvochtigheidssensoren",
-        has imagePath "project_automation.png",
-        has createdAt 2025-01-28T12:45:00+0000,
-        has startDate 2025-07-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $p10 isa project,
-        has id "ba35aa2f-4f46-4df4-ac87-0113ecde20e7",
-        has name "Farm Management Dashboard",
-        has description "Centraal beheersysteem voor alle farm operaties",
-        has imagePath "project_analytics.png",
-        has createdAt 2025-01-29T15:30:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    $p11 isa project,
-        has id "5880b44c-dd63-4583-b8ae-75b96be5c6a4",
-        has name "Blockchain Traceability",
-        has description "Transparante supply chain tracking voor voedselproducten",
-        has imagePath "project_logistics.png",
-        has createdAt 2025-01-30T10:20:00+0000,
-        has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-04-30T23:59:00+0000;
-
-    $p12 isa project,
-        has id "b547572e-9029-4d47-832b-0726f65a2757",
-        has name "Machine Learning Oogstvoorspelling",
-        has description "Voorspelling van oogstopbrengsten met ML algoritmen",
-        has imagePath "project_ai_technology.png",
-        has createdAt 2025-01-31T14:10:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    # Groene Kassen BV projects (4) - Period: 2025-08-01 to 2026-03-15
-    $p13 isa project,
-        has id "645cbcd9-0029-41ac-81c9-caee69427a34",
-        has name "Klimaatbeheersing AI",
-        has description "AI-systeem voor optimale kasklimaat controle",
-        has imagePath "project_ai_technology.png",
-        has createdAt 2025-02-01T08:45:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000,
-        has isPublic true;
-
-    $p14 isa project,
-        has id "2d0d232f-10b6-4628-a972-831e7be60fac",
-        has name "Vertical Farm Automation",
-        has description "Geautomatiseerd vertical farming systeem",
-        has imagePath "project_automation.png",
-        has createdAt 2025-02-02T11:30:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $p15 isa project,
-        has id "455f9a39-ebff-4471-9a48-49058a4d07e6",
-        has name "Hydroponic Nutriënt Monitor",
-        has description "Real-time monitoring van nutriëntenlevel in hydroponic systemen",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-02-03T13:15:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    $p16 isa project,
-        has id "0fd89987-49b8-4ca8-a116-38da26ee5f4f",
-        has name "Energie Efficiency Platform",
-        has description "Optimalisatie van energieverbruik in kassen",
-        has imagePath "project_sustainability.png",
-        has createdAt 2025-02-04T16:20:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    # Bodemexperts Nederland projects (2) - Period: 2025-09-01 to 2026-01-31
-    $p17 isa project,
-        has id "c68c9f39-285c-4ea8-bd25-7b57c6463cb7",
-        has name "Bodemanalyse Lab Management",
-        has description "Digitalisering van bodemanalyse processen",
-        has imagePath "project_laboratory.png",
-        has createdAt 2025-02-05T09:30:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $p18 isa project,
-        has id "63849ef7-de9c-41be-aad3-1c386eaae3a6",
-        has name "Bemestingsadvies Generator",
-        has description "Automatische generatie van bemestingsadviezen",
-        has imagePath "project_mobile_app.png",
-        has createdAt 2025-02-06T12:00:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    # AquaCultuur Innovatie projects (3) - Period: 2025-08-15 to 2026-02-28
-    $p19 isa project,
-        has id "a4bf2f2e-c81a-4d54-9ef6-745aa7aee481",
-        has name "Viskweek Waterkwaliteit Systeem",
-        has description "Monitoring van waterkwaliteit in viskwekerijen",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-02-07T14:45:00+0000,
-        has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000,
-        has isPublic true;
-
-    $p20 isa project,
-        has id "c03ca374-5334-4dde-b355-81ee591526f0",
-        has name "Aquaponics Balancing Tool",
-        has description "Optimalisatie van aquaponics ecosystemen",
-        has imagePath "project_automation.png",
-        has createdAt 2025-02-08T10:15:00+0000,
-        has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $p21 isa project,
-        has id "33b526b7-cc4a-4b3f-a7ec-a7d811ed81f3",
-        has name "Visvoeder Optimalisatie",
-        has description "Data-gedreven optimalisatie van visvoeders",
-        has imagePath "project_analytics.png",
-        has createdAt 2025-02-09T15:30:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    # Fruitboomgaarden Van Dijk projects (4) - Period: 2025-10-01 to 2026-05-31
-    $p22 isa project,
-        has id "e5b3756a-916d-4ad8-8ce1-040933bd0bb6",
-        has name "Fruitrijpheid Detector",
-        has description "Computer vision voor automatische rijpheidsdetectie",
-        has imagePath "project_ai_technology.png",
-        has createdAt 2025-02-10T08:20:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $p23 isa project,
-        has id "75d8eaa3-a535-4e3e-948e-8276515477f0",
-        has name "Oogstrobot Controller",
-        has description "Besturingssysteem voor geautomatiseerde oogstrobots",
-        has imagePath "project_automation.png",
-        has createdAt 2025-02-11T11:45:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-04-30T23:59:00+0000;
-
-    $p24 isa project,
-        has id "e5d8bd3c-9823-4fb5-bae6-935461acf2a6",
-        has name "Boomgaard Planner",
-        has description "Optimale planning van boomgaard layouts",
-        has imagePath "project_mobile_app.png",
-        has createdAt 2025-02-12T13:30:00+0000,
-        has startDate 2025-12-01T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $p25 isa project,
-        has id "447e0bbf-cddc-42cd-aa9a-aaa738bdb350",
-        has name "Pesticide Monitoring",
-        has description "Tracking van pesticide gebruik en residuen",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-02-13T16:10:00+0000,
-        has startDate 2026-01-15T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    # Akkerbouw Mechanisatie projects (2) - Period: 2025-07-15 to 2026-03-31
-    $p26 isa project,
-        has id "713d0e6d-3992-4224-8a73-dc2d32a346f4",
-        has name "Tractor Fleet Management",
-        has description "GPS-gebaseerd beheer van landbouwmachines",
-        has imagePath "project_logistics.png",
-        has createdAt 2025-02-14T09:00:00+0000,
-        has startDate 2025-07-15T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    $p27 isa project,
-        has id "50d8c9a9-392d-49e7-b846-a18115a953bd",
-        has name "Onderhoud Prediction Systeem",
-        has description "Voorspellend onderhoud voor landbouwequipment",
-        has imagePath "project_ai_technology.png",
-        has createdAt 2025-02-15T12:30:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    # Biodynamische Boerderij projects (3) - Period: 2025-09-15 to 2026-04-15
-    $p28 isa project,
-        has id "23cbaa73-0b6a-4a72-9fd0-affd99fcb09f",
-        has name "Biodiversiteit Tracker",
-        has description "Monitoring van biodiversiteit op boerderijen",
-        has imagePath "project_sustainability.png",
-        has createdAt 2025-02-16T14:20:00+0000,
-        has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000,
-        has isPublic true;
-
-    $p29 isa project,
-        has id "0b5dc5c8-0be6-4ad1-8ffc-77ebe950acd3",
-        has name "Biodynamische Kalender App",
-        has description "Digitale kalender voor biodynamische praktijken",
-        has imagePath "project_mobile_app.png",
-        has createdAt 2025-02-17T10:45:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    $p30 isa project,
-        has id "825e0b32-183e-410a-b8c6-176c04532300",
-        has name "Ecosysteem Balance Monitor",
-        has description "Holistische monitoring van farm ecosystemen",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-02-18T15:15:00+0000,
-        has startDate 2025-11-15T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000;
-
-    # Agri-Logistiek Centrum projects (3) - Period: 2025-11-01 to 2026-06-30
-    $p31 isa project,
-        has id "22db2dd5-e3c2-4fa2-864a-b43b3697196d",
-        has name "Supply Chain Optimizer",
-        has description "Optimalisatie van landbouwproduct distributie",
-        has imagePath "project_logistics.png",
-        has createdAt 2025-02-19T08:30:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-06-30T23:59:00+0000,
-        has isPublic true;
-
-    $p32 isa project,
-        has id "495050ab-07ea-4e9f-bf43-74ee7f7e95f1",
-        has name "Koeling Transport Monitor",
-        has description "Temperature tracking tijdens transport",
-        has imagePath "project_monitoring.png",
-        has createdAt 2025-02-20T11:20:00+0000,
-        has startDate 2025-12-01T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $p33 isa project,
-        has id "28f2d807-956e-41a7-9f9d-6bd3139ce365",
-        has name "Warehouse Automation",
-        has description "Automatisering van landbouw opslagsystemen",
-        has imagePath "project_automation.png",
-        has createdAt 2025-02-21T13:45:00+0000,
-        has startDate 2026-01-15T00:00:00+0000,
-        has endDate 2026-06-30T23:59:00+0000;
-
-    # Project creation relations
-    $c1 isa creates (supervisor: $s1, project: $p1),
-        has createdAt 2025-01-20T09:00:00+0000;
-    $c2 isa creates (supervisor: $s1, project: $p2),
-        has createdAt 2025-01-21T10:30:00+0000;
-    $c3 isa creates (supervisor: $s1, project: $p3),
-        has createdAt 2025-01-22T14:15:00+0000;
-    $c4 isa creates (supervisor: $s1, project: $p4),
-        has createdAt 2025-01-23T11:45:00+0000;
-    $c5 isa creates (supervisor: $s2, project: $p5),
-        has createdAt 2025-01-24T08:30:00+0000;
-    $c6 isa creates (supervisor: $s2, project: $p6),
-        has createdAt 2025-01-25T13:20:00+0000;
-    $c7 isa creates (supervisor: $s2, project: $p7),
-        has createdAt 2025-01-26T16:00:00+0000;
-    $c8 isa creates (supervisor: $s3, project: $p8),
-        has createdAt 2025-01-27T09:15:00+0000;
-    $c9 isa creates (supervisor: $s3, project: $p9),
-        has createdAt 2025-01-28T12:45:00+0000;
-    $c10 isa creates (supervisor: $s3, project: $p10),
-        has createdAt 2025-01-29T15:30:00+0000;
-    $c11 isa creates (supervisor: $s3, project: $p11),
-        has createdAt 2025-01-30T10:20:00+0000;
-    $c12 isa creates (supervisor: $s3, project: $p12),
-        has createdAt 2025-01-31T14:10:00+0000;
-    $c13 isa creates (supervisor: $s4, project: $p13),
-        has createdAt 2025-02-01T08:45:00+0000;
-    $c14 isa creates (supervisor: $s4, project: $p14),
-        has createdAt 2025-02-02T11:30:00+0000;
-    $c15 isa creates (supervisor: $s4, project: $p15),
-        has createdAt 2025-02-03T13:15:00+0000;
-    $c16 isa creates (supervisor: $s4, project: $p16),
-        has createdAt 2025-02-04T16:20:00+0000;
-    $c17 isa creates (supervisor: $s5, project: $p17),
-        has createdAt 2025-02-05T09:30:00+0000;
-    $c18 isa creates (supervisor: $s5, project: $p18),
-        has createdAt 2025-02-06T12:00:00+0000;
-    $c19 isa creates (supervisor: $s6, project: $p19),
-        has createdAt 2025-02-07T14:45:00+0000;
-    $c20 isa creates (supervisor: $s6, project: $p20),
-        has createdAt 2025-02-08T10:15:00+0000;
-    $c21 isa creates (supervisor: $s6, project: $p21),
-        has createdAt 2025-02-09T15:30:00+0000;
-    $c22 isa creates (supervisor: $s7, project: $p22),
-        has createdAt 2025-02-10T08:20:00+0000;
-    $c23 isa creates (supervisor: $s7, project: $p23),
-        has createdAt 2025-02-11T11:45:00+0000;
-    $c24 isa creates (supervisor: $s7, project: $p24),
-        has createdAt 2025-02-12T13:30:00+0000;
-    $c25 isa creates (supervisor: $s7, project: $p25),
-        has createdAt 2025-02-13T16:10:00+0000;
-    $c26 isa creates (supervisor: $s8, project: $p26),
-        has createdAt 2025-02-14T09:00:00+0000;
-    $c27 isa creates (supervisor: $s8, project: $p27),
-        has createdAt 2025-02-15T12:30:00+0000;
-    $c28 isa creates (supervisor: $s9, project: $p28),
-        has createdAt 2025-02-16T14:20:00+0000;
-    $c29 isa creates (supervisor: $s9, project: $p29),
-        has createdAt 2025-02-17T10:45:00+0000;
-    $c30 isa creates (supervisor: $s9, project: $p30),
-        has createdAt 2025-02-18T15:15:00+0000;
-    $c31 isa creates (supervisor: $s10, project: $p31),
-        has createdAt 2025-02-19T08:30:00+0000;
-    $c32 isa creates (supervisor: $s10, project: $p32),
-        has createdAt 2025-02-20T11:20:00+0000;
-    $c33 isa creates (supervisor: $s10, project: $p33),
-        has createdAt 2025-02-21T13:45:00+0000;
-
-    # Business projects relations
-    $bp1 isa hasProjects (business: $b1, project: $p1);
-    $bp2 isa hasProjects (business: $b1, project: $p2);
-    $bp3 isa hasProjects (business: $b1, project: $p3);
-    $bp4 isa hasProjects (business: $b1, project: $p4);
-    $bp5 isa hasProjects (business: $b2, project: $p5);
-    $bp6 isa hasProjects (business: $b2, project: $p6);
-    $bp7 isa hasProjects (business: $b2, project: $p7);
-    $bp8 isa hasProjects (business: $b3, project: $p8);
-    $bp9 isa hasProjects (business: $b3, project: $p9);
-    $bp10 isa hasProjects (business: $b3, project: $p10);
-    $bp11 isa hasProjects (business: $b3, project: $p11);
-    $bp12 isa hasProjects (business: $b3, project: $p12);
-    $bp13 isa hasProjects (business: $b4, project: $p13);
-    $bp14 isa hasProjects (business: $b4, project: $p14);
-    $bp15 isa hasProjects (business: $b4, project: $p15);
-    $bp16 isa hasProjects (business: $b4, project: $p16);
-    $bp17 isa hasProjects (business: $b5, project: $p17);
-    $bp18 isa hasProjects (business: $b5, project: $p18);
-    $bp19 isa hasProjects (business: $b6, project: $p19);
-    $bp20 isa hasProjects (business: $b6, project: $p20);
-    $bp21 isa hasProjects (business: $b6, project: $p21);
-    $bp22 isa hasProjects (business: $b7, project: $p22);
-    $bp23 isa hasProjects (business: $b7, project: $p23);
-    $bp24 isa hasProjects (business: $b7, project: $p24);
-    $bp25 isa hasProjects (business: $b7, project: $p25);
-    $bp26 isa hasProjects (business: $b8, project: $p26);
-    $bp27 isa hasProjects (business: $b8, project: $p27);
-    $bp28 isa hasProjects (business: $b9, project: $p28);
-    $bp29 isa hasProjects (business: $b9, project: $p29);
-    $bp30 isa hasProjects (business: $b9, project: $p30);
-    $bp31 isa hasProjects (business: $b10, project: $p31);
-    $bp32 isa hasProjects (business: $b10, project: $p32);
-    $bp33 isa hasProjects (business: $b10, project: $p33);
-
-    # Tasks (sample - 50 tasks across various projects)
-    # Tasks with dates synchronized with Emma's registration timelines
-    $t1 isa task,
-        has id "753d8083-2adc-464e-9c6f-bb2e55cf5cbe",
-        has name "IoT Sensor Specialist",
-        has description "Implementatie van bodemvochtigheidssensoren en data verzameling",
-        has totalNeeded 2,
-        has createdAt 2025-01-20T09:30:00+0000,
-        has startDate 2025-07-01T00:00:00+0000,
-        has endDate 2025-10-31T23:59:00+0000;
-
-    $t2 isa task,
-        has id "2b23d4c7-31c0-428d-be93-e28c12fe78ed",
-        has name "Data Analytics Developer",
-        has description "Ontwikkeling van dashboard voor bodemkwaliteit visualisatie",
-        has totalNeeded 1,
-        has createdAt 2025-01-21T11:00:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2025-11-30T23:59:00+0000;
-
-    $t3 isa task,
-        has id "11362171-528e-49c6-b857-a257736f9963",
-        has name "Mobile App Designer",
-        has description "UI/UX ontwerp voor farmer-friendly mobile interface",
-        has totalNeeded 1,
-        has createdAt 2025-01-21T11:30:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t4 isa task,
-        has id "55d94a54-c4fc-416c-a257-d7acb9e0acfb",
-        has name "Certificering Consultant",
-        has description "Expertise in biologische certificering processen",
-        has totalNeeded 1,
-        has createdAt 2025-01-22T14:45:00+0000,
-        has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2025-12-31T23:59:00+0000;
-
-    $t5 isa task,
-        has id "b446bc69-8bce-4d03-8d76-3761ef05f378",
-        has name "Weather API Integrator",
-        has description "Integratie van weerdata met landbouw systemen",
-        has totalNeeded 1,
-        has createdAt 2025-01-23T12:15:00+0000,
-        has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $t6 isa task,
-        has id "57a48d47-c0d8-4cdd-96b3-0f4ca2cacb55",
-        has name "Machine Learning Engineer",
-        has description "Ontwikkeling van voorspellende modellen voor melkproductie",
-        has totalNeeded 2,
-        has createdAt 2025-01-24T09:00:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2025-12-31T23:59:00+0000;
-
-    $t7 isa task,
-        has id "4497a1c6-1c05-4456-83ba-d22e4e9577cf",
-        has name "Voeding Calculator Developer",
-        has description "Algoritme ontwikkeling voor optimale voedersamenstelling",
-        has totalNeeded 1,
-        has createdAt 2025-01-25T13:50:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-01-15T23:59:00+0000;
-
-    $t8 isa task,
-        has id "d476b93f-0af7-450c-9a38-253bc1aa39b1",
-        has name "Animal Welfare Sensor Tech",
-        has description "Implementatie van dierenwelzijn monitoring systemen",
-        has totalNeeded 2,
-        has createdAt 2025-01-26T16:30:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $t9 isa task,
-        has id "b7146863-8037-44c0-9d83-e6fb1f90355f",
-        has name "Drone Pilot & Analyst",
-        has description "Drone operatie en gewasanalyse via beeldherkenning",
-        has totalNeeded 1,
-        has createdAt 2025-01-27T09:45:00+0000,
-        has startDate 2025-07-01T00:00:00+0000,
-        has endDate 2025-12-31T23:59:00+0000;
-
-    $t10 isa task,
-        has id "dac49e10-28ec-4ff6-a6c6-ab1744196094",
-        has name "Computer Vision Developer",
-        has description "AI algoritmen voor gewasziekte detectie via drone beelden",
-        has totalNeeded 2,
-        has createdAt 2025-01-27T10:15:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t11 isa task,
-        has id "af4748ec-f50c-4ffe-8e3e-804b4233afb7",
-        has name "Irrigation System Engineer",
-        has description "Automatische irrigatie systeem ontwikkeling",
-        has totalNeeded 1,
-        has createdAt 2025-01-28T13:15:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2025-10-31T23:59:00+0000;
-
-    $t12 isa task,
-        has id "52dc8c78-c556-4685-97fc-520d289f635b",
-        has name "Farm Dashboard Developer",
-        has description "Centraal beheersysteem voor alle farm operaties",
-        has totalNeeded 2,
-        has createdAt 2025-01-29T16:00:00+0000,
-        has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2025-10-15T23:59:00+0000;
-
-    $t13 isa task,
-        has id "f5f4c37b-7255-4f05-a805-d0b9f3e4e8ed",
-        has name "Blockchain Developer",
-        has description "Supply chain traceability met blockchain technologie",
-        has totalNeeded 1,
-        has createdAt 2025-01-30T10:50:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    $t14 isa task,
-        has id "bba01204-d76b-4f76-acfd-dabfec4879e3",
-        has name "Harvest Prediction Analyst",
-        has description "Machine learning voor oogstvoorspellingen",
-        has totalNeeded 1,
-        has createdAt 2025-01-31T14:40:00+0000,
-        has startDate 2025-12-01T00:00:00+0000,
-        has endDate 2026-01-15T23:59:00+0000;
-
-    $t15 isa task,
-        has id "4104fd9d-c07a-42d5-adb4-1cc46236ea31",
-        has name "Climate AI Specialist",
-        has description "AI ontwikkeling voor optimale kasklimaat controle",
-        has totalNeeded 2,
-        has createdAt 2025-02-01T09:15:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t16 isa task,
-        has id "5d582438-2486-4f28-820c-30f1ee413a4b",
-        has name "Vertical Farm Automation Engineer",
-        has description "Automatisering van vertical farming systemen",
-        has totalNeeded 1,
-        has createdAt 2025-02-02T12:00:00+0000,
-        has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-02-15T23:59:00+0000;
-
-    $t17 isa task,
-        has id "d30bba18-d7b4-4e36-9623-04eed0d182f7",
-        has name "Hydroponic Systems Developer",
-        has description "Monitoring systemen voor hydroponic nutriënten",
-        has totalNeeded 1,
-        has createdAt 2025-02-03T13:45:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    $t18 isa task,
-        has id "01cb885f-c3dd-4585-813c-7a8ffeccc2b5",
-        has name "Energy Efficiency Analyst",
-        has description "Optimalisatie van energieverbruik in kassen",
-        has totalNeeded 1,
-        has createdAt 2025-02-04T16:50:00+0000,
-        has startDate 2025-11-15T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    $t19 isa task,
-        has id "6f77782d-4e35-4732-b26f-b5c69de42416",
-        has name "Lab Data Manager",
-        has description "Digitalisering van bodemanalyse lab processen",
-        has totalNeeded 1,
-        has createdAt 2025-02-05T10:00:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2025-11-30T23:59:00+0000;
-
-    $t20 isa task,
-        has id "e557b627-d6d4-47b4-ba48-7b18ad9ff9a6",
-        has name "Fertilizer Algorithm Developer",
-        has description "Automatische bemestingsadvies algoritmen",
-        has totalNeeded 2,
-        has createdAt 2025-02-06T12:30:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t21 isa task,
-        has id "3765f20d-9ec4-40b8-8b64-2616d3c74f8d",
-        has name "Water Quality Monitor Specialist",
-        has description "Waterkwaliteit monitoring voor viskwekerijen",
-        has totalNeeded 1,
-        has createdAt 2025-02-07T15:15:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2025-12-31T23:59:00+0000;
-
-    $t22 isa task,
-        has id "f03e1d10-6568-4799-a123-a7b7ef0dba83",
-        has name "Aquaponics System Designer",
-        has description "Balancing tool voor aquaponics ecosystemen",
-        has totalNeeded 1,
-        has createdAt 2025-02-08T10:45:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $t23 isa task,
-        has id "bfe19309-c42a-4f1f-bfd3-5037543fac6b",
-        has name "Fish Feed Optimizer",
-        has description "Data-gedreven optimalisatie van visvoeders",
-        has totalNeeded 1,
-        has createdAt 2025-02-09T16:00:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-01-15T23:59:00+0000;
-
-    $t24 isa task,
-        has id "c7471f12-7998-412f-acb6-4cac2c8b3077",
-        has name "Computer Vision Fruit Analyst",
-        has description "Fruitrijpheid detectie via computer vision",
-        has totalNeeded 2,
-        has createdAt 2025-02-10T08:50:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-04-30T23:59:00+0000;
-
-    $t25 isa task,
-        has id "b0173028-a02d-44fd-bdaa-a5f83f9a4cd0",
-        has name "Robotics Control Engineer",
-        has description "Besturingssystemen voor oogstrobots",
-        has totalNeeded 1,
-        has createdAt 2025-02-11T12:15:00+0000,
-        has startDate 2025-11-15T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000;
-
-    $t26 isa task,
-        has id "4dea3de9-f794-4469-ade7-744255026e4f",
-        has name "Orchard Layout Planner",
-        has description "Optimale boomgaard planning algoritmen",
-        has totalNeeded 1,
-        has createdAt 2025-02-12T14:00:00+0000,
-        has startDate 2025-12-15T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $t27 isa task,
-        has id "f9b5b5cd-e80b-4102-aba1-b275bbbedca3",
-        has name "Pesticide Tracking Developer",
-        has description "Monitoring systeem voor pesticide gebruik",
-        has totalNeeded 1,
-        has createdAt 2025-02-13T16:40:00+0000,
-        has startDate 2026-02-01T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $t28 isa task,
-        has id "27ed3a8b-45b8-4a97-9d12-5fbc0dc187b1",
-        has name "Fleet Management Developer",
-        has description "GPS-gebaseerd beheer van landbouwmachines",
-        has totalNeeded 2,
-        has createdAt 2025-02-14T09:30:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $t29 isa task,
-        has id "f1d8b74e-b8d6-4083-91c1-aa116c990151",
-        has name "Predictive Maintenance Analyst",
-        has description "Voorspellend onderhoud voor landbouwequipment",
-        has totalNeeded 1,
-        has createdAt 2025-02-15T13:00:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    $t30 isa task,
-        has id "d13f20c4-9e39-484a-bfc2-1759b6dd8c69",
-        has name "Biodiversity Data Scientist",
-        has description "Monitoring van biodiversiteit op boerderijen",
-        has totalNeeded 1,
-        has createdAt 2025-02-16T14:50:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000;
-
-    $t31 isa task,
-        has id "873faf66-d9c1-4f54-8e32-bcc091e46210",
-        has name "Biodynamic Calendar App Developer",
-        has description "Mobile app voor biodynamische praktijken",
-        has totalNeeded 1,
-        has createdAt 2025-02-17T11:15:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    $t32 isa task,
-        has id "97164fe7-33bb-41a0-9e5f-7b22fd729570",
-        has name "Ecosystem Balance Analyst",
-        has description "Holistische monitoring van farm ecosystemen",
-        has totalNeeded 1,
-        has createdAt 2025-02-18T15:45:00+0000,
-        has startDate 2025-12-01T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000;
-
-    $t33 isa task,
-        has id "7f68f155-3562-42f0-9f3a-e0f7084c93a8",
-        has name "Supply Chain Optimizer",
-        has description "Optimalisatie van landbouwproduct distributie",
-        has totalNeeded 2,
-        has createdAt 2025-02-19T09:00:00+0000,
-        has startDate 2025-11-15T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $t34 isa task,
-        has id "ed30ad4a-e047-45a3-a9af-815759718224",
-        has name "Temperature Monitoring Specialist",
-        has description "Temperature tracking tijdens transport",
-        has totalNeeded 1,
-        has createdAt 2025-02-20T11:50:00+0000,
-        has startDate 2025-12-15T00:00:00+0000,
-        has endDate 2026-05-15T23:59:00+0000;
-
-    $t35 isa task,
-        has id "bbb76eb0-19fd-4a84-a3c7-8191d0219581",
-        has name "Warehouse Automation Engineer",
-        has description "Automatisering van opslagsystemen",
-        has totalNeeded 1,
-        has createdAt 2025-02-21T14:15:00+0000,
-        has startDate 2026-02-01T00:00:00+0000,
-        has endDate 2026-06-30T23:59:00+0000;
-
-    # Add more tasks for variety (tasks 36-50)
-    $t36 isa task,
-        has id "ba638539-602f-4082-8078-d6a23a2c8821",
-        has name "Soil Health Data Analyst",
-        has description "Analyse van bodemgezondheid trends en patronen",
-        has totalNeeded 1,
-        has createdAt 2025-01-20T10:00:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2025-12-15T23:59:00+0000;
-
-    $t37 isa task,
-        has id "f9b54e41-3292-441a-b8ac-4035f0ad63cd",
-        has name "Organic Compliance Checker",
-        has description "Automatische controle van biologische normen",
-        has totalNeeded 1,
-        has createdAt 2025-01-22T15:00:00+0000,
-        has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t38 isa task,
-        has id "913aacde-174e-4089-80dd-133dc7e8e6f5",
-        has name "Weather Impact Modeler",
-        has description "Modellering van weersinvloed op gewassen",
-        has totalNeeded 1,
-        has createdAt 2025-01-23T13:00:00+0000,
-        has startDate 2025-10-01T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    $t39 isa task,
-        has id "3e8e11f8-89d0-48d1-acea-711563fb43f3",
-        has name "Dairy Quality Controller",
-        has description "Kwaliteitscontrole systemen voor melkproducten",
-        has totalNeeded 2,
-        has createdAt 2025-01-24T10:00:00+0000,
-        has startDate 2025-08-01T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t40 isa task,
-        has id "51e0464b-6059-44ab-8885-c783b7ba959b",
-        has name "Livestock Behavior Analyst",
-        has description "Analyse van veedrag voor welzijnsoptimalisatie",
-        has totalNeeded 1,
-        has createdAt 2025-01-26T17:00:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $t41 isa task,
-        has id "fddf015b-fdc9-4f93-bfb1-f1bafd8cf52a",
-        has name "Crop Disease Predictor",
-        has description "Voorspelling van gewasziekten via AI",
-        has totalNeeded 2,
-        has createdAt 2025-01-27T11:00:00+0000,
-        has startDate 2025-07-15T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t42 isa task,
-        has id "a2be2e26-0347-41c9-9204-4b2e7719d524",
-        has name "Smart Greenhouse Controller",
-        has description "Intelligente sturing van kas systemen",
-        has totalNeeded 1,
-        has createdAt 2025-02-01T10:00:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-02-15T23:59:00+0000;
-
-    $t43 isa task,
-        has id "9c0a8a70-7b4c-428e-b935-a330fda66633",
-        has name "Nutrient Solution Optimizer",
-        has description "Optimalisatie van nutriëntoplossingen",
-        has totalNeeded 1,
-        has createdAt 2025-02-03T14:30:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-03-15T23:59:00+0000;
-
-    $t44 isa task,
-        has id "2814e49f-6f62-45ab-b7e2-9b00dc62f830",
-        has name "Soil Testing Automation",
-        has description "Automatisering van bodemtesten",
-        has totalNeeded 1,
-        has createdAt 2025-02-05T11:00:00+0000,
-        has startDate 2025-09-15T00:00:00+0000,
-        has endDate 2026-01-31T23:59:00+0000;
-
-    $t45 isa task,
-        has id "4c8d9967-e830-429d-a3d5-cc49fb2d8462",
-        has name "Aquatic Ecosystem Monitor",
-        has description "Monitoring van aquatische ecosystemen",
-        has totalNeeded 1,
-        has createdAt 2025-02-07T16:00:00+0000,
-        has startDate 2025-09-01T00:00:00+0000,
-        has endDate 2026-02-28T23:59:00+0000;
-
-    $t46 isa task,
-        has id "5857633e-d8ce-446a-8990-e91f8e5c7fc5",
-        has name "Harvest Quality Inspector",
-        has description "Automatische kwaliteitsinspectie van oogst",
-        has totalNeeded 2,
-        has createdAt 2025-02-10T09:30:00+0000,
-        has startDate 2025-11-01T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $t47 isa task,
-        has id "50aba629-1631-4576-bb3d-d0dfe12865ea",
-        has name "Farm Equipment Optimizer",
-        has description "Optimalisatie van landbouwmachine inzet",
-        has totalNeeded 1,
-        has createdAt 2025-02-14T10:30:00+0000,
-        has startDate 2025-08-15T00:00:00+0000,
-        has endDate 2026-03-31T23:59:00+0000;
-
-    $t48 isa task,
-        has id "ab904c5e-2792-49ee-9883-2826e2652caf",
-        has name "Ecological Balance Assessor",
-        has description "Beoordeling van ecologische balans",
-        has totalNeeded 1,
-        has createdAt 2025-02-16T16:00:00+0000,
-        has startDate 2025-10-15T00:00:00+0000,
-        has endDate 2026-04-15T23:59:00+0000;
-
-    $t49 isa task,
-        has id "ba41bd53-274c-4067-9e79-2b44a864cce9",
-        has name "Cold Chain Analytics",
-        has description "Analyse van koude keten prestaties",
-        has totalNeeded 1,
-        has createdAt 2025-02-20T12:30:00+0000,
-        has startDate 2026-01-01T00:00:00+0000,
-        has endDate 2026-05-31T23:59:00+0000;
-
-    $t50 isa task,
-        has id "f2e84bd1-5d30-496b-850c-46f914dcd4e2",
-        has name "Inventory Management Developer",
-        has description "Voorraadbeheersystemen voor agri-producten",
-        has totalNeeded 1,
-        has createdAt 2025-02-21T15:00:00+0000,
-        has startDate 2026-02-15T00:00:00+0000,
-        has endDate 2026-06-30T23:59:00+0000;
-
-    # Project-task relations (each project 1-7 tasks)
-    $pt1 isa containsTask (project: $p1, task: $t1);
-    $pt2 isa containsTask (project: $p1, task: $t36);
-    $pt3 isa containsTask (project: $p2, task: $t2);
-    $pt4 isa containsTask (project: $p2, task: $t3);
-    $pt5 isa containsTask (project: $p3, task: $t4);
-    $pt6 isa containsTask (project: $p3, task: $t37);
-    $pt7 isa containsTask (project: $p4, task: $t5);
-    $pt8 isa containsTask (project: $p4, task: $t38);
-    $pt9 isa containsTask (project: $p5, task: $t6);
-    $pt10 isa containsTask (project: $p5, task: $t39);
-    $pt11 isa containsTask (project: $p6, task: $t7);
-    $pt12 isa containsTask (project: $p7, task: $t8);
-    $pt13 isa containsTask (project: $p7, task: $t40);
-    $pt14 isa containsTask (project: $p8, task: $t9);
-    $pt15 isa containsTask (project: $p8, task: $t10);
-    $pt16 isa containsTask (project: $p8, task: $t41);
-    $pt17 isa containsTask (project: $p9, task: $t11);
-    $pt18 isa containsTask (project: $p10, task: $t12);
-    $pt19 isa containsTask (project: $p11, task: $t13);
-    $pt20 isa containsTask (project: $p12, task: $t14);
-    $pt21 isa containsTask (project: $p13, task: $t15);
-    $pt22 isa containsTask (project: $p13, task: $t42);
-    $pt23 isa containsTask (project: $p14, task: $t16);
-    $pt24 isa containsTask (project: $p15, task: $t17);
-    $pt25 isa containsTask (project: $p15, task: $t43);
-    $pt26 isa containsTask (project: $p16, task: $t18);
-    $pt27 isa containsTask (project: $p17, task: $t19);
-    $pt28 isa containsTask (project: $p17, task: $t44);
-    $pt29 isa containsTask (project: $p18, task: $t20);
-    $pt30 isa containsTask (project: $p19, task: $t21);
-    $pt31 isa containsTask (project: $p19, task: $t45);
-    $pt32 isa containsTask (project: $p20, task: $t22);
-    $pt33 isa containsTask (project: $p21, task: $t23);
-    $pt34 isa containsTask (project: $p22, task: $t24);
-    $pt35 isa containsTask (project: $p22, task: $t46);
-    $pt36 isa containsTask (project: $p23, task: $t25);
-    $pt37 isa containsTask (project: $p24, task: $t26);
-    $pt38 isa containsTask (project: $p25, task: $t27);
-    $pt39 isa containsTask (project: $p26, task: $t28);
-    $pt40 isa containsTask (project: $p26, task: $t47);
-    $pt41 isa containsTask (project: $p27, task: $t29);
-    $pt42 isa containsTask (project: $p28, task: $t30);
-    $pt43 isa containsTask (project: $p28, task: $t48);
-    $pt44 isa containsTask (project: $p29, task: $t31);
-    $pt45 isa containsTask (project: $p30, task: $t32);
-    $pt46 isa containsTask (project: $p31, task: $t33);
-    $pt47 isa containsTask (project: $p32, task: $t34);
-    $pt48 isa containsTask (project: $p32, task: $t49);
-    $pt49 isa containsTask (project: $p33, task: $t35);
-    $pt50 isa containsTask (project: $p33, task: $t50);
-
-    # Task-skill relations (each task requires 1-4 skills)
-    $ts1 isa requiresSkill (task: $t1, skill: $sk12);
-    $ts2 isa requiresSkill (task: $t1, skill: $sk2);
-    $ts3 isa requiresSkill (task: $t2, skill: $sk11);
-    $ts4 isa requiresSkill (task: $t2, skill: $sk1);
-    $ts5 isa requiresSkill (task: $t3, skill: $sk11);
-    $ts6 isa requiresSkill (task: $t4, skill: $sk14);
-    $ts7 isa requiresSkill (task: $t5, skill: $sk11);
-    $ts8 isa requiresSkill (task: $t5, skill: $sk2);
-    $ts9 isa requiresSkill (task: $t6, skill: $sk11);
-    $ts10 isa requiresSkill (task: $t6, skill: $sk3);
-    $ts11 isa requiresSkill (task: $t7, skill: $sk15);
-    $ts12 isa requiresSkill (task: $t7, skill: $sk3);
-    $ts13 isa requiresSkill (task: $t8, skill: $sk12);
-    $ts14 isa requiresSkill (task: $t8, skill: $sk3);
-    $ts15 isa requiresSkill (task: $t9, skill: $sk4);
-    $ts16 isa requiresSkill (task: $t10, skill: $sk11);
-    $ts17 isa requiresSkill (task: $t10, skill: $sk2);
-    $ts18 isa requiresSkill (task: $t11, skill: $sk12);
-    $ts19 isa requiresSkill (task: $t11, skill: $sk4);
-    $ts20 isa requiresSkill (task: $t12, skill: $sk11);
-    $ts21 isa requiresSkill (task: $t12, skill: $sk4);
-    $ts22 isa requiresSkill (task: $t13, skill: $sk11);
-    $ts23 isa requiresSkill (task: $t13, skill: $sk13);
-    $ts24 isa requiresSkill (task: $t14, skill: $sk11);
-    $ts25 isa requiresSkill (task: $t14, skill: $sk2);
-    $ts26 isa requiresSkill (task: $t15, skill: $sk5);
-    $ts27 isa requiresSkill (task: $t15, skill: $sk11);
-    $ts28 isa requiresSkill (task: $t16, skill: $sk5);
-    $ts29 isa requiresSkill (task: $t16, skill: $sk12);
-    $ts30 isa requiresSkill (task: $t17, skill: $sk5);
-    $ts31 isa requiresSkill (task: $t17, skill: $sk15);
-    $ts32 isa requiresSkill (task: $t18, skill: $sk5);
-    $ts33 isa requiresSkill (task: $t18, skill: $sk11);
-    $ts34 isa requiresSkill (task: $t19, skill: $sk1);
-    $ts35 isa requiresSkill (task: $t19, skill: $sk11);
-    $ts36 isa requiresSkill (task: $t20, skill: $sk6);
-    $ts37 isa requiresSkill (task: $t20, skill: $sk1);
-    $ts38 isa requiresSkill (task: $t21, skill: $sk7);
-    $ts39 isa requiresSkill (task: $t21, skill: $sk12);
-    $ts40 isa requiresSkill (task: $t22, skill: $sk7);
-    $ts41 isa requiresSkill (task: $t22, skill: $sk15);
-    $ts42 isa requiresSkill (task: $t23, skill: $sk7);
-    $ts43 isa requiresSkill (task: $t23, skill: $sk11);
-    $ts44 isa requiresSkill (task: $t24, skill: $sk8);
-    $ts45 isa requiresSkill (task: $t24, skill: $sk11);
-    $ts46 isa requiresSkill (task: $t25, skill: $sk8);
-    $ts47 isa requiresSkill (task: $t25, skill: $sk9);
-    $ts48 isa requiresSkill (task: $t26, skill: $sk8);
-    $ts49 isa requiresSkill (task: $t26, skill: $sk11);
-    $ts50 isa requiresSkill (task: $t27, skill: $sk8);
-    $ts51 isa requiresSkill (task: $t27, skill: $sk11);
-    $ts52 isa requiresSkill (task: $t28, skill: $sk9);
-    $ts53 isa requiresSkill (task: $t28, skill: $sk11);
-    $ts54 isa requiresSkill (task: $t29, skill: $sk9);
-    $ts55 isa requiresSkill (task: $t29, skill: $sk11);
-    $ts56 isa requiresSkill (task: $t30, skill: $sk10);
-    $ts57 isa requiresSkill (task: $t30, skill: $sk11);
-    $ts58 isa requiresSkill (task: $t31, skill: $sk10);
-    $ts59 isa requiresSkill (task: $t31, skill: $sk11);
-    $ts60 isa requiresSkill (task: $t32, skill: $sk10);
-    $ts61 isa requiresSkill (task: $t32, skill: $sk2);
-    $ts62 isa requiresSkill (task: $t33, skill: $sk13);
-    $ts63 isa requiresSkill (task: $t33, skill: $sk11);
-    $ts64 isa requiresSkill (task: $t34, skill: $sk13);
-    $ts65 isa requiresSkill (task: $t34, skill: $sk12);
-    $ts66 isa requiresSkill (task: $t35, skill: $sk13);
-    $ts67 isa requiresSkill (task: $t35, skill: $sk9);
-
-    # Add skill requirements for remaining tasks
-    $ts68 isa requiresSkill (task: $t36, skill: $sk1);
-    $ts69 isa requiresSkill (task: $t36, skill: $sk11);
-    $ts70 isa requiresSkill (task: $t37, skill: $sk14);
-    $ts71 isa requiresSkill (task: $t38, skill: $sk2);
-    $ts72 isa requiresSkill (task: $t38, skill: $sk11);
-    $ts73 isa requiresSkill (task: $t39, skill: $sk3);
-    $ts74 isa requiresSkill (task: $t39, skill: $sk11);
-    $ts75 isa requiresSkill (task: $t40, skill: $sk3);
-    $ts76 isa requiresSkill (task: $t40, skill: $sk11);
-    $ts77 isa requiresSkill (task: $t41, skill: $sk2);
-    $ts78 isa requiresSkill (task: $t41, skill: $sk11);
-    $ts79 isa requiresSkill (task: $t42, skill: $sk5);
-    $ts80 isa requiresSkill (task: $t42, skill: $sk12);
-    $ts81 isa requiresSkill (task: $t43, skill: $sk5);
-    $ts82 isa requiresSkill (task: $t43, skill: $sk15);
-    $ts83 isa requiresSkill (task: $t44, skill: $sk1);
-    $ts84 isa requiresSkill (task: $t44, skill: $sk12);
-    $ts85 isa requiresSkill (task: $t45, skill: $sk7);
-    $ts86 isa requiresSkill (task: $t45, skill: $sk10);
-    $ts87 isa requiresSkill (task: $t46, skill: $sk8);
-    $ts88 isa requiresSkill (task: $t46, skill: $sk11);
-    $ts89 isa requiresSkill (task: $t47, skill: $sk9);
-    $ts90 isa requiresSkill (task: $t47, skill: $sk4);
-    $ts91 isa requiresSkill (task: $t48, skill: $sk10);
-    $ts92 isa requiresSkill (task: $t48, skill: $sk2);
-    $ts93 isa requiresSkill (task: $t49, skill: $sk13);
-    $ts94 isa requiresSkill (task: $t49, skill: $sk11);
-    $ts95 isa requiresSkill (task: $t50, skill: $sk13);
-    $ts96 isa requiresSkill (task: $t50, skill: $sk11);
-
-    # Student skills
-    $stsk1 isa hasSkill (student: $u2, skill: $sk11),
-        has description "Ervaring met Python data analytics en machine learning frameworks";
-
-    $stsk2 isa hasSkill (student: $u2, skill: $sk12),
-        has description "Praktijkervaring met Arduino en Raspberry Pi IoT projecten";
-
-    $stsk3 isa hasSkill (student: $u2, skill: $sk1),
-        has description "Stage gelopen bij bodemonderzoek laboratorium";
-
-    $stsk4 isa hasSkill (student: $u3, skill: $sk2),
-        has description "Specialisatie in remote sensing en gewasmonitoring";
-
-    $stsk5 isa hasSkill (student: $u3, skill: $sk4),
-        has description "Ervaring met GPS-systemen en precisie landbouw tools";
-
-    $stsk6 isa hasSkill (student: $u3, skill: $sk8),
-        has description "Praktijkervaring in vader's fruitbedrijf";
-
-    $stsk7 isa hasSkill (student: $u4, skill: $sk5),
-        has description "Minor gevolgd in duurzame kastuinbouw";
-
-    $stsk8 isa hasSkill (student: $u4, skill: $sk7),
-        has description "Scriptie geschreven over aquaponics systemen";
-
-    $stsk9 isa hasSkill (student: $u4, skill: $sk15),
-        has description "Kennis van plant voeding en nutriënt balancing";
-
-    $stsk10 isa hasSkill (student: $u5, skill: $sk9),
-        has description "Praktijkervaring met landbouwmachine onderhoud";
-
-    $stsk11 isa hasSkill (student: $u5, skill: $sk13),
-        has description "Supply chain management cursus gevolgd";
-
-    $stsk12 isa hasSkill (student: $u5, skill: $sk3),
-        has description "Stage gelopen bij melkveehouderij";
-
-    # Task registrations (various acceptance statuses)
-    # ============================================
-    # Emma's COMPLETED projects for portfolio/Gantt (10 total)
-    # ============================================
-    
-    # 1. IoT Sensor Specialist @ De Gouden Akker (Jul-Oct 2025)
-    $tr1 isa registersForTask (student: $u2, task: $t1),
-        has description "Ik heb ervaring met IoT sensoren en wil graag bijdragen aan duurzame landbouw",
-        has isAccepted true,
-        has response "Je profiel past perfect bij wat we zoeken! Welkom bij het team.",
-        has createdAt 2025-07-01T09:00:00+0000,
-        has requestedAt 2025-07-01T09:00:00+0000,
-        has acceptedAt 2025-07-05T14:30:00+0000,
-        has startedAt 2025-07-10T09:00:00+0000,
-        has completedAt 2025-10-15T16:00:00+0000;
-
-    # 2. Data Analytics Developer @ De Gouden Akker (Aug-Nov 2025)
-    $tr2 isa registersForTask (student: $u2, task: $t2),
-        has description "Mijn data analytics ervaring kan goed van pas komen bij dit dashboard project",
-        has isAccepted true,
-        has response "Uitstekend, je analytics achtergrond is precies wat we zoeken!",
-        has createdAt 2025-08-01T09:30:00+0000,
-        has requestedAt 2025-08-01T09:30:00+0000,
-        has acceptedAt 2025-08-03T11:00:00+0000,
-        has startedAt 2025-08-08T09:00:00+0000,
-        has completedAt 2025-11-20T15:30:00+0000;
-
-    # 3. Soil Health Data Analyst @ De Gouden Akker (Sep-Dec 2025)
-    $tr_emma3 isa registersForTask (student: $u2, task: $t36),
-        has description "Bodemgezondheid analyse past bij mijn interesse in duurzame landbouw",
-        has isAccepted true,
-        has response "Je combinatie van data skills en bodemkennis is perfect!",
-        has createdAt 2025-09-01T10:00:00+0000,
-        has requestedAt 2025-09-01T10:00:00+0000,
-        has acceptedAt 2025-09-04T09:30:00+0000,
-        has startedAt 2025-09-10T09:00:00+0000,
-        has completedAt 2025-12-01T14:00:00+0000;
-
-    # 4. Machine Learning Engineer @ Veeteelt Groep (Oct-Dec 2025)
-    $tr_emma4 isa registersForTask (student: $u2, task: $t6),
-        has description "ML voor melkproductie optimalisatie is een interessante uitdaging",
-        has isAccepted true,
-        has response "Je ML ervaring is waardevol voor ons project, welkom!",
-        has createdAt 2025-10-01T08:00:00+0000,
-        has requestedAt 2025-10-01T08:00:00+0000,
-        has acceptedAt 2025-10-03T16:00:00+0000,
-        has startedAt 2025-10-07T09:00:00+0000,
-        has completedAt 2025-12-20T17:00:00+0000;
-
-    # 5. Farm Dashboard Developer @ SmartFarm Solutions (Aug-Sep 2025)
-    $tr_emma5 isa registersForTask (student: $u2, task: $t12),
-        has description "Dashboard ontwikkeling is mijn specialiteit",
-        has isAccepted true,
-        has response "Je portfolio laat mooie dashboards zien, perfect fit!",
-        has createdAt 2025-08-15T11:00:00+0000,
-        has requestedAt 2025-08-15T11:00:00+0000,
-        has acceptedAt 2025-08-17T10:00:00+0000,
-        has startedAt 2025-08-20T09:00:00+0000,
-        has completedAt 2025-09-30T16:30:00+0000;
-
-    # 6. Climate AI Specialist @ Groene Kassen (Nov 2025-Jan 2026)
-    $tr_emma6 isa registersForTask (student: $u2, task: $t15),
-        has description "AI voor klimaatbeheersing combineert mijn passie voor duurzaamheid met tech",
-        has isAccepted true,
-        has response "Je enthousiasme voor duurzaamheid is precies wat we zoeken!",
-        has createdAt 2025-11-01T09:00:00+0000,
-        has requestedAt 2025-11-01T09:00:00+0000,
-        has acceptedAt 2025-11-04T14:00:00+0000,
-        has startedAt 2025-11-08T09:00:00+0000,
-        has completedAt 2026-01-10T15:00:00+0000;
-
-    # 7. Irrigation System Engineer @ SmartFarm Solutions (Sep-Oct 2025)
-    $tr_emma7 isa registersForTask (student: $u2, task: $t11),
-        has description "IoT sensoren voor irrigatie is een praktische toepassing van mijn skills",
-        has isAccepted true,
-        has response "Je IoT ervaring is waardevol voor dit irrigatie project!",
-        has createdAt 2025-09-05T08:30:00+0000,
-        has requestedAt 2025-09-05T08:30:00+0000,
-        has acceptedAt 2025-09-08T11:00:00+0000,
-        has startedAt 2025-09-12T09:00:00+0000,
-        has completedAt 2025-10-25T16:00:00+0000;
-
-    # 8. Lab Data Manager @ Bodemexperts (Oct-Nov 2025)
-    $tr_emma8 isa registersForTask (student: $u2, task: $t19),
-        has description "Bodemanalyse digitaliseren past bij mijn achtergrond",
-        has isAccepted true,
-        has response "Je kennis van bodemanalyse én data management is ideaal!",
-        has createdAt 2025-10-10T09:00:00+0000,
-        has requestedAt 2025-10-10T09:00:00+0000,
-        has acceptedAt 2025-10-12T15:30:00+0000,
-        has startedAt 2025-10-16T09:00:00+0000,
-        has completedAt 2025-11-28T14:00:00+0000;
-
-    # 9. Water Quality Monitor @ AquaCultuur Innovatie (Nov-Dec 2025)
-    $tr_emma9 isa registersForTask (student: $u2, task: $t21),
-        has description "Waterkwaliteit monitoring met IoT sensoren is interessant",
-        has isAccepted true,
-        has response "Je sensor ervaring is perfect voor ons aquacultuur project!",
-        has createdAt 2025-11-05T10:00:00+0000,
-        has requestedAt 2025-11-05T10:00:00+0000,
-        has acceptedAt 2025-11-07T09:00:00+0000,
-        has startedAt 2025-11-11T09:00:00+0000,
-        has completedAt 2025-12-15T16:30:00+0000;
-
-    # 10. Harvest Prediction Analyst @ SmartFarm Solutions (Dec 2025-Jan 2026)
-    $tr_emma10 isa registersForTask (student: $u2, task: $t14),
-        has description "Machine learning voor oogstvoorspellingen is een mooie uitdaging",
-        has isAccepted true,
-        has response "Je ML achtergrond is precies wat we nodig hebben!",
-        has createdAt 2025-12-01T08:00:00+0000,
-        has requestedAt 2025-12-01T08:00:00+0000,
-        has acceptedAt 2025-12-03T14:00:00+0000,
-        has startedAt 2025-12-08T09:00:00+0000,
-        has completedAt 2026-01-05T17:00:00+0000;
-
-    # ============================================
-    # Emma's ACTIVE tasks (started but not completed)
-    # ============================================
-    
-    # 11. Computer Vision Fruit Analyst @ Fruitboomgaarden Van Dijk (Jan 2026 - ongoing)
-    $tr_emma_active1 isa registersForTask (student: $u2, task: $t24),
-        has description "Computer vision voor fruit analyse sluit aan bij mijn ML ervaring",
-        has isAccepted true,
-        has response "Welkom! Je ML achtergrond is perfect voor dit project.",
-        has createdAt 2026-01-10T09:00:00+0000,
-        has requestedAt 2026-01-10T09:00:00+0000,
-        has acceptedAt 2026-01-12T14:00:00+0000,
-        has startedAt 2026-01-15T09:00:00+0000;
-
-    # 12. Biodiversity Data Scientist @ Biodynamische Boerderij (Jan 2026 - ongoing)
-    $tr_emma_active2 isa registersForTask (student: $u2, task: $t30),
-        has description "Biodiversiteit monitoring past bij mijn interesse in duurzaamheid",
-        has isAccepted true,
-        has response "Je combinatie van data skills en ecologie is waardevol!",
-        has createdAt 2026-01-08T10:00:00+0000,
-        has requestedAt 2026-01-08T10:00:00+0000,
-        has acceptedAt 2026-01-10T11:00:00+0000,
-        has startedAt 2026-01-12T09:00:00+0000;
-
-    # 13. Smart Greenhouse Controller @ Groene Kassen (Jan 2026 - ongoing)
-    $tr_emma_active3 isa registersForTask (student: $u2, task: $t42),
-        has description "Slimme kasbeheersing combineert mijn IoT en AI interesse",
-        has isAccepted true,
-        has response "Je ervaring met IoT en AI is perfect voor dit project!",
-        has createdAt 2026-01-20T08:00:00+0000,
-        has requestedAt 2026-01-20T08:00:00+0000,
-        has acceptedAt 2026-01-22T10:00:00+0000,
-        has startedAt 2026-01-25T09:00:00+0000;
-
-    # ============================================
-    # Other students' registrations
-    # ============================================
-    
-    $tr3 isa registersForTask (student: $u3, task: $t9),
-        has description "Ik ben gecertificeerd dronepiloot en heb ervaring met gewasanalyse",
-        has isAccepted true,
-        has response "Uitstekend! Je drone certificaat en gewaskennis zijn precies wat we nodig hebben.",
-        has createdAt 2025-02-22T10:15:00+0000,
-        has requestedAt 2025-02-22T10:15:00+0000,
-        has acceptedAt 2025-02-24T11:00:00+0000;
-
-    $tr4 isa registersForTask (student: $u3, task: $t24),
-        has description "Computer vision voor fruitkwaliteit ligt in lijn met mijn interesse in fruitteelt",
-        has createdAt 2025-02-22T11:00:00+0000,
-        has requestedAt 2025-02-22T11:00:00+0000;
-
-    $tr5 isa registersForTask (student: $u4, task: $t17),
-        has description "Hydroponic systemen zijn mijn specialiteit, ik zou graag willen bijdragen",
-        has isAccepted false,
-        has response "We zoeken iemand met meer commerciële ervaring voor dit project",
-        has createdAt 2025-02-22T13:30:00+0000,
-        has requestedAt 2025-02-22T13:30:00+0000;
-
-    $tr6 isa registersForTask (student: $u4, task: $t22),
-        has description "Mijn scriptie ging over aquaponics, dit project sluit perfect aan",
-        has isAccepted true,
-        has response "Je scriptie hebben we gelezen, indrukwekkend werk! Je bent aangenomen.",
-        has createdAt 2025-02-22T14:15:00+0000,
-        has requestedAt 2025-02-22T14:15:00+0000,
-        has acceptedAt 2025-02-25T09:30:00+0000;
-
-    $tr7 isa registersForTask (student: $u5, task: $t28),
-        has description "Fleet management voor landbouwmachines combineert mijn technische en logistieke interesse",
-        has createdAt 2025-02-22T15:45:00+0000,
-        has requestedAt 2025-02-22T15:45:00+0000;
-
-    $tr8 isa registersForTask (student: $u5, task: $t33),
-        has description "Supply chain optimalisatie is iets waar ik me in wil specialiseren",
-        has isAccepted true,
-        has response "Je achtergrond in zowel techniek als logistiek maakt je de ideale kandidaat!",
-        has createdAt 2025-02-22T16:20:00+0000,
-        has requestedAt 2025-02-22T16:20:00+0000,
-        has acceptedAt 2025-02-24T10:00:00+0000;
-
     # ============================================
     # Thema's voor Publieke Discovery
     # ============================================
-    
     $theme1 isa theme,
         has id "theme-duurzaamheid",
         has name "Duurzaamheid",
@@ -1714,20 +84,6 @@ insert
         has themeDescription "Educatie en kennisoverdracht projecten",
         has color "#E91E63",
         has displayOrder 6;
-
-    # Koppel een paar projecten aan thema's om te testen
-    $pt_theme1 isa hasTheme (project: $p1, theme: $theme1);
-    $pt_theme2 isa hasTheme (project: $p1, theme: $theme3);
-    $pt_theme3 isa hasTheme (project: $p8, theme: $theme3);
-    $pt_theme4 isa hasTheme (project: $p8, theme: $theme1);
-    $pt_theme5 isa hasTheme (project: $p13, theme: $theme2);
-    $pt_theme6 isa hasTheme (project: $p13, theme: $theme1);
-    $pt_theme7 isa hasTheme (project: $p19, theme: $theme5);
-    $pt_theme8 isa hasTheme (project: $p19, theme: $theme4);
-    $pt_theme9 isa hasTheme (project: $p28, theme: $theme5);
-    $pt_theme10 isa hasTheme (project: $p28, theme: $theme1);
-    $pt_theme11 isa hasTheme (project: $p31, theme: $theme4);
-    $pt_theme12 isa hasTheme (project: $p31, theme: $theme3);
 
     # ============================================
     # City Deal - Agenda Stad
@@ -2123,28 +479,6 @@ insert
         has companySize "11-50",
         has website "https://citydealkennismaken.nl";
 
-    # RijnStad (welzijnsorganisatie)
-    $b_rijnstad isa business,
-        has id "16a6d50d-0807-4b31-8515-265900366440",
-        has name "RijnStad",
-        has description "RijnStad is de welzijnsorganisatie van Arnhem. Wij ondersteunen bewoners bij zelfredzaamheid, participatie en sociale samenhang in de wijk.",
-        has imagePath "logo_placeholder.png",
-        has location "Arnhem, Gelderland",
-        has sector "Zorg & Welzijn",
-        has companySize "200+",
-        has website "https://rijnstad.nl";
-
-    # Volkshuisvesting Arnhem (woningcorporatie)
-    $b_volksh isa business,
-        has id "62ffa1f0-cfbf-4eb0-a14a-0dd135133d57",
-        has name "Volkshuisvesting Arnhem",
-        has description "Volkshuisvesting Arnhem is een woningcorporatie die zorgt voor betaalbare en leefbare woningen in Arnhemse wijken, met focus op duurzaamheid en wijkontwikkeling.",
-        has imagePath "logo_placeholder.png",
-        has location "Arnhem, Gelderland",
-        has sector "Vastgoed & Woningbouw",
-        has companySize "51-200",
-        has website "https://volkshuisvestingarnhem.nl";
-
     # --- Supervisors ---
 
     # Gemeente Arnhem supervisors (extra, $b_arnhem already exists)
@@ -2185,20 +519,6 @@ insert
         has imagePath "supervisor_female.png",
         has email "n.elamrani@cdkm-arnhem.nl";
 
-    # RijnStad supervisor
-    $s_rijnstad isa supervisor,
-        has id "0936b7bc-64d2-4a72-aac6-807c1b3ec0be",
-        has fullName "Tom de Groot (Sociaal Werker)",
-        has imagePath "supervisor_male.png",
-        has email "t.degroot@rijnstad.nl";
-
-    # Volkshuisvesting supervisor
-    $s_volksh isa supervisor,
-        has id "f25d6a2b-800c-472f-8e54-8d321b1b59ff",
-        has fullName "Peter van Leeuwen (Wijkconsulent)",
-        has imagePath "supervisor_male.png",
-        has email "p.vanleeuwen@volkshuisvestingarnhem.nl";
-
     # OAuth for Klarendal supervisors
     $auth_kl1 isa oauthAuthentication (user: $s_kl1, provider: $op2),
         has oauthSub "dad21d48-7b4a-42de-8f2f-bb54a4385f3e";
@@ -2212,10 +532,6 @@ insert
         has oauthSub "de503cad-bc5c-459b-b471-eeb0d3cc43e1";
     $auth_cdkm isa oauthAuthentication (user: $s_cdkm, provider: $op2),
         has oauthSub "11143509-87cb-47c4-91df-9cc561ceca8f";
-    $auth_rijnstad isa oauthAuthentication (user: $s_rijnstad, provider: $op2),
-        has oauthSub "7a25e47a-b75f-462f-9e52-a0c2eea92685";
-    $auth_volksh isa oauthAuthentication (user: $s_volksh, provider: $op2),
-        has oauthSub "cf3fd44e-12ba-4d1c-9112-573c01369fdc";
 
     # Manages relations
     $m_kl1 isa manages (supervisor: $s_kl1, business: $b_arnhem),
@@ -2229,10 +545,6 @@ insert
     $m_kl5 isa manages (supervisor: $s_kl5, business: $b_arnhem),
         has location "Presikhaaf, Arnhem";
     $m_cdkm isa manages (supervisor: $s_cdkm, business: $b_cdkm),
-        has location "Arnhem";
-    $m_rijnstad isa manages (supervisor: $s_rijnstad, business: $b_rijnstad),
-        has location "Arnhem";
-    $m_volksh isa manages (supervisor: $s_volksh, business: $b_volksh),
         has location "Arnhem";
 
     # --- Teachers ---
@@ -2556,7 +868,7 @@ insert
     $p_kl8 isa project,
         has id "033cc431-ade5-476a-9620-38b52c7d6c37",
         has name "Studentensteunpunt Vervolg — Klarendal & Presikhaaf",
-        has description "Vervolg op het studentensteunpunt-onderzoek met verbreding naar Presikhaaf. In samenwerking met gemeente, Volkshuisvesting, RijnStad en meerdere HAN-opleidingen wordt gewerkt aan een structureel steunpunt voor bewoners.",
+        has description "Vervolg op het studentensteunpunt-onderzoek met verbreding naar Presikhaaf. In samenwerking met gemeente, woningcorporaties, welzijnspartners en meerdere HAN-opleidingen wordt gewerkt aan een structureel steunpunt voor bewoners.",
         has imagePath "project_sustainability.png",
         has createdAt 2025-09-01T10:00:00+0000,
         has startDate 2025-09-15T00:00:00+0000,
@@ -2633,7 +945,7 @@ insert
     $t_kl8 isa task,
         has id "f6d7e8f9-a0b1-4234-fabc-666666666666",
         has name "Coördinator Steunpunt Vervolg",
-        has description "Werk mee aan de opzet van een structureel studentensteunpunt in Klarendal en Presikhaaf. Coördineer met gemeente, Volkshuisvesting, RijnStad en bewoners. Multidisciplinaire samenwerking.",
+        has description "Werk mee aan de opzet van een structureel studentensteunpunt in Klarendal en Presikhaaf. Coördineer met gemeente, woningcorporaties, welzijnspartners en bewoners. Multidisciplinaire samenwerking.",
         has totalNeeded 2,
         has createdAt 2025-09-01T10:30:00+0000,
         has startDate 2025-09-15T00:00:00+0000,
@@ -2854,3 +1166,1199 @@ insert
         has acceptedAt 2025-02-10T09:15:00+0000,
         has startedAt 2025-02-15T09:00:00+0000,
         has completedAt 2025-07-15T16:00:00+0000;
+
+    # ============================================
+    # CDKM Arnhem — Groep 1: Productontwikkeling SpijkerBike
+    # "Fiets met een Verhaal"
+    # ============================================
+
+    # --- Project-specifieke skills ---
+    $sk_sb1 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c01",
+        has name "Kwalitatief Onderzoek (SpijkerBike)",
+        has isPending false,
+        has createdAt 2026-01-15T09:00:00+0000;
+
+    $sk_sb2 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c02",
+        has name "Klantinterviews",
+        has isPending false,
+        has createdAt 2026-01-15T09:05:00+0000;
+
+    $sk_sb3 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c03",
+        has name "Social Media Marketing",
+        has isPending false,
+        has createdAt 2026-01-15T09:10:00+0000;
+
+    $sk_sb4 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c04",
+        has name "Contentcreatie",
+        has isPending false,
+        has createdAt 2026-01-15T09:15:00+0000;
+
+    $sk_sb5 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c05",
+        has name "Sales & Verkoopstrategie",
+        has isPending false,
+        has createdAt 2026-01-15T09:20:00+0000;
+
+    $sk_sb6 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c06",
+        has name "Businesscase Ontwikkeling",
+        has isPending false,
+        has createdAt 2026-01-15T09:25:00+0000;
+
+    $sk_sb7 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c07",
+        has name "Financiele Analyse",
+        has isPending false,
+        has createdAt 2026-01-15T09:30:00+0000;
+
+    $sk_sb8 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c08",
+        has name "Didactisch Ontwerp",
+        has isPending false,
+        has createdAt 2026-01-15T09:35:00+0000;
+
+    $sk_sb9 isa skill,
+        has id "b3c2a1d0-4e5f-4a6b-8c7d-9e0f1a2b3c09",
+        has name "Fietstechniek & Werkplaats",
+        has isPending false,
+        has createdAt 2026-01-15T09:40:00+0000;
+
+    # --- Project ---
+    $p_sb isa project,
+        has id "563fd250-63ff-4bd6-a527-a1a5b852419a",
+        has name "Fiets met een Verhaal - SpijkerBike",
+        has description "Context: SpijkerBike, een sociale onderneming in het Spijkerkwartier van Arnhem, geeft gedoneerde fietsen een tweede leven door ze op te knappen en te verkopen. De commerciele kant is goed ontwikkeld, maar de sociale kant verdient meer aandacht. SpijkerBike wil het product 'Fiets met een Verhaal' doorontwikkelen, waarbij de unieke geschiedenis van elke fiets en de passie van de fietsenmaker in opleiding centraal staan. - Opdracht: Als tweedejaars HBO-student werk je aan de productontwikkeling van 'Fiets met een Verhaal'. Je onderzoekt hoe het concept aantrekkelijker gemaakt kan worden voor klanten door het verhaal achter de fietsen te benadrukken, interviewt potentiele en bestaande klanten, bedenkt en voert een social-media promotiecampagne uit, ontwikkelt verkoopacties en ontwerpt een leertraject dat je eigen leerervaringen documenteert en toepasbaar maakt voor anderen binnen de onderneming. - Werkzaamheden: (1) Onderzoek - interview klanten, analyseer de marktpositie en identificeer kansen voor sociale impact en verdienmodel. (2) Promotiecampagne - ontwikkel en voer een creatieve social-media campagne uit en monitor de resultaten. (3) Verkoopstimulatie - bedenk acties en strategieen en breng deze samen met het SpijkerBike-team in de praktijk. (4) Businesscase - stel een businesscase op met financiele haalbaarheid, groeipotentieel en zowel commerciele als sociale aspecten. (5) Leertraject - ontwerp en documenteer een leertraject op basis van je eigen ervaringen, bruikbaar voor toekomstige studenten en medewerkers. (6) Meewerken in de werkplaats - werk minimaal een dag mee om het productieproces en de sociale impact te ervaren. - Eindresultaat: Een uitgebreid plan voor de doorontwikkeling van 'Fiets met een Verhaal' (klantinzichten, uitgevoerde promotiecampagne, verkoopacties, businesscase) plus een leertraject-document gebaseerd op je eigen ervaringen. - Beoordeling: onderzoeksvaardigheden, creativiteit en impact van de promotiecampagne, effectiviteit van verkoopacties, kwaliteit van de businesscase, bijdrage aan het leertraject en samenwerking met SpijkerBike. - Begeleiding en IP-cursus: Joris Groen - deze groep gaat in het kader van de IP-cursus naar Roemenie. - Meer info: https://www.spijkerbikes.nl/",
+        has imagePath "80f4ee1e-f160-48b7-8338-038bb4f9dac2.png",
+        has location "Spijkerkwartier, Arnhem",
+        has createdAt 2026-01-20T09:00:00+0000,
+        has startDate 2026-02-02T09:00:00+0000,
+        has endDate 2026-06-26T17:00:00+0000,
+        has isPublic true;
+
+    # --- Project creation relation ---
+    $c_sb isa creates (supervisor: $s_cdkm, project: $p_sb),
+        has createdAt 2026-01-20T09:00:00+0000;
+
+    # --- Business-project relation ---
+    $bp_sb isa hasProjects (business: $b_cdkm, project: $p_sb);
+
+    # --- Tasks ---
+    $t_sb1 isa task,
+        has id "c4d3b2a1-5f6e-4b7c-8d9e-0f1a2b3c4d01",
+        has name "Klantonderzoek & Marktanalyse",
+        has description "Interview potentiele en bestaande klanten van SpijkerBike om inzicht te krijgen in hun behoeften en verwachtingen rondom 'Fiets met een Verhaal'. Analyseer de huidige marktpositie en identificeer kansen voor verbetering van sociale impact en verdienmodel.",
+        has totalNeeded 1,
+        has createdAt 2026-01-20T09:05:00+0000,
+        has startDate 2026-02-09T00:00:00+0000,
+        has endDate 2026-03-20T23:59:00+0000;
+
+    $t_sb2 isa task,
+        has id "c4d3b2a1-5f6e-4b7c-8d9e-0f1a2b3c4d02",
+        has name "Promotiecampagne Sociale Media",
+        has description "Ontwikkel een creatieve social-media campagne om de 'verhaalrijke fietsen' onder de aandacht te brengen. Voer de campagne uit op meerdere kanalen en monitor de resultaten (bereik, engagement, conversies) om de effectiviteit te evalueren.",
+        has totalNeeded 1,
+        has createdAt 2026-01-20T09:10:00+0000,
+        has startDate 2026-03-02T00:00:00+0000,
+        has endDate 2026-05-15T23:59:00+0000;
+
+    $t_sb3 isa task,
+        has id "c4d3b2a1-5f6e-4b7c-8d9e-0f1a2b3c4d03",
+        has name "Verkoopstimulatie & Acties",
+        has description "Bedenk acties en strategieen om de verkoop van de fietsen te stimuleren. Werk samen met het team van SpijkerBike om deze acties in de praktijk te brengen en hun effect te meten.",
+        has totalNeeded 1,
+        has createdAt 2026-01-20T09:15:00+0000,
+        has startDate 2026-03-16T00:00:00+0000,
+        has endDate 2026-06-12T23:59:00+0000;
+
+    $t_sb4 isa task,
+        has id "c4d3b2a1-5f6e-4b7c-8d9e-0f1a2b3c4d04",
+        has name "Businesscase 'Fiets met een Verhaal'",
+        has description "Stel een businesscase op waarin de financiele haalbaarheid en het groeipotentieel van het product 'Fiets met een Verhaal' wordt uiteengezet. Betrek zowel commerciele als sociale aspecten (double bottom line) in de analyse.",
+        has totalNeeded 1,
+        has createdAt 2026-01-20T09:20:00+0000,
+        has startDate 2026-04-06T00:00:00+0000,
+        has endDate 2026-06-19T23:59:00+0000;
+
+    $t_sb5 isa task,
+        has id "c4d3b2a1-5f6e-4b7c-8d9e-0f1a2b3c4d05",
+        has name "Leertraject Ontwerpen & Documenteren",
+        has description "Ontwerp een leertraject op basis van je eigen leerervaringen gedurende het project en documenteer dit in een toegankelijk document dat kan dienen als gids voor toekomstige studenten en medewerkers van SpijkerBike.",
+        has totalNeeded 1,
+        has createdAt 2026-01-20T09:25:00+0000,
+        has startDate 2026-02-16T00:00:00+0000,
+        has endDate 2026-06-26T23:59:00+0000;
+
+    $t_sb6 isa task,
+        has id "c4d3b2a1-5f6e-4b7c-8d9e-0f1a2b3c4d06",
+        has name "Meewerken in de Werkplaats",
+        has description "Werk minimaal een dag mee in de werkplaats om een beter begrip te krijgen van het productieproces en de sociale impact van SpijkerBike. Documenteer je observaties als input voor de andere werkzaamheden.",
+        has totalNeeded 1,
+        has createdAt 2026-01-20T09:30:00+0000,
+        has startDate 2026-02-16T00:00:00+0000,
+        has endDate 2026-03-13T23:59:00+0000;
+
+    # --- Project-task relations ---
+    $pt_sb1 isa containsTask (project: $p_sb, task: $t_sb1);
+    $pt_sb2 isa containsTask (project: $p_sb, task: $t_sb2);
+    $pt_sb3 isa containsTask (project: $p_sb, task: $t_sb3);
+    $pt_sb4 isa containsTask (project: $p_sb, task: $t_sb4);
+    $pt_sb5 isa containsTask (project: $p_sb, task: $t_sb5);
+    $pt_sb6 isa containsTask (project: $p_sb, task: $t_sb6);
+
+    # --- Task-skill relations ---
+    $ts_sb1 isa requiresSkill (task: $t_sb1, skill: $sk_sb1);
+    $ts_sb2 isa requiresSkill (task: $t_sb1, skill: $sk_sb2);
+    $ts_sb3 isa requiresSkill (task: $t_sb2, skill: $sk_sb3);
+    $ts_sb4 isa requiresSkill (task: $t_sb2, skill: $sk_sb4);
+    $ts_sb5 isa requiresSkill (task: $t_sb3, skill: $sk_sb5);
+    $ts_sb6 isa requiresSkill (task: $t_sb4, skill: $sk_sb6);
+    $ts_sb7 isa requiresSkill (task: $t_sb4, skill: $sk_sb7);
+    $ts_sb8 isa requiresSkill (task: $t_sb5, skill: $sk_sb8);
+    $ts_sb9 isa requiresSkill (task: $t_sb6, skill: $sk_sb9);
+
+    # --- Theme relations ---
+    $pt_theme_sb1 isa hasTheme (project: $p_sb, theme: $theme1);
+    $pt_theme_sb2 isa hasTheme (project: $p_sb, theme: $theme6);
+
+    # ============================================
+    # City Deal Kennis Maken — kennisinstellingen & partners
+    # Bron: "Eerder uitgevoerde projecten, initiatieven en
+    # onderzoeken door kennisinstellingen" (HAN, ArtEZ, HVHL, Rijn IJssel)
+    # ============================================
+
+    # --- Extra thema's ---
+    $theme_inclusie isa theme,
+        has id "theme-inclusie",
+        has name "Kansengelijkheid & Inclusie",
+        has sdgCode "SDG10",
+        has icon "diversity_3",
+        has themeDescription "Projecten die werken aan kansengelijkheid, participatie en sociale cohesie",
+        has color "#F59E0B",
+        has displayOrder 7;
+
+    $theme_mobiliteit isa theme,
+        has id "theme-mobiliteit",
+        has name "Duurzame Mobiliteit",
+        has sdgCode "SDG11",
+        has icon "pedal_bike",
+        has themeDescription "Duurzame bereikbaarheid, fietsen en reisgedrag van studenten en inwoners",
+        has color "#10B981",
+        has displayOrder 8;
+
+    $theme_cultuur isa theme,
+        has id "theme-cultuur",
+        has name "Kunst & Cultuur",
+        has sdgCode "SDG17",
+        has icon "palette",
+        has themeDescription "Kunst, cultuur en creatieve expressie als motor voor wijkontwikkeling",
+        has color "#EC4899",
+        has displayOrder 9;
+
+    # --- Gedeelde skills voor kennisinstellingen-projecten ---
+    $sk_ki_sociaal isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1001",
+        has name "Sociaal Werk & Welzijn",
+        has isPending false,
+        has createdAt 2024-02-01T09:00:00+0000;
+
+    $sk_ki_gezond isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1002",
+        has name "Gezondheidsbevordering",
+        has isPending false,
+        has createdAt 2024-02-01T09:05:00+0000;
+
+    $sk_ki_jong isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1003",
+        has name "Jongerenwerk",
+        has isPending false,
+        has createdAt 2024-02-01T09:10:00+0000;
+
+    $sk_ki_oud isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1004",
+        has name "Ouderenwerk",
+        has isPending false,
+        has createdAt 2024-02-01T09:15:00+0000;
+
+    $sk_ki_voed isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1005",
+        has name "Voedseleducatie",
+        has isPending false,
+        has createdAt 2024-02-01T09:20:00+0000;
+
+    $sk_ki_klim isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1006",
+        has name "Klimaatadaptatie",
+        has isPending false,
+        has createdAt 2024-02-01T09:25:00+0000;
+
+    $sk_ki_groen isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1007",
+        has name "Beplantingsplan & Groenontwerp",
+        has isPending false,
+        has createdAt 2024-02-01T09:30:00+0000;
+
+    $sk_ki_ruimte isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1008",
+        has name "Ruimtelijk Ontwerp",
+        has isPending false,
+        has createdAt 2024-02-01T09:35:00+0000;
+
+    $sk_ki_energie isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1009",
+        has name "Energietransitie",
+        has isPending false,
+        has createdAt 2024-02-01T09:40:00+0000;
+
+    $sk_ki_circ isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1010",
+        has name "Circulaire Economie",
+        has isPending false,
+        has createdAt 2024-02-01T09:45:00+0000;
+
+    $sk_ki_digi isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1011",
+        has name "3D Visualisatie & Digital Twin",
+        has isPending false,
+        has createdAt 2024-02-01T09:50:00+0000;
+
+    $sk_ki_kunst isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1012",
+        has name "Kunsteducatie",
+        has isPending false,
+        has createdAt 2024-02-01T09:55:00+0000;
+
+    $sk_ki_theater isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1013",
+        has name "Theaterpraktijk",
+        has isPending false,
+        has createdAt 2024-02-01T10:00:00+0000;
+
+    $sk_ki_partic isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1014",
+        has name "Participatief Onderzoek",
+        has isPending false,
+        has createdAt 2024-02-01T10:05:00+0000;
+
+    $sk_ki_didact isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1015",
+        has name "Wijkonderwijs & Interactieve Werkvormen",
+        has isPending false,
+        has createdAt 2024-02-01T10:10:00+0000;
+
+    $sk_ki_finlit isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1016",
+        has name "Financiele Educatie",
+        has isPending false,
+        has createdAt 2024-02-01T10:15:00+0000;
+
+    $sk_ki_pm isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1017",
+        has name "Projectmanagement",
+        has isPending false,
+        has createdAt 2024-02-01T10:20:00+0000;
+
+    $sk_ki_kwal isa skill,
+        has id "e1a0b1c2-d3e4-4f5a-8b6c-7d8e9f0a1018",
+        has name "Kwalitatief Veldonderzoek",
+        has isPending false,
+        has createdAt 2024-02-01T10:25:00+0000;
+
+    # --- Businesses: kennisinstellingen ---
+    $b_han isa business,
+        has id "aa000001-1111-4111-8111-000000000001",
+        has name "Hogeschool van Arnhem en Nijmegen (HAN)",
+        has description "De HAN verbindt onderwijs, onderzoek en praktijk in Arnhem via interprofessionele Labs in Presikhaaf, Malburgen, Arnhem-Noord en het Spijkerkwartier. Studenten werken samen met wijkpartners aan opgaven rond positieve gezondheid, kansengelijkheid, energietransitie en wijkontwikkeling.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Onderwijs & Onderzoek",
+        has companySize "200+",
+        has website "https://www.han.nl";
+
+    $b_hvhl isa business,
+        has id "aa000002-1111-4111-8111-000000000002",
+        has name "Hogeschool Van Hall Larenstein (HVHL)",
+        has description "HVHL is de groene hogeschool met een campus in Velp. Studenten werken aan vraagstukken rond klimaatadaptatie, biodiversiteit, voedsel en ruimtelijke kwaliteit in Arnhem en omgeving.",
+        has imagePath "default.png",
+        has location "Velp, Gelderland",
+        has sector "Onderwijs & Onderzoek",
+        has companySize "200+",
+        has website "https://www.hvhl.nl";
+
+    $b_artez isa business,
+        has id "aa000003-1111-4111-8111-000000000003",
+        has name "ArtEZ University of the Arts",
+        has description "ArtEZ is de Arnhemse hogeschool voor de kunsten. Studenten van de docentenopleidingen (Theater, Muziek, Beeldende Kunst en Vormgeving) werken vanuit issue based art education in Arnhemse wijken en met culturele partners.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Onderwijs & Cultuur",
+        has companySize "51-200",
+        has website "https://www.artez.nl";
+
+    $b_rij isa business,
+        has id "aa000004-1111-4111-8111-000000000004",
+        has name "Rijn IJssel",
+        has description "Rijn IJssel is het ROC van Arnhem. Mbo-studenten Sociaal Werk en Creatieve Industrie werken mee in wijkprojecten en initiatieven rond kansengelijkheid, jongerenwerk en duurzame leefomgeving.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Onderwijs & Beroepsonderwijs",
+        has companySize "200+",
+        has website "https://www.rijnijssel.nl";
+
+    # --- Businesses: partnerorganisaties ---
+    $b_swoa isa business,
+        has id "aa000005-2222-4222-8222-000000000005",
+        has name "SWOA - Stichting Welzijn Ouderen Arnhem",
+        has description "SWOA zet zich in voor vitale en sociaal verbonden ouderen in Arnhem. SWOA biedt ontmoetingsplekken, activiteitenaanbod (zoals de Warme Winterroute) en werkt samen met HAN- en Rijn IJssel-studenten aan programma's tegen eenzaamheid en isolement.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Zorg & Welzijn",
+        has companySize "51-200",
+        has website "https://www.swoa.nl";
+
+    $b_dgg isa business,
+        has id "aa000006-2222-4222-8222-000000000006",
+        has name "DrieGasthuizenGroep",
+        has description "DrieGasthuizenGroep biedt wonen, zorg en welzijn voor ouderen op meerdere locaties in Arnhem, waaronder Rosendaalseweg. Samen met HAN en HVHL wordt gewerkt aan een klimaat- en mensvriendelijk terrein.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Zorg & Welzijn",
+        has companySize "200+",
+        has website "https://www.driegasthuizengroep.nl";
+
+    $b_nca isa business,
+        has id "aa000007-2222-4222-8222-000000000007",
+        has name "Natuurcentrum Arnhem",
+        has description "Natuurcentrum Arnhem ontwikkelt natuur- en voedseleducatie in de stad, waaronder het voedselbos-in-oprichting in Elderveld en schoolmoestuintjes voor basisscholen in Malburgen en het AZC.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Natuur & Educatie",
+        has companySize "11-50",
+        has website "https://natuurcentrumarnhem.nl";
+
+    $b_connectr isa business,
+        has id "aa000008-2222-4222-8222-000000000008",
+        has name "Connectr Energy Innovation",
+        has description "Connectr is een samenwerking van kennisinstellingen en bedrijven op IPKW gericht op de energietransitie. De HAN heeft op deze campus labs en onderwijs (MIC, Powerlab, H2lab, Biobased Lab, Master Circulaire Economie), gericht op challenge based learning en praktijkgericht onderzoek.",
+        has imagePath "default.png",
+        has location "Arnhem, IPKW - Westervoortsedijk",
+        has sector "Energie & Innovatie",
+        has companySize "51-200",
+        has website "https://connectr.nl";
+
+    $b_volksh isa business,
+        has id "aa000009-2222-4222-8222-000000000009",
+        has name "Volkshuisvesting Arnhem",
+        has description "Volkshuisvesting is een Arnhemse woningcorporatie met ruim bezit in o.a. Malburgen, Presikhaaf en de binnenstad. Zij werkt aan betaalbare en duurzame woningen en leefbare wijken, en verwelkomt studenten bij vraagstukken rond verduurzaming, binnenklimaat en sociale wijkontwikkeling.",
+        has imagePath "default.png",
+        has location "Arnhem, Gelderland",
+        has sector "Vastgoed & Woningbouw",
+        has companySize "51-200",
+        has website "https://www.volkshuisvesting.nl";
+
+    # --- Supervisors per kennisinstelling / partner ---
+    $s_han_pres isa supervisor,
+        has id "bb000001-1111-4111-8111-000000010001",
+        has fullName "Nabela Zinad (Wijkdocent HAN Lab Presikhaaf)",
+        has imagePath "supervisor_female.png",
+        has email "nabela.zinad@han.nl";
+
+    $s_han_malb isa supervisor,
+        has id "bb000002-1111-4111-8111-000000010002",
+        has fullName "Liselotte de Bruijn (Wijkdocent HAN Lab Malburgen)",
+        has imagePath "supervisor_female.png",
+        has email "liselotte.debruijn@han.nl";
+
+    $s_han_spijker isa supervisor,
+        has id "bb000003-1111-4111-8111-000000010003",
+        has fullName "Almi Hanselman (Wijkdocent HAN Lab Spijkerkwartier)",
+        has imagePath "supervisor_female.png",
+        has email "almi.hanselman@han.nl";
+
+    $s_han_dt isa supervisor,
+        has id "bb000004-1111-4111-8111-000000010004",
+        has fullName "Ger de Vries (Academie IT & Mediadesign, Digital Twinning)",
+        has imagePath "supervisor_male.png",
+        has email "ger.devries@han.nl";
+
+    $s_han_lans isa supervisor,
+        has id "bb000005-1111-4111-8111-000000010005",
+        has fullName "Thomas Lans (Lector Kansrijk Ondernemen, OLA)",
+        has imagePath "supervisor_male.png",
+        has email "thomas.lans@han.nl";
+
+    $s_hvhl_land isa supervisor,
+        has id "bb000006-1111-4111-8111-000000010006",
+        has fullName "Marieke Bosch (Docent HVHL - Tuin- en Landschapsinrichting)",
+        has imagePath "supervisor_female.png",
+        has email "marieke.bosch@hvhl.nl";
+
+    $s_hvhl_voed isa supervisor,
+        has id "bb000007-1111-4111-8111-000000010007",
+        has fullName "Rob Veenstra (Docent HVHL - Voedsel & Groen)",
+        has imagePath "supervisor_male.png",
+        has email "rob.veenstra@hvhl.nl";
+
+    $s_artez_aet isa supervisor,
+        has id "bb000008-1111-4111-8111-000000010008",
+        has fullName "Ines Sauer (Docent ArtEZ - Artisteducator Theater)",
+        has imagePath "supervisor_female.png",
+        has email "ines.sauer@artez.nl";
+
+    $s_rij_vsv isa supervisor,
+        has id "bb000009-1111-4111-8111-000000010009",
+        has fullName "Yasser Uspessij (Projectleider VSV - Rijn IJssel)",
+        has imagePath "supervisor_male.png",
+        has email "yasser.uspessij@rijnijssel.nl";
+
+    $s_rij_ci isa supervisor,
+        has id "bb000010-1111-4111-8111-000000010010",
+        has fullName "Sara Holle (Docent Rijn IJssel - Sociaal Werk)",
+        has imagePath "supervisor_female.png",
+        has email "sara.holle@rijnijssel.nl";
+
+    $s_swoa isa supervisor,
+        has id "bb000011-1111-4111-8111-000000010011",
+        has fullName "Emma van Reijen (Activiteitencoordinator SWOA)",
+        has imagePath "supervisor_female.png",
+        has email "e.vanreijen@swoa.nl";
+
+    $s_dgg isa supervisor,
+        has id "bb000012-1111-4111-8111-000000010012",
+        has fullName "Sjoerd Huisman (Facilitair Manager DrieGasthuizenGroep)",
+        has imagePath "supervisor_male.png",
+        has email "s.huisman@driegasthuizengroep.nl";
+
+    $s_nca isa supervisor,
+        has id "bb000013-1111-4111-8111-000000010013",
+        has fullName "Mike Hoose (Kinderwijkteam Malburgen / Natuurcentrum)",
+        has imagePath "supervisor_male.png",
+        has email "mike.hoose@natuurcentrumarnhem.nl";
+
+    $s_connectr isa supervisor,
+        has id "bb000014-1111-4111-8111-000000010014",
+        has fullName "Erik Folgering (Connectr Energy Innovation)",
+        has imagePath "supervisor_male.png",
+        has email "erik.folgering@connectr.nl";
+
+    $s_volksh isa supervisor,
+        has id "bb000015-1111-4111-8111-000000010015",
+        has fullName "Peter van Leeuwen (Wijkconsulent Volkshuisvesting)",
+        has imagePath "supervisor_male.png",
+        has email "p.vanleeuwen@volkshuisvesting.nl";
+
+    # --- OAuth voor kennisinstelling-supervisors ---
+    $auth_han_pres isa oauthAuthentication (user: $s_han_pres, provider: $op2),
+        has oauthSub "han-pres-bb000001";
+    $auth_han_malb isa oauthAuthentication (user: $s_han_malb, provider: $op2),
+        has oauthSub "han-malb-bb000002";
+    $auth_han_spijker isa oauthAuthentication (user: $s_han_spijker, provider: $op2),
+        has oauthSub "han-spijker-bb000003";
+    $auth_han_dt isa oauthAuthentication (user: $s_han_dt, provider: $op1),
+        has oauthSub "han-dt-bb000004";
+    $auth_han_lans isa oauthAuthentication (user: $s_han_lans, provider: $op2),
+        has oauthSub "han-lans-bb000005";
+    $auth_hvhl_land isa oauthAuthentication (user: $s_hvhl_land, provider: $op2),
+        has oauthSub "hvhl-land-bb000006";
+    $auth_hvhl_voed isa oauthAuthentication (user: $s_hvhl_voed, provider: $op2),
+        has oauthSub "hvhl-voed-bb000007";
+    $auth_artez_aet isa oauthAuthentication (user: $s_artez_aet, provider: $op2),
+        has oauthSub "artez-aet-bb000008";
+    $auth_rij_vsv isa oauthAuthentication (user: $s_rij_vsv, provider: $op2),
+        has oauthSub "rij-vsv-bb000009";
+    $auth_rij_ci isa oauthAuthentication (user: $s_rij_ci, provider: $op2),
+        has oauthSub "rij-ci-bb000010";
+    $auth_swoa isa oauthAuthentication (user: $s_swoa, provider: $op2),
+        has oauthSub "swoa-bb000011";
+    $auth_dgg isa oauthAuthentication (user: $s_dgg, provider: $op2),
+        has oauthSub "dgg-bb000012";
+    $auth_nca isa oauthAuthentication (user: $s_nca, provider: $op2),
+        has oauthSub "nca-bb000013";
+    $auth_connectr isa oauthAuthentication (user: $s_connectr, provider: $op1),
+        has oauthSub "connectr-bb000014";
+    $auth_volksh isa oauthAuthentication (user: $s_volksh, provider: $op2),
+        has oauthSub "volksh-bb000015";
+
+    # --- Manages-relaties ---
+    $m_han_pres isa manages (supervisor: $s_han_pres, business: $b_han),
+        has location "Arnhem";
+    $m_han_malb isa manages (supervisor: $s_han_malb, business: $b_han),
+        has location "Arnhem";
+    $m_han_spijker isa manages (supervisor: $s_han_spijker, business: $b_han),
+        has location "Arnhem";
+    $m_han_dt isa manages (supervisor: $s_han_dt, business: $b_han),
+        has location "Arnhem";
+    $m_han_lans isa manages (supervisor: $s_han_lans, business: $b_han),
+        has location "Arnhem";
+    $m_hvhl_land isa manages (supervisor: $s_hvhl_land, business: $b_hvhl),
+        has location "Velp";
+    $m_hvhl_voed isa manages (supervisor: $s_hvhl_voed, business: $b_hvhl),
+        has location "Velp";
+    $m_artez_aet isa manages (supervisor: $s_artez_aet, business: $b_artez),
+        has location "Arnhem";
+    $m_rij_vsv isa manages (supervisor: $s_rij_vsv, business: $b_rij),
+        has location "Arnhem";
+    $m_rij_ci isa manages (supervisor: $s_rij_ci, business: $b_rij),
+        has location "Arnhem";
+    $m_swoa isa manages (supervisor: $s_swoa, business: $b_swoa),
+        has location "Arnhem";
+    $m_dgg isa manages (supervisor: $s_dgg, business: $b_dgg),
+        has location "Arnhem";
+    $m_nca isa manages (supervisor: $s_nca, business: $b_nca),
+        has location "Arnhem";
+    $m_connectr isa manages (supervisor: $s_connectr, business: $b_connectr),
+        has location "Arnhem";
+    $m_volksh isa manages (supervisor: $s_volksh, business: $b_volksh),
+        has location "Arnhem";
+
+    # ============================================
+    # Projecten per kennisinstelling / partner
+    # (gebaseerd op "City Deal Kennis Maken - overzicht projecten")
+    # ============================================
+
+    # --- HAN projecten ---
+    $p_hanPres_move isa project,
+        has id "cc010001-1111-4111-8111-000000010001",
+        has name "Move je Buurt - HAN Lab Presikhaaf",
+        has description "In samenwerking met Stichting Move en een Presikhaafse basisschool werken HAN-studenten aan kansengelijkheid: kinderen en studenten leren elkaars leefwereld kennen en bedenken samen hoe zij hun buurt kunnen verbeteren. De projectgroep begeleidt de kinderen, faciliteert werkvormen en rapporteert over bereik en impact.",
+        has imagePath "default.png",
+        has location "Presikhaaf, Arnhem",
+        has createdAt 2024-09-01T09:00:00+0000,
+        has startDate 2024-09-15T00:00:00+0000,
+        has endDate 2025-06-30T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanPres_food isa project,
+        has id "cc010002-1111-4111-8111-000000010002",
+        has name "Food for Thoughts 2.0 - HAN Lab Presikhaaf",
+        has description "Versterk de sociale band in Presikhaaf door ontmoetingen rond eten te laten terugkeren. Bouw voort op eerdere burendagen en gezamenlijke maaltijden: organiseer terugkerende bewonersdiners, werk samen met wijkpartners en meet het effect op sociale verbinding.",
+        has imagePath "default.png",
+        has location "Presikhaaf, Arnhem",
+        has createdAt 2024-09-01T09:10:00+0000,
+        has startDate 2024-09-15T00:00:00+0000,
+        has endDate 2025-06-30T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanMalb_vitaal isa project,
+        has id "cc010003-1111-4111-8111-000000010003",
+        has name "Vitaal Ouder Worden - HAN Lab Malburgen",
+        has description "In het Huis voor de Wijk werken studenten aan een van de speerpunten van Malburgen: vitaal ouder worden. Organiseer tweewekelijkse wandel- en ontmoetactiviteiten (route, tijd, werving, draaiboek), inventariseer het bestaande aanbod bij Sportbedrijf Arnhem en breng uit wat het Huis voor de Wijk nog kan toevoegen.",
+        has imagePath "default.png",
+        has location "Malburgen-Oost, Arnhem",
+        has createdAt 2025-01-15T09:00:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanMalb_peiling isa project,
+        has id "cc010004-1111-4111-8111-000000010004",
+        has name "Wijkpeiling Malburgen - HAN Lab Malburgen",
+        has description "Herhaal voor Malburgen de 'spijkerpeil'-wijkpeiling uit het Spijkerkwartier. Gebruik de leefplekmeter van Pharos om leefbaarheid, veiligheid, voorzieningen en participatie in kaart te brengen. Bouw voort op de themas die eerdere studenten al hebben geinventariseerd.",
+        has imagePath "default.png",
+        has location "Malburgen, Arnhem",
+        has createdAt 2025-01-15T09:15:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanNoord_finedu isa project,
+        has id "cc010005-1111-4111-8111-000000010005",
+        has name "Financiele Educatie Geitenkamp - HAN/Rijn IJssel Lab Arnhem-Noord",
+        has description "Leer kinderen tot 12 jaar omgaan met (digitaal) geld. Studenten Sociaal Werk van Rijn IJssel en HAN ontwikkelen, na bronnenonderzoek en gesprekken met groep 7/8 van basisschool De Witte Vlinder, interactieve voorlichtingen en extra materiaal (spaarkaart) om mee te nemen naar huis.",
+        has imagePath "default.png",
+        has location "Geitenkamp, Arnhem",
+        has createdAt 2024-09-01T09:25:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanSpijker_zakgeld isa project,
+        has id "cc010006-1111-4111-8111-000000010006",
+        has name "Zakgeldproject - HAN Lectoraat Sociale Kwaliteit",
+        has description "In gezinnen waar de financien krap zijn is zakgeld niet vanzelfsprekend. Onderzoekers werken samen met ervaringsdeskundigen en gezinnen uit Klarendal aan manieren om kinderen te ondersteunen bij hun financiele zelfstandigheid.",
+        has imagePath "default.png",
+        has location "Klarendal, Arnhem",
+        has createdAt 2025-02-01T09:00:00+0000,
+        has startDate 2025-02-15T00:00:00+0000,
+        has endDate 2025-12-19T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanDT isa project,
+        has id "cc010007-1111-4111-8111-000000010007",
+        has name "Digital Twinning Arnhem - HAN Academie IT & Mediadesign",
+        has description "Samenwerking tussen HAN-studenten, docenten en onderzoekers van de Academie IT & Mediadesign met de gemeente Arnhem rond drie themas: informatie-gestuurd werken (beleid meten en bijsturen), 3D/Mixed Reality visualisaties van de openbare ruimte (voor inspraak en besluitvorming) en inclusieve digitale dienstverlening.",
+        has imagePath "default.png",
+        has location "Arnhem",
+        has createdAt 2025-01-20T09:00:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-12-19T23:59:00+0000,
+        has isPublic true;
+
+    $p_hanOLA isa project,
+        has id "cc010008-1111-4111-8111-000000010008",
+        has name "OndernemersLab Arnhem (OLA)",
+        has description "Studenten van HAN en Rijn IJssel werken samen met bedrijven in de Arnhemse binnenstad aan gezamenlijke projecten. Partners: Startclub Arnhem, gemeente Arnhem, Rijn IJssel. Doel: de ondernemersagenda van de binnenstad voeden met studentenenergie en de student-ondernemer-match versterken.",
+        has imagePath "default.png",
+        has location "Arnhem, Binnenstad",
+        has createdAt 2025-01-20T09:30:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    # --- HVHL projecten ---
+    $p_hvhl_industrie isa project,
+        has id "cc020001-1111-4111-8111-000000020001",
+        has name "Vergroening Industriestraat Arnhem",
+        has description "Bedrijfspanden aan de Industriestraat (o.a. transportbedrijf, smederij) zijn toe aan vergroening. HVHL-studenten ontwerpen maatregelen voor de versteende straat, parkeerterreinen, gevels en daken. De ondernemers faciliteren en hebben budget beschikbaar gesteld.",
+        has imagePath "default.png",
+        has location "Industriestraat, Arnhem",
+        has createdAt 2025-01-10T09:00:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hvhl_gpoort isa project,
+        has id "cc020002-1111-4111-8111-000000020002",
+        has name "Kantorenpark Gelderse Poort - Klimaatadaptatie",
+        has description "In het kantorenpark nabij de N325 zijn meer dan 100 ondernemingen gevestigd met ca. 6.000 werknemers. Studenten onderzoeken welke aanpassingen (vergroening, waterberging, verkoeling) nodig zijn om het terrein toekomstbestendig te maken naast de al lopende verduurzaming van de gebouwen.",
+        has imagePath "default.png",
+        has location "Gelderse Poort, Arnhem",
+        has createdAt 2025-01-10T09:15:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hvhl_dgg isa project,
+        has id "cc020003-1111-4111-8111-000000020003",
+        has name "DrieGasthuizen Rosendaalseweg - Hittestress",
+        has description "Op de Rosendaalseweg (zelfstandige woningen en zorghuisvesting) spelen klimaatproblemen zoals hittestress. HAN-studenten leveren de stakeholderanalyse, HVHL-studenten de ruimtelijke analyse. Samen komen ze tot een plan dat toegankelijkheid, aantrekkelijke plekken en verkoeling van het gebouw verbetert.",
+        has imagePath "default.png",
+        has location "Rosendaalseweg, Arnhem",
+        has createdAt 2025-01-10T09:30:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hvhl_voedselbos isa project,
+        has id "cc020004-1111-4111-8111-000000020004",
+        has name "Voedselbos-in-oprichting Elderveld",
+        has description "Natuurcentrum Arnhem ontwikkelt in Elderveld, samen met het Kinderwijkteam Malburgen, een voedselbos met schoolmoestuintjes. De opgave: basisscholen en het AZC aan het project verbinden, gezonde voeding koppelen aan het raadsbesluit dat iedere leerling uit groep 6 een moestuintje krijgt.",
+        has imagePath "default.png",
+        has location "Elderveld, Arnhem",
+        has createdAt 2025-01-10T09:45:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-10-31T23:59:00+0000,
+        has isPublic true;
+
+    $p_hvhl_kronenburg isa project,
+        has id "cc020005-1111-4111-8111-000000020005",
+        has name "Parkeerterrein van de Toekomst - Winkelcentrum Kronenburg",
+        has description "Studenten ontwikkelden een verduurzamingsvoorstel voor het grote parkeerterrein van Kronenburg. Een overkapping die deels groen is, deels energie opwekt en schaduw op de bestrating brengt. Ruimte voor vergroening en waterberging als meerlaagse oplossing voor klimaatadaptatie.",
+        has imagePath "default.png",
+        has location "Kronenburg, Arnhem",
+        has createdAt 2025-01-10T10:00:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hvhl_rijker isa project,
+        has id "cc020006-1111-4111-8111-000000020006",
+        has name "Bomen in Rijkerswoerd - Oorzakenonderzoek",
+        has description "De bomen in Rijkerswoerd groeien niet goed. Oorzaken zijn onduidelijk (ruimtegebrek, klei-ondergrond?). HVHL-studenten doen bodem- en groeiplaatsonderzoek en leveren aanbevelingen voor beheer en herplant.",
+        has imagePath "default.png",
+        has location "Rijkerswoerd, Arnhem",
+        has createdAt 2025-01-10T10:15:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_hvhl_zwane isa project,
+        has id "cc020007-1111-4111-8111-000000020007",
+        has name "Zwanebloemlaan Malburgen - Binnenpleintjes Vergroenen",
+        has description "Volkshuisvesting heeft aan de Zwanebloemlaan versteende en afgesloten binnenpleintjes. Een pleintje is al vergroend, voor de andere worden tegelwippen en verbetering van het binnenklimaat ingezet. Studenten Bouwkunde (sociale woningbouw) werken samen met Kinderwijkteam en stadstuinier aan hittebestendige ontwerpen.",
+        has imagePath "default.png",
+        has location "Zwanebloemlaan, Malburgen, Arnhem",
+        has createdAt 2025-01-10T10:30:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    # --- ArtEZ projecten ---
+    $p_artez_moving isa project,
+        has id "cc030001-1111-4111-8111-000000030001",
+        has name "MOVING (HI)STORIES - 't Arnhemse Broek",
+        has description "Interdisciplinair project in 't Arnhemse Broek onder het motto 'Think Global, Act Local'. Tweedejaars bachelorstudenten van de docentenopleidingen in Arnhem werken in tien tot veertien collectieven vanuit de projectlocatie. Elk collectief ontwikkelt een kunstproject rondom een specifieke 'moving (hi)story' en onderzoekt zo hoe een Artisteducator van betekenis kan zijn in de wijk.",
+        has imagePath "default.png",
+        has location "'t Arnhemse Broek, Arnhem",
+        has createdAt 2024-09-01T09:00:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-06-27T23:59:00+0000,
+        has isPublic true;
+
+    $p_artez_animal isa project,
+        has id "cc030002-1111-4111-8111-000000030002",
+        has name "Animal Voices - Burgers' Zoo",
+        has description "De opleiding Artisteducator in Theater werkt samen met Burgers' Zoo. Het onderzoek gaat over de verhouding tussen mens en dier en hoe studenten de 'stem' van dieren kunnen representeren in hun theaterwerk - in een complexe omgeving waarin educatie, dierenwelzijn en machtsverhoudingen samenkomen.",
+        has imagePath "default.png",
+        has location "Burgers' Zoo, Antoon van Hooffplein 1, Arnhem",
+        has createdAt 2024-09-01T09:15:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-06-27T23:59:00+0000,
+        has isPublic true;
+
+    # --- Rijn IJssel projecten ---
+    $p_rij_vsv isa project,
+        has id "cc040001-1111-4111-8111-000000040001",
+        has name "Wijkaanpak Vroegtijdig Schoolverlaten (VSV)",
+        has description "In samenwerking met VO-scholen in Malburgen en Presikhaaf zetten Rijn IJssel-studenten zich in om jongeren in hun kracht te zetten bij het maken van opleidings- en beroepskeuzes. Themas: kansengelijkheid, mentale gezondheid, criminaliteitspreventie. Rolmodellen inspireren jongeren in lastige situaties.",
+        has imagePath "default.png",
+        has location "Malburgen & Presikhaaf, Arnhem",
+        has createdAt 2024-09-01T09:00:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    $p_rij_licht isa project,
+        has id "cc040002-1111-4111-8111-000000040002",
+        has name "Duurzame Straatverlichting Klarendal",
+        has description "Rijn IJssel-studenten van het cluster Creatieve Industrie ontwierpen, samen met gebruikers, duurzame, energiezuinige en innovatieve straatverlichting voor Klarendal. Thema: burgerinitiatief - techniek ontmoet co-creatie.",
+        has imagePath "default.png",
+        has location "Klarendal, Arnhem",
+        has createdAt 2024-09-01T09:15:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-02-28T23:59:00+0000,
+        has isPublic true;
+
+    # --- SWOA projecten ---
+    $p_swoa_kerst isa project,
+        has id "cc050001-1111-4111-8111-000000050001",
+        has name "Kerstdiner Nieuwe Hommel - SWOA",
+        has description "Organiseer het kerstdiner voor 55+ inwoners van Arnhem bij De Nieuwe Hommel (St. Marten). Studenten Sociaal Werk zorgen voor ontmoeting en interactie tussen bezoekers, studenten Voeding & Dietetiek ontwikkelen een driegangenmenu - met een suikervrije tiramisu als eigen ontwerp.",
+        has imagePath "default.png",
+        has location "De Nieuwe Hommel, St. Marten, Arnhem",
+        has createdAt 2024-10-01T09:00:00+0000,
+        has startDate 2024-10-15T00:00:00+0000,
+        has endDate 2024-12-20T23:59:00+0000,
+        has isPublic true;
+
+    $p_swoa_winter isa project,
+        has id "cc050002-1111-4111-8111-000000050002",
+        has name "Warme Winterroute St. Marten & Klarendal - SWOA",
+        has description "Wandeling voor inwoners van St. Marten en Klarendal met als doel ontmoeting en verbinding te creeren en bekendheid te geven aan lokale zorg- en welzijnsorganisaties. Een projectgroep van vijf studenten verzorgt extra (spel)activiteiten onderweg, onder meer in speeltuin De Leuke Linde.",
+        has imagePath "default.png",
+        has location "St. Marten & Klarendal, Arnhem",
+        has createdAt 2024-12-01T09:00:00+0000,
+        has startDate 2025-01-06T00:00:00+0000,
+        has endDate 2025-02-14T23:59:00+0000,
+        has isPublic true;
+
+    # --- Connectr project ---
+    $p_connectr isa project,
+        has id "cc060001-1111-4111-8111-000000060001",
+        has name "Energietransitie Labs - Connectr IPKW",
+        has description "Op de Connectr-campus werken HAN en partners samen aan de energietransitie. Naast bestaande labs (MIC, Powerlab, H2lab) zijn ook Biobased Lab en de Master Circulaire Economie hier gevestigd. Studenten werken via challenge based learning aan concrete opgaven uit de regio rond waterstof, circulaire materialen en energiesystemen.",
+        has imagePath "default.png",
+        has location "IPKW - Westervoortsedijk 73, Arnhem",
+        has createdAt 2025-01-20T09:00:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000,
+        has isPublic true;
+
+    # --- Project-creatie relaties ---
+    $c_hanPres_move isa creates (supervisor: $s_han_pres, project: $p_hanPres_move),
+        has createdAt 2024-09-01T09:00:00+0000;
+    $c_hanPres_food isa creates (supervisor: $s_han_pres, project: $p_hanPres_food),
+        has createdAt 2024-09-01T09:10:00+0000;
+    $c_hanMalb_vitaal isa creates (supervisor: $s_han_malb, project: $p_hanMalb_vitaal),
+        has createdAt 2025-01-15T09:00:00+0000;
+    $c_hanMalb_peiling isa creates (supervisor: $s_han_malb, project: $p_hanMalb_peiling),
+        has createdAt 2025-01-15T09:15:00+0000;
+    $c_hanNoord_finedu isa creates (supervisor: $s_rij_ci, project: $p_hanNoord_finedu),
+        has createdAt 2024-09-01T09:25:00+0000;
+    $c_hanSpijker_zakgeld isa creates (supervisor: $s_han_spijker, project: $p_hanSpijker_zakgeld),
+        has createdAt 2025-02-01T09:00:00+0000;
+    $c_hanDT isa creates (supervisor: $s_han_dt, project: $p_hanDT),
+        has createdAt 2025-01-20T09:00:00+0000;
+    $c_hanOLA isa creates (supervisor: $s_han_lans, project: $p_hanOLA),
+        has createdAt 2025-01-20T09:30:00+0000;
+    $c_hvhl_industrie isa creates (supervisor: $s_hvhl_land, project: $p_hvhl_industrie),
+        has createdAt 2025-01-10T09:00:00+0000;
+    $c_hvhl_gpoort isa creates (supervisor: $s_hvhl_land, project: $p_hvhl_gpoort),
+        has createdAt 2025-01-10T09:15:00+0000;
+    $c_hvhl_dgg isa creates (supervisor: $s_hvhl_land, project: $p_hvhl_dgg),
+        has createdAt 2025-01-10T09:30:00+0000;
+    $c_hvhl_voedselbos isa creates (supervisor: $s_hvhl_voed, project: $p_hvhl_voedselbos),
+        has createdAt 2025-01-10T09:45:00+0000;
+    $c_hvhl_kronenburg isa creates (supervisor: $s_hvhl_land, project: $p_hvhl_kronenburg),
+        has createdAt 2025-01-10T10:00:00+0000;
+    $c_hvhl_rijker isa creates (supervisor: $s_hvhl_voed, project: $p_hvhl_rijker),
+        has createdAt 2025-01-10T10:15:00+0000;
+    $c_hvhl_zwane isa creates (supervisor: $s_hvhl_land, project: $p_hvhl_zwane),
+        has createdAt 2025-01-10T10:30:00+0000;
+    $c_artez_moving isa creates (supervisor: $s_artez_aet, project: $p_artez_moving),
+        has createdAt 2024-09-01T09:00:00+0000;
+    $c_artez_animal isa creates (supervisor: $s_artez_aet, project: $p_artez_animal),
+        has createdAt 2024-09-01T09:15:00+0000;
+    $c_rij_vsv isa creates (supervisor: $s_rij_vsv, project: $p_rij_vsv),
+        has createdAt 2024-09-01T09:00:00+0000;
+    $c_rij_licht isa creates (supervisor: $s_rij_ci, project: $p_rij_licht),
+        has createdAt 2024-09-01T09:15:00+0000;
+    $c_swoa_kerst isa creates (supervisor: $s_swoa, project: $p_swoa_kerst),
+        has createdAt 2024-10-01T09:00:00+0000;
+    $c_swoa_winter isa creates (supervisor: $s_swoa, project: $p_swoa_winter),
+        has createdAt 2024-12-01T09:00:00+0000;
+    $c_connectr isa creates (supervisor: $s_connectr, project: $p_connectr),
+        has createdAt 2025-01-20T09:00:00+0000;
+
+    # --- Business - project relaties ---
+    $bp_hanPres_move isa hasProjects (business: $b_han, project: $p_hanPres_move);
+    $bp_hanPres_food isa hasProjects (business: $b_han, project: $p_hanPres_food);
+    $bp_hanMalb_vitaal isa hasProjects (business: $b_han, project: $p_hanMalb_vitaal);
+    $bp_hanMalb_peiling isa hasProjects (business: $b_han, project: $p_hanMalb_peiling);
+    $bp_hanNoord_finedu isa hasProjects (business: $b_han, project: $p_hanNoord_finedu);
+    $bp_hanSpijker_zakgeld isa hasProjects (business: $b_han, project: $p_hanSpijker_zakgeld);
+    $bp_hanDT isa hasProjects (business: $b_han, project: $p_hanDT);
+    $bp_hanOLA isa hasProjects (business: $b_han, project: $p_hanOLA);
+    $bp_hvhl_industrie isa hasProjects (business: $b_hvhl, project: $p_hvhl_industrie);
+    $bp_hvhl_gpoort isa hasProjects (business: $b_hvhl, project: $p_hvhl_gpoort);
+    $bp_hvhl_dgg isa hasProjects (business: $b_dgg, project: $p_hvhl_dgg);
+    $bp_hvhl_voedselbos isa hasProjects (business: $b_nca, project: $p_hvhl_voedselbos);
+    $bp_hvhl_kronenburg isa hasProjects (business: $b_hvhl, project: $p_hvhl_kronenburg);
+    $bp_hvhl_rijker isa hasProjects (business: $b_hvhl, project: $p_hvhl_rijker);
+    $bp_hvhl_zwane isa hasProjects (business: $b_volksh, project: $p_hvhl_zwane);
+    $bp_artez_moving isa hasProjects (business: $b_artez, project: $p_artez_moving);
+    $bp_artez_animal isa hasProjects (business: $b_artez, project: $p_artez_animal);
+    $bp_rij_vsv isa hasProjects (business: $b_rij, project: $p_rij_vsv);
+    $bp_rij_licht isa hasProjects (business: $b_rij, project: $p_rij_licht);
+    $bp_swoa_kerst isa hasProjects (business: $b_swoa, project: $p_swoa_kerst);
+    $bp_swoa_winter isa hasProjects (business: $b_swoa, project: $p_swoa_winter);
+    $bp_connectr isa hasProjects (business: $b_connectr, project: $p_connectr);
+
+    # --- Tasks per project (1 hoofdopdracht per project) ---
+    $t_hanPres_move isa task,
+        has id "dd010001-1111-4111-8111-000000010001",
+        has name "Begeleider 'Move je Buurt'",
+        has description "Begeleid kinderen van de Presikhaafse basisschool in co-creatie sessies, voer een klein kwalitatief onderzoek uit naar hun leefwereld en rapporteer over bereik en impact van de sessies.",
+        has totalNeeded 4,
+        has createdAt 2024-09-01T09:05:00+0000,
+        has startDate 2024-09-15T00:00:00+0000,
+        has endDate 2025-06-30T23:59:00+0000;
+
+    $t_hanPres_food isa task,
+        has id "dd010002-1111-4111-8111-000000010002",
+        has name "Programmeur Wijk-eetmomenten",
+        has description "Plan, werf en evalueer terugkerende buurtdiners in Presikhaaf. Werk samen met wijkpartners en zorg voor een rapportage over sociale verbinding.",
+        has totalNeeded 3,
+        has createdAt 2024-09-01T09:15:00+0000,
+        has startDate 2024-09-15T00:00:00+0000,
+        has endDate 2025-06-30T23:59:00+0000;
+
+    $t_hanMalb_vitaal isa task,
+        has id "dd010003-1111-4111-8111-000000010003",
+        has name "Organisator Wandel- en Ontmoetactiviteit",
+        has description "Maak een draaiboek voor de tweewekelijkse wandel- en ontmoetactiviteit (route, tijd, werving). Inventariseer bestaand aanbod bij Sportbedrijf Arnhem en stel aanbevelingen op voor uitbreiding.",
+        has totalNeeded 3,
+        has createdAt 2025-01-15T09:05:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hanMalb_peiling isa task,
+        has id "dd010004-1111-4111-8111-000000010004",
+        has name "Uitvoerder Wijkpeiling Malburgen",
+        has description "Voer de wijkpeiling uit op basis van de leefplekmeter van Pharos. Verzamel en analyseer de data, rapporteer over leefbaarheid, veiligheid, voorzieningen en participatie.",
+        has totalNeeded 3,
+        has createdAt 2025-01-15T09:20:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hanNoord_finedu isa task,
+        has id "dd010005-1111-4111-8111-000000010005",
+        has name "Ontwikkelaar Financiele Voorlichting Groep 7/8",
+        has description "Ontwikkel en geef voorlichting aan groep 7 en 8 van basisschool De Witte Vlinder over digitaal geld en zakgeld. Ontwerp interactieve werkvormen en een 'spaarkaart' om mee te nemen naar huis.",
+        has totalNeeded 4,
+        has createdAt 2024-09-01T09:30:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hanSpijker_zakgeld isa task,
+        has id "dd010006-1111-4111-8111-000000010006",
+        has name "Actie-onderzoeker Zakgeldproject",
+        has description "Ontwerp samen met ervaringsdeskundigen en gezinnen uit Klarendal manieren om kinderen te ondersteunen bij hun financiele zelfstandigheid. Maak een leerbaar product op basis van de gesprekken.",
+        has totalNeeded 2,
+        has createdAt 2025-02-01T09:05:00+0000,
+        has startDate 2025-02-15T00:00:00+0000,
+        has endDate 2025-12-19T23:59:00+0000;
+
+    $t_hanDT_3d isa task,
+        has id "dd010007-1111-4111-8111-000000010007",
+        has name "3D Visualisatie Openbare Ruimte",
+        has description "Ontwerp en bouw een 3D / Mixed Reality visualisatie van een Arnhemse straat of plein, bruikbaar voor inspraak en besluitvorming door bewoners en ambtenaren.",
+        has totalNeeded 2,
+        has createdAt 2025-01-20T09:05:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-12-19T23:59:00+0000;
+
+    $t_hanDT_data isa task,
+        has id "dd010008-1111-4111-8111-000000010008",
+        has name "Informatie-gestuurd Werken Dashboard",
+        has description "Bouw een dashboard waarmee beleidsimpact van de gemeente zichtbaar wordt. Combineer open data-bronnen en maak conclusies toegankelijk voor niet-technische beleidsmakers.",
+        has totalNeeded 2,
+        has createdAt 2025-01-20T09:10:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-12-19T23:59:00+0000;
+
+    $t_hanOLA isa task,
+        has id "dd010009-1111-4111-8111-000000010009",
+        has name "Student-Ondernemer Match OLA",
+        has description "Werk samen met ondernemers uit de Arnhemse binnenstad aan een concreet project (marktonderzoek, campagne of pilot). Lever een oplevering op die de ondernemer echt verder helpt.",
+        has totalNeeded 4,
+        has createdAt 2025-01-20T09:35:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hvhl_industrie isa task,
+        has id "dd020001-1111-4111-8111-000000020001",
+        has name "Ontwerper Groenmaatregelen Industriestraat",
+        has description "Ontwerp vergroening van straat, parkeerterreinen, gevels en daken in de Industriestraat. Koppel ontwerp aan een kostenraming en prioritering voor de ondernemers.",
+        has totalNeeded 3,
+        has createdAt 2025-01-10T09:05:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hvhl_gpoort isa task,
+        has id "dd020002-1111-4111-8111-000000020002",
+        has name "Klimaatplan Kantorenpark Gelderse Poort",
+        has description "Breng hittestress, parkeerdruk en stenigheid in kaart en ontwerp een samenhangend pakket van vergroening, waterberging en verkoeling voor het terrein.",
+        has totalNeeded 3,
+        has createdAt 2025-01-10T09:20:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hvhl_dgg isa task,
+        has id "dd020003-1111-4111-8111-000000020003",
+        has name "Ruimtelijke Analyse DrieGasthuizen",
+        has description "Voer een ruimtelijke analyse uit van de Rosendaalseweg-locatie. Lever ontwerpvoorstellen op voor betere toegankelijkheid van het terrein, aantrekkelijke plekken en verkoeling van het gebouw.",
+        has totalNeeded 2,
+        has createdAt 2025-01-10T09:35:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hvhl_voedselbos isa task,
+        has id "dd020004-1111-4111-8111-000000020004",
+        has name "Coordinator Voedselbos & Schoolmoestuin",
+        has description "Verbind basisscholen en het AZC aan het voedselbos, maak educatieve activiteiten passend bij het raadsbesluit 'moestuintje voor groep 6'. Zorg voor een plan dat ook na het studieproject kan doorlopen.",
+        has totalNeeded 2,
+        has createdAt 2025-01-10T09:50:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-10-31T23:59:00+0000;
+
+    $t_hvhl_kronenburg isa task,
+        has id "dd020005-1111-4111-8111-000000020005",
+        has name "Ontwerper Multifunctionele Overkapping Kronenburg",
+        has description "Werk het ontwerp uit van een overkapping met groen, zonne-energie en schaduw. Integreer waterberging en plan inpassing in de bestaande parkeerlayout.",
+        has totalNeeded 3,
+        has createdAt 2025-01-10T10:05:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hvhl_rijker isa task,
+        has id "dd020006-1111-4111-8111-000000020006",
+        has name "Onderzoeker Boomvitaliteit Rijkerswoerd",
+        has description "Voer bodem- en groeiplaatsonderzoek uit aan de slechtgroeiende bomen in Rijkerswoerd. Formuleer hypotheses (ruimtegebrek, klei-ondergrond) en aanbevelingen voor beheer en herplant.",
+        has totalNeeded 2,
+        has createdAt 2025-01-10T10:20:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_hvhl_zwane isa task,
+        has id "dd020007-1111-4111-8111-000000020007",
+        has name "Ontwerper Vergroening Binnenpleintjes",
+        has description "Ontwerp vergroening en tegelwipplannen voor de binnenpleintjes aan de Zwanebloemlaan. Betrek bewoners, Kinderwijkteam en stadstuinier in de co-creatie.",
+        has totalNeeded 3,
+        has createdAt 2025-01-10T10:35:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_artez_moving isa task,
+        has id "dd030001-1111-4111-8111-000000030001",
+        has name "Artisteducator 'Moving (Hi)story'",
+        has description "Werk in een collectief van twee tot drie studenten aan een kunstproject rond een specifieke 'moving (hi)story' uit 't Arnhemse Broek. Lever een publieksmoment op voor bewoners van de wijk.",
+        has totalNeeded 4,
+        has createdAt 2024-09-01T09:05:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-06-27T23:59:00+0000;
+
+    $t_artez_animal isa task,
+        has id "dd030002-1111-4111-8111-000000030002",
+        has name "Theatermaker Animal Voices",
+        has description "Onderzoek hoe je 'de stem van het dier' kunt representeren in theaterwerk. Ontwerp en speel een korte voorstelling in Burgers' Zoo, met ethische reflectie op de mens-dier-relatie.",
+        has totalNeeded 3,
+        has createdAt 2024-09-01T09:20:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-06-27T23:59:00+0000;
+
+    $t_rij_vsv isa task,
+        has id "dd040001-1111-4111-8111-000000040001",
+        has name "Sociaal Werker Wijkaanpak VSV",
+        has description "Werk mee in de wijkaanpak VSV: koppel rolmodellen aan jongeren, organiseer keuzeactiviteiten en ondersteun scholen bij preventie van vroegtijdig schoolverlaten in Malburgen/Presikhaaf.",
+        has totalNeeded 4,
+        has createdAt 2024-09-01T09:05:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    $t_rij_licht isa task,
+        has id "dd040002-1111-4111-8111-000000040002",
+        has name "Co-creatie Duurzame Straatverlichting Klarendal",
+        has description "Ontwerp, in co-creatie met Klarendalse bewoners, energiezuinige en innovatieve straatverlichting. Combineer vormgeving, techniek en draagvlak in het eindontwerp.",
+        has totalNeeded 3,
+        has createdAt 2024-09-01T09:20:00+0000,
+        has startDate 2024-09-09T00:00:00+0000,
+        has endDate 2025-02-28T23:59:00+0000;
+
+    $t_swoa_kerst isa task,
+        has id "dd050001-1111-4111-8111-000000050001",
+        has name "Gastvrouw/gastheer Kerstdiner 55+",
+        has description "Maak bezoekers welkom, stimuleer ontmoeting en interactie, ondersteun de driegangen-service. Reflecteer professioneel op je rol in het tegengaan van eenzaamheid.",
+        has totalNeeded 4,
+        has createdAt 2024-10-01T09:05:00+0000,
+        has startDate 2024-11-15T00:00:00+0000,
+        has endDate 2024-12-20T23:59:00+0000;
+
+    $t_swoa_winter isa task,
+        has id "dd050002-1111-4111-8111-000000050002",
+        has name "Activiteitenbegeleider Warme Winterroute",
+        has description "Bedenk en voer extra (spel)activiteiten uit langs de Warme Winterroute, o.a. in speeltuin De Leuke Linde. Maak bewoners bekend met lokale welzijnsorganisaties.",
+        has totalNeeded 5,
+        has createdAt 2024-12-01T09:05:00+0000,
+        has startDate 2025-01-06T00:00:00+0000,
+        has endDate 2025-02-14T23:59:00+0000;
+
+    $t_connectr isa task,
+        has id "dd060001-1111-4111-8111-000000060001",
+        has name "Challenge-based Energielab Student",
+        has description "Werk aan een concrete energietransitie-challenge op IPKW. Kies een lab-domein (waterstof, circulaire materialen, energiesystemen) en lever in een multidisciplinair team een prototype of onderzoeksrapport op.",
+        has totalNeeded 4,
+        has createdAt 2025-01-20T09:05:00+0000,
+        has startDate 2025-02-03T00:00:00+0000,
+        has endDate 2025-07-11T23:59:00+0000;
+
+    # --- Project - task relaties ---
+    $pt_hanPres_move isa containsTask (project: $p_hanPres_move, task: $t_hanPres_move);
+    $pt_hanPres_food isa containsTask (project: $p_hanPres_food, task: $t_hanPres_food);
+    $pt_hanMalb_vitaal isa containsTask (project: $p_hanMalb_vitaal, task: $t_hanMalb_vitaal);
+    $pt_hanMalb_peiling isa containsTask (project: $p_hanMalb_peiling, task: $t_hanMalb_peiling);
+    $pt_hanNoord_finedu isa containsTask (project: $p_hanNoord_finedu, task: $t_hanNoord_finedu);
+    $pt_hanSpijker_zakgeld isa containsTask (project: $p_hanSpijker_zakgeld, task: $t_hanSpijker_zakgeld);
+    $pt_hanDT_3d isa containsTask (project: $p_hanDT, task: $t_hanDT_3d);
+    $pt_hanDT_data isa containsTask (project: $p_hanDT, task: $t_hanDT_data);
+    $pt_hanOLA isa containsTask (project: $p_hanOLA, task: $t_hanOLA);
+    $pt_hvhl_industrie isa containsTask (project: $p_hvhl_industrie, task: $t_hvhl_industrie);
+    $pt_hvhl_gpoort isa containsTask (project: $p_hvhl_gpoort, task: $t_hvhl_gpoort);
+    $pt_hvhl_dgg isa containsTask (project: $p_hvhl_dgg, task: $t_hvhl_dgg);
+    $pt_hvhl_voedselbos isa containsTask (project: $p_hvhl_voedselbos, task: $t_hvhl_voedselbos);
+    $pt_hvhl_kronenburg isa containsTask (project: $p_hvhl_kronenburg, task: $t_hvhl_kronenburg);
+    $pt_hvhl_rijker isa containsTask (project: $p_hvhl_rijker, task: $t_hvhl_rijker);
+    $pt_hvhl_zwane isa containsTask (project: $p_hvhl_zwane, task: $t_hvhl_zwane);
+    $pt_artez_moving isa containsTask (project: $p_artez_moving, task: $t_artez_moving);
+    $pt_artez_animal isa containsTask (project: $p_artez_animal, task: $t_artez_animal);
+    $pt_rij_vsv isa containsTask (project: $p_rij_vsv, task: $t_rij_vsv);
+    $pt_rij_licht isa containsTask (project: $p_rij_licht, task: $t_rij_licht);
+    $pt_swoa_kerst isa containsTask (project: $p_swoa_kerst, task: $t_swoa_kerst);
+    $pt_swoa_winter isa containsTask (project: $p_swoa_winter, task: $t_swoa_winter);
+    $pt_connectr isa containsTask (project: $p_connectr, task: $t_connectr);
+
+    # --- Task - skill relaties ---
+    $ts_hanPres_move_a isa requiresSkill (task: $t_hanPres_move, skill: $sk_ki_sociaal);
+    $ts_hanPres_move_b isa requiresSkill (task: $t_hanPres_move, skill: $sk_ki_jong);
+    $ts_hanPres_food_a isa requiresSkill (task: $t_hanPres_food, skill: $sk_ki_sociaal);
+    $ts_hanPres_food_b isa requiresSkill (task: $t_hanPres_food, skill: $sk_ki_voed);
+    $ts_hanMalb_vitaal_a isa requiresSkill (task: $t_hanMalb_vitaal, skill: $sk_ki_gezond);
+    $ts_hanMalb_vitaal_b isa requiresSkill (task: $t_hanMalb_vitaal, skill: $sk_ki_oud);
+    $ts_hanMalb_peiling_a isa requiresSkill (task: $t_hanMalb_peiling, skill: $sk_ki_kwal);
+    $ts_hanMalb_peiling_b isa requiresSkill (task: $t_hanMalb_peiling, skill: $sk_ki_partic);
+    $ts_hanNoord_finedu_a isa requiresSkill (task: $t_hanNoord_finedu, skill: $sk_ki_finlit);
+    $ts_hanNoord_finedu_b isa requiresSkill (task: $t_hanNoord_finedu, skill: $sk_ki_didact);
+    $ts_hanSpijker_zakgeld_a isa requiresSkill (task: $t_hanSpijker_zakgeld, skill: $sk_ki_finlit);
+    $ts_hanSpijker_zakgeld_b isa requiresSkill (task: $t_hanSpijker_zakgeld, skill: $sk_ki_partic);
+    $ts_hanDT_3d_a isa requiresSkill (task: $t_hanDT_3d, skill: $sk_ki_digi);
+    $ts_hanDT_3d_b isa requiresSkill (task: $t_hanDT_3d, skill: $sk_ki_ruimte);
+    $ts_hanDT_data_a isa requiresSkill (task: $t_hanDT_data, skill: $sk11);
+    $ts_hanDT_data_b isa requiresSkill (task: $t_hanDT_data, skill: $sk_ki_digi);
+    $ts_hanOLA_a isa requiresSkill (task: $t_hanOLA, skill: $sk_ki_pm);
+    $ts_hanOLA_b isa requiresSkill (task: $t_hanOLA, skill: $sk_ki_circ);
+    $ts_hvhl_industrie_a isa requiresSkill (task: $t_hvhl_industrie, skill: $sk_ki_groen);
+    $ts_hvhl_industrie_b isa requiresSkill (task: $t_hvhl_industrie, skill: $sk_ki_klim);
+    $ts_hvhl_gpoort_a isa requiresSkill (task: $t_hvhl_gpoort, skill: $sk_ki_klim);
+    $ts_hvhl_gpoort_b isa requiresSkill (task: $t_hvhl_gpoort, skill: $sk_ki_ruimte);
+    $ts_hvhl_dgg_a isa requiresSkill (task: $t_hvhl_dgg, skill: $sk_ki_klim);
+    $ts_hvhl_dgg_b isa requiresSkill (task: $t_hvhl_dgg, skill: $sk_ki_ruimte);
+    $ts_hvhl_voedselbos_a isa requiresSkill (task: $t_hvhl_voedselbos, skill: $sk_ki_voed);
+    $ts_hvhl_voedselbos_b isa requiresSkill (task: $t_hvhl_voedselbos, skill: $sk_ki_groen);
+    $ts_hvhl_kronenburg_a isa requiresSkill (task: $t_hvhl_kronenburg, skill: $sk_ki_ruimte);
+    $ts_hvhl_kronenburg_b isa requiresSkill (task: $t_hvhl_kronenburg, skill: $sk_ki_energie);
+    $ts_hvhl_rijker_a isa requiresSkill (task: $t_hvhl_rijker, skill: $sk_ki_groen);
+    $ts_hvhl_rijker_b isa requiresSkill (task: $t_hvhl_rijker, skill: $sk_ki_kwal);
+    $ts_hvhl_zwane_a isa requiresSkill (task: $t_hvhl_zwane, skill: $sk_ki_groen);
+    $ts_hvhl_zwane_b isa requiresSkill (task: $t_hvhl_zwane, skill: $sk_ki_klim);
+    $ts_artez_moving_a isa requiresSkill (task: $t_artez_moving, skill: $sk_ki_kunst);
+    $ts_artez_moving_b isa requiresSkill (task: $t_artez_moving, skill: $sk_ki_partic);
+    $ts_artez_animal_a isa requiresSkill (task: $t_artez_animal, skill: $sk_ki_theater);
+    $ts_artez_animal_b isa requiresSkill (task: $t_artez_animal, skill: $sk_ki_kunst);
+    $ts_rij_vsv_a isa requiresSkill (task: $t_rij_vsv, skill: $sk_ki_sociaal);
+    $ts_rij_vsv_b isa requiresSkill (task: $t_rij_vsv, skill: $sk_ki_jong);
+    $ts_rij_licht_a isa requiresSkill (task: $t_rij_licht, skill: $sk_ki_energie);
+    $ts_rij_licht_b isa requiresSkill (task: $t_rij_licht, skill: $sk_ki_ruimte);
+    $ts_swoa_kerst_a isa requiresSkill (task: $t_swoa_kerst, skill: $sk_ki_oud);
+    $ts_swoa_kerst_b isa requiresSkill (task: $t_swoa_kerst, skill: $sk_ki_sociaal);
+    $ts_swoa_winter_a isa requiresSkill (task: $t_swoa_winter, skill: $sk_ki_oud);
+    $ts_swoa_winter_b isa requiresSkill (task: $t_swoa_winter, skill: $sk_ki_sociaal);
+    $ts_connectr_a isa requiresSkill (task: $t_connectr, skill: $sk_ki_energie);
+    $ts_connectr_b isa requiresSkill (task: $t_connectr, skill: $sk_ki_circ);
+
+    # --- Project - thema relaties ---
+    $tm_hanPres_move_a isa hasTheme (project: $p_hanPres_move, theme: $theme_inclusie);
+    $tm_hanPres_move_b isa hasTheme (project: $p_hanPres_move, theme: $theme6);
+    $tm_hanPres_food_a isa hasTheme (project: $p_hanPres_food, theme: $theme7);
+    $tm_hanPres_food_b isa hasTheme (project: $p_hanPres_food, theme: $theme_inclusie);
+    $tm_hanMalb_vitaal_a isa hasTheme (project: $p_hanMalb_vitaal, theme: $theme7);
+    $tm_hanMalb_vitaal_b isa hasTheme (project: $p_hanMalb_vitaal, theme: $theme_inclusie);
+    $tm_hanMalb_peiling_a isa hasTheme (project: $p_hanMalb_peiling, theme: $theme6);
+    $tm_hanMalb_peiling_b isa hasTheme (project: $p_hanMalb_peiling, theme: $theme_inclusie);
+    $tm_hanNoord_finedu_a isa hasTheme (project: $p_hanNoord_finedu, theme: $theme6);
+    $tm_hanNoord_finedu_b isa hasTheme (project: $p_hanNoord_finedu, theme: $theme_inclusie);
+    $tm_hanSpijker_zakgeld_a isa hasTheme (project: $p_hanSpijker_zakgeld, theme: $theme_inclusie);
+    $tm_hanSpijker_zakgeld_b isa hasTheme (project: $p_hanSpijker_zakgeld, theme: $theme6);
+    $tm_hanDT_a isa hasTheme (project: $p_hanDT, theme: $theme3);
+    $tm_hanDT_b isa hasTheme (project: $p_hanDT, theme: $theme6);
+    $tm_hanOLA_a isa hasTheme (project: $p_hanOLA, theme: $theme3);
+    $tm_hanOLA_b isa hasTheme (project: $p_hanOLA, theme: $theme1);
+    $tm_hvhl_industrie_a isa hasTheme (project: $p_hvhl_industrie, theme: $theme2);
+    $tm_hvhl_industrie_b isa hasTheme (project: $p_hvhl_industrie, theme: $theme1);
+    $tm_hvhl_gpoort_a isa hasTheme (project: $p_hvhl_gpoort, theme: $theme2);
+    $tm_hvhl_gpoort_b isa hasTheme (project: $p_hvhl_gpoort, theme: $theme1);
+    $tm_hvhl_dgg_a isa hasTheme (project: $p_hvhl_dgg, theme: $theme2);
+    $tm_hvhl_dgg_b isa hasTheme (project: $p_hvhl_dgg, theme: $theme7);
+    $tm_hvhl_voedselbos_a isa hasTheme (project: $p_hvhl_voedselbos, theme: $theme4);
+    $tm_hvhl_voedselbos_b isa hasTheme (project: $p_hvhl_voedselbos, theme: $theme5);
+    $tm_hvhl_kronenburg_a isa hasTheme (project: $p_hvhl_kronenburg, theme: $theme2);
+    $tm_hvhl_kronenburg_b isa hasTheme (project: $p_hvhl_kronenburg, theme: $theme3);
+    $tm_hvhl_rijker isa hasTheme (project: $p_hvhl_rijker, theme: $theme5);
+    $tm_hvhl_zwane_a isa hasTheme (project: $p_hvhl_zwane, theme: $theme2);
+    $tm_hvhl_zwane_b isa hasTheme (project: $p_hvhl_zwane, theme: $theme1);
+    $tm_artez_moving_a isa hasTheme (project: $p_artez_moving, theme: $theme_cultuur);
+    $tm_artez_moving_b isa hasTheme (project: $p_artez_moving, theme: $theme_inclusie);
+    $tm_artez_animal_a isa hasTheme (project: $p_artez_animal, theme: $theme_cultuur);
+    $tm_artez_animal_b isa hasTheme (project: $p_artez_animal, theme: $theme6);
+    $tm_rij_vsv_a isa hasTheme (project: $p_rij_vsv, theme: $theme_inclusie);
+    $tm_rij_vsv_b isa hasTheme (project: $p_rij_vsv, theme: $theme6);
+    $tm_rij_licht_a isa hasTheme (project: $p_rij_licht, theme: $theme1);
+    $tm_rij_licht_b isa hasTheme (project: $p_rij_licht, theme: $theme3);
+    $tm_swoa_kerst_a isa hasTheme (project: $p_swoa_kerst, theme: $theme7);
+    $tm_swoa_kerst_b isa hasTheme (project: $p_swoa_kerst, theme: $theme_inclusie);
+    $tm_swoa_winter_a isa hasTheme (project: $p_swoa_winter, theme: $theme7);
+    $tm_swoa_winter_b isa hasTheme (project: $p_swoa_winter, theme: $theme_inclusie);
+    $tm_connectr_a isa hasTheme (project: $p_connectr, theme: $theme3);
+    $tm_connectr_b isa hasTheme (project: $p_connectr, theme: $theme1);

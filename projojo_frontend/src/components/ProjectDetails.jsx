@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
+import { createTask, IMAGE_BASE_URL, getBusinessLogoUrl, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
 import useBookmarks from "../hooks/useBookmarks";
@@ -281,15 +281,19 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                         to={`/business/${project.business.id}`}
                                         className="inline-flex items-center gap-2 text-sm text-[var(--text-muted)] hover:text-primary transition group"
                                     >
-                                        {project.business.image_path && project.business.image_path !== 'default.png' ? (
-                                            <img
-                                                className="h-5 w-5 object-cover rounded"
-                                                src={`${IMAGE_BASE_URL}${project.business.image_path}`}
-                                                alt=""
-                                            />
-                                        ) : (
-                                            <span className="material-symbols-outlined text-sm">business</span>
-                                        )}
+                                        {(() => {
+                                            const logoUrl = getBusinessLogoUrl(project.business.image_path, project.business.website, { size: 64 });
+                                            return logoUrl ? (
+                                                <img
+                                                    className="h-5 w-5 object-cover rounded"
+                                                    src={logoUrl}
+                                                    alt=""
+                                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                />
+                                            ) : (
+                                                <span className="material-symbols-outlined text-sm">business</span>
+                                            );
+                                        })()}
                                         <span className="group-hover:underline">{project.business.name}</span>
                                     </Link>
                                     {project.business.location && (

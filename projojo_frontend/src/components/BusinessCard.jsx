@@ -4,6 +4,7 @@ import { IMAGE_BASE_URL, createSupervisorInviteKey } from '../services';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
+import BusinessLogo from './BusinessLogo';
 import FormInput from './FormInput';
 import Loading from "./Loading";
 import LocationMap from "./LocationMap";
@@ -11,31 +12,6 @@ import Modal from "./Modal";
 import RichTextViewer from './RichTextViewer';
 import SkillBadge from './SkillBadge';
 import Tooltip from './Tooltip';
-
-// Check if business has a valid image (not default.png or empty)
-const hasValidImage = (imagePath) => {
-    return imagePath && imagePath !== 'default.png' && imagePath.trim() !== '';
-};
-
-// Placeholder component for businesses without images
-function BusinessPlaceholder({ name, size = 'md' }) {
-    const sizeClasses = {
-        sm: 'w-10 h-10 text-lg',
-        md: 'w-14 h-14 text-xl',
-        lg: 'w-20 h-20 text-3xl'
-    };
-    
-    // Get initials from business name
-    const initials = name
-        ? name.split(' ').map(word => word[0]).join('').substring(0, 2).toUpperCase()
-        : 'B';
-    
-    return (
-        <div className={`${sizeClasses[size]} rounded-[10px] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center`}>
-            <span className="font-bold text-primary">{initials}</span>
-        </div>
-    );
-}
 
 export default function BusinessCard({ 
     name, 
@@ -147,15 +123,12 @@ export default function BusinessCard({
                         to={`/business/${businessId}`}
                         className="w-14 h-14 rounded-xl overflow-hidden shrink-0 neu-pressed p-0.5 hover:scale-105 transition-transform"
                     >
-                        {hasValidImage(image) ? (
-                            <img 
-                                className="w-full h-full object-cover rounded-[10px]" 
-                                src={`${IMAGE_BASE_URL}${image}`} 
-                                alt={`Logo van ${name}`} 
-                            />
-                        ) : (
-                            <BusinessPlaceholder name={name} size="md" />
-                        )}
+                        <BusinessLogo
+                            image={image}
+                            website={website}
+                            name={name}
+                            size="md"
+                        />
                     </Link>
 
                     {/* Name and location */}

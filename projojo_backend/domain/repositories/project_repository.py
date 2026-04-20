@@ -98,7 +98,9 @@ class ProjectRepository(BaseRepository[Project]):
                 'business': {
                     'id': $business_id,
                     'name': $business_name,
-                    'location': $business.location
+                    'location': $business.location,
+                    'image_path': $business.imagePath,
+                    'website': [$business.website]
                 },
                 'themes': [
                     match
@@ -171,6 +173,11 @@ class ProjectRepository(BaseRepository[Project]):
                     "color": color_list[0] if color_list else None
                 })
             
+            business_data = r.get("business", {}) or {}
+            website_list = business_data.get("website", [])
+            if isinstance(website_list, list):
+                business_data["website"] = website_list[0] if website_list else None
+
             public_projects.append({
                 "id": r.get("id", ""),
                 "name": r.get("name", ""),
@@ -181,7 +188,7 @@ class ProjectRepository(BaseRepository[Project]):
                 "start_date": r.get("start_date", [None])[0],
                 "end_date": r.get("end_date", [None])[0],
                 "impact_summary": impact_summary_list[0] if impact_summary_list else None,
-                "business": r.get("business", {}),
+                "business": business_data,
                 "themes": themes,
                 "open_positions": total_positions - total_accepted,
                 "total_positions": total_positions,
@@ -300,12 +307,17 @@ class ProjectRepository(BaseRepository[Project]):
                 'description': $business.description,
                 'image_path': $business.imagePath,
                 'location': $business.location,
+                'website': [$business.website],
             };
         """
         results = Db.read_transact(query, {"project_id": project_id})
         if not results:
             return None
-        return results[0]
+        business = results[0]
+        website_list = business.get("website", [])
+        if isinstance(website_list, list):
+            business["website"] = website_list[0] if website_list else None
+        return business
 
     def _map_to_model(self, result: dict[str, Any]) -> Project:
         # Extract relevant information from the query result

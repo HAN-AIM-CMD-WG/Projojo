@@ -2,6 +2,49 @@ export const API_BASE_URL = "http://localhost:8000/";
 export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
 export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
 
+const PLACEHOLDER_IMAGES = new Set(["default.png", "logo_placeholder.png"]);
+
+function hasUsableImage(imagePath) {
+    return (
+        typeof imagePath === "string"
+        && imagePath.trim() !== ""
+        && !PLACEHOLDER_IMAGES.has(imagePath)
+    );
+}
+
+function extractDomain(website) {
+    if (!website) return null;
+    const raw = Array.isArray(website) ? website[0] : website;
+    if (!raw || typeof raw !== "string") return null;
+    try {
+        const url = new URL(raw.startsWith("http") ? raw : `https://${raw}`);
+        return url.hostname.replace(/^www\./, "");
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Resolve a logo URL for an organisation. Uses the uploaded image when present,
+ * otherwise falls back to a Google favicon derived from the website domain.
+ * Returns null when neither is available (caller should render a text placeholder).
+ *
+ * @param {string | null | undefined} imagePath
+ * @param {string | string[] | null | undefined} website
+ * @param {{ size?: number }} [options]
+ * @returns {string | null}
+ */
+export function getBusinessLogoUrl(imagePath, website, { size = 128 } = {}) {
+    if (hasUsableImage(imagePath)) {
+        return `${IMAGE_BASE_URL}${imagePath}`;
+    }
+    const domain = extractDomain(website);
+    if (domain) {
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+    }
+    return null;
+}
+
 export class HttpError extends Error {
     #statusCode;
 
