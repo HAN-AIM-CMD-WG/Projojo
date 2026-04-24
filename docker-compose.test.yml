@@ -1,0 +1,77 @@
+# This is the dedicated Docker Compose file for the isolated E2E test stack.
+# It is intentionally separate from [`docker-compose.yml`](docker-compose.yml)
+# so tests can rebuild a clean stack without conflicting with normal development.
+
+services:
+  typedb:
+    extends:
+      file: docker-compose.base.yml
+      service: typedb
+    container_name: projojo_test_typedb
+    env_file:
+      - .env.test
+    volumes:
+      - typedb-test-data:/opt/typedb-all-linux-x86_64/server/data
+    networks:
+      - projojo-test-network
+
+  backend:
+    extends:
+      file: docker-compose.base.yml
+      service: backend
+    container_name: projojo_test_backend
+    depends_on:
+      - typedb
+      - mailhog
+    build:
+      target: development
+    env_file:
+      - .env.test
+    volumes:
+      - ./projojo_backend:/app
+      - /app/__pycache__
+      - /app/.venv
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPATH=/app
+      - EMAIL_SMTP_PORT=1025
+    networks:
+      - projojo-test-network
+
+  frontend:
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
+    container_name: projojo_test_frontend
+    build:
+      target: development
+    env_file:
+      - .env.test
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    volumes:
+      - ./projojo_frontend:/app
+      - /app/node_modules
+    networks:
+      - projojo-test-network
+
+  mailhog:
+    container_name: projojo_test_mailhog
+    image: mailhog/mailhog:latest
+    platform: linux/amd64
+    restart: unless-stopped
+    env_file:
+      - .env.test
+    ports:
+      - "${MAILHOG_SMTP_HOST_PORT}:1025"
+      - "${MAILHOG_WEB_PORT}:8025"
+    networks:
+      - projojo-test-network
+
+volumes:
+  typedb-test-data:
+
+networks:
+  projojo-test-network:
+    driver: bridge

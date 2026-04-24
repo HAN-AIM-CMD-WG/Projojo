@@ -1,0 +1,92 @@
+insert
+
+    # Identity providers required by schema for local development users
+    $provider_google isa oauthProvider,
+        has name "google";
+
+    $provider_github isa oauthProvider,
+        has name "github";
+
+    $provider_microsoft isa oauthProvider,
+        has name "microsoft";
+
+    # Neutral infrastructure users
+    $teacher isa teacher,
+        has id "20000000-0000-4000-8000-000000000001",
+        has email "teacher.e2e@projojo.local",
+        has fullName "Tessa Testdocent",
+        has imagePath "default.svg";
+
+    $student isa student,
+        has id "20000000-0000-4000-8000-000000000002",
+        has email "student.e2e@projojo.local",
+        has fullName "Tom Teststudent",
+        has imagePath "default.svg",
+        has description "Neutrale student voor de lokale E2E infrastructuur proof suite.";
+
+    $supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000003",
+        has email "supervisor.e2e@projojo.local",
+        has fullName "Sanne Testbegeleider",
+        has imagePath "default.svg";
+
+    # Required auth links
+    $teacher_auth isa oauthAuthentication (user: $teacher, provider: $provider_microsoft),
+        has oauthSub "e2e-teacher-microsoft-sub";
+
+    $student_auth isa oauthAuthentication (user: $student, provider: $provider_google),
+        has oauthSub "e2e-student-google-sub";
+
+    $supervisor_auth isa oauthAuthentication (user: $supervisor, provider: $provider_github),
+        has oauthSub "e2e-supervisor-github-sub";
+
+    # Dedicated deterministic business and project marker for preflight + suite assertions
+    $business isa business,
+        has id "30000000-0000-4000-8000-000000000001",
+        has name "E2E Infrastructure Business",
+        has description "Neutrale organisatie voor de Projojo E2E infrastructuur proof suite.",
+        has imagePath "default.svg",
+        has location "Arnhem",
+        has sector "Education",
+        has companySize "1-10",
+        has website "https://example.invalid/projojo-e2e";
+
+    $project isa project,
+        has id "40000000-0000-4000-8000-000000000001",
+        has name "E2E Infrastructure Proof Project",
+        has description "Neutraal publiek project dat alleen de lokale testinfrastructuur bewijst.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-15T09:00:00.000+0000,
+        has location "Arnhem",
+        has isPublic true,
+        has impactSummary "PROJOJO_E2E_INFRASTRUCTURE_V1",
+        has startDate 2026-01-15T09:00:00.000+0000,
+        has endDate 2030-01-15T09:00:00.000+0000;
+
+    $task isa task,
+        has id "50000000-0000-4000-8000-000000000001",
+        has name "Infrastructure Proof Task",
+        has description "Neutrale taak voor het bewijzen van dashboard- en public-discovery data.",
+        has totalNeeded 2,
+        has createdAt 2026-01-15T09:15:00.000+0000,
+        has startDate 2026-01-15T09:15:00.000+0000,
+        has endDate 2030-01-15T09:15:00.000+0000;
+
+    $skill isa skill,
+        has id "60000000-0000-4000-8000-000000000001",
+        has name "Deterministisch Testen",
+        has isPending false,
+        has createdAt 2026-01-15T09:30:00.000+0000;
+
+    # Required relations
+    $manages isa manages (supervisor: $supervisor, business: $business),
+        has location "Arnhem";
+
+    $has_projects isa hasProjects (business: $business, project: $project);
+
+    $contains_task isa containsTask (project: $project, task: $task);
+
+    $requires_skill isa requiresSkill (task: $task, skill: $skill);
+
+    $creates_project isa creates (supervisor: $supervisor, project: $project),
+        has createdAt 2026-01-15T09:00:00.000+0000;

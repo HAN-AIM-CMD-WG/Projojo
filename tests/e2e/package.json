@@ -1,0 +1,25 @@
+{
+  "name": "projojo-e2e",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "preflight": "node ./scripts/preflight.cjs",
+    "test": "node ./node_modules/@qavajs/core/bin/qavajs.js run --config ./qavajs.config.cjs",
+    "browsers": "playwright install chromium"
+  },
+  "dependencies": {
+    "@cucumber/cucumber": "^12.8.1",
+    "@qavajs/cli": "^1.0.1",
+    "@qavajs/core": "^2.14.0",
+    "@qavajs/memory": "^1.11.0",
+    "@qavajs/steps-memory": "^2.0.1",
+    "@qavajs/steps-playwright": "^2.16.0"
+  },
+  "devDependencies": {
+    "@qavajs/console-formatter": "^1.2.0",
+    "@qavajs/html-formatter": "^1.2.0",
+    "playwright": "^1.52.0"
+  }
+}

@@ -1,0 +1,59 @@
+version: '3'
+
+vars:
+  E2E_ENV_FILE: .env.test
+  E2E_COMPOSE_PROJECT: projojo-e2e
+  E2E_COMPOSE_ARGS: --env-file .env.test -p projojo-e2e -f docker-compose.base.yml -f docker-compose.test.yml
+
+tasks:
+  test:e2e:stack:
+    desc: Start a fresh isolated Docker stack for the neutral E2E infrastructure suite
+    cmds:
+      - docker compose {{.E2E_COMPOSE_ARGS}} down -v --remove-orphans
+      - docker compose {{.E2E_COMPOSE_ARGS}} up -d --build typedb mailhog backend frontend
+
+  test:e2e:install:
+    desc: Install the dedicated Qavajs E2E runner dependencies
+    dir: tests/e2e
+    cmds:
+      - npm install
+
+  test:e2e:browsers:
+    desc: Install the primary Playwright browser used by the infrastructure suite
+    dir: tests/e2e
+    cmds:
+      - npx playwright install chromium
+
+  test:e2e:reset:
+    desc: Reset TypeDB with the dedicated deterministic E2E seed
+    cmds:
+      - docker compose {{.E2E_COMPOSE_ARGS}} stop backend frontend
+      - docker compose {{.E2E_COMPOSE_ARGS}} run --rm backend uv run python db/reset_test_database.py --seed db/test_seed.tql
+      - docker compose {{.E2E_COMPOSE_ARGS}} up -d backend frontend
+
+  test:e2e:preflight:
+    desc: Fail fast when the local stack or deterministic seed is not ready
+    dir: tests/e2e
+    cmds:
+      - node ./scripts/preflight.cjs
+
+  test:e2e:run:
+    desc: Run the neutral Qavajs infrastructure-proof suite and write the HTML report artifact
+    dir: tests/e2e
+    cmds:
+      - node ./node_modules/@qavajs/core/bin/qavajs.js run --config ./qavajs.config.cjs
+
+  test:e2e:report:
+    desc: Print the saved HTML report location
+    cmds:
+      - echo tests/e2e/reports/report.html
+
+  test:e2e:
+    desc: Full local deterministic E2E infrastructure workflow on the isolated test stack
+    cmds:
+      - task: test:e2e:stack
+      - task: test:e2e:install
+      - task: test:e2e:browsers
+      - task: test:e2e:reset
+      - task: test:e2e:preflight
+      - task: test:e2e:run

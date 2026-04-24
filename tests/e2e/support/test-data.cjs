@@ -1,0 +1,23 @@
+const FRONTEND_URL = process.env.PROJOJO_FRONTEND_URL ?? 'http://localhost:10121';
+const BACKEND_URL = process.env.PROJOJO_BACKEND_URL ?? 'http://localhost:10122';
+
+const LOGIN_URL = `${FRONTEND_URL}/login`;
+const PUBLIC_DISCOVERY_URL = `${FRONTEND_URL}/publiek`;
+
+const PROOF_SEED_MARKER = 'PROJOJO_E2E_INFRASTRUCTURE_V1';
+const PROOF_BUSINESS_NAME = 'E2E Infrastructure Business';
+const PROOF_PROJECT_NAME = 'E2E Infrastructure Proof Project';
+const PROOF_PROJECT_ID = '40000000-0000-4000-8000-000000000001';
+const PROOF_SUPERVISOR_NAME = 'Sanne Testbegeleider';
+
+module.exports = {
+  FRONTEND_URL,
+  BACKEND_URL,
+  LOGIN_URL,
+  PUBLIC_DISCOVERY_URL,
+  PROOF_SEED_MARKER,
+  PROOF_BUSINESS_NAME,
+  PROOF_PROJECT_NAME,
+  PROOF_PROJECT_ID,
+  PROOF_SUPERVISOR_NAME,
+};
