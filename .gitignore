@@ -80,6 +80,10 @@ projojo_backend/*.log
 node_modules
 .arena_temp
 
+# E2E generated reports
+tests/e2e/reports/*
+!tests/e2e/reports/.gitkeep
+
 # Backend Static Files
 projojo_backend/static/images/*
 projojo_backend/static/pdf/*
