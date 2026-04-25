@@ -1,164 +1,203 @@
 # Projojo Backend
 
-The API will be available at http://localhost:8000
+FastAPI backend service for Projojo.
 
-API documentation will be available at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+For most day-to-day work, treat this backend as part of the full repo-level Docker development stack rather than a standalone app.
 
-FastAPI backend service for the Projojo application.
+## Quick facts
 
-# Development Setup
+- Main local backend URL in the Docker dev stack: `http://localhost:10102`
+- Swagger UI: `http://localhost:10102/docs`
+- Repo-level startup command: `task docker:start` from the project root
+- Optional local-only Python run: `uv run python main.py` from [`projojo_backend/`](./)
+
+## Recommended workflow
+
+The current project-standard workflow lives at the repo root and is driven by [`../Taskfile.yml`](../Taskfile.yml).
+
+From the project root:
+
+```bash
+cp .env.example .env
+task docker:start
+```
+
+That starts the full development stack defined by [`../docker-compose.yml`](../docker-compose.yml):
+
+- frontend
+- backend
+- TypeDB
+- MailHog
+
+Use this backend README when you need backend-specific details. Use the root [`../README.md`](../README.md) for full-stack onboarding.
 
 ## Prerequisites
 
-1. **[Docker & Docker Compose](https://www.docker.com/get-started/)**
-2. **OAuth Credentials** - See [OAuth Setup Guide](./auth/README.md) for instructions
-3. optional: **[Python 3.13](https://www.python.org/downloads/)**
-4. optional: **[uv](https://docs.astral.sh/uv/getting-started/installation/)**
+Required for normal backend development:
 
-> **uv** and **python** are only needed for IDE support and dependency management
+1. Docker Desktop
+2. Task CLI
+3. A repo-root [`.env`](../.env.example) created from [`../.env.example`](../.env.example)
+4. OAuth client credentials configured via [`./auth/README.md`](./auth/README.md)
 
-## Quick Start
+Optional:
 
-### 1. Configure OAuth Credentials
-Before running the application, you need to set up OAuth credentials:
+- Python 3.13+
+- `uv`
 
-1. Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
+Local Python and `uv` are only needed if you want IDE dependency syncing or to run the backend outside Docker.
 
-2. Follow the [OAuth Setup Guide](./auth/README.md) to obtain your Google and GitHub OAuth credentials
+## Required environment configuration
 
-3. Update the `.env` file with your credentials
+The backend reads settings from [`config/settings.py`](config/settings.py), which loads the repo-root `.env` file.
 
-### 2. Run the Application
+Important required values include:
+
+- `ENVIRONMENT`
+- `FRONTEND_URL`
+- `SESSIONS_SECRET_KEY`
+- `JWT_SECRET_KEY`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
+- `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET`
+- `TYPEDB_*`
+- `EMAIL_*`
+
+See [`../.env.example`](../.env.example) for the full template.
+
+## Backend URLs
+
+### In the normal Docker development stack
+
+These are the URLs most developers should use:
+
+- API root: `http://localhost:10102`
+- Swagger UI: `http://localhost:10102/docs`
+- TypeDB status endpoint: `http://localhost:10102/typedb/status`
+
+Those values come from [`../.env.example`](../.env.example) and [`../docker-compose.base.yml`](../docker-compose.base.yml).
+
+### When running the backend directly with Python
+
+[`uvicorn.run()`](main.py:199) in [`main.py`](main.py) still starts the backend on port `8000`.
+
+So if you run:
+
 ```bash
-# Run with Docker (from project root)
-docker compose up backend
-
-# Optional: Install dependencies locally for IDE support and dependency management
 cd projojo_backend
-uv sync
-# Optional: Run backend locally (requires Python and uv installed)
 uv run python main.py
 ```
-> [!IMPORTANT] Windows Compatibility Notice
-> **Dependency management** with uv **should work just fine** (installing, adding, removing packages). However, the TypeDB driver currently has **compatibility issues** on Windows due to missing native binaries for Python 3.13. Local development with `uv run python main.py` may fail with import errors.
->
-> Windows users should use Docker for development or **switch to WSL2** (Windows Subsystem for Linux). **Docker works perfectly fine** as it runs a Linux environment and downloads the necessary native dependencies on the first run.
 
-## What is uv?
+your local URLs become:
 
-uv is a fast Python tool for dependency management and virtual environments. Think of it as npm, but for Python:
-- `pyproject.toml` ≈ `package.json` (project metadata and dependencies)
-- `uv.lock` ≈ `package-lock.json` (exact versions for reproducible installs)
-- `uv add <dependency>` ≈ `npm install <dependency>`
-- `uv sync` ≈ `npm ci` (install exact versions from lock file)
+- API root: `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
 
-More info: https://docs.astral.sh/uv/
+That local-only mode is optional and not the main documented workflow for the repo.
 
-## Dependency Management
+## Running the backend in Docker
 
-All commands below should be run locally, not inside the Docker container. This ensures dependency changes are immediately available for version control.
+From the repo root, use the shared task workflow:
 
-> **Important:** When you change dependencies, always rebuild your Docker container so the changes are applied: `docker compose up --build backend`
-
-### Getting Started with Existing Project
 ```bash
-# Install/sync dependencies according to pyproject.toml and uv.lock
+task docker:start
+task docker:logs
+task docker:stop
+task docker:reset
+```
+
+If you only need to restart the backend after config changes:
+
+```bash
+docker compose restart backend
+```
+
+If you changed environment variables that also affect frontend auth flows, restart both:
+
+```bash
+docker compose restart backend frontend
+```
+
+## Running the backend locally with Python
+
+This is useful for IDE integration or focused backend debugging, but it assumes you already understand the repo-level Docker setup.
+
+From [`projojo_backend/`](./):
+
+```bash
 uv sync
-```
-
-### Adding Dependencies
-```bash
-# Production dependencies
-uv add <dependency> [<dependency2> ...]
-uv add fastapi pandas redis
-
-# Development dependencies
-uv add pytest black flake8 --dev
-
-# Rebuild Docker to apply changes
-docker compose up --build backend
-```
-
-### Removing Dependencies
-```bash
-# Production dependencies
-uv remove <dependency> [<dependency2> ...]
-uv remove pandas redis
-
-# Development dependencies
-uv remove black flake8 --dev
-
-# Rebuild Docker to apply changes
-docker compose up --build backend
-```
-
-### Upgrading Dependencies
-```bash
-# Upgrade all dependencies to latest compatible versions
-uv sync --upgrade
-
-# Upgrade specific dependency
-uv add <dependency> --upgrade
-
-# Rebuild Docker to apply changes
-docker compose up --build backend
-```
-
-### Running Commands
-You can run Python commands through uv without manually activating the virtual environment:
-```bash
-# Run Python scripts
 uv run python main.py
+```
+
+Notes:
+
+- the backend still expects the repo-root `.env` file loaded by [`config/settings.py`](config/settings.py:10)
+- TypeDB and other dependent services still need to be available
+- on Windows, local TypeDB driver compatibility may still be problematic; Docker or WSL2 remains the safer option
+
+## Dependency management
+
+Backend dependencies are defined in [`pyproject.toml`](pyproject.toml) and locked in [`uv.lock`](uv.lock).
+
+Useful local commands from [`projojo_backend/`](./):
+
+```bash
+uv sync
+uv add <dependency>
+uv remove <dependency>
 uv run python --version
 ```
 
-Or activate the virtual environment manually
+After changing backend dependencies, rebuild or restart the backend container from the repo root:
+
 ```bash
-# Windows (PowerShell)
-.venv\Scripts\activate
-
-# macOS/Linux
-source .venv/bin/activate
-
-# Deactivate when done
-deactivate
+docker compose up --build backend
 ```
 
-## Running Tests
+## Authentication and OAuth
 
-Tests should be run inside the Docker container to ensure they run in the correct environment.
+OAuth login is handled through backend routes defined in [`routes/auth_router.py`](routes/auth_router.py):
 
-### Option 1: Using Docker Desktop Exec Tab
-1. Go to the **Exec** tab of the `projojo_backend` container in Docker Desktop.
-2. Run the tests:
-   ```bash
-   uv run pytest
+- `/auth/login/{provider}`
+- `/auth/callback/{provider}`
 
-   # Use -v for verbose output (shows individual test results)
-   uv run pytest -v
-   ```
+Provider setup instructions live in [`./auth/README.md`](./auth/README.md).
 
-### Option 2: Using Terminal
-1. Enter the container:
-   ```bash
-   docker exec -it projojo_backend bash
-   ```
-2. Run the tests:
-   ```bash
-   uv run pytest
-   ```
-3. Exit the container:
-   ```bash
-   exit
-   ```
+Important: provider redirect URIs must point to the **backend callback URL**, not directly to the frontend.
 
-## Project Structure
+## Development-only endpoints
 
-- **`pyproject.toml`** - Project metadata and dependencies
-- **`uv.lock`** - Lock file with exact versions
-- **`.venv/`** - Virtual environment
+[`typedb_status()`](main.py:128) is available only when `ENVIRONMENT=development`.
+
+There is also a development-only shortcut login route at [`/auth/test/login/{user_id}`](routes/auth_router.py:108) for local testing.
+
+## Testing
+
+The main actively documented automated testing workflow for this repo is the isolated E2E stack at:
+
+- [`../tests/e2e/`](../tests/e2e/)
+- [`../docs/TESTING_INFRASTRUCTURE.md`](../docs/TESTING_INFRASTRUCTURE.md)
+- [`../Taskfile.yml`](../Taskfile.yml)
+
+Run it from the repo root with:
+
+```bash
+task test:e2e
+```
+
+## Backend structure
+
+- [`auth/`](auth/) - OAuth, JWT, and authorization helpers
+- [`config/`](config/) - environment settings
+- [`db/`](db/) - TypeDB bootstrap and query helpers
+- [`domain/`](domain/) - models and repositories
+- [`routes/`](routes/) - FastAPI routers
+- [`service/`](service/) - application services
+- [`tests/`](tests/) - backend-specific tests
+
+## Related docs
+
+- [`../README.md`](../README.md)
+- [`./auth/README.md`](./auth/README.md)
+- [`../docs/DEPLOYMENT_INFRASTRUCTURE.md`](../docs/DEPLOYMENT_INFRASTRUCTURE.md)
+- [`../docs/TESTING_INFRASTRUCTURE.md`](../docs/TESTING_INFRASTRUCTURE.md)

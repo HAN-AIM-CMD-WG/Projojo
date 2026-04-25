@@ -185,22 +185,30 @@ cp .env.example .env
 
 - Docker Desktop
 - Docker Compose v2+
+- Task CLI
 
 ### Quick Start
 
 ```bash
-# Mac/Linux
-./docker-start.sh
+# Start the local development stack
+task docker:start
 
-# Windows PowerShell
-.\docker-start.ps1
+# Fully reset volumes, rebuild images, and restart
+task docker:reset
 ```
 
-This script:
-1. Starts all services (use `-reset` flag to stop/remove containers first)
+These tasks:
+1. Start all services (use `task docker:reset` to stop/remove containers and rebuild first)
 2. Waits for services to initialize
 3. Opens browser to http://localhost:10101
 4. Shows container logs for backend and frontend
+
+Related commands:
+
+```bash
+task docker:logs
+task docker:stop
+```
 
 ### Compose File Structure
 
