@@ -1,5 +1,6 @@
 Feature: API and memory proof
 
+  @api @memory
   Scenario: API values can be remembered and reused in a browser assertion
     Given I request the public projects API
     When I remember the proof project id as 'proofProjectId'

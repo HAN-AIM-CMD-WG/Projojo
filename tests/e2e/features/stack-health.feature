@@ -1,5 +1,6 @@
 Feature: Local stack reachability proof
 
+  @smoke @api @infra
   Scenario: Local Docker endpoints and deterministic seed are reachable
     Given the backend root endpoint is reachable
     And the TypeDB status endpoint reports a connected database

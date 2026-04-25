@@ -112,7 +112,44 @@ task test:e2e:browsers
 task test:e2e:reset
 task test:e2e:preflight
 task test:e2e:run
+task test:e2e:run:selective
+task test:e2e:focus
 task test:e2e:report
+```
+
+### Stable selective runs
+
+The committed direct-core execution path now supports selective runs through a dedicated [`selective`](../tests/e2e/qavajs.config.cjs:52) profile in [`tests/e2e/qavajs.config.cjs`](../tests/e2e/qavajs.config.cjs:1).
+
+That profile intentionally omits the default full-suite [`paths`](../tests/e2e/qavajs.config.cjs:50) glob, so forwarded CLI filters narrow the run instead of being merged with [`features/**/*.feature`](../tests/e2e/qavajs.config.cjs:50).
+
+Use [`test:e2e:run:selective`](../Taskfile.yml:100) when the isolated stack is already prepared, or [`test:e2e:focus`](../Taskfile.yml:106) when you want the full deterministic setup first.
+
+Important remarks:
+
+- forwarded core-runner flags must come **after** `--` so Task passes them through unchanged
+- feature paths are relative to [`tests/e2e/`](../tests/e2e/package.json:1) because [`test:e2e:run:selective`](../Taskfile.yml:100) executes with `dir: tests/e2e`
+- the most reliable focused command is [`--paths`](../tests/e2e/node_modules/@qavajs/core/lib/cliOptions.js:11)
+- for a single scenario, combine [`--paths`](../tests/e2e/node_modules/@qavajs/core/lib/cliOptions.js:11) with [`--name`](../tests/e2e/node_modules/@qavajs/core/lib/cliOptions.js:20)
+- [`--help`](../tests/e2e/node_modules/@qavajs/core/lib/cliOptions.js:5) is not a user-facing help surface on the direct core runner, so use the documented task examples below instead
+
+Examples:
+
+```bash
+# rerun one feature on an already prepared stack
+task test:e2e:run:selective -- --paths features/stack-health.feature
+
+# rerun one specific scenario from one feature file
+task test:e2e:run:selective -- --paths features/development-login.feature --name "Demo login creates a usable authenticated supervisor browser session"
+
+# rerun all smoke scenarios
+task test:e2e:run:selective -- --tags @smoke
+
+# rerun only scenarios that are both API-related and smoke-tagged
+task test:e2e:run:selective -- --tags @api --tags @smoke
+
+# perform the full deterministic setup, then run only one feature
+task test:e2e:focus -- --paths features/api-memory.feature
 ```
 
 ## What the current suite proves
@@ -132,6 +169,7 @@ The current harness uses:
 - CommonJS config and support files: [`tests/e2e/qavajs.config.cjs`](../tests/e2e/qavajs.config.cjs), [`tests/e2e/steps/infrastructure.steps.cjs`](../tests/e2e/steps/infrastructure.steps.cjs), [`tests/e2e/support/page-object.cjs`](../tests/e2e/support/page-object.cjs), and [`tests/e2e/support/test-data.cjs`](../tests/e2e/support/test-data.cjs)
 - qava built-in Playwright and memory steps loaded through [`require`](../tests/e2e/qavajs.config.cjs:14)
 - the [`@qavajs/core`](../tests/e2e/package.json:15) runner entrypoint invoked by [`tests/e2e/package.json`](../tests/e2e/package.json:9) and [`Taskfile.yml`](../Taskfile.yml:98)
+- a `default` profile for full-suite runs and a [`selective`](../tests/e2e/qavajs.config.cjs:52) profile that leaves [`paths`](../tests/e2e/node_modules/@cucumber/cucumber/lib/configuration/default_configuration.js:18) empty until CLI filters are supplied
 
 [`@qavajs/cli`](../tests/e2e/package.json:14) is still installed, but the committed execution path for this repository is the direct core runner above. If the project later switches back to the CLI wrapper, this document should be updated together with [`tests/e2e/package.json`](../tests/e2e/package.json:9) and [`Taskfile.yml`](../Taskfile.yml:98).
 

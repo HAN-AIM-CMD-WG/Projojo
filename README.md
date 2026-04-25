@@ -200,8 +200,38 @@ task test:e2e:browsers
 task test:e2e:reset
 task test:e2e:preflight
 task test:e2e:run
+task test:e2e:run:selective
+task test:e2e:focus
 task test:e2e:report
 ```
+
+### Selective E2E runs
+
+[`test:e2e:run:selective`](Taskfile.yml:100) uses the stable direct [`@qavajs/core`](tests/e2e/package.json:15) runner with the [`selective`](tests/e2e/qavajs.config.cjs:52) profile from [`tests/e2e/qavajs.config.cjs`](tests/e2e/qavajs.config.cjs:1).
+
+That profile omits the default full-suite feature glob, so CLI filters can narrow the run correctly.
+
+```bash
+# one feature file on an already prepared stack
+task test:e2e:run:selective -- --paths features/stack-health.feature
+
+# one scenario inside one feature file
+task test:e2e:run:selective -- --paths features/development-login.feature --name "Demo login creates a usable authenticated supervisor browser session"
+
+# all smoke scenarios
+task test:e2e:run:selective -- --tags @smoke
+
+# scenarios tagged with both @api and @smoke
+task test:e2e:run:selective -- --tags @api --tags @smoke
+```
+
+[`test:e2e:focus`](Taskfile.yml:106) performs the full deterministic setup and then applies the same selective filters:
+
+```bash
+task test:e2e:focus -- --paths features/api-memory.feature
+```
+
+Use documented examples rather than [`--help`](tests/e2e/node_modules/@qavajs/core/lib/cliOptions.js:5), because the direct core runner is not exposing a user-facing help screen.
 
 Report output is written to `[tests/e2e/reports/report.html](tests/e2e/reports/report.html)`.
 

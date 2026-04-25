@@ -97,6 +97,24 @@ tasks:
     cmds:
       - node ./node_modules/@qavajs/core/bin/qavajs.js run --config ./qavajs.config.cjs
 
+  test:e2e:run:selective:
+    desc: Run a filtered Qavajs E2E subset on the prepared stack; forward core args after `--`
+    dir: tests/e2e
+    cmds:
+      - node ./node_modules/@qavajs/core/bin/qavajs.js run --config ./qavajs.config.cjs --profile selective {{.CLI_ARGS}}
+
+  test:e2e:focus:
+    desc: Full deterministic E2E workflow followed by a filtered Qavajs run using the selective profile
+    cmds:
+      - task: test:e2e:stack
+      - task: test:e2e:install
+      - task: test:e2e:browsers
+      - task: test:e2e:reset
+      - task: test:e2e:preflight
+      - task: test:e2e:run:selective
+        vars:
+          CLI_ARGS: '{{.CLI_ARGS}}'
+
   test:e2e:report:
     desc: Print the saved HTML report location
     cmds:

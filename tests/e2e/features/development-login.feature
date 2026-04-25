@@ -1,5 +1,6 @@
 Feature: Development login browser proof
 
+  @smoke @ui @auth
   Scenario: Demo login creates a usable authenticated supervisor browser session
     Given I open browser url 'http://localhost:10121/login'
     Then 'Supervisor Role Tab' should be visible
