@@ -6,6 +6,60 @@ vars:
   E2E_COMPOSE_ARGS: --env-file .env.test -p projojo-e2e -f docker-compose.base.yml -f docker-compose.test.yml
 
 tasks:
+  docker:start:
+    desc: Start Projojo services in detached mode, open the browser, and stream app logs
+    cmds:
+      - echo "Starting Projojo services..."
+      - docker compose up -d
+      - task: docker:open
+
+  docker:reset:
+    desc: Reset Projojo services by removing volumes, rebuilding images, and restarting the stack
+    cmds:
+      - echo "Resetting Projojo services..."
+      - echo "Stopping and removing existing project containers, networks, and volumes..."
+      - docker compose down --volumes
+      - echo "Building images and starting Projojo services..."
+      - docker compose up -d --build
+      - task: docker:open
+
+  docker:open:
+    desc: Wait for app startup, open the frontend URL, and hand off to log streaming
+    internal: true
+    dotenv: ['.env']
+    vars:
+      DOCKER_FRONTEND_PORT: '{{.FRONTEND_PORT | default "10101"}}'
+      DOCKER_FRONTEND_URL: 'http://localhost:{{.DOCKER_FRONTEND_PORT}}'
+    cmds:
+      - echo "Allowing a few seconds for services to initialize..."
+      - cmd: sleep 5
+        platforms: [darwin, linux]
+      - cmd: powershell -NoProfile -Command "Start-Sleep -Seconds 5"
+        platforms: [windows]
+      - echo "Attempting to open browser to {{.DOCKER_FRONTEND_URL}}..."
+      - cmd: open "{{.DOCKER_FRONTEND_URL}}"
+        platforms: [darwin]
+        ignore_error: true
+      - cmd: xdg-open "{{.DOCKER_FRONTEND_URL}}"
+        platforms: [linux]
+        ignore_error: true
+      - cmd: explorer.exe "{{.DOCKER_FRONTEND_URL}}"
+        platforms: [windows]
+        ignore_error: true
+      - echo "If the browser did not open automatically, open {{.DOCKER_FRONTEND_URL}} manually."
+      - echo "Showing logs for backend and frontend services (press Ctrl+C to stop log streaming)..."
+      - task: docker:logs
+
+  docker:logs:
+    desc: Stream backend and frontend logs from the development stack
+    cmds:
+      - docker compose logs -f backend frontend --tail 20
+
+  docker:stop:
+    desc: Stop the Projojo development stack without removing volumes
+    cmds:
+      - docker compose stop
+
   test:e2e:stack:
     desc: Start a fresh isolated Docker stack for the neutral E2E infrastructure suite
     cmds:
