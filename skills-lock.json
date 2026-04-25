@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "bdd-scenarios": {
+      "source": "thebushidocollective/han",
+      "sourceType": "github",
+      "computedHash": "7ee39ea5a4f60c34321ef9455bdad9da0888ce7be9b56fae806716d6fdf995d9"
+    },
+    "karpathy-guidelines": {
+      "source": "forrestchang/andrej-karpathy-skills",
+      "sourceType": "github",
+      "computedHash": "41e8ca055bbde13d240776a14a076a59614057200340c243130a76ba4e64cac8"
+    },
+    "professional-honesty": {
+      "source": "thebushidocollective/han",
+      "sourceType": "github",
+      "computedHash": "a77b1c2850d8b5d0f0c2452feaa0c427ec565ed4a3bc17274de0502144b7fc1b"
+    },
+    "reducing-entropy": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "b13a84c41dc386c758a3eec600314ad2753989bd556bc2628519277ae3739fe5"
+    }
+  }
+}
