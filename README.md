@@ -121,22 +121,97 @@ Relevant scripts in `[projojo_frontend/package.json](projojo_frontend/package.js
 
 These are normally executed inside Docker for the app stack.
 
-### Backend dependencies
+### Backend development
 
 Backend dependencies live in `[projojo_backend/pyproject.toml](projojo_backend/pyproject.toml:1)` and are managed with `uv`.
 
-You only need local Python/uv if you want IDE support or to manage backend dependencies outside Docker.
+For most day-to-day work, treat the backend as part of the full repo-level Docker stack. You only need local Python/uv if you want IDE support, focused backend debugging, or to manage backend dependencies outside Docker.
 
-Useful backend references:
+#### Optional: run the backend directly with Python
 
-- `[projojo_backend/README.md](projojo_backend/README.md)`
-- `[requires-python = ">=3.13"](projojo_backend/pyproject.toml:5)`
+From `[projojo_backend/](projojo_backend/)`:
+
+```bash
+uv sync
+uv run python main.py
+```
+
+This local-only mode is optional and not the main documented workflow for the repo.
+
+- API root: `http://localhost:8000`
+- Swagger UI: `http://localhost:8000/docs`
+- the normal Docker workflow still uses `http://localhost:10102`
+
+Notes:
+
+- the backend still expects the repo-root `[.env](.env.example)` file
+- TypeDB and other dependent services still need to be available
+- on Windows, local TypeDB driver compatibility may still be problematic; Docker or WSL2 remains the safer option
+
+The direct Python entry point in `[projojo_backend/main.py](projojo_backend/main.py:198)` still runs uvicorn on port `8000`.
+
+#### Backend dependency management
+
+Useful local commands from `[projojo_backend/](projojo_backend/)`:
+
+```bash
+uv sync
+uv add <dependency>
+uv remove <dependency>
+uv run python --version
+```
 
 If you change backend dependencies locally, rebuild the backend container:
 
 ```bash
 docker compose up --build backend
 ```
+
+#### Authentication and development-only endpoints
+
+OAuth login is handled through backend routes in `[projojo_backend/routes/auth_router.py](projojo_backend/routes/auth_router.py)`:
+
+- `/auth/login/{provider}`
+- `/auth/callback/{provider}`
+
+Provider setup instructions live in `[projojo_backend/auth/README.md](projojo_backend/auth/README.md)`.
+
+Important: provider redirect URIs must point to the **backend callback URL**, not directly to the frontend.
+
+Development-only helpers:
+
+- `[http://localhost:10102/typedb/status](projojo_backend/main.py:128)` is available only when `ENVIRONMENT=development`
+- `/auth/test/login/{user_id}` in `[projojo_backend/routes/auth_router.py](projojo_backend/routes/auth_router.py:108)` provides a local shortcut login route for testing
+
+<details>
+<summary>Backend environment values to review</summary>
+
+Important backend values in `[.env.example](.env.example)` include:
+
+- `ENVIRONMENT`
+- `FRONTEND_URL`
+- `SESSIONS_SECRET_KEY`
+- `JWT_SECRET_KEY`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET`
+- `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET`
+- `TYPEDB_*`
+- `EMAIL_*`
+
+</details>
+
+<details>
+<summary>Backend directory structure</summary>
+
+- `[projojo_backend/auth/](projojo_backend/auth/)` - OAuth, JWT, and authorization helpers
+- `[projojo_backend/config/](projojo_backend/config/)` - environment settings
+- `[projojo_backend/db/](projojo_backend/db/)` - TypeDB bootstrap and query helpers
+- `[projojo_backend/domain/](projojo_backend/domain/)` - models and repositories
+- `[projojo_backend/routes/](projojo_backend/routes/)` - FastAPI routers
+- `[projojo_backend/service/](projojo_backend/service/)` - application services
+- `[projojo_backend/tests/](projojo_backend/tests/)` - backend-specific tests
+
+</details>
 
 ### Useful checks while developing
 
@@ -287,4 +362,4 @@ For the full infrastructure explanation, see `[docs/DEPLOYMENT_INFRASTRUCTURE.md
 
 - `[docs/DEPLOYMENT_INFRASTRUCTURE.md](docs/DEPLOYMENT_INFRASTRUCTURE.md)`
 - `[docs/TESTING_INFRASTRUCTURE.md](docs/TESTING_INFRASTRUCTURE.md)`
-- `[projojo_backend/README.md](projojo_backend/README.md)`
+- `[projojo_backend/auth/README.md](projojo_backend/auth/README.md)`

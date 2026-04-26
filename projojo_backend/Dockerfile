@@ -8,7 +8,7 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Copy uv dependency files
-COPY pyproject.toml uv.lock README.md ./
+COPY pyproject.toml uv.lock ./
 
 # Install the application dependencies.
 RUN uv sync --frozen --no-cache
@@ -32,4 +32,3 @@ RUN echo "=== B: PREVIEW STAGE ENVIRONMENT ===" && env | sort || true
 # --proxy-headers: Trust X-Forwarded-Proto header from Traefik for HTTPS detection
 # --forwarded-allow-ips "*": Allow proxy headers from any IP (Traefik runs in Docker network)
 CMD ["sh", "-c", "echo 'B: Starting production server...' && env | sort && uv run uvicorn main:app --host 0.0.0.0 --port ${BACKEND_PORT} --proxy-headers --forwarded-allow-ips '*' --log-level info"]
-
