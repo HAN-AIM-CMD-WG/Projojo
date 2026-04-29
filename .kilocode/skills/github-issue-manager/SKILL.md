@@ -99,20 +99,20 @@ Canonical invocation:
 bash «script-dir»/github-issue-manager.sh «command» ...
 ```
 
-Immediadirectoriesr activating this skill, run the following command to learn the exact syntax the script uses for all commands.
+Immediately after activating this skill, run the following command to learn the exact syntax the script uses for all commands.
 
 ```bash
 bash «script-dir»/github-issue-manager.sh help
 ```
 
-## Choose the codirectoriese this decision guide:
+## Choose the command using this decision guide:
 
 - Need to inspect open story work before creating or continuing work: use `list-stories`
 - Need full context for an epic, story, or task before implementation or review: use `get-issue-context`
 - Need a top-level grouping issue: use `create-epic`
 - Need a user-facing or deliverable unit of work: use `create-story`
-- Need an implementation task under a story: use `create-task` with `--story`
-- Need a cross-cutting task without a story parent: use `create-task` without `--story`
+- Need an implementation task under a story: use `create-task` with `--story-number` or `--story-title`
+- Need a cross-cutting task without a story parent: use `create-task` without `--story-number`, `--story-title`, or `--story-slug`
 - Need to advance or correct board state: use `update-status`
 
 ## Standard workflow
@@ -125,10 +125,12 @@ Before creating the next story, inspect existing stories:
 bash «script-dir»/github-issue-manager.sh list-stories
 ```
 
-Use a fidirectories needed:
+The `list-stories` response omits issue body text. Each story item includes its issue number, title, labels, state, URL, assignees, milestone, parent issue summary, and sub-issue summaries. Parent and sub-issue summaries include issue number and title only.
+
+Use a filter if needed:
 
 ```bash
-bash «script-dir»/github-issue-manager.sh list-stories "label:epic sdirectories"
+bash «script-dir»/github-issue-manager.sh list-stories --filter "label:story state:open"
 ```
 
 If earlier work is incomplete, surface it and wait for user approval before creating more work.
@@ -136,9 +138,16 @@ If earlier work is incomplete, surface it and wait for user approval before crea
 ### 2. Inspect issue context before implementation or review
 
 ```bash
-bash «script-dir»/github-issue-manager.sh get-issue-context 456
+bash «script-dir»/github-issue-manager.sh get-issue-context --issue-number 456
 ```
-directories6 being the epic, story, or task issue number on GitHub).
+
+You can also resolve an epic, story, or task by part of its title:
+
+```bash
+bash «script-dir»/github-issue-manager.sh get-issue-context --issue-title "Login form"
+```
+
+Title matching is case-insensitive substring matching over all issue states. If multiple issues match, the script emits a warning with candidates and selects the open issue with the lowest issue number. If multiple issues match but none are open, the command fails with a JSON error listing the candidates.
 
 Use the returned JSON as the working context for issue type, parent and child relationships, acceptance criteria, linked issues, linked issue details, sub-issues, and file-list comments.
 
@@ -147,46 +156,66 @@ Use the returned JSON as the working context for issue type, parent and child re
 Create epic:
 
 ```bash
-bash «script-dir»/github-issue-manager.sh create-epic "Epic title" "directories" "epic-slug"
+bash «script-dir»/github-issue-manager.sh create-epic --title "Epic title" --body "Epic body" --epic-slug "epic-slug"
 ```
 
 Create story under an epic (123 is the epic's issue number on GitHub):
 
 ```bash
-bash «script-dir»/github-issue-manager.sh create-story "Story title"directoriesody" "story-slug" --epic 123 "epic-slug"
+bash «script-dir»/github-issue-manager.sh create-story --title "Story title" --body "Story body" --story-slug "story-slug" --epic-number 123
+```
+
+Create story under an epic by partial epic title:
+
+```bash
+bash «script-dir»/github-issue-manager.sh create-story --title "Story title" --body "Story body" --story-slug "story-slug" --epic-title "Foundation"
 ```
 
 Create standalone story:
 
 ```bash
-bash «script-dir»/github-issue-manager.sh create-story "Story title"directoriesody" "story-slug"
+bash «script-dir»/github-issue-manager.sh create-story --title "Story title" --body "Story body" --story-slug "story-slug"
 ```
 
 Create task under a story (456 is the story's issue number on github):
 
 ```bash
-bash «script-dir»/github-issue-manager.sh create-task "Task title" "directories" --story 456 "story-slug" --epic-slug "epic-slug"
+bash «script-dir»/github-issue-manager.sh create-task --title "Task title" --body "Task body" --story-number 456
+```
+
+Create task under a story by partial story title:
+
+```bash
+bash «script-dir»/github-issue-manager.sh create-task --title "Task title" --body "Task body" --story-title "Login"
 ```
 
 Create standalone or cross-cutting task:
 
 ```bash
-bash «script-dir»/github-issue-manager.sh create-task "Task title" "directories"
+bash «script-dir»/github-issue-manager.sh create-task --title "Task title" --body "Task body"
 ```
 
 Hierarchy rules:
 
-- When a story belongs to an epic, create it with `--epic`.
-- When a task belongs to a story, create it with `--story`.
+- When a story belongs to an epic, create it with `--epic-number` or `--epic-title`.
+- When a task belongs to a story, create it with `--story-number` or `--story-title`.
+- Parent slugs are inferred from `epic:«slug»` and `story:«slug»` labels when possible.
 - Do not rely on labels or project placement to create parent-child links.
 - Verify the parent-child relationship succeeded before creating more work.
 
 ### 4. Moving work through the board
 
 ```bash
-bash «script-dir»/github-issue-manager.sh update-status 456 "In Progdirectories
+bash «script-dir»/github-issue-manager.sh update-status --issue-number 456 --status "In Progress"
+```
 
-(456 is the issue number on GitHub)
+Or by partial title:
+
+```bash
+bash «script-dir»/github-issue-manager.sh update-status --issue-title "Login form" --status "In Progress"
+```
+
+456 is the issue number on GitHub.
 
 Preferred lifecycle unless the repository defines a different one:
 
@@ -269,7 +298,9 @@ Status field behavior:
 ## Guardrails
 
 - Never pass numeric slugs.
-- Never use older positional examples that disagree with the current `--epic`, `--story`, or `--epic-slug` flags.
+- Never use older positional examples. Public commands are flag-only.
+- Use `--epic-number` or `--epic-title` for parent epics.
+- Use `--story-number` or `--story-title` for parent stories.
 - Never assume labels reflect actual board status.
 - Never move an issue to `Done` if it still needs review.
 - Never skip an incomplete earlier story without explicit user approval.
@@ -280,5 +311,3 @@ Immediately after activating this skill, run the following command to learn the 
 
 ```bash
 bash «script-dir»/github-issue-manager.sh help
-```
-directories

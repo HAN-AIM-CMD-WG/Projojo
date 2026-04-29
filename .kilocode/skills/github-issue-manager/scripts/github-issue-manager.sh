@@ -35,65 +35,226 @@ print_usage() {
     cat << EOF
 GitHub Issue Manager v${VERSION}
 
-USAGE:
-    ${SCRIPT_NAME} <command> [options]
+Manages GitHub issues, project boards, and parent-child relationships
+for a three-level hierarchy: epics > stories > tasks.
 
-CONFIG:
-    Create a ${ROOT_CONFIG_NAME} file in your project root:
+DEPENDENCIES:
+    gh      GitHub CLI, authenticated with scopes: repo, read:org, project
+    jq      Command-line JSON processor
+
+    Check auth: gh auth status
+    Fix auth:   gh auth refresh -h github.com -s repo,read:org,project
+
+SETUP:
+    Create a file called ${ROOT_CONFIG_NAME} in your project root:
+
         GH_REPO="owner/repo"
-        PROJECT_BOARD_NAME="Project Board"
-        COLUMNS="Backlog,Ready,In Progress,Done"
+        PROJECT_BOARD_NAME="My Board"
+        COLUMNS="Backlog,Ready,In Progress,AI Review,Review,Done"
+
+    GH_REPO              Owner and repo name (e.g. "myorg/myapp").
+    PROJECT_BOARD_NAME   Title of the GitHub Projects v2 board.
+                         Created automatically if it does not exist.
+    COLUMNS              Comma-separated status values for the board's
+                         Status field. "Backlog" and "Done" are always
+                         added even if omitted. The Status field and any
+                         missing options are created automatically.
+
+    The script searches upward from the current directory for this file.
+    If not found, it also searches upward from the script's own directory.
+
+USAGE:
+    ${SCRIPT_NAME} <command> [flags]
+
+    All commands use named flags. Positional arguments are rejected.
 
 COMMANDS:
-    create-epic <title> <body> <epic_slug>
-        Create epic issue with required slug for labeling.
 
-    create-story <title> <body> <story_slug> [--epic <epic_num> <epic_slug>]
-        Create story issue. Story slug is always required.
-        Use --epic to link to a parent epic (requires both epic number and slug).
+  create-epic
+      --title <title>       Issue title (required)
+      --body <body>         Issue body (required)
+      --epic-slug <slug>    Slug for the epic: label (required)
 
-    create-task <title> <body> [--story <story_num> <story_slug>] [--epic-slug <epic_slug>]
-        Create task issue. Use --story to link to a parent story.
-        Use --epic-slug to add epic label without linking.
+      Creates a GitHub issue labeled "epic" and "epic:<slug>", adds it
+      to the project board, and sets its status to Backlog.
 
-    update-status <issue_num> <status>
-        Update issue status on project board.
+      Output (stdout): {"epic_number": <num>}
 
-    list-stories [filter]
-        List stories (default: "label:story state:open")
+  create-story
+      --title <title>       Issue title (required)
+      --body <body>         Issue body (required)
+      --story-slug <slug>   Slug for the story: label (required)
+      --epic-number <num>   Link to parent epic by issue number
+      --epic-title <frag>   Link to parent epic by title fragment
+      --epic-slug <slug>    Override the parent epic's slug
 
-    get-issue-context <issue_num>
-        Get comprehensive context for an epic, story, or task.
+      Creates a GitHub issue labeled "story" and "story:<slug>". If a
+      parent epic is given, also labels it "epic:<slug>" and creates a
+      sub-issue relationship.
 
-    help                Show this help message
-    version             Show version information
+      --epic-number and --epic-title are mutually exclusive. When either
+      is used, the epic's slug is read from its "epic:<slug>" label
+      unless --epic-slug is also provided.
+
+      Output (stdout): {"story_number": <num>}
+
+  create-task
+      --title <title>       Issue title (required)
+      --body <body>         Issue body (required)
+      --story-number <num>  Link to parent story by issue number
+      --story-title <frag>  Link to parent story by title fragment
+      --story-slug <slug>   Override the parent story's slug
+      --epic-slug <slug>    Add the epic:<slug> label without linking
+
+      Creates a GitHub issue labeled "task". If a parent story is given,
+      also labels it "story:<slug>" and creates a sub-issue relationship.
+      When linking to a story, the story's "story:<slug>" and
+      "epic:<slug>" labels are read automatically unless overridden.
+
+      --story-number and --story-title are mutually exclusive.
+      --epic-slug alone (without --story-*) adds the epic label only.
+
+      Output (stdout): {"task_number": <num>}
+
+  update-status
+      --issue-number <num>  Identify issue by number
+      --issue-title <frag>  Identify issue by title fragment
+      --status <status>     Target status column (required)
+
+      Sets the Status field on the project board. The issue is added to
+      the board automatically if it is not already there.
+
+      --issue-number and --issue-title are mutually exclusive; one is
+      required.
+
+      Status must match a configured COLUMNS value. Legacy aliases:
+      "Todo" and "Next Milestone" both map to "Backlog".
+
+      Side effects:
+        - Setting status to "Done" closes the issue on GitHub.
+        - Moving a closed issue to any other status reopens it.
+
+      Output (stdout):
+        {"success": "...", "item_id": "...", "requested_status": "...",
+         "applied_status": "...", "issue_state": "OPEN"|"CLOSED"}
+
+  list-stories
+      --filter <filter>     Filter string (default: "label:story state:open")
+
+      Lists issues matching the filter. The filter string supports
+      "label:<name>" and "state:<open|closed|all>" tokens, space-separated.
+      If no recognized tokens are found, defaults to stories in open state.
+
+      Each item includes: number, title, labels, state, url, assignees,
+      milestone, parent (number + title or null), and sub_issues (array
+      of number + title). Issue body text is not included.
+
+      Results are limited to 50 issues. The last array element is a
+      _metadata object with the filter used and the count.
+
+      Output (stdout): JSON array
+
+  get-issue-context
+      --issue-number <num>  Identify issue by number
+      --issue-title <frag>  Identify issue by title fragment
+
+      Returns detailed JSON for any issue type (epic, story, task, or
+      unmanaged). Includes: metadata, parsed body sections (Story,
+      Acceptance Criteria, Tasks, Dev Notes), parent-child relationships
+      via both labels and the GitHub sub-issue API, linked issues with
+      details, sibling tasks, related stories/tasks, and file-list
+      comments.
+
+      --issue-number and --issue-title are mutually exclusive; one is
+      required.
+
+      Output (stdout): JSON object
+
+  help, -h, --help       Show this help text.
+  version, -v, --version  Show version string.
+
+TITLE MATCHING:
+    Flags named --*-title or --issue-title resolve an issue by searching
+    for the given substring in issue titles. The search covers all issue
+    states (open and closed) and is case-insensitive.
+
+    Parent-scoped flags are label-filtered:
+      --epic-title   only matches issues with the "epic" label
+      --story-title  only matches issues with the "story" label
+
+    Generic --issue-title matches any issue regardless of labels.
+
+    Resolution rules:
+      - 1 match:   used directly.
+      - >1 match:  warning printed to stderr listing all candidates;
+                    the open issue with the lowest number is selected.
+      - >1 match, none open: command fails with a JSON error on stderr
+                    listing all candidates.
+      - 0 matches: command fails with a JSON error on stderr.
+
+SLUGS:
+    Slugs are short identifiers used in label names (e.g. "epic:foundation").
+    Rules:
+      - Lowercase, hyphens instead of spaces, alphanumeric + hyphens only.
+      - Must contain at least one non-numeric character (purely numeric
+        slugs like "42" are rejected to prevent issue-number mix-ups).
+      - Epic slugs: max 20 characters.
+      - Story slugs: max 30 characters.
+    Tip: derive from the title, abbreviate where obvious (e.g. "auth"
+    for "authentication"), drop stop words ("the", "and", "of").
+
+LABELS:
+    The script creates these labels automatically as needed:
+      epic             Applied to all epics.
+      story            Applied to all stories.
+      task             Applied to all tasks.
+      epic:<slug>      Groups an epic with its stories and tasks.
+      story:<slug>     Groups a story with its tasks.
+
+OUTPUT:
+    Successful commands print JSON to stdout. Progress and warnings go
+    to stderr with colored prefixes ([INFO], [SUCCESS], [WARNING]).
+    Errors print a JSON object to stderr and exit with code 1.
+
+    All commands are flag-only. Passing positional arguments prints an
+    error and exits.
 
 EXAMPLES:
     # Create an epic
-    ${SCRIPT_NAME} create-epic "Epic 1: Foundation" "Setup basic infrastructure" "foundation"
+    ${SCRIPT_NAME} create-epic --title "Foundation" --body "Setup base" --epic-slug "foundation"
 
-    # Create a story linked to an epic
-    ${SCRIPT_NAME} create-story "User Auth" "As a user I want to login" "user-auth" --epic 15 "foundation"
+    # Story under an epic (by number)
+    ${SCRIPT_NAME} create-story --title "User Auth" --body "Login" --story-slug "user-auth" --epic-number 15
 
-    # Create a standalone story (no epic)
-    ${SCRIPT_NAME} create-story "Bug Fix" "Fix login timeout issue" "login-fix"
+    # Story under an epic (by title fragment)
+    ${SCRIPT_NAME} create-story --title "User Auth" --body "Login" --story-slug "user-auth" --epic-title "Foundation"
 
-    # Create a task linked to a story
-    ${SCRIPT_NAME} create-task "Login form validation" "Implement client-side validation" --story 16 "user-auth"
+    # Standalone story
+    ${SCRIPT_NAME} create-story --title "Bug Fix" --body "Fix timeout" --story-slug "login-fix"
 
-    # Create a task with epic label only (no story link)
-    ${SCRIPT_NAME} create-task "Setup CI pipeline" "Configure GitHub Actions" --epic-slug "foundation"
+    # Task under a story (by number)
+    ${SCRIPT_NAME} create-task --title "Validation" --body "Client checks" --story-number 16
 
-    # Create a standalone task
-    ${SCRIPT_NAME} create-task "Quick fix" "Patch security issue"
+    # Task under a story (by title fragment)
+    ${SCRIPT_NAME} create-task --title "Validation" --body "Client checks" --story-title "User Auth"
 
-    # Other commands
-    ${SCRIPT_NAME} update-status 42 "In Progress"
+    # Task with epic label only (no story link)
+    ${SCRIPT_NAME} create-task --title "CI pipeline" --body "Actions setup" --epic-slug "foundation"
+
+    # Standalone task
+    ${SCRIPT_NAME} create-task --title "Quick fix" --body "Patch security issue"
+
+    # Update status
+    ${SCRIPT_NAME} update-status --issue-number 42 --status "In Progress"
+    ${SCRIPT_NAME} update-status --issue-title "Validation" --status "Done"
+
+    # List stories
     ${SCRIPT_NAME} list-stories
-    ${SCRIPT_NAME} get-issue-context 42
+    ${SCRIPT_NAME} list-stories --filter "label:epic state:all"
 
-For detailed usage examples, see: README github-issue-manager.md
-Slug creation tips: derive from title, lowercase, hyphens instead of spaces, alphanumeric and hyphens only, max 20 characters, use well known abbreviations where possible (e.g., "auth" for "authentication"), avoid stop words (e.g., "the", "and", "of")
+    # Get issue context
+    ${SCRIPT_NAME} get-issue-context --issue-number 42
+    ${SCRIPT_NAME} get-issue-context --issue-title "User Auth"
 EOF
 }
 
@@ -123,8 +284,228 @@ output_json() {
 }
 
 output_error() {
-    echo "{\"error\": \"$1\"}" >&2
+    jq -n --arg error "$1" '{error: $error}' >&2
     exit 1
+}
+
+output_error_json() {
+    echo "$1" >&2
+    exit 1
+}
+
+is_valid_json() {
+    local value="$1"
+    [ -n "$value" ] && printf '%s\n' "$value" | jq -e . >/dev/null 2>&1
+}
+
+ensure_json_or_default() {
+    local value="$1"
+    local default_json="$2"
+
+    if is_valid_json "$value"; then
+        printf '%s\n' "$value"
+    else
+        printf '%s\n' "$default_json"
+    fi
+}
+
+issue_summary_jq_filter() {
+    cat <<'JQ'
+{
+    number: .number,
+    title: .title,
+    state: .state,
+    url: .url,
+    labels: [.labels[].name?],
+    issue_type: (
+        ([.labels[].name?]) as $labels |
+        if ($labels | index("epic")) then "epic"
+        elif ($labels | index("story")) then "story"
+        elif ($labels | index("task")) then "task"
+        else "issue"
+        end
+    ),
+    slugs: {
+        epic: ([.labels[].name? | select(startswith("epic:")) | sub("^epic:"; "")] | first // null),
+        story: ([.labels[].name? | select(startswith("story:")) | sub("^story:"; "")] | first // null)
+    }
+}
+JQ
+}
+
+issue_summary_from_json() {
+    jq -c "$(issue_summary_jq_filter)"
+}
+
+require_flag_value() {
+    local flag="$1"
+    local remaining_count="$2"
+
+    if [ "$remaining_count" -lt 2 ]; then
+        output_error "$flag requires a value"
+    fi
+}
+
+reject_positional_arg() {
+    local command_name="$1"
+    local arg="$2"
+
+    output_error "Unexpected positional argument for $command_name: $arg. This command uses flags only. Run: $SCRIPT_NAME help"
+}
+
+require_one_issue_ref() {
+    local command_name="$1"
+    local number_flag="$2"
+    local number_value="$3"
+    local title_flag="$4"
+    local title_value="$5"
+
+    if [ -n "$number_value" ] && [ -n "$title_value" ]; then
+        output_error "$command_name accepts either $number_flag or $title_flag, not both"
+    fi
+
+    if [ -z "$number_value" ] && [ -z "$title_value" ]; then
+        output_error "$command_name requires either $number_flag <num> or $title_flag <fragment>"
+    fi
+}
+
+validate_issue_number() {
+    local issue_num="$1"
+    local flag_name="$2"
+
+    if ! [[ "$issue_num" =~ ^[0-9]+$ ]]; then
+        output_error "Invalid $flag_name: $issue_num. Must be numeric."
+    fi
+}
+
+resolve_issue_ref() {
+    local number_value="$1"
+    local title_fragment="$2"
+    local required_label="$3"
+    local ref_description="$4"
+
+    if [ -z "$REPO" ]; then
+        load_config
+    fi
+
+    if [ -n "$number_value" ]; then
+        validate_issue_number "$number_value" "issue number"
+
+        local issue_data
+        issue_data=$(gh issue view "$number_value" --repo "$REPO" --json number,title,state,url,labels 2>&1)
+        if [ $? -ne 0 ]; then
+            output_error "Issue #$number_value not found in repo $REPO"
+        fi
+
+        if ! is_valid_json "$issue_data"; then
+            output_error "Issue #$number_value not found or invalid response from GitHub"
+        fi
+
+        if [ -n "$required_label" ]; then
+            if ! printf '%s\n' "$issue_data" | jq -e --arg label "$required_label" '[.labels[].name?] | index($label)' >/dev/null 2>&1; then
+                output_error "Issue #$number_value is not labeled $required_label"
+            fi
+        fi
+
+        printf '%s\n' "$issue_data" | issue_summary_from_json
+        return 0
+    fi
+
+    if [ -z "$title_fragment" ]; then
+        output_error "Missing title fragment for $ref_description"
+    fi
+
+    local title_query="$title_fragment"
+    if [ -n "$required_label" ]; then
+        title_query="$title_query label:$required_label"
+    fi
+
+    local search_output
+    search_output=$(gh issue list --repo "$REPO" --search "$title_query" --state all --limit 100 --json number,title,state,url,labels 2>&1)
+    if [ $? -ne 0 ]; then
+        output_error "Failed to search issues by title for $ref_description: $search_output"
+    fi
+
+    if ! is_valid_json "$search_output"; then
+        output_error "Invalid JSON response while searching issues by title for $ref_description"
+    fi
+
+    local matches
+    matches=$(printf '%s\n' "$search_output" | jq -c --arg fragment "$title_fragment" --arg label "$required_label" '
+        map(select((.title // "" | ascii_downcase | contains($fragment | ascii_downcase))))
+        | if $label == "" then . else map(select([.labels[].name?] | index($label))) end
+        | map({
+            number: .number,
+            title: .title,
+            state: .state,
+            url: .url,
+            labels: [.labels[].name?],
+            issue_type: (
+                ([.labels[].name?]) as $labels |
+                if ($labels | index("epic")) then "epic"
+                elif ($labels | index("story")) then "story"
+                elif ($labels | index("task")) then "task"
+                else "issue"
+                end
+            ),
+            slugs: {
+                epic: ([.labels[].name? | select(startswith("epic:")) | sub("^epic:"; "")] | first // null),
+                story: ([.labels[].name? | select(startswith("story:")) | sub("^story:"; "")] | first // null)
+            }
+        })')
+
+    matches=$(ensure_json_or_default "$matches" "[]")
+
+    local match_count
+    match_count=$(printf '%s\n' "$matches" | jq 'length')
+
+    if [ "$match_count" -eq 0 ]; then
+        local error_json
+        error_json=$(jq -n \
+            --arg error "No issue found for title fragment" \
+            --arg fragment "$title_fragment" \
+            --arg required_label "$required_label" \
+            --arg ref "$ref_description" \
+            '{error: $error, reference: $ref, fragment: $fragment, required_label: (if $required_label == "" then null else $required_label end), candidates: []}')
+        output_error_json "$error_json"
+    fi
+
+    if [ "$match_count" -eq 1 ]; then
+        printf '%s\n' "$matches" | jq -c '.[0]'
+        return 0
+    fi
+
+    local open_match_count
+    open_match_count=$(printf '%s\n' "$matches" | jq '[.[] | select(.state == "OPEN")] | length')
+
+    if [ "$open_match_count" -eq 0 ]; then
+        local no_open_error
+        no_open_error=$(jq -n \
+            --arg error "Multiple title matches found, but none are open" \
+            --arg fragment "$title_fragment" \
+            --arg required_label "$required_label" \
+            --arg ref "$ref_description" \
+            --argjson candidates "$matches" \
+            '{error: $error, reference: $ref, fragment: $fragment, required_label: (if $required_label == "" then null else $required_label end), candidates: $candidates}')
+        output_error_json "$no_open_error"
+    fi
+
+    local selected
+    selected=$(printf '%s\n' "$matches" | jq -c '[.[] | select(.state == "OPEN")] | sort_by(.number) | .[0]')
+    local selected_number
+    selected_number=$(printf '%s\n' "$selected" | jq -r '.number')
+
+    local warning_json
+    warning_json=$(jq -n \
+        --arg message "Multiple title matches found; selecting open issue with the lowest issue number" \
+        --arg fragment "$title_fragment" \
+        --arg required_label "$required_label" \
+        --arg selected_number "$selected_number" \
+        --argjson candidates "$matches" \
+        '{message: $message, fragment: $fragment, required_label: (if $required_label == "" then null else $required_label end), selected_number: ($selected_number | tonumber), candidates: $candidates}')
+    log_warning "$warning_json"
+
+    printf '%s\n' "$selected"
 }
 
 # Cache for existing labels to avoid redundant API calls (bash 3.x compatible)
@@ -646,7 +1027,7 @@ create_epic_issue() {
     local epic_slug="$3"
     
     if [ -z "$title" ] || [ -z "$body" ] || [ -z "$epic_slug" ]; then
-        output_error "Usage: create-epic <title> <body> <epic_slug>"
+        output_error "Usage: create-epic --title <title> --body <body> --epic-slug <slug>"
     fi
     
     # Validate slug is not purely numeric (common AI agent mistake - passing issue numbers as slugs)
@@ -711,18 +1092,18 @@ create_story_issue() {
     
     # Validate required parameters
     if [ -z "$title" ] || [ -z "$body" ] || [ -z "$story_slug" ]; then
-        output_error "Usage: create-story <title> <body> <story_slug> [--epic <epic_num> <epic_slug>]"
+        output_error "Usage: create-story --title <title> --body <body> --story-slug <slug> [--epic-number <num> | --epic-title <fragment>] [--epic-slug <slug>]"
     fi
     
     # Validate slugs are not purely numeric (common AI agent mistake - passing issue numbers as slugs)
     validate_slug "$story_slug" "story"
     
-    # If epic_num is provided, epic_slug must also be provided (and vice versa)
+    # If epic_num is provided, epic_slug must also be available.
     if [ -n "$epic_num" ] && [ -z "$epic_slug" ]; then
-        output_error "When providing --epic, both <epic_num> and <epic_slug> are required"
+        output_error "When linking a story to an epic, --epic-slug must be provided or inferred from an epic:<slug> label"
     fi
     if [ -n "$epic_slug" ] && [ -z "$epic_num" ]; then
-        output_error "When providing --epic, both <epic_num> and <epic_slug> are required"
+        output_error "--epic-slug requires --epic-number or --epic-title when creating a story"
     fi
     
     # Validate epic_num is numeric if provided
@@ -813,15 +1194,15 @@ create_task_issue() {
     
     # Validate required parameters
     if [ -z "$title" ] || [ -z "$body" ]; then
-        output_error "Usage: create-task <title> <body> [--story <story_num> <story_slug>] [--epic-slug <epic_slug>]"
+        output_error "Usage: create-task --title <title> --body <body> [--story-number <num> | --story-title <fragment>] [--story-slug <slug>] [--epic-slug <epic_slug>]"
     fi
     
-    # If story_num is provided, story_slug must also be provided (and vice versa)
+    # If story_num is provided, story_slug must also be available.
     if [ -n "$story_num" ] && [ -z "$story_slug" ]; then
-        output_error "When providing --story, both <story_num> and <story_slug> are required"
+        output_error "When linking a task to a story, --story-slug must be provided or inferred from a story:<slug> label"
     fi
     if [ -n "$story_slug" ] && [ -z "$story_num" ]; then
-        output_error "When providing --story, both <story_num> and <story_slug> are required"
+        output_error "--story-slug requires --story-number or --story-title when creating a task"
     fi
     
     # Validate story_num is numeric if provided
@@ -1039,6 +1420,71 @@ query($projectId: ID!) {
     printf '%s\t%s\n' "$option_id" "$actual_status"
 }
 
+get_issue_hierarchy_summary() {
+    local issue_num="$1"
+
+    local empty_summary='{"parent":null,"sub_issues":[]}'
+
+    if [ -z "$issue_num" ] || ! [[ "$issue_num" =~ ^[0-9]+$ ]]; then
+        printf '%s\n' "$empty_summary"
+        return 0
+    fi
+
+    local node_id
+    node_id=$(gh api "repos/$REPO/issues/$issue_num" --jq '.node_id' 2>/dev/null)
+    if [ -z "$node_id" ] || [ "$node_id" = "null" ]; then
+        printf '%s\n' "$empty_summary"
+        return 0
+    fi
+
+    local hierarchy_data
+    hierarchy_data=$(gh api graphql -H "GraphQL-Features: sub_issues" -f query='
+        query($nodeId: ID!) {
+            node(id: $nodeId) {
+                ... on Issue {
+                    parent {
+                        __typename
+                        ... on Issue {
+                            number
+                            title
+                        }
+                    }
+                    subIssues(first: 50) {
+                        nodes {
+                            number
+                            title
+                        }
+                    }
+                }
+            }
+        }' -f nodeId="$node_id" 2>/dev/null)
+
+    if [ $? -ne 0 ] || [ -z "$hierarchy_data" ] || ! is_valid_json "$hierarchy_data"; then
+        printf '%s\n' "$empty_summary"
+        return 0
+    fi
+
+    local summary
+    summary=$(printf '%s\n' "$hierarchy_data" | jq -c '{
+        parent: (
+            .data.node.parent // null
+            | if . == null or .__typename != "Issue" then null else {number: .number, title: .title} end
+        ),
+        sub_issues: [
+            .data.node.subIssues.nodes[]?
+            | select(. != null)
+            | {number: .number, title: .title}
+        ]
+    }' 2>/dev/null)
+
+    if [ $? -ne 0 ] || [ -z "$summary" ] || ! is_valid_json "$summary"; then
+        printf '%s\n' "$empty_summary"
+        return 0
+    fi
+
+    printf '%s\n' "$summary"
+}
+
 #=============================================================================
 # ISSUE MANAGEMENT FUNCTIONS
 #=============================================================================
@@ -1048,7 +1494,7 @@ update_issue_status() {
     local column="$2"
     
     if [ -z "$issue_num" ] || [ -z "$column" ]; then
-        output_error "Usage: update-status <issue_num> <status>"
+        output_error "Usage: update-status (--issue-number <num> | --issue-title <fragment>) --status <status>"
     fi
     
     # Validate inputs
@@ -1165,8 +1611,8 @@ list_stories() {
         gh_args="--label story --state open"
     fi
     
-    # List issues
-    local output=$(eval "gh issue list $gh_args --json number,title,body,labels,assignees,milestone --limit 50 --repo \"$REPO\"" 2>&1)
+    # List issues without body text. Story hierarchy is enriched below.
+    local output=$(eval "gh issue list $gh_args --json number,title,labels,assignees,milestone,state,url --limit 50 --repo \"$REPO\"" 2>&1)
     if [ $? -ne 0 ]; then
         output_error "Failed to list issues: $output"
     fi
@@ -1183,15 +1629,34 @@ list_stories() {
         return 0
     fi
     
+    local enriched_output="[]"
+    local story_item=""
+    local story_num=""
+    local hierarchy_summary=""
+
+    while IFS= read -r story_item; do
+        [ -z "$story_item" ] && continue
+
+        story_num=$(printf '%s\n' "$story_item" | jq -r '.number')
+        hierarchy_summary=$(get_issue_hierarchy_summary "$story_num")
+        hierarchy_summary=$(ensure_json_or_default "$hierarchy_summary" '{"parent":null,"sub_issues":[]}')
+
+        enriched_output=$(jq -n \
+            --argjson stories "$enriched_output" \
+            --argjson story "$story_item" \
+            --argjson hierarchy "$hierarchy_summary" \
+            '$stories + [($story + {parent: $hierarchy.parent, sub_issues: $hierarchy.sub_issues})]')
+    done <<< "$(printf '%s\n' "$output" | jq -c '.[]')"
+
     # Return successful result with metadata
-    echo "$output" | jq --arg filter "$filter" --arg count "$story_count" '. + [{"_metadata": {"filter": $filter, "count": ($count | tonumber)}}]'
+    echo "$enriched_output" | jq --arg filter "$filter" --arg count "$story_count" '. + [{"_metadata": {"filter": $filter, "count": ($count | tonumber), "includes_body": false, "includes_hierarchy": true}}]'
 }
 
 get_issue_context() {
     local issue_num="$1"
 
     if [ -z "$issue_num" ]; then
-        output_error "Usage: get-issue-context <issue_num>"
+        output_error "Usage: get-issue-context (--issue-number <num> | --issue-title <fragment>)"
     fi
 
     # Validate issue number
@@ -1278,6 +1743,8 @@ get_issue_context() {
     summarize_issue_collection() {
         local issues_json="$1"
 
+        issues_json=$(ensure_json_or_default "$issues_json" "[]")
+
         jq -n --argjson issues "$issues_json" '{
             total: ($issues | length),
             epic_count: ($issues | map(select(.issue_type == "epic")) | length),
@@ -1341,12 +1808,15 @@ get_issue_context() {
 
     # Query comments to find "File List" entries
     log_info "Checking comments for file lists..."
-    local comments_data=$(gh issue comments "$issue_num" --repo "$REPO" --json body,author 2>&1)
+    local comments_data=""
     local file_lists="[]"
 
-    if [ $? -eq 0 ] && [ -n "$comments_data" ]; then
+    comments_data=$(gh api "repos/$REPO/issues/$issue_num/comments" 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        comments_data=$(ensure_json_or_default "$comments_data" "[]")
         # Look for comments containing "File List" or similar markers
-        file_lists=$(echo "$comments_data" | jq '[.[] | select(.body | test("(?i)(file list|files?:)")) | {author: .author.login, content: .body}]')
+        file_lists=$(printf '%s\n' "$comments_data" | jq '[.[]? | select((.body // "") | test("(?i)(file list|files?:)")) | {author: (.user.login // "unknown"), content: (.body // "")}]' 2>/dev/null)
+        file_lists=$(ensure_json_or_default "$file_lists" "[]")
     fi
 
     # Get direct parent and sub-issues using GraphQL if available
@@ -1490,13 +1960,31 @@ get_issue_context() {
         fi
     fi
 
+    local empty_issue_summary='{"total":0,"epic_count":0,"story_count":0,"task_count":0,"other_count":0}'
+
+    linked_issues=$(ensure_json_or_default "$linked_issues" "[]")
+    linked_issue_details=$(ensure_json_or_default "$linked_issue_details" "[]")
+    file_lists=$(ensure_json_or_default "$file_lists" "[]")
+    sub_issues=$(ensure_json_or_default "$sub_issues" "[]")
+    parent_epic=$(ensure_json_or_default "$parent_epic" "null")
+    parent_story=$(ensure_json_or_default "$parent_story" "null")
+    related_stories=$(ensure_json_or_default "$related_stories" "[]")
+    related_tasks=$(ensure_json_or_default "$related_tasks" "[]")
+    sibling_tasks=$(ensure_json_or_default "$sibling_tasks" "[]")
+
     local direct_sub_issue_summary=$(summarize_issue_collection "$sub_issues")
     local related_story_summary=$(summarize_issue_collection "$related_stories")
     local related_task_summary=$(summarize_issue_collection "$related_tasks")
     local sibling_task_summary=$(summarize_issue_collection "$sibling_tasks")
 
+    direct_sub_issue_summary=$(ensure_json_or_default "$direct_sub_issue_summary" "$empty_issue_summary")
+    related_story_summary=$(ensure_json_or_default "$related_story_summary" "$empty_issue_summary")
+    related_task_summary=$(ensure_json_or_default "$related_task_summary" "$empty_issue_summary")
+    sibling_task_summary=$(ensure_json_or_default "$sibling_task_summary" "$empty_issue_summary")
+
     # Build comprehensive JSON result
-    local result=$(jq -n \
+    local result=""
+    result=$(jq -n \
         --arg issue_num "$issue_num" \
         --arg issue_type "$issue_type" \
         --arg epic_slug "$epic_slug" \
@@ -1564,6 +2052,10 @@ get_issue_context() {
             file_lists: $file_lists
         }')
 
+    if [ $? -ne 0 ] || ! is_valid_json "$result"; then
+        output_error "Failed to build issue context JSON for #$issue_num"
+    fi
+
     log_success "Successfully retrieved context for issue #$issue_num"
     output_json "$result"
 }
@@ -1576,88 +2068,308 @@ get_issue_context() {
 # ARGUMENT PARSING HELPERS
 #=============================================================================
 
+parse_create_epic_args() {
+    local title=""
+    local body=""
+    local epic_slug=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --title)
+                require_flag_value "$1" $#
+                title="$2"
+                shift 2
+                ;;
+            --body)
+                require_flag_value "$1" $#
+                body="$2"
+                shift 2
+                ;;
+            --epic-slug)
+                require_flag_value "$1" $#
+                epic_slug="$2"
+                shift 2
+                ;;
+            --*)
+                output_error "Unknown option for create-epic: $1"
+                ;;
+            *)
+                reject_positional_arg "create-epic" "$1"
+                ;;
+        esac
+    done
+
+    if [ -z "$title" ] || [ -z "$body" ] || [ -z "$epic_slug" ]; then
+        output_error "Usage: create-epic --title <title> --body <body> --epic-slug <slug>"
+    fi
+
+    create_epic_issue "$title" "$body" "$epic_slug"
+}
+
 # Parse create-story arguments
-# Syntax: create-story <title> <body> <story_slug> [--epic <epic_num> <epic_slug>]
+# Syntax: create-story --title <title> --body <body> --story-slug <slug> [--epic-number <num> | --epic-title <fragment>] [--epic-slug <slug>]
 parse_create_story_args() {
     local title=""
     local body=""
     local story_slug=""
     local epic_num=""
+    local epic_title=""
     local epic_slug=""
-    
-    if [ $# -lt 3 ]; then
-        output_error "Usage: create-story <title> <body> <story_slug> [--epic <epic_num> <epic_slug>]"
-    fi
-    
-    title="$1"
-    body="$2"
-    story_slug="$3"
-    shift 3
-    
+
     # Parse optional flags
     while [ $# -gt 0 ]; do
         case "$1" in
-            --epic)
-                if [ $# -lt 3 ]; then
-                    output_error "--epic requires two arguments: <epic_num> <epic_slug>"
-                fi
+            --title)
+                require_flag_value "$1" $#
+                title="$2"
+                shift 2
+                ;;
+            --body)
+                require_flag_value "$1" $#
+                body="$2"
+                shift 2
+                ;;
+            --story-slug)
+                require_flag_value "$1" $#
+                story_slug="$2"
+                shift 2
+                ;;
+            --epic-number)
+                require_flag_value "$1" $#
                 epic_num="$2"
-                epic_slug="$3"
-                shift 3
+                shift 2
+                ;;
+            --epic-title)
+                require_flag_value "$1" $#
+                epic_title="$2"
+                shift 2
+                ;;
+            --epic-slug)
+                require_flag_value "$1" $#
+                epic_slug="$2"
+                shift 2
+                ;;
+            --*)
+                output_error "Unknown option for create-story: $1"
                 ;;
             *)
-                output_error "Unknown option: $1"
+                reject_positional_arg "create-story" "$1"
                 ;;
         esac
     done
-    
+
+    if [ -z "$title" ] || [ -z "$body" ] || [ -z "$story_slug" ]; then
+        output_error "Usage: create-story --title <title> --body <body> --story-slug <slug> [--epic-number <num> | --epic-title <fragment>] [--epic-slug <slug>]"
+    fi
+
+    if [ -n "$epic_num" ] || [ -n "$epic_title" ]; then
+        require_one_issue_ref "create-story" "--epic-number" "$epic_num" "--epic-title" "$epic_title"
+
+        local epic_ref
+        if ! epic_ref=$(resolve_issue_ref "$epic_num" "$epic_title" "epic" "parent epic"); then
+            exit 1
+        fi
+        epic_num=$(printf '%s\n' "$epic_ref" | jq -r '.number')
+
+        if [ -z "$epic_slug" ]; then
+            epic_slug=$(printf '%s\n' "$epic_ref" | jq -r '.slugs.epic // empty')
+            if [ -z "$epic_slug" ]; then
+                output_error "Could not infer --epic-slug from parent epic #$epic_num. Add an epic:<slug> label or pass --epic-slug explicitly."
+            fi
+        fi
+    elif [ -n "$epic_slug" ]; then
+        output_error "--epic-slug requires --epic-number or --epic-title when creating a story"
+    fi
+
     # Call create_story_issue with parameter order: title, body, story_slug, epic_num, epic_slug
     create_story_issue "$title" "$body" "$story_slug" "$epic_num" "$epic_slug"
 }
 
 # Parse create-task arguments
-# Syntax: create-task <title> <body> [--story <story_num> <story_slug>] [--epic-slug <epic_slug>]
+# Syntax: create-task --title <title> --body <body> [--story-number <num> | --story-title <fragment>] [--story-slug <slug>] [--epic-slug <epic_slug>]
 parse_create_task_args() {
     local title=""
     local body=""
     local story_num=""
+    local story_title=""
     local story_slug=""
     local epic_slug=""
-    
-    if [ $# -lt 2 ]; then
-        output_error "Usage: create-task <title> <body> [--story <story_num> <story_slug>] [--epic-slug <epic_slug>]"
-    fi
-    
-    title="$1"
-    body="$2"
-    shift 2
-    
+
     # Parse optional flags
     while [ $# -gt 0 ]; do
         case "$1" in
-            --story)
-                if [ $# -lt 3 ]; then
-                    output_error "--story requires two arguments: <story_num> <story_slug>"
-                fi
+            --title)
+                require_flag_value "$1" $#
+                title="$2"
+                shift 2
+                ;;
+            --body)
+                require_flag_value "$1" $#
+                body="$2"
+                shift 2
+                ;;
+            --story-number)
+                require_flag_value "$1" $#
                 story_num="$2"
-                story_slug="$3"
-                shift 3
+                shift 2
+                ;;
+            --story-title)
+                require_flag_value "$1" $#
+                story_title="$2"
+                shift 2
+                ;;
+            --story-slug)
+                require_flag_value "$1" $#
+                story_slug="$2"
+                shift 2
                 ;;
             --epic-slug)
-                if [ $# -lt 2 ]; then
-                    output_error "--epic-slug requires one argument: <epic_slug>"
-                fi
+                require_flag_value "$1" $#
                 epic_slug="$2"
                 shift 2
                 ;;
+            --*)
+                output_error "Unknown option for create-task: $1"
+                ;;
             *)
-                output_error "Unknown option: $1"
+                reject_positional_arg "create-task" "$1"
                 ;;
         esac
     done
-    
+
+    if [ -z "$title" ] || [ -z "$body" ]; then
+        output_error "Usage: create-task --title <title> --body <body> [--story-number <num> | --story-title <fragment>] [--story-slug <slug>] [--epic-slug <epic_slug>]"
+    fi
+
+    if [ -n "$story_num" ] || [ -n "$story_title" ]; then
+        require_one_issue_ref "create-task" "--story-number" "$story_num" "--story-title" "$story_title"
+
+        local story_ref
+        if ! story_ref=$(resolve_issue_ref "$story_num" "$story_title" "story" "parent story"); then
+            exit 1
+        fi
+        story_num=$(printf '%s\n' "$story_ref" | jq -r '.number')
+
+        if [ -z "$story_slug" ]; then
+            story_slug=$(printf '%s\n' "$story_ref" | jq -r '.slugs.story // empty')
+            if [ -z "$story_slug" ]; then
+                output_error "Could not infer --story-slug from parent story #$story_num. Add a story:<slug> label or pass --story-slug explicitly."
+            fi
+        fi
+
+        if [ -z "$epic_slug" ]; then
+            epic_slug=$(printf '%s\n' "$story_ref" | jq -r '.slugs.epic // empty')
+        fi
+    elif [ -n "$story_slug" ]; then
+        output_error "--story-slug requires --story-number or --story-title when creating a task"
+    fi
+
     # Call create_task_issue with parameter order: title, body, story_num, story_slug, epic_slug
     create_task_issue "$title" "$body" "$story_num" "$story_slug" "$epic_slug"
+}
+
+parse_update_status_args() {
+    local issue_num=""
+    local issue_title=""
+    local status=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --issue-number)
+                require_flag_value "$1" $#
+                issue_num="$2"
+                shift 2
+                ;;
+            --issue-title)
+                require_flag_value "$1" $#
+                issue_title="$2"
+                shift 2
+                ;;
+            --status)
+                require_flag_value "$1" $#
+                status="$2"
+                shift 2
+                ;;
+            --*)
+                output_error "Unknown option for update-status: $1"
+                ;;
+            *)
+                reject_positional_arg "update-status" "$1"
+                ;;
+        esac
+    done
+
+    require_one_issue_ref "update-status" "--issue-number" "$issue_num" "--issue-title" "$issue_title"
+
+    if [ -z "$status" ]; then
+        output_error "Usage: update-status (--issue-number <num> | --issue-title <fragment>) --status <status>"
+    fi
+
+    local issue_ref
+    if ! issue_ref=$(resolve_issue_ref "$issue_num" "$issue_title" "" "issue"); then
+        exit 1
+    fi
+    issue_num=$(printf '%s\n' "$issue_ref" | jq -r '.number')
+
+    update_issue_status "$issue_num" "$status"
+}
+
+parse_list_stories_args() {
+    local filter=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --filter)
+                require_flag_value "$1" $#
+                filter="$2"
+                shift 2
+                ;;
+            --*)
+                output_error "Unknown option for list-stories: $1"
+                ;;
+            *)
+                reject_positional_arg "list-stories" "$1"
+                ;;
+        esac
+    done
+
+    list_stories "$filter"
+}
+
+parse_get_issue_context_args() {
+    local issue_num=""
+    local issue_title=""
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --issue-number)
+                require_flag_value "$1" $#
+                issue_num="$2"
+                shift 2
+                ;;
+            --issue-title)
+                require_flag_value "$1" $#
+                issue_title="$2"
+                shift 2
+                ;;
+            --*)
+                output_error "Unknown option for get-issue-context: $1"
+                ;;
+            *)
+                reject_positional_arg "get-issue-context" "$1"
+                ;;
+        esac
+    done
+
+    require_one_issue_ref "get-issue-context" "--issue-number" "$issue_num" "--issue-title" "$issue_title"
+
+    local issue_ref
+    if ! issue_ref=$(resolve_issue_ref "$issue_num" "$issue_title" "" "issue"); then
+        exit 1
+    fi
+    issue_num=$(printf '%s\n' "$issue_ref" | jq -r '.number')
+
+    get_issue_context "$issue_num"
 }
 
 #=============================================================================
@@ -1675,10 +2387,7 @@ main() {
     
     case "$command" in
         "create-epic")
-            if [ $# -lt 3 ]; then
-                output_error "Usage: create-epic <title> <body> <epic_slug>"
-            fi
-            create_epic_issue "$1" "$2" "$3"
+            parse_create_epic_args "$@"
             ;;
         "create-story")
             parse_create_story_args "$@"
@@ -1687,19 +2396,13 @@ main() {
             parse_create_task_args "$@"
             ;;
         "update-status")
-            if [ $# -lt 2 ]; then
-                output_error "Usage: update-status <issue_num> <status>"
-            fi
-            update_issue_status "$1" "$2"
+            parse_update_status_args "$@"
             ;;
         "list-stories")
-            list_stories "$1"
+            parse_list_stories_args "$@"
             ;;
         "get-issue-context")
-            if [ $# -lt 1 ]; then
-                output_error "Usage: get-issue-context <issue_num>"
-            fi
-            get_issue_context "$1"
+            parse_get_issue_context_args "$@"
             ;;
         "help"|"-h"|"--help")
             print_usage

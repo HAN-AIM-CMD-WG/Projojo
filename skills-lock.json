@@ -6,6 +6,11 @@
       "sourceType": "github",
       "computedHash": "7ee39ea5a4f60c34321ef9455bdad9da0888ce7be9b56fae806716d6fdf995d9"
     },
+    "github-issue-manager": {
+      "source": "/Users/robert/repos/lecters/agent-skills",
+      "sourceType": "local",
+      "computedHash": "86055db65d077296d5b3f936673da53452b214824945ce85e4bafc98bbe28469"
+    },
     "karpathy-guidelines": {
       "source": "forrestchang/andrej-karpathy-skills",
       "sourceType": "github",
