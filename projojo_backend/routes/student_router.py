@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form, Depends
+from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form
 from auth.permissions import auth
-from auth.jwt_utils import get_token_payload
 
 from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
@@ -8,9 +7,6 @@ from service.image_service import save_image, delete_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
-LEGACY_PORTFOLIO_ENDPOINT_DETAIL = (
-    "Deze legacy portfolio endpoint is gedecommissioned. Gebruik de nieuwe portfolio API zodra die beschikbaar is."
-)
 
 router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
@@ -152,30 +148,3 @@ async def update_student(
         raise HTTPException(
             status_code=500, detail=f"Er is een fout opgetreden bij het bijwerken van het profiel: {str(e)}"
         )
-
-
-@router.get("/{student_id}/portfolio")
-async def get_student_portfolio(
-    student_id: str = Path(..., description="Student ID"), payload: dict = Depends(get_token_payload)
-):
-    """
-    Legacy portfolio endpoint is intentionally decommissioned.
-    """
-    _ = student_id
-    _ = payload
-    raise HTTPException(status_code=410, detail=LEGACY_PORTFOLIO_ENDPOINT_DETAIL)
-
-
-@router.delete("/{student_id}/portfolio/{portfolio_id}")
-async def delete_portfolio_item(
-    student_id: str = Path(..., description="Student ID"),
-    portfolio_id: str = Path(..., description="Portfolio Item ID"),
-    payload: dict = Depends(get_token_payload),
-):
-    """
-    Legacy portfolio delete endpoint is intentionally decommissioned.
-    """
-    _ = student_id
-    _ = portfolio_id
-    _ = payload
-    raise HTTPException(status_code=410, detail=LEGACY_PORTFOLIO_ENDPOINT_DETAIL)

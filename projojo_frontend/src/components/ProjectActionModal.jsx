@@ -87,7 +87,7 @@ export default function ProjectActionModal({
                                 </p>
                                 <p className="text-sm mt-1 opacity-90">
                                     {isDelete 
-                                        ? "Deze studenten krijgen een notificatie en hun voltooide werk wordt opgeslagen in hun portfolio."
+                                        ? "Deze studenten krijgen een notificatie en hun voltooide werk blijft zichtbaar in hun portfolio"
                                         : "Deze studenten krijgen een notificatie dat het project niet meer actief is."
                                     }
                                 </p>
