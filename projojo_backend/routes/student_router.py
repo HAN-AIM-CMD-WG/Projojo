@@ -2,13 +2,15 @@ from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, F
 from auth.permissions import auth
 from auth.jwt_utils import get_token_payload
 
-from domain.repositories import SkillRepository, UserRepository, PortfolioRepository
+from domain.repositories import SkillRepository, UserRepository
 from domain.models.skill import StudentSkill
 from service.image_service import save_image, delete_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
-portfolio_repo = PortfolioRepository()
+LEGACY_PORTFOLIO_ENDPOINT_DETAIL = (
+    "Deze legacy portfolio endpoint is gedecommissioned. Gebruik de nieuwe portfolio API zodra die beschikbaar is."
+)
 
 router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
@@ -60,7 +62,7 @@ async def update_student_skills(
 async def update_student_skill_description(
     student_id: str = Path(..., description="Student ID"),
     skill_id: str = Path(..., description="Skill ID"),
-    skill: StudentSkill = Body(..., description="Skill object with updated description")
+    skill: StudentSkill = Body(..., description="Skill object with updated description"),
 ):
     """
     Update a specific skill's description for a student
@@ -82,6 +84,7 @@ async def update_student_skill_description(
             detail="Er is iets misgegaan bij het opslaan van de beschrijving",
         )
 
+
 @router.get("/registrations")
 @auth(role="student")
 async def get_student_registrations(request: Request) -> list[dict]:
@@ -100,7 +103,7 @@ async def update_student(
     description: str = Form(None),
     profilePicture: UploadFile = File(None),
     cv: UploadFile = File(None),
-    cv_deleted: str = Form(None)
+    cv_deleted: str = Form(None),
 ):
     """
     Update student profile information (description, profile picture, CV)
@@ -130,12 +133,7 @@ async def update_student(
             cv_filename = ""
 
         # Update student in database
-        user_repo.update_student(
-            id=student_id,
-            description=description,
-            image_path=image_filename,
-            cv_path=cv_filename
-        )
+        user_repo.update_student(id=student_id, description=description, image_path=image_filename, cv_path=cv_filename)
 
         # Delete old files after successful database update
         if image_filename and old_image_path:
@@ -152,109 +150,32 @@ async def update_student(
     except Exception as e:
         print(f"Error updating student {student_id}: {e}")
         raise HTTPException(
-            status_code=500,
-            detail=f"Er is een fout opgetreden bij het bijwerken van het profiel: {str(e)}"
+            status_code=500, detail=f"Er is een fout opgetreden bij het bijwerken van het profiel: {str(e)}"
         )
 
 
 @router.get("/{student_id}/portfolio")
 async def get_student_portfolio(
-    student_id: str = Path(..., description="Student ID"),
-    payload: dict = Depends(get_token_payload)
+    student_id: str = Path(..., description="Student ID"), payload: dict = Depends(get_token_payload)
 ):
     """
-    Get the portfolio for a student.
-    
-    Returns a unified list combining:
-    - Live items: completed tasks from existing (including archived) projects
-    - Snapshot items: preserved data from deleted projects
-    
-    Each item contains:
-    - source_type: "live" | "snapshot"
-    - is_archived: bool (for live items, indicates if project is archived)
-    - Full project, business, task, and skills data
-    - Timeline data for Gantt visualization
-    
-    Accessible by:
-    - The student themselves
-    - Teachers (all portfolios)
-    - Supervisors (students working on their projects)
+    Legacy portfolio endpoint is intentionally decommissioned.
     """
-    role = payload.get("role")
-    user_id = payload.get("sub")
-    
-    # Authorization: students can only view their own portfolio
-    if role == "student" and user_id != student_id:
-        raise HTTPException(
-            status_code=403, 
-            detail="Je kunt alleen je eigen portfolio bekijken"
-        )
-    
-    # Verify student exists
-    student = user_repo.get_student_by_id(student_id)
-    if not student:
-        raise HTTPException(status_code=404, detail="Student niet gevonden")
-    
-    # Get the unified portfolio
-    portfolio = portfolio_repo.get_student_portfolio(student_id)
-    
-    return {
-        "student_id": student_id,
-        "student_name": student.get("full_name", ""),
-        "items": portfolio,
-        "total_count": len(portfolio),
-        "completed_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
-        "active_count": sum(1 for item in portfolio if item.get("source_type") == "active"),
-        "snapshot_count": sum(1 for item in portfolio if item.get("source_type") == "snapshot"),
-        # Legacy fields for backwards compatibility
-        "live_count": sum(1 for item in portfolio if item.get("source_type") == "live"),
-    }
+    _ = student_id
+    _ = payload
+    raise HTTPException(status_code=410, detail=LEGACY_PORTFOLIO_ENDPOINT_DETAIL)
 
 
 @router.delete("/{student_id}/portfolio/{portfolio_id}")
 async def delete_portfolio_item(
     student_id: str = Path(..., description="Student ID"),
     portfolio_id: str = Path(..., description="Portfolio Item ID"),
-    payload: dict = Depends(get_token_payload)
+    payload: dict = Depends(get_token_payload),
 ):
     """
-    Delete a portfolio snapshot (for GDPR/privacy requests).
-    Only snapshot items can be deleted, not live items.
-    
-    Accessible by:
-    - The student themselves
-    - Teachers
+    Legacy portfolio delete endpoint is intentionally decommissioned.
     """
-    role = payload.get("role")
-    user_id = payload.get("sub")
-    
-    # Authorization
-    if role == "student" and user_id != student_id:
-        raise HTTPException(
-            status_code=403, 
-            detail="Je kunt alleen je eigen portfolio items verwijderen"
-        )
-    
-    if role not in ["student", "teacher"]:
-        raise HTTPException(
-            status_code=403, 
-            detail="Alleen studenten en docenten kunnen portfolio items verwijderen"
-        )
-    
-    # Only allow deleting snapshots (live items can't be deleted this way)
-    if portfolio_id.startswith("live-"):
-        raise HTTPException(
-            status_code=400,
-            detail="Live portfolio items kunnen niet verwijderd worden. Neem contact op met de docent."
-        )
-    
-    # Delete the snapshot
-    success = portfolio_repo.delete_snapshot(portfolio_id)
-    
-    if not success:
-        raise HTTPException(
-            status_code=404,
-            detail="Portfolio item niet gevonden"
-        )
-    
-    return {"message": "Portfolio item succesvol verwijderd"}
+    _ = student_id
+    _ = portfolio_id
+    _ = payload
+    raise HTTPException(status_code=410, detail=LEGACY_PORTFOLIO_ENDPOINT_DETAIL)
