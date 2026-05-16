@@ -412,6 +412,12 @@ class TaskRepository(BaseRepository[Task]):
         Update a registration status (accept/reject) with optional response.
         Sets acceptedAt timestamp when accepted for timeline tracking.
         """
+        state = self.get_registration_timeline(task_id, student_id)
+        if not state:
+            raise ValueError("Registratie niet gevonden")
+        if state["started_at"] is not None or state["completed_at"] is not None:
+            raise ValueError("Gestarte of voltooide registraties kunnen niet opnieuw beoordeeld worden")
+
         accepted_at = datetime.now() if accepted else None
         
         # Base query for updating isAccepted and response
@@ -569,6 +575,16 @@ class TaskRepository(BaseRepository[Task]):
         Mark a registration as started (student begins working on the task).
         Sets the startedAt timestamp for timeline tracking.
         """
+        state = self.get_registration_timeline(task_id, student_id)
+        if not state:
+            raise ValueError("Registratie niet gevonden")
+        if state["is_accepted"] is not True:
+            raise ValueError("Registratie moet geaccepteerd zijn voordat deze gestart kan worden")
+        if state["started_at"] is not None:
+            raise ValueError("Registratie is al gestart")
+        if state["completed_at"] is not None:
+            raise ValueError("Voltooide registraties kunnen niet opnieuw gestart worden")
+
         started_at = datetime.now()
         
         query = """
@@ -577,6 +593,8 @@ class TaskRepository(BaseRepository[Task]):
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task),
                     has isAccepted true;
+                not { $registration has startedAt $existing_started; };
+                not { $registration has completedAt $existing_completed; };
             update
                 $registration has startedAt ~started_at;
         """
@@ -592,6 +610,16 @@ class TaskRepository(BaseRepository[Task]):
         Mark a registration as completed (student finished the task).
         Sets the completedAt timestamp for portfolio and timeline tracking.
         """
+        state = self.get_registration_timeline(task_id, student_id)
+        if not state:
+            raise ValueError("Registratie niet gevonden")
+        if state["is_accepted"] is not True:
+            raise ValueError("Registratie moet geaccepteerd zijn voordat deze voltooid kan worden")
+        if state["started_at"] is None:
+            raise ValueError("Registratie moet gestart zijn voordat deze voltooid kan worden")
+        if state["completed_at"] is not None:
+            raise ValueError("Registratie is al voltooid")
+
         completed_at = datetime.now()
         
         query = """
@@ -599,7 +627,9 @@ class TaskRepository(BaseRepository[Task]):
                 $task isa task, has id ~task_id;
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task),
-                    has isAccepted true;
+                    has isAccepted true,
+                    has startedAt $started_at;
+                not { $registration has completedAt $existing_completed; };
             update
                 $registration has completedAt ~completed_at;
         """
@@ -608,6 +638,68 @@ class TaskRepository(BaseRepository[Task]):
             "task_id": task_id,
             "student_id": student_id,
             "completed_at": completed_at
+        })
+
+    def revert_registration_started(self, task_id: str, student_id: str) -> None:
+        """
+        Revert a started registration back to accepted.
+        """
+        state = self.get_registration_timeline(task_id, student_id)
+        if not state:
+            raise ValueError("Registratie niet gevonden")
+        if state["is_accepted"] is not True:
+            raise ValueError("Alleen geaccepteerde registraties kunnen worden teruggezet")
+        if state["started_at"] is None:
+            raise ValueError("Registratie is nog niet gestart")
+        if state["completed_at"] is not None:
+            raise ValueError("Voltooide registraties moeten eerst worden teruggezet van voltooid naar gestart")
+
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has isAccepted true,
+                    has startedAt $started_at;
+                not { $registration has completedAt $completed_at; };
+            delete
+                has $started_at of $registration;
+        """
+
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
+        })
+
+    def revert_registration_completed(self, task_id: str, student_id: str) -> None:
+        """
+        Revert a completed registration back to started.
+        """
+        state = self.get_registration_timeline(task_id, student_id)
+        if not state:
+            raise ValueError("Registratie niet gevonden")
+        if state["is_accepted"] is not True:
+            raise ValueError("Alleen geaccepteerde registraties kunnen worden teruggezet")
+        if state["started_at"] is None:
+            raise ValueError("Registratie moet gestart zijn")
+        if state["completed_at"] is None:
+            raise ValueError("Registratie is nog niet voltooid")
+
+        query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has isAccepted true,
+                    has startedAt $started_at,
+                    has completedAt $completed_at;
+            delete
+                has $completed_at of $registration;
+        """
+
+        Db.write_transact(query, {
+            "task_id": task_id,
+            "student_id": student_id,
         })
 
     def get_registration_timeline(self, task_id: str, student_id: str) -> dict | None:
@@ -637,12 +729,16 @@ class TaskRepository(BaseRepository[Task]):
             return None
         
         r = results[0]
+        def optional_value(field: str):
+            values = r.get(field, [])
+            return values[0] if values else None
+
         return {
-            "requested_at": r.get("requested_at", [None])[0],
-            "accepted_at": r.get("accepted_at", [None])[0],
-            "started_at": r.get("started_at", [None])[0],
-            "completed_at": r.get("completed_at", [None])[0],
-            "is_accepted": r.get("is_accepted", [None])[0],
+            "requested_at": optional_value("requested_at"),
+            "accepted_at": optional_value("accepted_at"),
+            "started_at": optional_value("started_at"),
+            "completed_at": optional_value("completed_at"),
+            "is_accepted": optional_value("is_accepted"),
         }
 
     def update(self, task_id: str, name: str, description: str, total_needed: int, start_date: str | None = None, end_date: str | None = None) -> Task:

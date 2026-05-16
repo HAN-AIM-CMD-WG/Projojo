@@ -144,6 +144,132 @@ insert
         has startDate 2026-01-18T09:15:00.000+0000,
         has endDate 2026-02-26T17:00:00.000+0000;
 
+    $pf_task_004_accepted_start_task isa task,
+        has id "50000000-0000-4000-8000-000000000010",
+        has name "PF-task-004 Accepted Start Task",
+        has description "Accepted registration fixture for valid start lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:00:00.000+0000,
+        has startDate 2026-01-21T09:00:00.000+0000,
+        has endDate 2030-01-21T09:00:00.000+0000;
+
+    $pf_task_004_pending_start_task isa task,
+        has id "50000000-0000-4000-8000-000000000011",
+        has name "PF-task-004 Pending Start Task",
+        has description "Pending registration fixture for rejected start lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:01:00.000+0000,
+        has startDate 2026-01-21T09:01:00.000+0000,
+        has endDate 2030-01-21T09:01:00.000+0000;
+
+    $pf_task_004_rejected_start_task isa task,
+        has id "50000000-0000-4000-8000-000000000012",
+        has name "PF-task-004 Rejected Start Task",
+        has description "Rejected registration fixture for rejected start lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:02:00.000+0000,
+        has startDate 2026-01-21T09:02:00.000+0000,
+        has endDate 2030-01-21T09:02:00.000+0000;
+
+    $pf_task_004_started_start_task isa task,
+        has id "50000000-0000-4000-8000-000000000013",
+        has name "PF-task-004 Started Start Task",
+        has description "Already-started registration fixture for rejected start lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:03:00.000+0000,
+        has startDate 2026-01-21T09:03:00.000+0000,
+        has endDate 2030-01-21T09:03:00.000+0000;
+
+    $pf_task_004_completed_start_task isa task,
+        has id "50000000-0000-4000-8000-000000000014",
+        has name "PF-task-004 Completed Start Task",
+        has description "Already-completed registration fixture for rejected start lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:04:00.000+0000,
+        has startDate 2026-01-21T09:04:00.000+0000,
+        has endDate 2030-01-21T09:04:00.000+0000;
+
+    $pf_task_004_accepted_completion_task isa task,
+        has id "50000000-0000-4000-8000-000000000015",
+        has name "PF-task-004 Accepted Completion Task",
+        has description "Accepted but not started registration fixture for completion rejection coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:05:00.000+0000,
+        has startDate 2026-01-21T09:05:00.000+0000,
+        has endDate 2030-01-21T09:05:00.000+0000;
+
+    $pf_task_004_started_completion_task isa task,
+        has id "50000000-0000-4000-8000-000000000016",
+        has name "PF-task-004 Started Completion Task",
+        has description "Started registration fixture for valid completion lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:06:00.000+0000,
+        has startDate 2026-01-21T09:06:00.000+0000,
+        has endDate 2030-01-21T09:06:00.000+0000;
+
+    $pf_task_004_student_denied_task isa task,
+        has id "50000000-0000-4000-8000-000000000017",
+        has name "PF-task-004 Student Denied Task",
+        has description "Started registration fixture for student lifecycle mutation denial coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:07:00.000+0000,
+        has startDate 2026-01-21T09:07:00.000+0000,
+        has endDate 2030-01-21T09:07:00.000+0000;
+
+    $pf_task_004_supervisor_denied_task isa task,
+        has id "50000000-0000-4000-8000-000000000018",
+        has name "PF-task-004 Supervisor Denied Task",
+        has description "Started registration fixture for unrelated-supervisor lifecycle denial coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:08:00.000+0000,
+        has startDate 2026-01-21T09:08:00.000+0000,
+        has endDate 2030-01-21T09:08:00.000+0000;
+
+    $pf_task_004_timeline_task isa task,
+        has id "50000000-0000-4000-8000-000000000019",
+        has name "PF-task-004 Timeline Access Task",
+        has description "Accepted registration fixture for lifecycle timeline access coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:09:00.000+0000,
+        has startDate 2026-01-21T09:09:00.000+0000,
+        has endDate 2030-01-21T09:09:00.000+0000;
+
+    $pf_task_004_started_revert_task isa task,
+        has id "50000000-0000-4000-8000-000000000020",
+        has name "PF-task-004 Started Revert Task",
+        has description "Started registration fixture for valid revert-start lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:10:00.000+0000,
+        has startDate 2026-01-21T09:10:00.000+0000,
+        has endDate 2030-01-21T09:10:00.000+0000;
+
+    $pf_task_004_completed_revert_task isa task,
+        has id "50000000-0000-4000-8000-000000000021",
+        has name "PF-task-004 Completed Revert Task",
+        has description "Completed registration fixture for valid revert-completion lifecycle coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:11:00.000+0000,
+        has startDate 2026-01-21T09:11:00.000+0000,
+        has endDate 2030-01-21T09:11:00.000+0000;
+
+    $pf_task_004_supervisor_start_task isa task,
+        has id "50000000-0000-4000-8000-000000000022",
+        has name "PF-task-004 Supervisor Start Task",
+        has description "Accepted registration fixture for related-supervisor start coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:12:00.000+0000,
+        has startDate 2026-01-21T09:12:00.000+0000,
+        has endDate 2030-01-21T09:12:00.000+0000;
+
+    $pf_task_004_supervisor_completion_task isa task,
+        has id "50000000-0000-4000-8000-000000000023",
+        has name "PF-task-004 Supervisor Completion Task",
+        has description "Started registration fixture for related-supervisor completion coverage.",
+        has totalNeeded 1,
+        has createdAt 2026-01-21T09:13:00.000+0000,
+        has startDate 2026-01-21T09:13:00.000+0000,
+        has endDate 2030-01-21T09:13:00.000+0000;
+
     $skill isa skill,
         has id "60000000-0000-4000-8000-000000000001",
         has name "Deterministisch Testen",
@@ -161,7 +287,63 @@ insert
 
     $contains_task isa containsTask (project: $project, task: $task);
 
+    $pf_task_004_contains_accepted_start isa containsTask (project: $project, task: $pf_task_004_accepted_start_task);
+
+    $pf_task_004_contains_pending_start isa containsTask (project: $project, task: $pf_task_004_pending_start_task);
+
+    $pf_task_004_contains_rejected_start isa containsTask (project: $project, task: $pf_task_004_rejected_start_task);
+
+    $pf_task_004_contains_started_start isa containsTask (project: $project, task: $pf_task_004_started_start_task);
+
+    $pf_task_004_contains_completed_start isa containsTask (project: $project, task: $pf_task_004_completed_start_task);
+
+    $pf_task_004_contains_accepted_completion isa containsTask (project: $project, task: $pf_task_004_accepted_completion_task);
+
+    $pf_task_004_contains_started_completion isa containsTask (project: $project, task: $pf_task_004_started_completion_task);
+
+    $pf_task_004_contains_student_denied isa containsTask (project: $project, task: $pf_task_004_student_denied_task);
+
+    $pf_task_004_contains_supervisor_denied isa containsTask (project: $project, task: $pf_task_004_supervisor_denied_task);
+
+    $pf_task_004_contains_timeline isa containsTask (project: $project, task: $pf_task_004_timeline_task);
+
+    $pf_task_004_contains_started_revert isa containsTask (project: $project, task: $pf_task_004_started_revert_task);
+
+    $pf_task_004_contains_completed_revert isa containsTask (project: $project, task: $pf_task_004_completed_revert_task);
+
+    $pf_task_004_contains_supervisor_start isa containsTask (project: $project, task: $pf_task_004_supervisor_start_task);
+
+    $pf_task_004_contains_supervisor_completion isa containsTask (project: $project, task: $pf_task_004_supervisor_completion_task);
+
     $requires_skill isa requiresSkill (task: $task, skill: $skill);
+
+    $pf_task_004_requires_skill_accepted_start isa requiresSkill (task: $pf_task_004_accepted_start_task, skill: $skill);
+
+    $pf_task_004_requires_skill_pending_start isa requiresSkill (task: $pf_task_004_pending_start_task, skill: $skill);
+
+    $pf_task_004_requires_skill_rejected_start isa requiresSkill (task: $pf_task_004_rejected_start_task, skill: $skill);
+
+    $pf_task_004_requires_skill_started_start isa requiresSkill (task: $pf_task_004_started_start_task, skill: $skill);
+
+    $pf_task_004_requires_skill_completed_start isa requiresSkill (task: $pf_task_004_completed_start_task, skill: $skill);
+
+    $pf_task_004_requires_skill_accepted_completion isa requiresSkill (task: $pf_task_004_accepted_completion_task, skill: $skill);
+
+    $pf_task_004_requires_skill_started_completion isa requiresSkill (task: $pf_task_004_started_completion_task, skill: $skill);
+
+    $pf_task_004_requires_skill_student_denied isa requiresSkill (task: $pf_task_004_student_denied_task, skill: $skill);
+
+    $pf_task_004_requires_skill_supervisor_denied isa requiresSkill (task: $pf_task_004_supervisor_denied_task, skill: $skill);
+
+    $pf_task_004_requires_skill_timeline isa requiresSkill (task: $pf_task_004_timeline_task, skill: $skill);
+
+    $pf_task_004_requires_skill_started_revert isa requiresSkill (task: $pf_task_004_started_revert_task, skill: $skill);
+
+    $pf_task_004_requires_skill_completed_revert isa requiresSkill (task: $pf_task_004_completed_revert_task, skill: $skill);
+
+    $pf_task_004_requires_skill_supervisor_start isa requiresSkill (task: $pf_task_004_supervisor_start_task, skill: $skill);
+
+    $pf_task_004_requires_skill_supervisor_completion isa requiresSkill (task: $pf_task_004_supervisor_completion_task, skill: $skill);
 
     $portfolio_archived_source_has_projects isa hasProjects (business: $portfolio_archived_source_business, project: $portfolio_archived_source_project);
 
@@ -193,6 +375,138 @@ insert
         has acceptedAt 2026-01-19T09:00:00.000+0000,
         has startedAt 2026-01-20T09:00:00.000+0000,
         has completedAt 2026-02-26T17:00:00.000+0000;
+
+    $pf_task_004_accepted_start_registration isa registersForTask (student: $student, task: $pf_task_004_accepted_start_task),
+        has id "pf-task-004-accepted-for-start",
+        has description "PF-task-004 accepted registration for valid start coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:00:00.000+0000,
+        has requestedAt 2026-01-21T10:00:00.000+0000,
+        has acceptedAt 2026-01-21T11:00:00.000+0000;
+
+    $pf_task_004_pending_start_registration isa registersForTask (student: $student, task: $pf_task_004_pending_start_task),
+        has id "pf-task-004-pending-start-rejected",
+        has description "PF-task-004 pending registration for start rejection coverage.",
+        has createdAt 2026-01-21T10:01:00.000+0000,
+        has requestedAt 2026-01-21T10:01:00.000+0000;
+
+    $pf_task_004_rejected_start_registration isa registersForTask (student: $student, task: $pf_task_004_rejected_start_task),
+        has id "pf-task-004-rejected-start-rejected",
+        has description "PF-task-004 rejected registration for start rejection coverage.",
+        has isAccepted false,
+        has response "Rejected for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:02:00.000+0000,
+        has requestedAt 2026-01-21T10:02:00.000+0000;
+
+    $pf_task_004_started_start_registration isa registersForTask (student: $student, task: $pf_task_004_started_start_task),
+        has id "pf-task-004-started-start-rejected",
+        has description "PF-task-004 started registration for duplicate start rejection coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:03:00.000+0000,
+        has requestedAt 2026-01-21T10:03:00.000+0000,
+        has acceptedAt 2026-01-21T11:03:00.000+0000,
+        has startedAt 2026-01-22T09:03:00.000+0000;
+
+    $pf_task_004_completed_start_registration isa registersForTask (student: $student, task: $pf_task_004_completed_start_task),
+        has id "pf-task-004-completed-start-rejected",
+        has description "PF-task-004 completed registration for start rejection coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:04:00.000+0000,
+        has requestedAt 2026-01-21T10:04:00.000+0000,
+        has acceptedAt 2026-01-21T11:04:00.000+0000,
+        has startedAt 2026-01-22T09:04:00.000+0000,
+        has completedAt 2026-01-23T17:04:00.000+0000;
+
+    $pf_task_004_accepted_completion_registration isa registersForTask (student: $student, task: $pf_task_004_accepted_completion_task),
+        has id "pf-task-004-accepted-completion-rejected",
+        has description "PF-task-004 accepted registration for completion-before-start rejection coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:05:00.000+0000,
+        has requestedAt 2026-01-21T10:05:00.000+0000,
+        has acceptedAt 2026-01-21T11:05:00.000+0000;
+
+    $pf_task_004_started_completion_registration isa registersForTask (student: $student, task: $pf_task_004_started_completion_task),
+        has id "pf-task-004-started-for-completion",
+        has description "PF-task-004 started registration for valid completion coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:06:00.000+0000,
+        has requestedAt 2026-01-21T10:06:00.000+0000,
+        has acceptedAt 2026-01-21T11:06:00.000+0000,
+        has startedAt 2026-01-22T09:06:00.000+0000;
+
+    $pf_task_004_student_denied_registration isa registersForTask (student: $student, task: $pf_task_004_student_denied_task),
+        has id "pf-task-004-student-denied",
+        has description "PF-task-004 registration for student lifecycle mutation denial coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:07:00.000+0000,
+        has requestedAt 2026-01-21T10:07:00.000+0000,
+        has acceptedAt 2026-01-21T11:07:00.000+0000,
+        has startedAt 2026-01-22T09:07:00.000+0000;
+
+    $pf_task_004_supervisor_denied_registration isa registersForTask (student: $student, task: $pf_task_004_supervisor_denied_task),
+        has id "pf-task-004-supervisor-denied",
+        has description "PF-task-004 registration for unrelated-supervisor lifecycle mutation denial coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:08:00.000+0000,
+        has requestedAt 2026-01-21T10:08:00.000+0000,
+        has acceptedAt 2026-01-21T11:08:00.000+0000,
+        has startedAt 2026-01-22T09:08:00.000+0000;
+
+    $pf_task_004_timeline_registration isa registersForTask (student: $student, task: $pf_task_004_timeline_task),
+        has id "pf-task-004-timeline-access",
+        has description "PF-task-004 accepted registration for timeline access coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:09:00.000+0000,
+        has requestedAt 2026-01-21T10:09:00.000+0000,
+        has acceptedAt 2026-01-21T11:09:00.000+0000;
+
+    $pf_task_004_started_revert_registration isa registersForTask (student: $student, task: $pf_task_004_started_revert_task),
+        has id "pf-task-004-started-for-revert",
+        has description "PF-task-004 started registration for revert-start coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:10:00.000+0000,
+        has requestedAt 2026-01-21T10:10:00.000+0000,
+        has acceptedAt 2026-01-21T11:10:00.000+0000,
+        has startedAt 2026-01-22T09:10:00.000+0000;
+
+    $pf_task_004_completed_revert_registration isa registersForTask (student: $student, task: $pf_task_004_completed_revert_task),
+        has id "pf-task-004-completed-for-revert",
+        has description "PF-task-004 completed registration for revert-completion coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 lifecycle coverage.",
+        has createdAt 2026-01-21T10:11:00.000+0000,
+        has requestedAt 2026-01-21T10:11:00.000+0000,
+        has acceptedAt 2026-01-21T11:11:00.000+0000,
+        has startedAt 2026-01-22T09:11:00.000+0000,
+        has completedAt 2026-01-23T17:11:00.000+0000;
+
+    $pf_task_004_supervisor_start_registration isa registersForTask (student: $student, task: $pf_task_004_supervisor_start_task),
+        has id "pf-task-004-supervisor-start-allowed",
+        has description "PF-task-004 accepted registration for related-supervisor start coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 supervisor lifecycle coverage.",
+        has createdAt 2026-01-21T10:12:00.000+0000,
+        has requestedAt 2026-01-21T10:12:00.000+0000,
+        has acceptedAt 2026-01-21T11:12:00.000+0000;
+
+    $pf_task_004_supervisor_completion_registration isa registersForTask (student: $student, task: $pf_task_004_supervisor_completion_task),
+        has id "pf-task-004-supervisor-completion-allowed",
+        has description "PF-task-004 started registration for related-supervisor completion coverage.",
+        has isAccepted true,
+        has response "Accepted for PF-task-004 supervisor lifecycle coverage.",
+        has createdAt 2026-01-21T10:13:00.000+0000,
+        has requestedAt 2026-01-21T10:13:00.000+0000,
+        has acceptedAt 2026-01-21T11:13:00.000+0000,
+        has startedAt 2026-01-22T09:13:00.000+0000;
 
     $portfolio_item_no_ratings isa portfolioItem,
         has id "pf-seed-item-no-ratings",
