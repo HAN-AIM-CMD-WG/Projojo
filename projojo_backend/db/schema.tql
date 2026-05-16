@@ -15,6 +15,9 @@ entity supervisor sub user,
 entity student sub user,
     owns description @card(0..1),
     owns cvPath @card(0..1),
+    owns portfolioSummary @card(0..1),
+    owns portfolioSlug @card(0..1) @unique,
+    owns isPortfolioWorldPublic @card(0..1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..),
     plays hasPortfolio:student @card(0..);
@@ -215,6 +218,9 @@ attribute name value string;
 attribute fullName value string;
 attribute imagePath value string;
 attribute cvPath value string;
+attribute portfolioSummary value string;
+attribute portfolioSlug value string;
+attribute isPortfolioWorldPublic value boolean;
 attribute id value string;
 attribute oauthSub value string;
 attribute description value string;
