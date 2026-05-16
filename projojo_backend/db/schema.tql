@@ -9,7 +9,8 @@ entity user @abstract,
 
 entity supervisor sub user,
     plays manages:supervisor @card(1),
-    plays creates:supervisor @card(0..);
+    plays creates:supervisor @card(0..),
+    plays portfolioReviewAuthor:author @card(0..);
 
 entity student sub user,
     owns description @card(0..1),
@@ -18,7 +19,8 @@ entity student sub user,
     plays registersForTask:student @card(0..),
     plays hasPortfolio:student @card(0..);
 
-entity teacher sub user;
+entity teacher sub user,
+    plays portfolioReviewAuthor:author @card(0..);
 
 entity oauthProvider,
     owns name @key, # e.g. "microsoft", "google"
@@ -172,25 +174,40 @@ entity portfolioItem,
     owns sourceTaskArchived @card(0..1),
     owns sourceProjectArchived @card(0..1),
     owns sourceBusinessArchived @card(0..1),
-    plays hasPortfolio:item @card(1);
+    plays hasPortfolio:item @card(1),
+    plays hasPortfolioReview:item @card(0..);
+
+entity portfolioReview,
+    owns id @key,
+    owns reviewText @card(1),
+    owns rating @card(0..1),
+    owns createdAt @card(1),
+    owns updatedAt @card(1),
+    owns isWorldVisible @card(1),
+    owns publicNoticeAcceptedAt @card(1),
+    plays hasPortfolioReview:review @card(1),
+    plays portfolioReviewAuthor:review @card(1);
 
 relation hasPortfolio,
     relates student @card(1),
     relates item @card(1);
 
+# Review author design: the creation API must attach exactly one portfolioReviewAuthor relation.
+# Editing authorization matches the current caller by user id through the author role, not display names.
+# Read models display author details from the related author entity.
+# Normal review reads join through the portfolio item and exclude retired items.
+relation hasPortfolioReview,
+    relates item @card(1),
+    relates review @card(1);
+
+relation portfolioReviewAuthor,
+    relates review @card(1),
+    relates author @card(1);
+
 # Project-Thema koppeling
 relation hasTheme,
     relates project @card(1),
     relates theme @card(1);
-
-#Werkt helaas nog niet :(
-# TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
-# nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
-#rule access: when {
-#    (supervisor: $s, project: $p) isa projectCreation;
-#} then {
-#    (supervisorRole: $s, projectRole: $p) isa accessPermission;
-#};
 
 
 attribute email value string;
@@ -219,12 +236,16 @@ attribute requestedAt value datetime-tz;
 attribute acceptedAt value datetime-tz;
 attribute startedAt value datetime-tz;
 attribute completedAt value datetime-tz;
+attribute updatedAt value datetime-tz;
+attribute publicNoticeAcceptedAt value datetime-tz;
 attribute sourceRegistrationId value string;
 attribute sourceTaskId value string;
 attribute sourceProjectId value string;
 attribute sourceBusinessId value string;
 attribute taskName value string;
 attribute taskDescription value string;
+attribute reviewText value string;
+attribute rating value integer @range(1..5);
 attribute projectName value string;
 attribute projectDescription value string;
 attribute businessName value string;
