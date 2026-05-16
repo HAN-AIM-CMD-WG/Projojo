@@ -11,6 +11,7 @@ const execFileAsync = promisify(execFile);
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const TEST_SEED_PATH = path.join(REPO_ROOT, 'projojo_backend', 'db', 'test_seed.tql');
+const TASKFILE_PATH = path.join(REPO_ROOT, 'Taskfile.yml');
 const DOCKER_COMPOSE_ARGS = [
   'compose',
   '--env-file',
@@ -347,6 +348,15 @@ function flattenedAliasObjects(value) {
   return Object.values(value).flatMap(flattenedAliasObjects);
 }
 
+function taskBlock(taskfile, taskName) {
+  const lines = taskfile.split(/\r?\n/u);
+  const start = lines.findIndex((line) => line === `  ${taskName}:`);
+  assert.notEqual(start, -1, `Expected Taskfile to define ${taskName}`);
+
+  const end = lines.findIndex((line, index) => index > start && /^  [A-Za-z0-9:-]+:/u.test(line));
+  return lines.slice(start, end === -1 ? undefined : end).join('\n');
+}
+
 async function runPortfolioSeedProbe() {
   const { stdout, stderr } = await execFileAsync(
     'docker',
@@ -538,4 +548,29 @@ Then('the portfolio reset and verification commands should be documented near th
   assert.match(seedContract, /task test:e2e:reset/u);
   assert.match(seedContract, /reset_test_database\.py --seed db\/test_seed\.tql/u);
   assert.match(seedContract, /task test:e2e:run:selective CLI_ARGS="--paths features\/pf-task-002d-portfolio-seed-fixtures-and-reset-contract\.feature"/u);
+});
+
+Then('the portfolio reset workflow should be wired into the E2E gate', function () {
+  const taskfile = fs.readFileSync(TASKFILE_PATH, 'utf8');
+  const resetBlock = taskBlock(taskfile, 'test:e2e:reset');
+  const fullGateBlock = taskBlock(taskfile, 'test:e2e');
+  const focusedGateBlock = taskBlock(taskfile, 'test:e2e:focus');
+  const fullResetIndex = fullGateBlock.indexOf('task: test:e2e:reset');
+  const fullRunIndex = fullGateBlock.indexOf('task: test:e2e:run');
+  const focusedResetIndex = focusedGateBlock.indexOf('task: test:e2e:reset');
+  const focusedRunIndex = focusedGateBlock.indexOf('task: test:e2e:run:selective');
+
+  assert.match(resetBlock, /reset_test_database\.py --seed db\/test_seed\.tql/u, 'Expected reset task to execute the documented seed reset command');
+  assert.notEqual(fullResetIndex, -1, 'Expected full E2E gate to include the reset task');
+  assert.notEqual(fullRunIndex, -1, 'Expected full E2E gate to include the run task');
+  assert.ok(
+    fullResetIndex < fullRunIndex,
+    'Expected full E2E gate to reset the database before running scenarios',
+  );
+  assert.notEqual(focusedResetIndex, -1, 'Expected focused E2E gate to include the reset task');
+  assert.notEqual(focusedRunIndex, -1, 'Expected focused E2E gate to include the selective run task');
+  assert.ok(
+    focusedResetIndex < focusedRunIndex,
+    'Expected focused E2E gate to reset the database before running selected scenarios',
+  );
 });

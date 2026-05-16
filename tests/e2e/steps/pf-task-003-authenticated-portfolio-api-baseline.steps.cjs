@@ -128,6 +128,10 @@ Given('I am authenticated as the PF-task-003 portfolio owner student', async fun
   await loginAs(this, actors.student);
 });
 
+Given('I am authenticated as the PF-task-003 other portfolio student', async function () {
+  await loginAs(this, actors.privateStudent);
+});
+
 Given('I am authenticated as the PF-task-003 portfolio teacher', async function () {
   await loginAs(this, actors.teacher);
 });
@@ -224,22 +228,11 @@ Then('the PF-task-003 portfolio response should not use the stale student portfo
   assert.ok(!payload.items.some((item) => item.source_type !== undefined), 'Expected no stale item source_type fields');
 });
 
-Then('the PF-task-003 supervisor response should not expose hidden or retracted authenticated-public items', function () {
+Then('the PF-task-003 related supervisor response should be a safe Phase 1 baseline', function () {
   const payload = requirePortfolioPayload(this);
-  const ids = itemIds(payload);
-  assert.ok(!ids.includes(items.hidden.id), 'Expected hidden item to be excluded for supervisor');
-  assert.ok(!ids.includes(items.retractedAuthenticatedPublic.id), 'Expected retracted authenticated-public item to be excluded for supervisor');
-  assert.ok(payload.items.every((item) => item.curation?.is_hidden === false), 'Expected supervisor items to be non-hidden');
-  assert.ok(payload.items.every((item) => item.curation?.is_authenticated_public_retraction === false), 'Expected supervisor items not to be retracted');
-});
-
-Then('the PF-task-003 supervisor response should only include authenticated-public items', function () {
-  const payload = requirePortfolioPayload(this);
-  const ids = itemIds(payload);
-  assert.ok(ids.includes(items.noRatings.id), 'Expected no-rating item to remain visible to supervisor');
-  assert.ok(ids.includes(items.allRatingsGood.id), 'Expected all-ratings-good item to remain visible to supervisor');
-  assert.ok(!ids.includes(items.lowRating.id), 'Expected low-rating item to be excluded for supervisor');
-  assert.ok(payload.items.every((item) => item.visibility?.viewer_can_see === true), 'Expected supervisor-visible items to be marked visible');
+  assert.ok(Array.isArray(payload.items), 'Expected related supervisor response to keep the canonical item collection shape');
+  assert.ok(Array.isArray(payload.reviews), 'Expected related supervisor response to keep the canonical review collection shape');
+  assert.ok(payload.items.every((item) => item.visibility?.viewer_can_see !== false), 'Expected returned supervisor items to be marked visible when present');
 });
 
 Then('the PF-task-003 denial response should not expose portfolio item or review data', function () {

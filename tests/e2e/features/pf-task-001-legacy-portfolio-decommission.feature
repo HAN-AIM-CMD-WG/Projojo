@@ -11,3 +11,9 @@ Feature: PF-task-001 legacy portfolio backend is decommissioned
     Given I am authenticated as the seeded teacher
     When I call the legacy student portfolio delete endpoint for portfolio id 'snapshot-does-not-matter'
     Then the latest legacy portfolio API response status should be 404
+
+  @api @portfolio @pf-task-001
+  Scenario: Project deletion no longer has a portfolio snapshot trigger
+    When I inspect the project deletion portfolio decommissioning contract
+    Then the project deletion code should not create portfolio snapshots
+    And stale snapshot repository helpers should be absent

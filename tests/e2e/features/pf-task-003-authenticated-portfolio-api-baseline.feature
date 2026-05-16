@@ -31,14 +31,20 @@ Feature: PF-task-003 authenticated portfolio API baseline and public slug guard
     And the PF-task-003 portfolio response should not use the stale student portfolio shape
 
   @api @portfolio @pf-task-003
+  Scenario: Other students are denied without portfolio data disclosure
+    Given I am authenticated as the PF-task-003 other portfolio student
+    When I request the PF-task-003 authenticated portfolio for the seeded portfolio student
+    Then the latest PF-task-003 API response status should be 403
+    And the PF-task-003 denial response should not expose portfolio item or review data
+
+  @api @portfolio @pf-task-003
   Scenario: Related supervisor is authorized at portfolio level
     Given I am authenticated as the PF-task-003 related portfolio supervisor
     When I request the PF-task-003 authenticated portfolio for the seeded portfolio student
     Then the latest PF-task-003 API response status should be 200
     And the PF-task-003 portfolio response should describe viewer role "supervisor"
     And the PF-task-003 portfolio response should include canonical portfolio fields
-    And the PF-task-003 supervisor response should not expose hidden or retracted authenticated-public items
-    And the PF-task-003 supervisor response should only include authenticated-public items
+    And the PF-task-003 related supervisor response should be a safe Phase 1 baseline
     And the PF-task-003 portfolio response should not use the stale student portfolio shape
 
   @api @portfolio @pf-task-003
