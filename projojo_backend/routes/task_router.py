@@ -3,19 +3,20 @@ from domain.repositories import TaskRepository, UserRepository, SkillRepository,
 from auth.permissions import auth
 from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
-from service import task_service
-from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
+from domain.models.task import RegistrationCompletionRequest, RegistrationCreate, RegistrationUpdate, Task, TaskCreate
 from service.validation_service import is_valid_length
 from datetime import datetime
 from typing import List, Optional
+
 
 def normalize_datetime(dt):
     """Remove timezone info from datetime to allow comparison with naive datetimes."""
     if dt is None:
         return None
-    if hasattr(dt, 'tzinfo') and dt.tzinfo is not None:
+    if hasattr(dt, "tzinfo") and dt.tzinfo is not None:
         return dt.replace(tzinfo=None)
     return dt
+
 
 task_repo = TaskRepository()
 user_repo = UserRepository()
@@ -23,6 +24,7 @@ skill_repo = SkillRepository()
 project_repo = ProjectRepository()
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
+
 
 # Task endpoints
 @router.get("/")
@@ -44,11 +46,12 @@ async def get_colleague_email_addresses(request: Request, task_id: str = Path(..
     # Get colleagues in the business of the task
     return user_repo.get_colleagues(task_id, request.state.user_id)
 
+
 @router.get("/{task_id}/student-emails")
 @auth(role="supervisor", owner_id_key="task_id")
 async def get_student_email_addresses(
     task_id: str = Path(..., description="Task ID"),
-    selection: str = Query(..., description="Comma-separated list: registered,accepted,rejected")
+    selection: str = Query(..., description="Comma-separated list: registered,accepted,rejected"),
 ):
     """
     Get student email addresses for a task based on status selection
@@ -67,6 +70,7 @@ async def get_student_email_addresses(
     unique_emails = list(set(emails))
     return unique_emails
 
+
 # Generic routes last
 @router.get("/{task_id}")
 @auth(role="authenticated")
@@ -76,6 +80,7 @@ async def get_task(task_id: str = Path(..., description="Task ID")):
     """
     task = task_repo.get_by_id(task_id)
     return task
+
 
 @router.get("/{task_id}/skills")
 @auth(role="authenticated")
@@ -92,11 +97,12 @@ async def get_task_skills(task_id: str = Path(..., description="Task ID")):
     skills = skill_repo.get_task_skills(task_id)
     return skills
 
+
 @router.put("/{task_id}/skills")
 @auth(role="supervisor", owner_id_key="task_id")
 async def update_task_skills(
     task_id: str = Path(..., description="Task ID"),
-    skill_ids: List[str] = Body(..., description="List of skill IDs to set for this task")
+    skill_ids: List[str] = Body(..., description="List of skill IDs to set for this task"),
 ):
     """
     Update skills for a task.
@@ -133,7 +139,9 @@ async def update_task_skills(
 
         # If some skills were locked, include a warning message
         if isinstance(result, dict) and result.get("locked"):
-            result["message"] = "Sommige skills konden niet worden verwijderd omdat er al aanmeldingen zijn voor deze taak."
+            result["message"] = (
+                "Sommige skills konden niet worden verwijderd omdat er al aanmeldingen zijn voor deze taak."
+            )
         elif isinstance(result, dict):
             result["message"] = "Skills succesvol bijgewerkt"
         else:
@@ -144,6 +152,7 @@ async def update_task_skills(
         print(f"Error updating skills for task {task_id}: {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de skills")
 
+
 @router.get("/{task_id}/registrations")
 @auth(role="supervisor", owner_id_key="task_id")
 async def get_registrations(task_id: str = Path(..., description="Task ID")):
@@ -152,6 +161,7 @@ async def get_registrations(task_id: str = Path(..., description="Task ID")):
     """
     registrations = task_repo.get_registrations(task_id)
     return registrations
+
 
 @router.get("/{task_id}/registrations/all")
 @auth(role="supervisor", owner_id_key="task_id")
@@ -166,12 +176,13 @@ async def get_all_registrations(task_id: str = Path(..., description="Task ID"))
     registrations = task_repo.get_all_registrations(task_id)
     return registrations
 
+
 @router.post("/{task_id}/registrations")
 @auth(role="student")
 async def create_registration(
     request: Request,
     task_id: str = Path(..., description="Task ID"),
-    registration: RegistrationCreate = Body(..., description="The motivation for registration")
+    registration: RegistrationCreate = Body(..., description="The motivation for registration"),
 ):
     """
     Create a new registration for a student to a task
@@ -192,7 +203,7 @@ async def create_registration(
 
     # check if the student is already registered for this task
     existing_registrations = user_repo.get_student_registrations(student_id)
-    existing_task_ids = [reg.get('id') for reg in existing_registrations]
+    existing_task_ids = [reg.get("id") for reg in existing_registrations]
     if task_id in existing_task_ids:
         raise HTTPException(status_code=400, detail="Je bent al geregistreerd voor deze taak")
 
@@ -200,17 +211,20 @@ async def create_registration(
         task_repo.create_registration(task_id, student_id, registration.motivation)
         return {"message": "Registratie succesvol aangemaakt"}
     except Exception as e:
-        if (hasattr(e, 'status_code')):
+        if hasattr(e, "status_code"):
             raise HTTPException(status_code=e.status_code, detail=str(e))
         print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het registreren.")
+
 
 @router.put("/{task_id}/registrations/{student_id}")
 @auth(role="supervisor", owner_id_key="task_id")
 async def update_registration(
     task_id: str = Path(..., description="Task ID"),
     student_id: str = Path(..., description="Student ID"),
-    registration: RegistrationUpdate = Body(..., description="Whether the registration is accepted or rejected, and optional response")
+    registration: RegistrationUpdate = Body(
+        ..., description="Whether the registration is accepted or rejected, and optional response"
+    ),
 ):
     """
     Update a registration status (accept/reject) with optional response
@@ -227,15 +241,15 @@ async def update_registration(
         task_repo.update_registration(task_id, student_id, registration.accepted, registration.response)
         return {"message": "Registratie succesvol bijgewerkt"}
     except Exception as e:
-        if (hasattr(e, 'status_code')):
+        if hasattr(e, "status_code"):
             raise HTTPException(status_code=e.status_code, detail=str(e))
         print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het bijwerken van de registratie.")
 
+
 @router.delete("/{task_id}/registrations")
 async def cancel_registration(
-    task_id: str = Path(..., description="Task ID"),
-    payload: dict = Depends(get_token_payload)
+    task_id: str = Path(..., description="Task ID"), payload: dict = Depends(get_token_payload)
 ):
     """
     Cancel a pending registration for a task (only if not yet accepted/rejected)
@@ -250,8 +264,7 @@ async def cancel_registration(
         deleted = task_repo.delete_registration(task_id, student_id)
         if not deleted:
             raise HTTPException(
-                status_code=404,
-                detail="Aanmelding niet gevonden of al verwerkt (geaccepteerd/afgewezen)"
+                status_code=404, detail="Aanmelding niet gevonden of al verwerkt (geaccepteerd/afgewezen)"
             )
         return {"message": "Aanmelding succesvol geannuleerd"}
     except HTTPException:
@@ -259,25 +272,19 @@ async def cancel_registration(
     except Exception as e:
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het annuleren van de aanmelding")
 
+
 @router.post("/{project_id}", response_model=Task, status_code=201)
 @auth(role="supervisor", owner_id_key="project_id")
-async def create_task(
-    project_id: str = Path(..., description="Project ID"),
-    task_create: TaskCreate = Body(...)
-):
+async def create_task(project_id: str = Path(..., description="Project ID"), task_create: TaskCreate = Body(...)):
     """
     Create a new task
     """
     if not is_valid_length(task_create.name, 100):
-        raise HTTPException(
-            status_code=400,
-            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
-        )
+        raise HTTPException(status_code=400, detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen.")
 
     if not is_valid_length(task_create.description, 4000, strip_md=True):
         raise HTTPException(
-            status_code=400,
-            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+            status_code=400, detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     try:
@@ -297,18 +304,15 @@ async def create_task(
         if start_date and project_start and start_date < project_start:
             raise HTTPException(
                 status_code=400,
-                detail=f"Taak startdatum ({start_date.strftime('%d-%m-%Y')}) kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen."
+                detail=f"Taak startdatum ({start_date.strftime('%d-%m-%Y')}) kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen.",
             )
         if end_date and project_end and end_date > project_end:
             raise HTTPException(
                 status_code=400,
-                detail=f"Taak einddatum ({end_date.strftime('%d-%m-%Y')}) kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen."
+                detail=f"Taak einddatum ({end_date.strftime('%d-%m-%Y')}) kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen.",
             )
         if start_date and end_date and start_date > end_date:
-            raise HTTPException(
-                status_code=400,
-                detail="Startdatum kan niet na de einddatum liggen."
-            )
+            raise HTTPException(status_code=400, detail="Startdatum kan niet na de einddatum liggen.")
 
         task = Task(
             id=None,  # ID will be generated by repository
@@ -318,7 +322,7 @@ async def create_task(
             project_id=project_id,
             created_at=datetime.now(),
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
         )
 
         created_task = task_repo.create(task)
@@ -326,10 +330,11 @@ async def create_task(
     except HTTPException:
         raise
     except Exception as e:
-        if (hasattr(e, 'status_code')):
+        if hasattr(e, "status_code"):
             raise HTTPException(status_code=e.status_code, detail=str(e))
         print(f"{type(e)} - {e}")
         raise HTTPException(status_code=400, detail="Er is iets misgegaan bij het aanmaken van de taak.")
+
 
 @router.put("/{task_id}")
 @auth(role="supervisor", owner_id_key="task_id")
@@ -345,15 +350,11 @@ async def update_task(
     Update task information.
     """
     if not is_valid_length(name, 100):
-        raise HTTPException(
-            status_code=400,
-            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
-        )
+        raise HTTPException(status_code=400, detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen.")
 
     if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
-            status_code=400,
-            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+            status_code=400, detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Verify task exists
@@ -367,13 +368,13 @@ async def update_task(
 
     if start_date and start_date.strip():
         try:
-            parsed_start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            parsed_start = datetime.fromisoformat(start_date.replace("Z", "+00:00"))
         except ValueError:
             raise HTTPException(status_code=400, detail="Ongeldige startdatum formaat.")
 
     if end_date and end_date.strip():
         try:
-            parsed_end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            parsed_end = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
         except ValueError:
             raise HTTPException(status_code=400, detail="Ongeldige einddatum formaat.")
 
@@ -391,12 +392,12 @@ async def update_task(
             if parsed_start and project_start and parsed_start < project_start:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Taak startdatum kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen."
+                    detail=f"Taak startdatum kan niet voor de project startdatum ({project_start.strftime('%d-%m-%Y')}) liggen.",
                 )
             if parsed_end and project_end and parsed_end > project_end:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Taak einddatum kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen."
+                    detail=f"Taak einddatum kan niet na de project einddatum ({project_end.strftime('%d-%m-%Y')}) liggen.",
                 )
 
     # Validate start before end
@@ -414,8 +415,7 @@ async def update_task(
 @router.patch("/{task_id}/registrations/{student_id}/start")
 @auth(role="supervisor", owner_id_key="task_id")
 async def mark_registration_started(
-    task_id: str = Path(..., description="Task ID"),
-    student_id: str = Path(..., description="Student ID")
+    task_id: str = Path(..., description="Task ID"), student_id: str = Path(..., description="Student ID")
 ):
     """
     Mark a registration as started.
@@ -434,8 +434,10 @@ async def mark_registration_started(
 @router.patch("/{task_id}/registrations/{student_id}/complete")
 @auth(role="supervisor", owner_id_key="task_id")
 async def mark_registration_completed(
+    request: Request,
     task_id: str = Path(..., description="Task ID"),
-    student_id: str = Path(..., description="Student ID")
+    student_id: str = Path(..., description="Student ID"),
+    completion: RegistrationCompletionRequest | None = Body(default=None),
 ):
     """
     Mark a registration as completed (student finished the task).
@@ -445,8 +447,26 @@ async def mark_registration_completed(
     - A teacher
     """
     try:
-        task_repo.mark_registration_completed(task_id, student_id)
+        review_text = (completion.review_text or "").strip() if completion else ""
+        rating = completion.rating if completion else None
+        if rating is not None and not review_text:
+            raise HTTPException(status_code=400, detail="Reviewtekst is verplicht wanneer een beoordeling wordt meegestuurd.")
+        if review_text and completion.public_review_notice_accepted is not True:
+            raise HTTPException(
+                status_code=400, detail="Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient."
+            )
+        task_repo.mark_registration_completed(
+            task_id,
+            student_id,
+            reviewer_id=request.state.user_id,
+            reviewer_role=request.state.user_role,
+            review_text=review_text or None,
+            public_review_notice_accepted=completion.public_review_notice_accepted if completion else False,
+            rating=rating,
+        )
         return {"message": "Taak gemarkeerd als voltooid en toegevoegd aan portfolio"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Kon taak niet als voltooid markeren: {str(e)}")
 
@@ -454,8 +474,7 @@ async def mark_registration_completed(
 @router.patch("/{task_id}/registrations/{student_id}/revert-start")
 @auth(role="supervisor", owner_id_key="task_id")
 async def revert_registration_started(
-    task_id: str = Path(..., description="Task ID"),
-    student_id: str = Path(..., description="Student ID")
+    task_id: str = Path(..., description="Task ID"), student_id: str = Path(..., description="Student ID")
 ):
     """
     Revert a started registration back to accepted.
@@ -474,8 +493,7 @@ async def revert_registration_started(
 @router.patch("/{task_id}/registrations/{student_id}/revert-completion")
 @auth(role="supervisor", owner_id_key="task_id")
 async def revert_registration_completed(
-    task_id: str = Path(..., description="Task ID"),
-    student_id: str = Path(..., description="Student ID")
+    task_id: str = Path(..., description="Task ID"), student_id: str = Path(..., description="Student ID")
 ):
     """
     Revert a completed registration back to started.
@@ -495,7 +513,7 @@ async def revert_registration_completed(
 async def get_registration_timeline(
     task_id: str = Path(..., description="Task ID"),
     student_id: str = Path(..., description="Student ID"),
-    payload: dict = Depends(get_token_payload)
+    payload: dict = Depends(get_token_payload),
 ):
     """
     Get the full timeline for a registration.

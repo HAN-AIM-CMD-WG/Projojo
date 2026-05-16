@@ -178,6 +178,17 @@ class Db:
             tx.commit()
 
     @staticmethod
+    def write_transact_many(queries: list[tuple[str, dict[str, Any] | None]]):
+        """Execute multiple write queries in one transaction."""
+        Db.ensure_connection()
+        built_queries = [build_query(query, params, allow_none=True) if params else query for query, params in queries]
+        assert Db.driver is not None
+        with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
+            for query in built_queries:
+                tx.query(query).resolve()
+            tx.commit()
+
+    @staticmethod
     def close():
         if Db.driver is not None:
             Db.driver.close()

@@ -574,13 +574,17 @@
 
     /* --- Input Fields - Verfijnd --- */
     .neu-input {
-        @apply outline-none transition-all duration-200;
+        @apply outline-none;
         background: var(--neu-bg);
         color: var(--text-secondary);
         font-weight: 600;
         border-radius: 1rem;
         padding: 1rem 1.5rem;
         box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
+    }
+
+    .neu-input:not(textarea) {
+        @apply transition-all duration-200;
     }
 
     .neu-input::placeholder {

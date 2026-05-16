@@ -894,11 +894,13 @@ export function markTaskStarted(taskId, studentId) {
  * Mark a task registration as completed (supervisor/teacher only)
  * @param {string} taskId
  * @param {string} studentId
+ * @param {{review_text?: string, rating?: number, public_review_notice_accepted?: boolean}=} completion
  * @returns {Promise<{message: string}>}
  */
-export function markTaskCompleted(taskId, studentId) {
+export function markTaskCompleted(taskId, studentId, completion) {
     return fetchWithError(`${API_BASE_URL}tasks/${taskId}/registrations/${studentId}/complete`, {
         method: "PATCH",
+        body: completion ? JSON.stringify(completion) : undefined,
     });
 }
 

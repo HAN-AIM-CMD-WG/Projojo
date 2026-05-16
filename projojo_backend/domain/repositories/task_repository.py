@@ -605,7 +605,16 @@ class TaskRepository(BaseRepository[Task]):
             "started_at": started_at
         })
 
-    def mark_registration_completed(self, task_id: str, student_id: str) -> None:
+    def mark_registration_completed(
+        self,
+        task_id: str,
+        student_id: str,
+        reviewer_id: str | None = None,
+        reviewer_role: str | None = None,
+        review_text: str | None = None,
+        public_review_notice_accepted: bool = False,
+        rating: int | None = None,
+    ) -> None:
         """
         Mark a registration as completed (student finished the task).
         Sets the completedAt timestamp for portfolio and timeline tracking.
@@ -634,11 +643,196 @@ class TaskRepository(BaseRepository[Task]):
                 $registration has completedAt ~completed_at;
         """
         
+        if review_text:
+            if not reviewer_id:
+                raise ValueError("Reviewer ontbreekt voor reviewtekst")
+            if public_review_notice_accepted is not True:
+                raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
+            self._create_completion_portfolio_review(task_id, student_id, reviewer_id, reviewer_role, review_text, rating, completed_at)
+            return
+
         Db.write_transact(query, {
             "task_id": task_id,
             "student_id": student_id,
             "completed_at": completed_at
         })
+
+    def _create_completion_portfolio_review(
+        self,
+        task_id: str,
+        student_id: str,
+        reviewer_id: str,
+        reviewer_role: str | None,
+        review_text: str,
+        rating: int | None,
+        completed_at: datetime,
+    ) -> None:
+        if reviewer_role not in {"teacher", "supervisor"}:
+            raise ValueError("Alleen docenten en begeleiders kunnen portfolio-reviews schrijven")
+
+        context_query = """
+            match
+                $student isa student, has id ~student_id;
+                $task isa task, has id ~task_id, has name $task_name, has description $task_description;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has id $registration_id,
+                    has startedAt $started_at;
+                not { $registration has completedAt $existing_completed; };
+                $project isa project, has id $project_id, has name $project_name, has description $project_description;
+                $contains_task isa containsTask (project: $project, task: $task);
+                $business isa business, has id $business_id, has name $business_name, has location $business_location;
+                $has_projects isa hasProjects (business: $business, project: $project);
+                $reviewer isa __reviewer_role__, has id ~reviewer_id;
+            fetch {
+                'registration_id': $registration_id,
+                'task_name': $task_name,
+                'task_description': $task_description,
+                'project_id': $project_id,
+                'project_name': $project_name,
+                'project_description': $project_description,
+                'business_id': $business_id,
+                'business_name': $business_name,
+                'business_location': $business_location,
+                'started_at': $started_at,
+                'skills': [
+                    match
+                        $requires_skill isa requiresSkill (task: $task, skill: $skill);
+                    fetch { 'name': $skill.name };
+                ]
+            };
+        """.replace("__reviewer_role__", reviewer_role)
+        context_rows = Db.read_transact(
+            context_query,
+            {"task_id": task_id, "student_id": student_id, "reviewer_id": reviewer_id},
+            sort_fields=False,
+        )
+        if not context_rows:
+            raise ValueError("Portfolio-context voor afronding niet gevonden")
+
+        context = context_rows[0]
+        item_id = generate_uuid()
+        review_id = generate_uuid()
+        now = datetime.now()
+        skill_lines = []
+        params = {
+            "student_id_for_item": student_id,
+            "reviewer_id": reviewer_id,
+            "item_id": item_id,
+            "item_created_at": now,
+            "item_completed_at": completed_at,
+            "source_registration_id": self._one(context.get("registration_id")),
+            "source_task_id": task_id,
+            "source_project_id": self._one(context.get("project_id")),
+            "source_business_id": self._one(context.get("business_id")),
+            "task_name": self._one(context.get("task_name")),
+            "task_description": self._one(context.get("task_description")),
+            "project_name": self._one(context.get("project_name")),
+            "project_description": self._one(context.get("project_description")),
+            "business_name": self._one(context.get("business_name")),
+            "business_location": self._one(context.get("business_location")),
+            "timeline_start_date": self._datetime_value(self._one(context.get("started_at"))),
+            "timeline_end_date": completed_at,
+            "review_id": review_id,
+            "review_text": review_text,
+            "rating": rating,
+            "review_created_at": now,
+            "review_updated_at": now,
+            "public_notice_accepted_at": now,
+        }
+
+        for index, skill in enumerate(context.get("skills", [])):
+            key = f"skill_name_{index}"
+            skill_lines.append(f"            has skillName ~{key},")
+            params[key] = self._one(skill.get("name"))
+
+        skill_attrs = "\n".join(skill_lines)
+        query = f"""
+            match
+                $student isa student, has id ~student_id_for_item;
+                $task isa task, has id ~source_task_id_for_match;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has id ~source_registration_id_for_match,
+                    has completedAt ~registration_completed_at;
+                $reviewer isa {reviewer_role}, has id ~reviewer_id;
+            insert
+                $item isa portfolioItem,
+                    has id ~item_id,
+                    has createdAt ~item_created_at,
+                    has completedAt ~item_completed_at,
+                    has sourceRegistrationId ~source_registration_id,
+                    has sourceTaskId ~source_task_id,
+                    has sourceProjectId ~source_project_id,
+                    has sourceBusinessId ~source_business_id,
+                    has taskName ~task_name,
+                    has taskDescription ~task_description,
+                    has projectName ~project_name,
+                    has projectDescription ~project_description,
+                    has businessName ~business_name,
+                    has businessLocation ~business_location,
+{skill_attrs}
+                    has timelineStartDate ~timeline_start_date,
+                    has timelineEndDate ~timeline_end_date,
+                    has isRetired false,
+                    has isHidden false,
+                    has isAuthenticatedPublicRetraction false,
+                    has isWorldVisible false,
+                    has sourceTaskArchived false,
+                    has sourceProjectArchived false,
+                    has sourceBusinessArchived false;
+                $ownership isa hasPortfolio (student: $student, item: $item);
+                $review isa portfolioReview,
+                    has id ~review_id,
+                    has reviewText ~review_text,
+                    has rating ~rating,
+                    has createdAt ~review_created_at,
+                    has updatedAt ~review_updated_at,
+                    has isWorldVisible false,
+                    has publicNoticeAcceptedAt ~public_notice_accepted_at;
+                $review_link isa hasPortfolioReview (item: $item, review: $review);
+                $author_link isa portfolioReviewAuthor (review: $review, author: $reviewer);
+        """
+        complete_query = """
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task),
+                    has isAccepted true,
+                    has startedAt $started_at;
+                not { $registration has completedAt $existing_completed; };
+            update
+                $registration has completedAt ~completed_at;
+        """
+        insert_params = {
+            **params,
+            "source_task_id_for_match": task_id,
+            "source_registration_id_for_match": params["source_registration_id"],
+            "registration_completed_at": completed_at,
+        }
+        Db.write_transact_many([
+            (complete_query, {
+                "task_id": task_id,
+                "student_id": student_id,
+                "completed_at": completed_at,
+            }),
+            (query, insert_params),
+        ])
+
+    def _one(self, value, default=None):
+        if isinstance(value, list):
+            return value[0] if value else default
+        return default if value is None else value
+
+    def _datetime_value(self, value):
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, str):
+            normalized = value
+            if "." in normalized and "+" in normalized:
+                prefix, timezone = normalized.rsplit("+", 1)
+                date_part, fraction = prefix.split(".", 1)
+                normalized = f"{date_part}.{fraction[:6]}+{timezone}"
+            return datetime.fromisoformat(normalized)
+        return value
 
     def revert_registration_started(self, task_id: str, student_id: str) -> None:
         """
@@ -685,7 +879,18 @@ class TaskRepository(BaseRepository[Task]):
         if state["completed_at"] is None:
             raise ValueError("Registratie is nog niet voltooid")
 
-        query = """
+        registration_rows = Db.read_transact("""
+            match
+                $task isa task, has id ~task_id;
+                $student isa student, has id ~student_id;
+                $registration isa registersForTask (student: $student, task: $task), has id $registration_id;
+            fetch { 'registration_id': $registration_id };
+        """, {"task_id": task_id, "student_id": student_id}, sort_fields=False)
+        if not registration_rows:
+            raise ValueError("Registratie niet gevonden")
+        registration_id = self._one(registration_rows[0].get("registration_id"))
+
+        delete_completion_query = """
             match
                 $task isa task, has id ~task_id;
                 $student isa student, has id ~student_id;
@@ -696,11 +901,27 @@ class TaskRepository(BaseRepository[Task]):
             delete
                 has $completed_at of $registration;
         """
+        unretire_flag_query = """
+            match
+                $item isa portfolioItem, has sourceRegistrationId ~source_registration_id, has isRetired $is_retired;
+            delete
+                has $is_retired of $item;
+        """
+        retire_item_query = """
+            match
+                $item isa portfolioItem, has sourceRegistrationId ~source_registration_id;
+            update
+                $item has isRetired true;
+                $item has retiredAt ~retired_at;
+        """
 
-        Db.write_transact(query, {
-            "task_id": task_id,
-            "student_id": student_id,
-        })
+        params = {"task_id": task_id, "student_id": student_id}
+        retire_params = {"source_registration_id": registration_id}
+        Db.write_transact_many([
+            (delete_completion_query, params),
+            (unretire_flag_query, retire_params),
+            (retire_item_query, {**retire_params, "retired_at": datetime.now()}),
+        ])
 
     def get_registration_timeline(self, task_id: str, student_id: str) -> dict | None:
         """

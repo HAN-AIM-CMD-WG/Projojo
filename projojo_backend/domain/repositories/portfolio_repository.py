@@ -3,9 +3,69 @@ import re
 from typing import Any
 
 from db.initDatabase import Db
+from service.uuid_service import generate_uuid
 
 
 class PortfolioRepository:
+    def create_review(
+        self,
+        item_id: str,
+        author_id: str,
+        author_role: str,
+        business_id: str | None,
+        review_text: str,
+        public_review_notice_accepted: bool,
+        rating: int | None = None,
+    ) -> str:
+        if author_role not in {"teacher", "supervisor"}:
+            raise PermissionError("Alleen docenten en begeleiders kunnen portfolio-reviews schrijven.")
+        if public_review_notice_accepted is not True:
+            raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
+
+        item_business_id = self._get_item_business_id(item_id)
+        if item_business_id is None:
+            raise ValueError("Portfolio-item niet gevonden.")
+        if author_role == "supervisor" and item_business_id != business_id:
+            raise PermissionError("Je hebt hier geen rechten voor.")
+
+        review_id = generate_uuid()
+        now = datetime.now()
+        query = f"""
+            match
+                $item isa portfolioItem, has id ~item_id;
+                $author isa {author_role}, has id ~author_id;
+            insert
+                $review isa portfolioReview,
+                    has id ~review_id,
+                    has reviewText ~review_text,
+                    has rating ~rating,
+                    has createdAt ~created_at,
+                    has updatedAt ~updated_at,
+                    has isWorldVisible false,
+                    has publicNoticeAcceptedAt ~public_notice_accepted_at;
+                $review_link isa hasPortfolioReview (item: $item, review: $review);
+                $author_link isa portfolioReviewAuthor (review: $review, author: $author);
+        """
+        Db.write_transact(query, {
+            "item_id": item_id,
+            "author_id": author_id,
+            "review_id": review_id,
+            "review_text": review_text,
+            "rating": rating,
+            "created_at": now,
+            "updated_at": now,
+            "public_notice_accepted_at": now,
+        })
+        return review_id
+
+    def _get_item_business_id(self, item_id: str) -> str | None:
+        rows = Db.read_transact("""
+            match
+                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id;
+            fetch { 'business_id': $business_id };
+        """, {"item_id": item_id}, sort_fields=False)
+        return self._one(rows[0].get("business_id")) if rows else None
+
     def get_student_identity(self, student_id: str) -> dict[str, Any] | None:
         query = """
             match

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 
 from auth.permissions import auth
-from domain.models.portfolio import PortfolioResponse
+from domain.models.portfolio import PortfolioResponse, PortfolioReviewCreateRequest
 from domain.repositories.portfolio_repository import PortfolioRepository
 
 
@@ -9,89 +9,35 @@ router = APIRouter(tags=["Portfolio Endpoints"])
 portfolio_repo = PortfolioRepository()
 
 
-@router.get(
-    "/portfolios/students/{student_id}",
-    response_model=PortfolioResponse,
-    responses={
-        200: {
-            "description": "Authenticated canonical portfolio baseline. Includes viewer role, allowed student identity fields, item collection shape, review collection shape, curation fields, visibility reasons, and archived-source metadata.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "viewer_role": "teacher",
-                        "student": {
-                            "id": "student-id",
-                            "full_name": "Student Name",
-                            "image_path": "default.svg",
-                            "portfolio_summary": "Short portfolio summary",
-                            "portfolio_slug": "student-slug",
-                            "is_portfolio_world_public": False,
-                        },
-                        "items": [
-                            {
-                                "id": "portfolio-item-id",
-                                "created_at": "2026-02-20T17:05:00+00:00",
-                                "completed_at": "2026-02-20T17:00:00+00:00",
-                                "source_registration_id": "registration-id",
-                                "source_task_id": "task-id",
-                                "source_project_id": "project-id",
-                                "source_business_id": "business-id",
-                                "task": {"name": "Task", "description": "Copied task description"},
-                                "project": {"name": "Project", "description": "Copied project description"},
-                                "business": {"name": "Business", "location": "Arnhem"},
-                                "skills": ["Skill"],
-                                "timeline_start_date": "2026-01-20T09:00:00+00:00",
-                                "timeline_end_date": "2026-02-20T17:00:00+00:00",
-                                "curation": {
-                                    "is_retired": False,
-                                    "retired_at": None,
-                                    "is_hidden": False,
-                                    "hidden_at": None,
-                                    "hidden_by_role": None,
-                                    "hidden_by_user_id": None,
-                                    "display_order": 1,
-                                    "is_authenticated_public_retraction": False,
-                                    "is_world_visible": False,
-                                },
-                                "archived_source": {"task": False, "project": False, "business": False},
-                                "visibility": {"viewer_can_see": True, "reason": "visible_to_authenticated_viewer"},
-                                "reviews": [
-                                    {
-                                        "id": "portfolio-review-id",
-                                        "item_id": "portfolio-item-id",
-                                        "review_text": "Constructive portfolio review.",
-                                        "rating": 4,
-                                        "created_at": "2026-02-20T18:00:00+00:00",
-                                        "updated_at": "2026-02-20T18:00:00+00:00",
-                                        "is_world_visible": False,
-                                        "public_notice_accepted_at": "2026-02-20T18:00:00+00:00",
-                                        "author": {"id": "teacher-id", "role": "teacher", "full_name": "Teacher Name"},
-                                    }
-                                ],
-                            }
-                        ],
-                        "reviews": [
-                            {
-                                "id": "portfolio-review-id",
-                                "item_id": "portfolio-item-id",
-                                "review_text": "Constructive portfolio review.",
-                                "rating": 4,
-                                "created_at": "2026-02-20T18:00:00+00:00",
-                                "updated_at": "2026-02-20T18:00:00+00:00",
-                                "is_world_visible": False,
-                                "public_notice_accepted_at": "2026-02-20T18:00:00+00:00",
-                                "author": {"id": "teacher-id", "role": "teacher", "full_name": "Teacher Name"},
-                            }
-                        ],
-                    }
-                }
-            },
-        },
-        401: {"description": "Authentication required", "content": {"application/json": {"example": {"detail": "Je moet ingelogd zijn om deze actie uit te kunnen voeren."}}}},
-        403: {"description": "No portfolio relationship", "content": {"application/json": {"example": {"detail": "Je hebt hier geen rechten voor."}}}},
-        404: {"description": "Student not found", "content": {"application/json": {"example": {"detail": "Portfolio niet gevonden"}}}},
-    },
-)
+@router.post("/portfolio-items/{item_id}/reviews", status_code=status.HTTP_201_CREATED)
+@auth(role="supervisor")
+async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateRequest, request: Request):
+    review_text = review.review_text.strip()
+    if not review_text:
+        raise HTTPException(status_code=400, detail="Reviewtekst is verplicht.")
+    if review.public_review_notice_accepted is not True:
+        raise HTTPException(
+            status_code=400, detail="Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient."
+        )
+
+    try:
+        review_id = portfolio_repo.create_review(
+            item_id=item_id,
+            author_id=request.state.user_id,
+            author_role=request.state.user_role,
+            business_id=request.state.business_id,
+            review_text=review_text,
+            public_review_notice_accepted=review.public_review_notice_accepted,
+            rating=review.rating,
+        )
+        return {"id": review_id}
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.get("/portfolios/students/{student_id}", response_model=PortfolioResponse)
 @auth(role="authenticated")
 async def get_authenticated_student_portfolio(student_id: str, request: Request):
     student = portfolio_repo.get_student_identity(student_id)
@@ -120,14 +66,6 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
     }
 
 
-@router.get(
-    "/portfolio/{slug}",
-    responses={
-        404: {
-            "description": "Public portfolio is private by default or not found. The response intentionally omits item and review collections.",
-            "content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}},
-        }
-    },
-)
+@router.get("/portfolio/{slug}")
 async def get_public_portfolio(slug: str):
     raise HTTPException(status_code=404, detail="Portfolio niet publiek")

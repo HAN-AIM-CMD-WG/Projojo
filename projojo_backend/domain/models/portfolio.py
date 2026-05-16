@@ -54,6 +54,12 @@ class PortfolioReviewAuthor(BaseModel):
     full_name: str
 
 
+class PortfolioReviewCreateRequest(BaseModel):
+    review_text: str
+    rating: int | None = Field(default=None, ge=1, le=5)
+    public_review_notice_accepted: bool = False
+
+
 class PortfolioReviewResponse(BaseModel):
     id: str
     item_id: str

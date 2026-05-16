@@ -12,6 +12,7 @@ export default function Modal({
     const modalRef = useRef(null);
     const closeButtonRef = useRef(null);
     const previousActiveElement = useRef(null);
+    const hasFocusedOnOpen = useRef(false);
     const titleId = useId();
 
     const handleClickOutside = () => {
@@ -52,20 +53,24 @@ export default function Modal({
 
     useEffect(() => {
         if (isModalOpen) {
-            // Store currently focused element to restore later
-            previousActiveElement.current = document.activeElement;
+            if (!hasFocusedOnOpen.current) {
+                // Store currently focused element to restore later
+                previousActiveElement.current = document.activeElement;
+
+                // Focus the close button after a short delay to ensure modal is rendered
+                setTimeout(() => {
+                    closeButtonRef.current?.focus();
+                }, 0);
+                hasFocusedOnOpen.current = true;
+            }
 
             // Prevent body scroll
             document.body.style.overflow = 'hidden';
 
             // Add keyboard listener
             document.addEventListener('keydown', handleKeyDown);
-
-            // Focus the close button after a short delay to ensure modal is rendered
-            setTimeout(() => {
-                closeButtonRef.current?.focus();
-            }, 0);
         } else {
+            hasFocusedOnOpen.current = false;
             document.body.style.overflow = 'auto';
             document.removeEventListener('keydown', handleKeyDown);
 
