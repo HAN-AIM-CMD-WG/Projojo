@@ -7,10 +7,76 @@ const PUBLIC_DISCOVERY_URL = `${FRONTEND_URL}/publiek`;
 const PROOF_SEED_MARKER = 'PROJOJO_E2E_INFRASTRUCTURE_V1';
 const PROOF_BUSINESS_NAME = 'E2E Infrastructure Business';
 const PROOF_PROJECT_NAME = 'E2E Infrastructure Proof Project';
+const PROOF_BUSINESS_ID = '30000000-0000-4000-8000-000000000001';
 const PROOF_PROJECT_ID = '40000000-0000-4000-8000-000000000001';
+const PROOF_TASK_ID = '50000000-0000-4000-8000-000000000001';
 const PROOF_SUPERVISOR_NAME = 'Sanne Testbegeleider';
 const E2E_TEACHER_ID = '20000000-0000-4000-8000-000000000001';
 const E2E_STUDENT_ID = '20000000-0000-4000-8000-000000000002';
+const ARCHIVED_SOURCE_BUSINESS_ID = '30000000-0000-4000-8000-000000000003';
+const ARCHIVED_SOURCE_PROJECT_ID = '40000000-0000-4000-8000-000000000002';
+const ARCHIVED_SOURCE_TASK_ID = '50000000-0000-4000-8000-000000000002';
+const ARCHIVED_SOURCE_REGISTRATION_ID = 'pf-seed-registration-archived-source';
+
+const PORTFOLIO_SEED_ALIASES = Object.freeze({
+  actors: Object.freeze({
+    student: Object.freeze({ alias: 'portfolio-owner-student', id: E2E_STUDENT_ID, fullName: 'Tom Teststudent' }),
+    teacher: Object.freeze({ alias: 'portfolio-teacher', id: E2E_TEACHER_ID, fullName: 'Tessa Testdocent' }),
+    relatedSupervisor: Object.freeze({ alias: 'portfolio-related-supervisor', id: '20000000-0000-4000-8000-000000000003', fullName: 'Sanne Testbegeleider' }),
+    unrelatedSupervisor: Object.freeze({ alias: 'portfolio-unrelated-supervisor', id: '20000000-0000-4000-8000-000000000004', fullName: 'Umar Onverwant' }),
+  }),
+  businesses: Object.freeze({
+    related: Object.freeze({ alias: 'portfolio-related-business', id: PROOF_BUSINESS_ID, name: 'E2E Infrastructure Business' }),
+    unrelated: Object.freeze({ alias: 'portfolio-unrelated-business', id: '30000000-0000-4000-8000-000000000002', name: 'Portfolio Unrelated Business' }),
+    archivedSource: Object.freeze({ alias: 'portfolio-archived-source-business', id: ARCHIVED_SOURCE_BUSINESS_ID, name: 'Portfolio Archived Source Business' }),
+  }),
+  source: Object.freeze({
+    registration: Object.freeze({ alias: 'portfolio-completed-registration', id: 'pf-seed-registration-completed' }),
+    task: Object.freeze({ alias: 'portfolio-source-task', id: PROOF_TASK_ID }),
+    project: Object.freeze({ alias: 'portfolio-source-project', id: PROOF_PROJECT_ID }),
+    business: Object.freeze({ alias: 'portfolio-source-business', id: PROOF_BUSINESS_ID }),
+    archivedRegistration: Object.freeze({ alias: 'portfolio-archived-source-registration', id: ARCHIVED_SOURCE_REGISTRATION_ID }),
+    archivedTask: Object.freeze({ alias: 'portfolio-archived-source-task', id: ARCHIVED_SOURCE_TASK_ID }),
+    archivedProject: Object.freeze({ alias: 'portfolio-archived-source-project', id: ARCHIVED_SOURCE_PROJECT_ID }),
+    archivedBusiness: Object.freeze({ alias: 'portfolio-archived-source-business-record', id: ARCHIVED_SOURCE_BUSINESS_ID }),
+  }),
+  items: Object.freeze({
+    noRatings: Object.freeze({ alias: 'portfolio-item-no-ratings', id: 'pf-seed-item-no-ratings' }),
+    allRatingsGood: Object.freeze({ alias: 'portfolio-item-all-ratings-good', id: 'pf-seed-item-all-ratings-good' }),
+    lowRating: Object.freeze({ alias: 'portfolio-item-low-rating', id: 'pf-seed-item-low-rating' }),
+    hidden: Object.freeze({ alias: 'portfolio-item-hidden', id: 'pf-seed-item-hidden' }),
+    retractedAuthenticatedPublic: Object.freeze({ alias: 'portfolio-item-retracted-authenticated-public', id: 'pf-seed-item-retracted-authenticated-public' }),
+    worldPublicSelected: Object.freeze({ alias: 'portfolio-item-world-public-selected', id: 'pf-seed-item-world-public-selected' }),
+    archivedSource: Object.freeze({ alias: 'portfolio-item-archived-source', id: 'pf-seed-item-archived-source' }),
+  }),
+  reviews: Object.freeze({
+    noRating: Object.freeze({ alias: 'portfolio-review-no-rating', id: 'pf-seed-review-no-rating' }),
+    goodTeacher: Object.freeze({ alias: 'portfolio-review-good-teacher', id: 'pf-seed-review-good-teacher' }),
+    goodSupervisor: Object.freeze({ alias: 'portfolio-review-good-supervisor', id: 'pf-seed-review-good-supervisor' }),
+    lowRating: Object.freeze({ alias: 'portfolio-review-low-rating', id: 'pf-seed-review-low-rating' }),
+    hidden: Object.freeze({ alias: 'portfolio-review-hidden', id: 'pf-seed-review-hidden' }),
+    retracted: Object.freeze({ alias: 'portfolio-review-retracted', id: 'pf-seed-review-retracted' }),
+    worldPublicSelected: Object.freeze({ alias: 'portfolio-review-world-public-selected', id: 'pf-seed-review-world-public-selected' }),
+    archivedSource: Object.freeze({ alias: 'portfolio-review-archived-source', id: 'pf-seed-review-archived-source' }),
+  }),
+  ratingStates: Object.freeze({
+    noRatings: Object.freeze({ alias: 'portfolio-rating-state-no-ratings', itemId: 'pf-seed-item-no-ratings' }),
+    allRatingsAtLeastThree: Object.freeze({ alias: 'portfolio-rating-state-all-ratings-at-least-three', itemId: 'pf-seed-item-all-ratings-good' }),
+    belowThree: Object.freeze({ alias: 'portfolio-rating-state-below-three', itemId: 'pf-seed-item-low-rating' }),
+  }),
+  publicSlugs: Object.freeze({
+    existing: Object.freeze({ alias: 'portfolio-public-slug-existing', slug: 'portfolio-seed-world-public' }),
+    unused: Object.freeze({ alias: 'portfolio-public-slug-unused', slug: 'portfolio-seed-unused-slug' }),
+  }),
+  archivedSourceState: Object.freeze({
+    alias: 'portfolio-archived-source-state',
+    itemId: 'pf-seed-item-archived-source',
+    registrationId: ARCHIVED_SOURCE_REGISTRATION_ID,
+    taskId: ARCHIVED_SOURCE_TASK_ID,
+    projectId: ARCHIVED_SOURCE_PROJECT_ID,
+    businessId: ARCHIVED_SOURCE_BUSINESS_ID,
+  }),
+});
 
 module.exports = {
   FRONTEND_URL,
@@ -20,8 +86,11 @@ module.exports = {
   PROOF_SEED_MARKER,
   PROOF_BUSINESS_NAME,
   PROOF_PROJECT_NAME,
+  PROOF_BUSINESS_ID,
   PROOF_PROJECT_ID,
+  PROOF_TASK_ID,
   PROOF_SUPERVISOR_NAME,
   E2E_TEACHER_ID,
   E2E_STUDENT_ID,
+  PORTFOLIO_SEED_ALIASES,
 };
