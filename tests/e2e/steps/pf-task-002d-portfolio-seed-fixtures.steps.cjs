@@ -311,6 +311,7 @@ def probe() -> dict:
         'reviewsByItem': {key: reviews_for_item(value['id']) for key, value in ALIASES['items'].items()},
         'slugs': {
             'existing': slug_rows(ALIASES['publicSlugs']['existing']['slug']),
+            'private': slug_rows(ALIASES['publicSlugs']['private']['slug']),
             'unused': slug_rows(ALIASES['publicSlugs']['unused']['slug']),
         },
         'unrelatedSourceLinks': unrelated_source_links(),
@@ -520,11 +521,14 @@ Then('the portfolio seed should support baseline lookup by aliases without gener
   }
 });
 
-Then('the portfolio seed should include existing and unused public slug fixtures', function () {
+Then('the portfolio seed should include existing, private, and unused public slug fixtures', function () {
   const result = getSeedResult(this);
 
   assert.equal(result.slugs.existing.length, 1, 'Expected the existing public slug to be occupied for duplicate-slug tests');
   assert.equal(result.slugs.existing[0].portfolio_slug, PORTFOLIO_SEED_ALIASES.publicSlugs.existing.slug);
+  assert.equal(result.slugs.private.length, 1, 'Expected the private public slug to be occupied for private-by-default tests');
+  assert.equal(result.slugs.private[0].portfolio_slug, PORTFOLIO_SEED_ALIASES.publicSlugs.private.slug);
+  assert.deepEqual(result.slugs.private[0].is_portfolio_world_public, [false]);
   assert.equal(result.slugs.unused.length, 0, 'Expected the unused public slug alias to be available for successful-update tests');
 });
 

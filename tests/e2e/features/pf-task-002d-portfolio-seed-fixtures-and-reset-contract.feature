@@ -18,5 +18,5 @@ Feature: PF-task-002d portfolio seed fixtures and reset contract
   Scenario: Reset contract supports later portfolio API baseline tests
     Given the deterministic portfolio seed fixtures are loaded
     Then the portfolio seed should support baseline lookup by aliases without generated IDs
-    And the portfolio seed should include existing and unused public slug fixtures
+    And the portfolio seed should include existing, private, and unused public slug fixtures
     And the portfolio reset and verification commands should be documented near the seed contract

@@ -32,6 +32,15 @@ insert
         has portfolioSlug "portfolio-seed-world-public",
         has isPortfolioWorldPublic true;
 
+    $portfolio_private_student isa student,
+        has id "20000000-0000-4000-8000-000000000005",
+        has email "portfolio.private.student@projojo.local",
+        has fullName "Priya Priveportfolio",
+        has imagePath "default.svg",
+        has portfolioSummary "Private-by-default portfolio slug fixture.",
+        has portfolioSlug "portfolio-seed-private",
+        has isPortfolioWorldPublic false;
+
     $supervisor isa supervisor,
         has id "20000000-0000-4000-8000-000000000003",
         has email "supervisor.e2e@projojo.local",
@@ -50,6 +59,9 @@ insert
 
     $student_auth isa oauthAuthentication (user: $student, provider: $provider_google),
         has oauthSub "e2e-student-google-sub";
+
+    $portfolio_private_student_auth isa oauthAuthentication (user: $portfolio_private_student, provider: $provider_google),
+        has oauthSub "portfolio-private-student-google-sub";
 
     $supervisor_auth isa oauthAuthentication (user: $supervisor, provider: $provider_github),
         has oauthSub "e2e-supervisor-github-sub";

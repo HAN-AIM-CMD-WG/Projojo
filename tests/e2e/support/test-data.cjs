@@ -21,6 +21,7 @@ const ARCHIVED_SOURCE_REGISTRATION_ID = 'pf-seed-registration-archived-source';
 const PORTFOLIO_SEED_ALIASES = Object.freeze({
   actors: Object.freeze({
     student: Object.freeze({ alias: 'portfolio-owner-student', id: E2E_STUDENT_ID, fullName: 'Tom Teststudent' }),
+    privateStudent: Object.freeze({ alias: 'portfolio-private-student', id: '20000000-0000-4000-8000-000000000005', fullName: 'Priya Priveportfolio' }),
     teacher: Object.freeze({ alias: 'portfolio-teacher', id: E2E_TEACHER_ID, fullName: 'Tessa Testdocent' }),
     relatedSupervisor: Object.freeze({ alias: 'portfolio-related-supervisor', id: '20000000-0000-4000-8000-000000000003', fullName: 'Sanne Testbegeleider' }),
     unrelatedSupervisor: Object.freeze({ alias: 'portfolio-unrelated-supervisor', id: '20000000-0000-4000-8000-000000000004', fullName: 'Umar Onverwant' }),
@@ -66,6 +67,7 @@ const PORTFOLIO_SEED_ALIASES = Object.freeze({
   }),
   publicSlugs: Object.freeze({
     existing: Object.freeze({ alias: 'portfolio-public-slug-existing', slug: 'portfolio-seed-world-public' }),
+    private: Object.freeze({ alias: 'portfolio-public-slug-private', slug: 'portfolio-seed-private' }),
     unused: Object.freeze({ alias: 'portfolio-public-slug-unused', slug: 'portfolio-seed-unused-slug' }),
   }),
   archivedSourceState: Object.freeze({

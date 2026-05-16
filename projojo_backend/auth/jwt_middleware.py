@@ -19,6 +19,7 @@ EXCLUDED_ENDPOINTS = [
     # Public discovery endpoints (no authentication required)
     "/projects/public",  # List all public projects
     "/projects/public/*",  # Get specific public project
+    "/portfolio/*",  # Public portfolio slug guard
     "/themes",  # List all themes (public)
     "/themes/*",  # Get specific theme (public for GET)
 
