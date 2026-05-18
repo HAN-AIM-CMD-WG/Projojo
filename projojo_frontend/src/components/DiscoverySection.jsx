@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getPublicProjects, getThemes, IMAGE_BASE_URL } from '../services';
+import { getPublicProjects, getThemes } from '../services';
 import PublicProjectCard from './PublicProjectCard';
 import SkeletonList from './SkeletonList';
 

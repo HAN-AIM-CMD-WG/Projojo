@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthProvider';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { getBusinessById, IMAGE_BASE_URL, updateBusiness } from '../services';
+import { getBusinessById, getImageUrl, updateBusiness } from '../services';
 import useFetch from '../useFetch';
 
 /**
@@ -122,7 +122,7 @@ export default function UpdateBusinessPage() {
                     <DragDrop
                         name="image"
                         accept="image/*"
-                        initialFilePath={business?.image_path ? IMAGE_BASE_URL + business.image_path : null}
+                        initialFilePath={getImageUrl(business?.image_path)}
                     />
                 </div>
 

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { IMAGE_BASE_URL } from '../services';
+import { DEFAULT_PROJECT_IMAGE, getProjectImageUrl } from '../services';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
 import RichTextViewer from "./RichTextViewer";
@@ -116,8 +116,9 @@ export default function ProjectCard({ project, index = 0 }) {
         <div className="h-40 w-full relative overflow-hidden">
           <img
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            src={`${IMAGE_BASE_URL}${project.image_path}`}
+            src={getProjectImageUrl(project.image_path)}
             alt={project.title || project.name}
+            onError={(e) => { e.currentTarget.src = DEFAULT_PROJECT_IMAGE; }}
           />
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import useBookmarks from '../hooks/useBookmarks';
-import { getStudentRegistrations, getTaskSkills, cancelRegistration, getProject, IMAGE_BASE_URL, getBusinessLogoUrl } from '../services';
+import { DEFAULT_PROJECT_IMAGE, getImageUrl, getProjectImageUrl, getStudentRegistrations, getTaskSkills, cancelRegistration, getProject, getBusinessLogoUrl } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
@@ -469,15 +469,14 @@ function TeacherDashboard() {
                         {savedProjects.map((project) => (
                             <div key={project.id} className="neu-flat overflow-hidden flex flex-col">
                                 {/* Project image */}
-                                {project.image_path && (
-                                    <Link to={`/projects/${project.id}`} className="block">
-                                        <img
-                                            src={`${IMAGE_BASE_URL}${project.image_path}`}
-                                            alt={project.name}
-                                            className="w-full h-36 object-cover hover:scale-[1.02] transition-transform"
-                                        />
-                                    </Link>
-                                )}
+                                <Link to={`/projects/${project.id}`} className="block">
+                                    <img
+                                        src={getProjectImageUrl(project.image_path)}
+                                        alt={project.name}
+                                        className="w-full h-36 object-cover hover:scale-[1.02] transition-transform"
+                                        onError={(e) => { e.currentTarget.src = DEFAULT_PROJECT_IMAGE; }}
+                                    />
+                                </Link>
                                 <div className="p-4 flex-1 flex flex-col">
                                     {/* Business info */}
                                     {project.business && (
@@ -628,6 +627,7 @@ function TaskCard({ task, status, onCancel, isExpanded = false }) {
         .split(' ')
         .slice(0, 40)
         .join(' ') + (cleanDescription.split(' ').length > 40 ? '...' : '');
+    const businessImage = getImageUrl(task.business_image);
 
     // Build the correct link
     const linkTo = task.project_id 
@@ -642,11 +642,12 @@ function TaskCard({ task, status, onCancel, isExpanded = false }) {
             {/* Business info */}
             {task.business_name && (
                 <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gray-100">
-                    {task.business_image ? (
+                    {businessImage ? (
                         <img 
-                            src={`${IMAGE_BASE_URL}${task.business_image}`}
+                            src={businessImage}
                             alt={task.business_name}
                             className="w-8 h-8 rounded-lg object-cover shrink-0 ring-1 ring-gray-200"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                     ) : (
                         <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">

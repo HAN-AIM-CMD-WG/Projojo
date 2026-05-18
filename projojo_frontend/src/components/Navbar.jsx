@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { IMAGE_BASE_URL, getUser, getBusinessById } from "../services";
+import { DEFAULT_PROFILE_IMAGE, getProfileImageUrl, getUser, getBusinessById } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import BusinessLogo from "./BusinessLogo";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Navbar() {
     const { authData, logout } = useAuth();
-    const [profilePicture, setProfilePicture] = useState("/default_profile_picture.png");
+    const [profilePicture, setProfilePicture] = useState(DEFAULT_PROFILE_IMAGE);
     const [businessData, setBusinessData] = useState(null);
     const [isCollapsed, setIsCollapsed] = useState(true);
     const navigate = useNavigate();
@@ -56,10 +56,10 @@ export default function Navbar() {
             getUser(authData.userId)
                 .then(data => {
                     if (ignore) return;
-                    setProfilePicture(`${IMAGE_BASE_URL}${data.image_path}`);
+                    setProfilePicture(getProfileImageUrl(data.image_path));
                 })
                 .catch(() => {
-                    // Keep default profile picture
+                    if (!ignore) setProfilePicture(DEFAULT_PROFILE_IMAGE);
                 });
         }
         
@@ -245,6 +245,7 @@ export default function Navbar() {
                                                     src={profilePicture} 
                                                     className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
                                                     alt="Profielfoto" 
+                                                    onError={(e) => { e.currentTarget.src = DEFAULT_PROFILE_IMAGE; }}
                                                 />
                                             </div>
                                             <div className="neu-status-online absolute bottom-0 right-0"></div>
@@ -257,6 +258,7 @@ export default function Navbar() {
                                                     src={profilePicture} 
                                                     className="w-full h-full rounded-full object-cover neu-pressed p-0.5" 
                                                     alt="Profielfoto" 
+                                                    onError={(e) => { e.currentTarget.src = DEFAULT_PROFILE_IMAGE; }}
                                                 />
                                             </div>
                                             <div className="neu-status-online absolute bottom-0 right-0"></div>

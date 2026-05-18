@@ -5,7 +5,7 @@ import { getSupervisorDashboard, updateRegistration } from '../services';
 import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
-import { IMAGE_BASE_URL } from '../services';
+import { DEFAULT_PROFILE_IMAGE, DEFAULT_PROJECT_IMAGE, getProfileImageUrl, getProjectImageUrl } from '../services';
 
 /**
  * Supervisor Dashboard - Shows business projects, pending registrations and active students
@@ -340,11 +340,11 @@ function RegistrationCard({ registration, onUpdate }) {
                 {/* Left: Student info */}
                 <div className="flex items-start gap-4 lg:w-1/4">
                     <img 
-                        src={`${IMAGE_BASE_URL}${registration.student_image}`}
+                        src={getProfileImageUrl(registration.student_image)}
                         alt={registration.student_name}
                         className="w-14 h-14 rounded-full object-cover neu-pressed flex-shrink-0"
                         onError={(e) => {
-                            e.target.src = '/default_profile_picture.png';
+                            e.currentTarget.src = DEFAULT_PROFILE_IMAGE;
                         }}
                     />
                     <div>
@@ -487,11 +487,11 @@ function ActiveStudentCard({ student }) {
             {/* Student header */}
             <div className="flex items-center gap-4 mb-4">
                 <img 
-                    src={`${IMAGE_BASE_URL}${student.student_image}`}
+                    src={getProfileImageUrl(student.student_image)}
                     alt={student.student_name}
                     className="w-14 h-14 rounded-full object-cover neu-pressed"
                     onError={(e) => {
-                        e.target.src = '/default_profile_picture.png';
+                        e.currentTarget.src = DEFAULT_PROFILE_IMAGE;
                     }}
                 />
                 <div className="flex-1 min-w-0">
@@ -544,11 +544,11 @@ function ProjectCard({ project, pendingCount = 0 }) {
                 {/* Project image */}
                 <div className="w-24 h-24 flex-shrink-0 relative">
                     <img 
-                        src={`${IMAGE_BASE_URL}${project.image_path || 'project_technology.png'}`}
+                        src={getProjectImageUrl(project.image_path)}
                         alt={project.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                            e.target.src = `${IMAGE_BASE_URL}project_technology.png`;
+                            e.currentTarget.src = DEFAULT_PROJECT_IMAGE;
                         }}
                     />
                     {/* Pending badge overlay */}

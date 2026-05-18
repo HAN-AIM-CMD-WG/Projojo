@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../services";
+import { API_BASE_URL, DEFAULT_PROFILE_IMAGE, getProfileImageUrl, hasUsableImage } from "../services";
 import { notification } from "./notifications/NotifySystem";
 
 const ROLE_CONFIG = {
@@ -131,11 +131,12 @@ export default function TestUserSelector() {
 													: 'hover:bg-primary/5 hover:translate-x-1'
 										}`}
 									>
-										{user.image_path ? (
+										{hasUsableImage(user.image_path) ? (
 											<img
-												src={`${API_BASE_URL}image/${user.image_path}`}
+												src={getProfileImageUrl(user.image_path)}
 												alt={user.full_name}
 												className="w-8 h-8 rounded-full object-cover shrink-0"
+												onError={(e) => { e.currentTarget.src = DEFAULT_PROFILE_IMAGE; }}
 											/>
 										) : (
 											<div className={`w-8 h-8 rounded-full ${config.color} flex items-center justify-center shrink-0`}>

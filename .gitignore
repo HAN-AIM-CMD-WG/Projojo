@@ -80,3 +80,5 @@ node_modules
 projojo_backend/static/images/*
 projojo_backend/static/pdf/*
 !projojo_backend/static/images/__init__.py
+!projojo_backend/static/images/default.png
+!projojo_backend/static/images/supervisor_male.png

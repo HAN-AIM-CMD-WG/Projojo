@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getPublicProjects, getPublicProject, getThemes, IMAGE_BASE_URL } from '../services';
+import { DEFAULT_PROJECT_IMAGE, getProjectImageUrl, getPublicProjects, getPublicProject, getThemes } from '../services';
 import PublicProjectCard from '../components/PublicProjectCard';
 import SkeletonList from '../components/SkeletonList';
 import Loading from '../components/Loading';
@@ -503,9 +503,10 @@ function PublicProjectDetail({ projectId }) {
             {/* Hero header with image */}
             <header className="relative h-56 md:h-72">
                 <img
-                    src={`${IMAGE_BASE_URL}${project.image_path}`}
+                    src={getProjectImageUrl(project.image_path)}
                     alt={project.name}
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.currentTarget.src = DEFAULT_PROJECT_IMAGE; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
                 

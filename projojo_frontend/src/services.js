@@ -1,15 +1,29 @@
 export const API_BASE_URL = "http://localhost:8000/";
 export const IMAGE_BASE_URL = `${API_BASE_URL}image/`;
 export const PDF_BASE_URL = `${API_BASE_URL}pdf/`;
+export const DEFAULT_PROFILE_IMAGE = "/default_profile_picture.png";
+export const DEFAULT_PROJECT_IMAGE = `${IMAGE_BASE_URL}project_technology.png`;
 
 const PLACEHOLDER_IMAGES = new Set(["default.png", "logo_placeholder.png"]);
 
-function hasUsableImage(imagePath) {
+export function hasUsableImage(imagePath) {
     return (
         typeof imagePath === "string"
         && imagePath.trim() !== ""
         && !PLACEHOLDER_IMAGES.has(imagePath)
     );
+}
+
+export function getImageUrl(imagePath, fallbackUrl = null) {
+    return hasUsableImage(imagePath) ? `${IMAGE_BASE_URL}${imagePath}` : fallbackUrl;
+}
+
+export function getProjectImageUrl(imagePath) {
+    return getImageUrl(imagePath, DEFAULT_PROJECT_IMAGE);
+}
+
+export function getProfileImageUrl(imagePath) {
+    return getImageUrl(imagePath, DEFAULT_PROFILE_IMAGE);
 }
 
 function extractDomain(website) {

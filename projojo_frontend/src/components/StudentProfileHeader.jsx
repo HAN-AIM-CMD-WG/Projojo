@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { IMAGE_BASE_URL } from "../services";
+import { DEFAULT_PROFILE_IMAGE, getProfileImageUrl } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 
 export default function StudentProfileHeader({ student }) {
     const { authData } = useAuth();
     const isOwnProfile = authData.type === "student" && authData.userId === student.id;
+    const profileImage = getProfileImageUrl(student?.image_path);
 
     // Calculate profile completeness
     const calculateCompleteness = () => {
@@ -45,9 +46,10 @@ export default function StudentProfileHeader({ student }) {
                             aria-label="Profielfoto wijzigen"
                         >
                             <img 
-                                src={student?.image_path ? `${IMAGE_BASE_URL}${student?.image_path}` : "/loading.gif"} 
+                                src={profileImage} 
                                 alt={student?.full_name || "Profielfoto"} 
                                 className="w-28 h-28 rounded-full neu-flat p-2 object-cover relative z-10 transition-all group-hover/avatar:brightness-75"
+                                onError={(e) => { e.currentTarget.src = DEFAULT_PROFILE_IMAGE; }}
                             />
                             {/* Hover overlay with camera icon */}
                             <div className="absolute inset-0 flex items-center justify-center z-20 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
@@ -58,9 +60,10 @@ export default function StudentProfileHeader({ student }) {
                         </Link>
                     ) : (
                         <img 
-                            src={student?.image_path ? `${IMAGE_BASE_URL}${student?.image_path}` : "/loading.gif"} 
+                            src={profileImage} 
                             alt={student?.full_name || "Profielfoto"} 
                             className="w-28 h-28 rounded-full neu-flat p-2 object-cover relative z-10"
+                            onError={(e) => { e.currentTarget.src = DEFAULT_PROFILE_IMAGE; }}
                         />
                     )}
                     {/* Online indicator */}

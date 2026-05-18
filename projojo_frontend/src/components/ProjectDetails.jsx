@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createTask, IMAGE_BASE_URL, getBusinessLogoUrl, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
+import { createTask, DEFAULT_PROJECT_IMAGE, getBusinessLogoUrl, getProjectImageUrl, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
 import useBookmarks from "../hooks/useBookmarks";
@@ -244,8 +244,9 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                     <div className="relative w-full h-full rounded-xl overflow-hidden">
                         <img
                             className="w-full h-full object-cover"
-                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                            src={isLoading ? '/loading.gif' : getProjectImageUrl(project.image_path)}
                             alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                            onError={(e) => { e.currentTarget.src = DEFAULT_PROJECT_IMAGE; }}
                         />
                         {/* Subtle vignette overlay for depth */}
                         <div className="absolute inset-0 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]" />

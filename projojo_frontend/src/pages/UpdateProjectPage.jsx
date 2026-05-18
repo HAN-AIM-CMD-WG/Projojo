@@ -6,7 +6,7 @@ import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
 import RichTextEditor from '../components/RichTextEditor';
-import { getProject, IMAGE_BASE_URL, updateProject } from '../services';
+import { getProject, getProjectImageUrl, updateProject } from '../services';
 import useFetch from '../useFetch';
 import Loading from '../components/Loading';
 
@@ -127,7 +127,7 @@ export default function UpdateProjectPage() {
                     name="image"
                     accept="image"
                     label="Projectafbeelding"
-                    initialFilePath={IMAGE_BASE_URL + (projectData.image_path || projectData.image_path)}
+                    initialFilePath={getProjectImageUrl(projectData.image_path)}
                 />
                 <div className='grid grid-cols-2 gap-2'>
                     <button className="btn-secondary flex-grow" type="button" onClick={() => navigation(-1)}>Annuleren</button>

@@ -9,7 +9,7 @@ import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import SkeletonList from "../components/SkeletonList";
 import Tooltip from "../components/Tooltip";
-import { createTeacherInviteKey, createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
+import { createTeacherInviteKey, createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness } from "../services";
 
 export default function TeacherPage() {
     const { authData } = useAuth();

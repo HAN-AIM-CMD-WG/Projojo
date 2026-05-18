@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import { Link } from 'react-router-dom';
 import L from 'leaflet';
-import { IMAGE_BASE_URL } from '../services';
+import { getImageUrl } from '../services';
 import { useTheme } from '../context/ThemeContext';
 
 // Custom coral marker icon SVG
@@ -307,11 +307,12 @@ export default function OverviewMap({
                                     <div className="font-sans min-w-[200px]">
                                         <div className="flex items-start gap-3">
                                             {/* Business logo */}
-                                            {loc.image && loc.image !== 'default.png' ? (
+                                            {getImageUrl(loc.image) ? (
                                                 <img 
-                                                    src={`${IMAGE_BASE_URL}${loc.image}`}
+                                                    src={getImageUrl(loc.image)}
                                                     alt=""
                                                     className="w-10 h-10 rounded-lg object-cover shrink-0"
+                                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                                 />
                                             ) : (
                                                 <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'linear-gradient(135deg, rgba(255,127,80,0.2) 0%, rgba(255,127,80,0.05) 100%)' }}>

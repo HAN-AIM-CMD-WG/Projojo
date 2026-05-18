@@ -5,7 +5,7 @@ import RichTextEditor from "../../components/RichTextEditor";
 import PdfPreview from "../../components/PdfPreview";
 import { getUser, updateStudent } from "../../services";
 import useFetch from "../../useFetch";
-import { IMAGE_BASE_URL, PDF_BASE_URL } from "../../services";
+import { DEFAULT_PROFILE_IMAGE, PDF_BASE_URL, getProfileImageUrl } from "../../services";
 import { notification } from "../../components/notifications/NotifySystem";
 
 /**
@@ -47,7 +47,7 @@ export default function UpdateStudentPage() {
                 setDescription(data.description || '');
             }
             if (data.image_path && !photoPreview) {
-                setPhotoPreview(IMAGE_BASE_URL + data.image_path);
+                setPhotoPreview(getProfileImageUrl(data.image_path));
             }
             if (data.cv_path && !cvPreview && !cvDeleted) {
                 setCvPreview(PDF_BASE_URL + data.cv_path);
@@ -183,6 +183,7 @@ export default function UpdateStudentPage() {
                                             src={photoPreview} 
                                             alt="Profielfoto" 
                                             className="w-full h-full object-cover rounded-full"
+                                            onError={(e) => { e.currentTarget.src = DEFAULT_PROFILE_IMAGE; }}
                                         />
                                     ) : (
                                         <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">

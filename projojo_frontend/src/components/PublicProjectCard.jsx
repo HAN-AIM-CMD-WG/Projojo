@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { IMAGE_BASE_URL } from '../services';
+import { DEFAULT_PROJECT_IMAGE, getProjectImageUrl } from '../services';
 import { getCountdownText } from "../utils/dates";
 
 /**
@@ -37,9 +37,10 @@ export default function PublicProjectCard({ project, index = 0 }) {
                 <div className="h-40 sm:h-44 w-full relative overflow-hidden">
                     <img
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        src={`${IMAGE_BASE_URL}${project.image_path}`}
+                        src={getProjectImageUrl(project.image_path)}
                         alt={project.name}
                         loading="lazy"
+                        onError={(e) => { e.currentTarget.src = DEFAULT_PROJECT_IMAGE; }}
                     />
                     {/* Gradient overlay */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
