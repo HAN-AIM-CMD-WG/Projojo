@@ -37,7 +37,80 @@ async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateReq
         raise HTTPException(status_code=400, detail=str(error))
 
 
-@router.get("/portfolios/students/{student_id}", response_model=PortfolioResponse)
+@router.get(
+    "/portfolios/students/{student_id}",
+    response_model=PortfolioResponse,
+    responses={
+        200: {
+            "content": {
+                "application/json": {
+                    "example": {
+                        "viewer_role": "teacher",
+                        "student": {
+                            "id": "20000000-0000-4000-8000-000000000002",
+                            "full_name": "Tom Teststudent",
+                            "image_path": "/images/students/tom-teststudent.png",
+                            "portfolio_summary": "Leert door praktijkprojecten.",
+                            "portfolio_slug": "portfolio-seed-world-public",
+                            "is_portfolio_world_public": True,
+                        },
+                        "items": [
+                            {
+                                "id": "pf-seed-item-no-ratings",
+                                "created_at": "2026-02-20T17:05:00+00:00",
+                                "completed_at": "2026-02-20T17:00:00+00:00",
+                                "source_registration_id": "pf-seed-registration-completed",
+                                "source_task_id": "50000000-0000-4000-8000-000000000001",
+                                "source_project_id": "40000000-0000-4000-8000-000000000001",
+                                "source_business_id": "30000000-0000-4000-8000-000000000001",
+                                "task": {"name": "Infrastructure Proof Task", "description": "Task evidence copied at completion."},
+                                "project": {"name": "E2E Infrastructure Proof Project", "description": "Project evidence copied at completion."},
+                                "business": {"name": "E2E Infrastructure Business", "location": "Arnhem"},
+                                "skills": ["Samenwerken"],
+                                "timeline_start_date": "2026-01-20T09:00:00+00:00",
+                                "timeline_end_date": "2026-02-20T17:00:00+00:00",
+                                "curation": {
+                                    "is_retired": False,
+                                    "retired_at": None,
+                                    "is_hidden": False,
+                                    "hidden_at": None,
+                                    "hidden_by_role": None,
+                                    "hidden_by_user_id": None,
+                                    "display_order": 1,
+                                    "is_authenticated_public_retraction": False,
+                                    "is_world_visible": False,
+                                },
+                                "archived_source": {"task": False, "project": False, "business": False},
+                                "visibility": {"viewer_can_see": True, "reason": "visible_to_authenticated_viewer"},
+                                "reviews": [],
+                            }
+                        ],
+                        "reviews": [
+                            {
+                                "id": "pf-seed-review-good-teacher",
+                                "item_id": "pf-seed-item-all-ratings-good",
+                                "review_text": "Sterke afronding met duidelijke reflectie.",
+                                "rating": 5,
+                                "created_at": "2026-02-20T17:10:00+00:00",
+                                "updated_at": "2026-02-20T17:10:00+00:00",
+                                "is_world_visible": False,
+                                "public_notice_accepted_at": "2026-02-20T17:09:00+00:00",
+                                "author": {
+                                    "id": "20000000-0000-4000-8000-000000000001",
+                                    "role": "teacher",
+                                    "full_name": "Tessa Testdocent",
+                                },
+                            }
+                        ],
+                    }
+                }
+            }
+        },
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Je hebt hier geen rechten voor."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio niet gevonden"}}}},
+    },
+)
 @auth(role="authenticated")
 async def get_authenticated_student_portfolio(student_id: str, request: Request):
     student = portfolio_repo.get_student_identity(student_id)
@@ -66,6 +139,9 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
     }
 
 
-@router.get("/portfolio/{slug}")
+@router.get(
+    "/portfolio/{slug}",
+    responses={404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}}},
+)
 async def get_public_portfolio(slug: str):
     raise HTTPException(status_code=404, detail="Portfolio niet publiek")

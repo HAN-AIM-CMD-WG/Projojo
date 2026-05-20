@@ -45,6 +45,24 @@ for registration_id in [
 ]:
     Db.write_transact(f"""
 match
+  $item isa portfolioItem, has sourceRegistrationId "{registration_id}";
+  $review_link isa hasPortfolioReview (item: $item, review: $review);
+  $author_link isa portfolioReviewAuthor (review: $review, author: $author);
+delete
+  $author_link;
+  $review_link;
+  $review;
+""")
+    Db.write_transact(f"""
+match
+  $item isa portfolioItem, has sourceRegistrationId "{registration_id}";
+  $ownership isa hasPortfolio (student: $student, item: $item);
+delete
+  $ownership;
+  $item;
+""")
+    Db.write_transact(f"""
+match
   $registration isa registersForTask, has id "{registration_id}", has completedAt $completed_at;
 delete
   has $completed_at of $registration;
@@ -391,10 +409,10 @@ When('I submit the PF-task-012b completion review form', async function () {
   await submitButton.waitFor({ state: 'hidden' });
 });
 
-When('I submit the PF-task-012b completion without review', async function () {
+Then('the PF-task-012b completion without review action should not be available', async function () {
   const completeButton = this.playwright.page.getByRole('button', { name: 'Afronden zonder review' });
-  await completeButton.click();
-  await completeButton.waitFor({ state: 'hidden' });
+  await this.playwright.page.getByRole('dialog').waitFor({ state: 'visible' });
+  assert.equal(await completeButton.count(), 0, 'Expected supervisors not to see a completion-without-review action');
 });
 
 Then('the latest PF-task-012b API response status should be {int}', function (expectedStatus) {

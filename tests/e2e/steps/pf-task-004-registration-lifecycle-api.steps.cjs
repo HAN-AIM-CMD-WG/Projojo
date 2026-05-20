@@ -84,6 +84,28 @@ print(json.dumps({'timeline': timeline, 'items': items}, default=str))
 const RESET_LIFECYCLE_FIXTURES = String.raw`
 from db.initDatabase import Db
 
+Db.write_transact("""
+match
+  $item isa portfolioItem, has sourceRegistrationId $registration_id;
+  $registration_id like "pf-task-004-.*";
+  $review_link isa hasPortfolioReview (item: $item, review: $review);
+  $author_link isa portfolioReviewAuthor (review: $review, author: $author);
+delete
+  $author_link;
+  $review_link;
+  $review;
+""")
+
+Db.write_transact("""
+match
+  $item isa portfolioItem, has sourceRegistrationId $registration_id;
+  $registration_id like "pf-task-004-.*";
+  $ownership isa hasPortfolio (student: $student, item: $item);
+delete
+  $ownership;
+  $item;
+""")
+
 for attribute_type in ['isAccepted', 'response', 'acceptedAt', 'startedAt', 'completedAt']:
     Db.write_transact(f"""
 match
@@ -233,12 +255,23 @@ async function requestLifecycleAction(world, action, fixtureName, headers = {}) 
   assert.ok(pathSegment, `Unknown PF-task-004 lifecycle action '${action}'`);
 
   const fixture = fixtureFor(fixtureName);
+  const actor = getState(world).actor;
+  const body = action === 'complete' && actor?.alias?.includes('supervisor')
+    ? {
+        review_text: `PF-task-004 supervisor lifecycle completion ${Date.now()}`,
+        public_review_notice_accepted: true,
+      }
+    : undefined;
+  const requestHeaders = {
+    Accept: 'application/json',
+    ...headers,
+  };
+  if (body) requestHeaders['Content-Type'] = 'application/json';
+
   const response = await fetch(`${BACKEND_URL}/tasks/${fixture.taskId}/registrations/${studentId}/${pathSegment}`, {
     method: 'PATCH',
-    headers: {
-      Accept: 'application/json',
-      ...headers,
-    },
+    headers: requestHeaders,
+    body: body ? JSON.stringify(body) : undefined,
   });
 
   rememberLatestApiResponse(world, response, await readJsonSafely(response));

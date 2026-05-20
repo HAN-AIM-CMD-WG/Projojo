@@ -48,7 +48,7 @@ class RegistrationUpdate(BaseModel):
     response: str = ""
 
 class RegistrationCompletionRequest(BaseModel):
-    review_text: str | None = None
+    review_text: str | None = Field(default=None, max_length=2000, description="Optional completion review text, max 2000 characters.")
     rating: int | None = Field(default=None, ge=1, le=5)
     public_review_notice_accepted: bool = False
 

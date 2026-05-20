@@ -57,6 +57,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isSavingSkills, setIsSavingSkills] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
+    const supervisorCompletionRequiresReview = authData.type === "supervisor";
 
     const isFull = task.total_accepted >= task.total_needed;
 
@@ -916,6 +917,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
                         <label className="flex flex-col gap-2 text-sm font-bold text-[var(--text-primary)]">
                             Reviewtekst
+                            {supervisorCompletionRequiresReview && (
+                                <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                                    Verplicht voor begeleiders bij het afronden van een registratie.
+                                </span>
+                            )}
                             <textarea
                                 className="neu-input min-h-28 resize-y font-normal"
                                 value={completionReviewText}
@@ -937,14 +943,16 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         </label>
 
                         <div className="flex flex-wrap items-center justify-end gap-3 pt-2 border-t border-[var(--neu-border)]">
-                            <button
-                                type="button"
-                                className="neu-btn mr-auto"
-                                onClick={() => completionReviewStudentId && handleMarkCompleted(completionReviewStudentId)}
-                                disabled={progressLoading[completionReviewStudentId] === 'completing'}
-                            >
-                                Afronden zonder review
-                            </button>
+                            {!supervisorCompletionRequiresReview && (
+                                <button
+                                    type="button"
+                                    className="neu-btn mr-auto"
+                                    onClick={() => completionReviewStudentId && handleMarkCompleted(completionReviewStudentId)}
+                                    disabled={progressLoading[completionReviewStudentId] === 'completing'}
+                                >
+                                    Afronden zonder review
+                                </button>
+                            )}
                             <button type="button" className="neu-btn" onClick={closeCompletionReviewDialog}>
                                 Annuleren
                             </button>

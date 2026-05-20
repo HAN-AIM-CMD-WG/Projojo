@@ -110,8 +110,8 @@ Feature: PF-task-012b reviewer public-use notice enforcement
     And the persisted PF-task-012b review should store a public notice accepted timestamp
 
   @ui @portfolio @pf-task-012b
-  Scenario: Completion remains possible without submitting review text
+  Scenario: Supervisor completion without review text is prevented by the completion review rules
     Given I am authenticated in the browser as the PF-task-012b related portfolio supervisor
     When I open the PF-task-012b completion dialog for "supervisorCompletionAllowed"
-    And I submit the PF-task-012b completion without review
-    Then the PF-task-012b completion state for "supervisorCompletionAllowed" should have a completed timestamp
+    Then the PF-task-012b completion without review action should not be available
+    And the PF-task-012b completion state for "supervisorCompletionAllowed" should not have a completed timestamp

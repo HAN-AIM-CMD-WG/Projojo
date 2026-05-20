@@ -449,13 +449,15 @@ async def mark_registration_completed(
     try:
         review_text = (completion.review_text or "").strip() if completion else ""
         rating = completion.rating if completion else None
+        if request.state.user_role == "supervisor" and not review_text:
+            raise HTTPException(status_code=400, detail="Reviewtekst is verplicht wanneer een begeleider een registratie afrondt.")
         if rating is not None and not review_text:
             raise HTTPException(status_code=400, detail="Reviewtekst is verplicht wanneer een beoordeling wordt meegestuurd.")
         if review_text and completion.public_review_notice_accepted is not True:
             raise HTTPException(
                 status_code=400, detail="Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient."
             )
-        task_repo.mark_registration_completed(
+        portfolio_item_id = task_repo.mark_registration_completed(
             task_id,
             student_id,
             reviewer_id=request.state.user_id,
@@ -464,7 +466,7 @@ async def mark_registration_completed(
             public_review_notice_accepted=completion.public_review_notice_accepted if completion else False,
             rating=rating,
         )
-        return {"message": "Taak gemarkeerd als voltooid en toegevoegd aan portfolio"}
+        return {"message": "Taak gemarkeerd als voltooid en toegevoegd aan portfolio", "portfolio_item_id": portfolio_item_id}
     except HTTPException:
         raise
     except Exception as e:
