@@ -76,7 +76,7 @@ Related story issues:
 - **ARCH-task-019 / #336 — Seed Data for Archive Scenarios**
   - moved to **AI Review**
   - verified locally
-  - **not committed/pushed separately yet** because it currently depends on broader unstaged schema/backend changes
+  - now included in a broader review checkpoint commit because it depends on schema/model/query work in the same archive slice
 
 - **ARCH-task-002 / #319 — Domain Models and Datetime Serialization**
   - continued locally
@@ -90,6 +90,8 @@ Related story issues:
     - typed archived-list route response models in business/project/task routers
     - typed archive/restore action response models in business/task restore flows and business/task archive flows
     - typed restore action response model for project restore
+  - checkpoint committed as:
+    - `407b77f` — `ARCH-002/019: checkpoint archive contract and seed foundations`
 
 ---
 
@@ -115,11 +117,13 @@ When a future Archiving task starts, I should:
 - started **ARCH-002** model-contract work in `projojo_backend/domain/models/archive.py`
 - continued **ARCH-002** by wiring the new archive models into backend exports and several archive/list/restore route response contracts
 - verified the touched backend files compile with `python -m py_compile`
+- committed the current archive foundations checkpoint as:
+  - `407b77f` — `ARCH-002/019: checkpoint archive contract and seed foundations`
 
 **Confirmed not yet done in this session:**
 
-- ARCH-019 is **not safely isolated for standalone push yet**
 - ARCH-002 is **started but not finished**
+- current checkpoint still needs push / board alignment after commit
 
 ### Next recommended active tasks
 
