@@ -66,8 +66,7 @@ export default function ProjectDetailsPage() {
 
     if (!projectId || showNotFound) return <NotFoundPage />
 
-    // Detect archived: explicitly archived, completed status, or end_date in the past
-    const isArchived = project?.is_archived || project?.status === 'completed' || (project?.end_date && new Date(project.end_date) < new Date());
+    const isArchived = Boolean(project?.archived_at);
 
     const breadcrumbItems = [
         { label: "Ontdek", to: "/ontdek" },
@@ -83,7 +82,7 @@ export default function ProjectDetailsPage() {
             {isArchived && (
                 <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl bg-[var(--neu-bg)] border border-[var(--neu-border)] text-[var(--text-muted)]">
                     <span className="material-symbols-outlined text-lg">inventory_2</span>
-                    <span className="text-sm font-semibold">Dit project is afgerond en staat in het archief.</span>
+                    <span className="text-sm font-semibold">Dit project staat in het archief.</span>
                 </div>
             )}
 

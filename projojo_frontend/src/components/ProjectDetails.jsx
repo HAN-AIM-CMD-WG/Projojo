@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, deleteProject, setProjectVisibility, setProjectImpact } from "../services";
+import { createTask, IMAGE_BASE_URL, archiveProject, restoreProject, setProjectVisibility, setProjectImpact } from "../services";
 import { useAuth } from "../auth/AuthProvider";
 import { useStudentSkills } from "../context/StudentSkillsContext";
 import useBookmarks from "../hooks/useBookmarks";
@@ -49,9 +49,10 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
     const [successMessage, setSuccessMessage] = useState("");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
-    const [actionType, setActionType] = useState(null); // "archive" | "delete"
+    const [actionType, setActionType] = useState(null); // "archive"
     const [affectedStudents, setAffectedStudents] = useState([]);
     const [isActionLoading, setIsActionLoading] = useState(false);
+    const [archiveReason, setArchiveReason] = useState("");
     const { authData } = useAuth();
     const { studentSkills } = useStudentSkills();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
@@ -100,7 +101,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
         setIsActionLoading(true);
         try {
             // First call without confirm to get affected students
-            const result = await archiveProject(project.id, false);
+            const result = await archiveProject(project.id, false, archiveReason.trim());
             if (result.requires_confirmation) {
                 setAffectedStudents(result.affected_students || []);
                 setIsActionModalOpen(true);
@@ -129,49 +130,14 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
         }
     };
 
-    const handleDeleteClick = async () => {
-        setActionType("delete");
-        setIsActionLoading(true);
-        try {
-            // First call without confirm to get affected students
-            const result = await deleteProject(project.id, false);
-            if (result.requires_confirmation) {
-                setAffectedStudents(result.affected_students || []);
-                setIsActionModalOpen(true);
-            } else {
-                // No students affected, deleted directly
-                setSuccessMessage(result.message);
-                // Navigate back to business page after delete
-                if (businessId) {
-                    navigate(`/business/${businessId}`);
-                } else {
-                    navigate('/');
-                }
-            }
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsActionLoading(false);
-        }
-    };
-
     const handleConfirmAction = async () => {
         setIsActionLoading(true);
         try {
             let result;
             if (actionType === "archive") {
-                result = await archiveProject(project.id, true);
+                result = await archiveProject(project.id, true, archiveReason.trim());
                 setSuccessMessage(result.message);
                 refreshData?.();
-            } else if (actionType === "delete") {
-                result = await deleteProject(project.id, true);
-                setSuccessMessage(result.message);
-                // Navigate back after delete
-                if (businessId) {
-                    navigate(`/business/${businessId}`);
-                } else {
-                    navigate('/');
-                }
             }
             setIsActionModalOpen(false);
         } catch (err) {
@@ -213,8 +179,8 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
         }
     };
 
-    // Check if project is completed (end_date passed)
-    const isCompleted = project?.end_date && new Date(project.end_date) < new Date();
+    const isArchived = Boolean(project?.archived_at);
+    const isCompleted = Boolean(project?.end_date && new Date(project.end_date) < new Date());
 
     const handleShareLink = () => {
         const url = `${window.location.origin}/projects/${project.id}`;
@@ -253,7 +219,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                         {/* Subtle vignette overlay for depth */}
                         <div className="absolute inset-0 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]" />
                         {/* Archived overlay - subtle dimming only */}
-                        {project.is_archived && (
+                        {isArchived && (
                             <div className="absolute inset-0 bg-black/30" />
                         )}
                     </div>
@@ -268,7 +234,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 <span className="text-xs font-bold text-primary uppercase tracking-wider">
                                     Project
                                 </span>
-                                {project.is_archived && (
+                                {isArchived && (
                                     <span className="text-xs font-medium text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
                                         Gearchiveerd
                                     </span>
@@ -570,7 +536,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                         </button>
 
                         {/* Archive/Restore button */}
-                        {project.is_archived ? (
+                        {isArchived ? (
                             <button
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
                                     bg-green-50 border border-green-200 text-green-700
@@ -596,21 +562,17 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             </button>
                         )}
 
-                        {/* Delete button - teacher only */}
-                        {isTeacher && (
-                            <button
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                    bg-red-50 border border-red-200 text-red-700
-                                    hover:bg-red-100 hover:border-red-300 transition-all duration-200"
-                                onClick={handleDeleteClick}
-                                disabled={isActionLoading}
-                                title="Verwijder dit project permanent"
-                            >
-                                <span className="material-symbols-outlined text-sm">delete</span>
-                                Verwijderen
-                            </button>
-                        )}
                     </div>
+                    {!isArchived && (
+                        <div className="mt-3 max-w-md">
+                            <FormInput
+                                label="Reden voor archivering"
+                                placeholder="Waarom archiveer je dit project?"
+                                value={archiveReason}
+                                onChange={setArchiveReason}
+                            />
+                        </div>
+                    )}
                 </div>
             )}
             {isOwner && (

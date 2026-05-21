@@ -18,9 +18,12 @@ class Task(BaseModel):
     total_completed: int | None = None
     start_date: datetime | None = None
     end_date: datetime | None = None
+    archived_at: datetime | None = None
+    archived_by: str | None = None
+    archived_reason: str | None = None
 
     # Handle TypeDB returning empty arrays for optional fields
-    @field_validator('start_date', 'end_date', mode='before')
+    @field_validator('start_date', 'end_date', 'archived_at', 'archived_by', 'archived_reason', mode='before')
     @classmethod
     def extract_from_array(cls, v):
         if isinstance(v, list):

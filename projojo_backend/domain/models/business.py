@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 from .project import Project
@@ -13,7 +15,9 @@ class Business(BaseModel):
     sector: str | None = None
     company_size: str | None = None
     website: str | None = None
-    is_archived: bool = False
+    archived_at: datetime | None = None
+    archived_by: str | None = None
+    archived_reason: str | None = None
     projects: list[Project] | None = None
 
     class Config:

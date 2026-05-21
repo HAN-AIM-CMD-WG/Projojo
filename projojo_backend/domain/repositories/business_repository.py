@@ -30,7 +30,9 @@ class BusinessRepository(BaseRepository[Business]):
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
                 'website': [ $business.website ],
-                'isArchived': [ $business.isArchived ]
+                'archivedAt': [ $business.archivedAt ],
+                'archivedBy': [ $business.archivedBy ],
+                'archivedReason': [ $business.archivedReason ]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -51,6 +53,7 @@ class BusinessRepository(BaseRepository[Business]):
                 has description $description,
                 has imagePath $imagePath,
                 has location $location;
+                not { $business has archivedAt $archived_at; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -61,17 +64,15 @@ class BusinessRepository(BaseRepository[Business]):
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
                 'website': [ $business.website ],
-                'isArchived': [ $business.isArchived ]
+                'archivedAt': [ $business.archivedAt ],
+                'archivedBy': [ $business.archivedBy ],
+                'archivedReason': [ $business.archivedReason ]
             };
         """
+        if include_archived:
+            query = query.replace("not { $business has archivedAt $archived_at; };", "")
         results = Db.read_transact(query)
-        businesses = [self._map_to_model(result) for result in results]
-        
-        # Filter archived businesses in Python
-        if not include_archived:
-            businesses = [b for b in businesses if not b.is_archived]
-        
-        return businesses
+        return [self._map_to_model(result) for result in results]
     
     def get_archived(self) -> list[Business]:
         """Get all archived businesses."""
@@ -82,7 +83,8 @@ class BusinessRepository(BaseRepository[Business]):
                 has name $name,
                 has description $description,
                 has imagePath $imagePath,
-                has location $location;
+                has location $location,
+                has archivedAt $archived_at;
             fetch {
                 'id': $id,
                 'name': $name,
@@ -93,14 +95,13 @@ class BusinessRepository(BaseRepository[Business]):
                 'sector': [ $business.sector ],
                 'companySize': [ $business.companySize ],
                 'website': [ $business.website ],
-                'isArchived': [ $business.isArchived ]
+                'archivedAt': [ $business.archivedAt ],
+                'archivedBy': [ $business.archivedBy ],
+                'archivedReason': [ $business.archivedReason ]
             };
         """
         results = Db.read_transact(query)
-        businesses = [self._map_to_model(result) for result in results]
-        
-        # Filter to only archived businesses
-        return [b for b in businesses if b.is_archived]
+        return [self._map_to_model(result) for result in results]
 
     def _map_to_model(self, result: dict[str, Any]) -> Business:
         # Extract relevant information from the query result
@@ -123,8 +124,9 @@ class BusinessRepository(BaseRepository[Business]):
         website_list = result.get("website", [])
         website = website_list[0] if website_list else None
         
-        is_archived_list = result.get("isArchived", [])
-        is_archived = is_archived_list[0] if is_archived_list else False
+        archived_at_list = result.get("archivedAt", [])
+        archived_by_list = result.get("archivedBy", [])
+        archived_reason_list = result.get("archivedReason", [])
 
         return Business(
             id=id,
@@ -136,7 +138,9 @@ class BusinessRepository(BaseRepository[Business]):
             sector=sector,
             company_size=company_size,
             website=website,
-            is_archived=is_archived,
+            archived_at=archived_at_list[0] if archived_at_list else None,
+            archived_by=archived_by_list[0] if archived_by_list else None,
+            archived_reason=archived_reason_list[0] if archived_reason_list else None,
         )
 
     def get_business_associations(self, business_id: str) -> list[BusinessAssociation]:
@@ -179,6 +183,7 @@ class BusinessRepository(BaseRepository[Business]):
         match
             $business isa business,
                 has location $location;
+            not { $business has archivedAt $business_archived_at; };
         fetch {
             "id": $business.id,
             "name": $business.name,
@@ -189,11 +194,14 @@ class BusinessRepository(BaseRepository[Business]):
             "sector": [$business.sector],
             "company_size": [$business.companySize],
             "website": [$business.website],
-            "is_archived": [$business.isArchived],
+            "archived_at": [$business.archivedAt],
+            "archived_by": [$business.archivedBy],
+            "archived_reason": [$business.archivedReason],
             "projects": [
                 match
                     ($business, $project) isa hasProjects;
                     $project isa project;
+                    not { $project has archivedAt $project_archived_at; };
                 fetch {
                     "id": $project.id,
                     "name": $project.name,
@@ -203,10 +211,14 @@ class BusinessRepository(BaseRepository[Business]):
                     "location": $project.location,
                     "start_date": [$project.startDate],
                     "end_date": [$project.endDate],
+                    "archived_at": [$project.archivedAt],
+                    "archived_by": [$project.archivedBy],
+                    "archived_reason": [$project.archivedReason],
                     "tasks": [
                         match
                             ($project, $task) isa containsTask;
                             $task isa task;
+                            not { $task has archivedAt $task_archived_at; };
                         fetch {
                             "id": $task.id,
                             "name": $task.name,
@@ -236,10 +248,14 @@ class BusinessRepository(BaseRepository[Business]):
                                 match
                                     $registration isa registersForTask (task: $task, student: $student),
                                     has isAccepted true, has completedAt $completed;
+                                    not { $registration has archivedAt $registration_archived_at; };
                                 return count;
                             ),
                             "start_date": [$task.startDate],
                             "end_date": [$task.endDate],
+                            "archived_at": [$task.archivedAt],
+                            "archived_by": [$task.archivedBy],
+                            "archived_reason": [$task.archivedReason],
                             "skills": [
                                 match
                                     ($task, $skill) isa requiresSkill;
@@ -257,44 +273,27 @@ class BusinessRepository(BaseRepository[Business]):
             ]
         };
         """
+        if include_archived:
+            query = query.replace("not { $business has archivedAt $business_archived_at; };", "")
+            query = query.replace("not { $project has archivedAt $project_archived_at; };", "")
+            query = query.replace("not { $task has archivedAt $task_archived_at; };", "")
         results = Db.read_transact(query)
-        
-        # Filter out archived businesses unless explicitly requested
-        if not include_archived:
-            results = [
-                b for b in results 
-                if not (b.get("is_archived") and len(b.get("is_archived")) > 0 and b.get("is_archived")[0] == True)
-            ]
-        
         return results
 
-    def create(self, name: str, as_draft: bool = False) -> Business:
+    def create(self, name: str) -> Business:
         id = generate_uuid()
-
-        if as_draft:
-            query = """
-                insert
-                    $business isa business,
-                    has id ~id,
-                    has name ~name,
-                    has description "",
-                    has imagePath "default.png",
-                    has location "",
-                    has isArchived true;
-            """
-        else:
-            query = """
-                insert
-                    $business isa business,
-                    has id ~id,
-                    has name ~name,
-                    has description "",
-                    has imagePath "default.png",
-                    has location "";
-            """
+        query = """
+            insert
+                $business isa business,
+                has id ~id,
+                has name ~name,
+                has description "",
+                has imagePath "default.png",
+                has location "";
+        """
         Db.write_transact(query, {"id": id, "name": name})
         return Business(
-            id=id, name=name, description="", image_path="default.png", location="", is_archived=as_draft
+            id=id, name=name, description="", image_path="default.png", location=""
         )
 
     def update(self, business_id: str, name: str, description: str, location: str, image_filename: str = None, country: str = None, sector: str = None, company_size: str = None, website: str = None) -> Business:
@@ -341,42 +340,3 @@ class BusinessRepository(BaseRepository[Business]):
         """
 
         Db.write_transact(query, update_params)
-    
-    def archive_business(self, business_id: str) -> None:
-        """Archive a business (set isArchived to true)."""
-        # First check if isArchived already exists and delete it
-        delete_query = """
-            match
-                $business isa business, has id ~business_id, has isArchived $val;
-            delete
-                has $val of $business;
-        """
-        try:
-            Db.write_transact(delete_query, {"business_id": business_id})
-        except Exception:
-            pass  # Attribute might not exist yet, that's fine
-        
-        # Then insert the new value
-        insert_query = """
-            match
-                $business isa business, has id ~business_id;
-            insert
-                $business has isArchived true;
-        """
-        Db.write_transact(insert_query, {"business_id": business_id})
-    
-    def restore_business(self, business_id: str) -> None:
-        """Restore an archived business (set isArchived to false)."""
-        # Delete existing isArchived attribute
-        delete_query = """
-            match
-                $business isa business, has id ~business_id, has isArchived $val;
-            delete
-                has $val of $business;
-        """
-        try:
-            Db.write_transact(delete_query, {"business_id": business_id})
-        except Exception as e:
-            print(f"Delete failed for business {business_id}: {e}")
-        
-        # Don't insert false - absence of isArchived means not archived

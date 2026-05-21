@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Path, Query, Body, HTTPException, Request, Form, Depends
 from domain.repositories import TaskRepository, UserRepository, SkillRepository, ProjectRepository
+from domain.repositories.archive_repository import ArchiveRepository
 from auth.permissions import auth
 from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
+from domain.models import ArchiveRequest, RestoreRequest, ArchivedTaskItem, ArchiveActionResponse
 from service.validation_service import is_valid_length
 from datetime import datetime
 from typing import List, Optional
@@ -21,6 +23,7 @@ task_repo = TaskRepository()
 user_repo = UserRepository()
 skill_repo = SkillRepository()
 project_repo = ProjectRepository()
+archive_repo = ArchiveRepository()
 
 router = APIRouter(prefix="/tasks", tags=["Task Endpoints"])
 
@@ -33,6 +36,13 @@ async def get_all_tasks():
     """
     tasks = task_repo.get_all()
     return tasks
+
+
+@router.get("/archived", response_model=list[ArchivedTaskItem])
+async def get_archived_tasks(payload: dict = Depends(get_token_payload)):
+    if payload.get("role") != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen gearchiveerde taken bekijken")
+    return task_repo.get_archived()
 
 
 @router.get("/{task_id}/emails/colleagues")
@@ -409,6 +419,62 @@ async def update_task(
     except Exception as e:
         print(f"Error updating task {task_id}: {e}")
         raise HTTPException(status_code=400, detail="Er is een fout opgetreden bij het bijwerken van de taak.")
+
+
+@router.patch("/{task_id}/archive", response_model=ArchiveActionResponse)
+async def archive_task(
+    task_id: str = Path(..., description="Task ID"),
+    archive_request: ArchiveRequest = Body(...),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Archive a task.
+    - Supervisor: only tasks in their own business
+    - Teacher: all tasks
+    """
+    role = payload.get("role")
+
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten kunnen geen taken archiveren")
+
+    task = task_repo.get_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
+    if role not in ["supervisor", "teacher"]:
+        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen taken archiveren")
+
+    if archive_repo.is_task_archived(task_id):
+        raise HTTPException(status_code=400, detail="Deze taak is al gearchiveerd")
+
+    archive_repo.archive_task(task_id, payload.get("sub"), archive_request.archived_reason)
+    return ArchiveActionResponse(message="Taak succesvol gearchiveerd")
+
+
+@router.patch("/{task_id}/restore", response_model=ArchiveActionResponse)
+async def restore_task(
+    task_id: str = Path(..., description="Task ID"),
+    restore_request: RestoreRequest | None = Body(None),
+    payload: dict = Depends(get_token_payload)
+):
+    """
+    Restore an archived task.
+    - Supervisor: only tasks in their own business
+    - Teacher: all tasks
+    """
+    role = payload.get("role")
+
+    if role == "student":
+        raise HTTPException(status_code=403, detail="Studenten kunnen geen taken herstellen")
+
+    if role not in ["supervisor", "teacher"]:
+        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen taken herstellen")
+
+    if not archive_repo.is_task_archived(task_id):
+        raise HTTPException(status_code=400, detail="Deze taak is niet gearchiveerd")
+
+    archive_repo.restore_task(task_id)
+    return ArchiveActionResponse(message="Taak succesvol hersteld")
 
 
 @router.patch("/{task_id}/registrations/{student_id}/start")

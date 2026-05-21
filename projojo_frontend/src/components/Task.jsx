@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted } from "../services";
+import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted, archiveTask, restoreTask } from "../services";
 import { notification } from "./notifications/NotifySystem";
 import Alert from "./Alert";
 import { useAuth } from "../auth/AuthProvider";
@@ -50,8 +50,11 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isSavingTask, setIsSavingTask] = useState(false);
     const [taskSkillsState, setTaskSkillsState] = useState(task.skills || []);
     const [isSavingSkills, setIsSavingSkills] = useState(false);
+    const [archiveReason, setArchiveReason] = useState("");
+    const [isArchiveLoading, setIsArchiveLoading] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
+    const isArchived = Boolean(task.archived_at);
 
     const isFull = task.total_accepted >= task.total_needed;
 
@@ -285,6 +288,34 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
+    const handleArchiveTask = async () => {
+        if (!archiveReason.trim()) {
+            setSpotsError("Een archiveringsreden is verplicht.");
+            return;
+        }
+        setIsArchiveLoading(true);
+        try {
+            await archiveTask(task.id, archiveReason.trim());
+            setFetchAmount((currentAmount) => currentAmount + 1);
+        } catch (error) {
+            setSpotsError(error.message);
+        } finally {
+            setIsArchiveLoading(false);
+        }
+    };
+
+    const handleRestoreTask = async () => {
+        setIsArchiveLoading(true);
+        try {
+            await restoreTask(task.id);
+            setFetchAmount((currentAmount) => currentAmount + 1);
+        } catch (error) {
+            setSpotsError(error.message);
+        } finally {
+            setIsArchiveLoading(false);
+        }
+    };
+
     // === TAB DEFINITIONS ===
     const tabs = [
         { id: 'details', label: 'Details', icon: 'info' },
@@ -302,7 +333,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
     return (
         <div className="group h-full">
-            <div id={`task-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
+            <div id={`task-${task.id}`} className={`neu-flat rounded-2xl h-full flex flex-col overflow-visible ${isArchived ? 'opacity-70 grayscale' : ''}`}>
 
                 {/* === COMPACT HEADER === */}
                 <div className="p-3 sm:p-4 border-b border-[var(--neu-border)] rounded-t-2xl overflow-hidden">
@@ -332,6 +363,12 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 <h2 className="text-base font-bold text-[var(--text-primary)] leading-tight line-clamp-2">
                                     {task.name}
                                 </h2>
+                                {isArchived && (
+                                    <span className="inline-flex mt-1 items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                        <span className="material-symbols-outlined text-xs">inventory_2</span>
+                                        Gearchiveerd
+                                    </span>
+                                )}
                             </div>
                         </div>
 
@@ -595,7 +632,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                         </button>
                     )}
                     {isOwner && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                             <button
                                 className="neu-btn flex-1"
                                 onClick={() => setIsRegistrationsModalOpen(true)}
@@ -611,6 +648,31 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                 </span>
                             </button>
                             <CreateBusinessEmail taskId={task.id} compact />
+                            {isArchived ? (
+                                <button className="neu-btn !text-green-700" onClick={handleRestoreTask} disabled={isArchiveLoading}>
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <span className="material-symbols-outlined text-lg">unarchive</span>
+                                        Herstellen
+                                    </span>
+                                </button>
+                            ) : (
+                                <button className="neu-btn !text-amber-700" onClick={handleArchiveTask} disabled={isArchiveLoading || !archiveReason.trim()}>
+                                    <span className="flex items-center justify-center gap-1.5">
+                                        <span className="material-symbols-outlined text-lg">archive</span>
+                                        Archiveren
+                                    </span>
+                                </button>
+                            )}
+                        </div>
+                    )}
+                    {isOwner && !isArchived && (
+                        <div className="mt-3">
+                            <FormInput
+                                label="Reden voor archivering"
+                                placeholder="Waarom archiveer je deze taak?"
+                                value={archiveReason}
+                                onChange={setArchiveReason}
+                            />
                         </div>
                     )}
                 </div>

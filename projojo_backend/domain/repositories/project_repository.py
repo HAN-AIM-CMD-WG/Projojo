@@ -34,7 +34,10 @@ class ProjectRepository(BaseRepository[Project]):
                 'start_date': [$project.startDate],
                 'end_date': [$project.endDate],
                 'is_public': [$project.isPublic],
-                'impact_summary': [$project.impactSummary]
+                'impact_summary': [$project.impactSummary],
+                'archived_at': [$project.archivedAt],
+                'archived_by': [$project.archivedBy],
+                'archived_reason': [$project.archivedReason]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -51,6 +54,7 @@ class ProjectRepository(BaseRepository[Project]):
                 has description $description,
                 has imagePath $imagePath,
                 has createdAt $createdAt;
+                not { $project has archivedAt $archived_at; };
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $business has id $business_id;
             fetch {
@@ -64,7 +68,42 @@ class ProjectRepository(BaseRepository[Project]):
                 'start_date': [$project.startDate],
                 'end_date': [$project.endDate],
                 'is_public': [$project.isPublic],
-                'impact_summary': [$project.impactSummary]
+                'impact_summary': [$project.impactSummary],
+                'archived_at': [$project.archivedAt],
+                'archived_by': [$project.archivedBy],
+                'archived_reason': [$project.archivedReason]
+            };
+        """
+        results = Db.read_transact(query)
+        return [self._map_to_model(result) for result in results]
+
+    def get_archived(self) -> list[Project]:
+        query = """
+            match
+                $project isa project,
+                has id $id,
+                has name $name,
+                has description $description,
+                has imagePath $imagePath,
+                has createdAt $createdAt,
+                has archivedAt $archived_at;
+                $hasProjects isa hasProjects(business: $business, project: $project);
+                $business has id $business_id;
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'imagePath': $imagePath,
+                'location': $project.location,
+                'createdAt': $createdAt,
+                'business': $business_id,
+                'start_date': [$project.startDate],
+                'end_date': [$project.endDate],
+                'is_public': [$project.isPublic],
+                'impact_summary': [$project.impactSummary],
+                'archived_at': [$project.archivedAt],
+                'archived_by': [$project.archivedBy],
+                'archived_reason': [$project.archivedReason]
             };
         """
         results = Db.read_transact(query)
@@ -84,7 +123,8 @@ class ProjectRepository(BaseRepository[Project]):
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $business has id $business_id,
                     has name $business_name;
-                not { $project has isArchived true; };
+                not { $project has archivedAt $project_archived_at; };
+                not { $business has archivedAt $business_archived_at; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -115,6 +155,7 @@ class ProjectRepository(BaseRepository[Project]):
                     match
                         $containsTask isa containsTask(project: $project, task: $task);
                         $task has id $task_id, has name $task_name, has totalNeeded $total_needed;
+                        not { $task has archivedAt $task_archived_at; };
                     fetch {
                         'id': $task_id,
                         'name': $task_name,
@@ -327,6 +368,9 @@ class ProjectRepository(BaseRepository[Project]):
         # Extract optional public/impact fields (returned as arrays)
         is_public_list = result.get("is_public", [])
         impact_summary_list = result.get("impact_summary", [])
+        archived_at_list = result.get("archived_at", [])
+        archived_by_list = result.get("archived_by", [])
+        archived_reason_list = result.get("archived_reason", [])
         is_public = is_public_list[0] if is_public_list else False
         impact_summary = impact_summary_list[0] if impact_summary_list else None
 
@@ -364,6 +408,9 @@ class ProjectRepository(BaseRepository[Project]):
             end_date=end_date,
             is_public=is_public,
             impact_summary=impact_summary,
+            archived_at=archived_at_list[0] if archived_at_list else None,
+            archived_by=archived_by_list[0] if archived_by_list else None,
+            archived_reason=archived_reason_list[0] if archived_reason_list else None,
         )
 
     def check_project_exists(self, project_name: str, business_id: str) -> bool:
@@ -641,137 +688,13 @@ class ProjectRepository(BaseRepository[Project]):
             })
         return completed_tasks
 
-    def archive_project(self, project_id: str) -> None:
-        """Archive a project (set isArchived to true)."""
-        # First check if isArchived already exists and delete it
-        delete_query = """
-            match
-                $project isa project, has id ~project_id, has isArchived $val;
-            delete
-                $project has $val;
-        """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass  # No existing isArchived attribute
-
-        # Now insert isArchived = true
-        insert_query = """
-            match
-                $project isa project, has id ~project_id;
-            insert
-                $project has isArchived true;
-        """
-        Db.write_transact(insert_query, {"project_id": project_id})
-
-    def restore_project(self, project_id: str) -> None:
-        """Restore an archived project (remove isArchived attribute)."""
-        delete_query = """
-            match
-                $project isa project, has id ~project_id, has isArchived $val;
-            delete
-                $project has $val;
-        """
-        Db.write_transact(delete_query, {"project_id": project_id})
-
-    def delete_project(self, project_id: str) -> None:
-        """
-        Hard delete a project and all its associated data.
-        Order: registrations -> tasks -> creates relation -> hasProjects relation -> project
-        """
-        # 1. Delete all registrations for tasks in this project
-        delete_registrations = """
-            match
-                $project isa project, has id ~project_id;
-                $containsTask isa containsTask(project: $project, task: $task);
-                $registration isa registersForTask(task: $task);
-            delete
-                $registration isa registersForTask;
-        """
-        try:
-            Db.write_transact(delete_registrations, {"project_id": project_id})
-        except Exception:
-            pass  # No registrations
-
-        # 2. Delete all requiresSkill relations for tasks
-        delete_requires_skill = """
-            match
-                $project isa project, has id ~project_id;
-                $containsTask isa containsTask(project: $project, task: $task);
-                $requiresSkill isa requiresSkill(task: $task);
-            delete
-                $requiresSkill isa requiresSkill;
-        """
-        try:
-            Db.write_transact(delete_requires_skill, {"project_id": project_id})
-        except Exception:
-            pass  # No skills
-
-        # 3. Delete containsTask relations and tasks
-        delete_contains_task = """
-            match
-                $project isa project, has id ~project_id;
-                $containsTask isa containsTask(project: $project, task: $task);
-            delete
-                $containsTask isa containsTask;
-        """
-        try:
-            Db.write_transact(delete_contains_task, {"project_id": project_id})
-        except Exception:
-            pass  # No tasks
-
-        # 4. Delete tasks themselves
-        delete_tasks = """
-            match
-                $project isa project, has id ~project_id;
-                $containsTask isa containsTask(project: $project, task: $task);
-            delete
-                $task isa task;
-        """
-        try:
-            Db.write_transact(delete_tasks, {"project_id": project_id})
-        except Exception:
-            pass  # No tasks
-
-        # 5. Delete creates relation
-        delete_creates = """
-            match
-                $project isa project, has id ~project_id;
-                $creates isa creates(project: $project);
-            delete
-                $creates isa creates;
-        """
-        try:
-            Db.write_transact(delete_creates, {"project_id": project_id})
-        except Exception:
-            pass  # No creates relation
-
-        # 6. Delete hasProjects relation
-        delete_has_projects = """
-            match
-                $project isa project, has id ~project_id;
-                $hasProjects isa hasProjects(project: $project);
-            delete
-                $hasProjects isa hasProjects;
-        """
-        Db.write_transact(delete_has_projects, {"project_id": project_id})
-
-        # 7. Finally delete the project itself
-        delete_project = """
-            match
-                $project isa project, has id ~project_id;
-            delete
-                $project isa project;
-        """
-        Db.write_transact(delete_project, {"project_id": project_id})
-
     def is_archived(self, project_id: str) -> bool:
         """Check if a project is archived."""
         query = """
             match
-                $project isa project, has id ~project_id, has isArchived true;
+                $project isa project, has id ~project_id, has archivedAt $archived_at;
             fetch {
-                'archived': true
+                'archived': $archived_at
             };
         """
         results = Db.read_transact(query, {"project_id": project_id})

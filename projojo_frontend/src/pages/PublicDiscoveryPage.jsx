@@ -68,15 +68,9 @@ function PublicProjectList() {
 
         // Status filter
         if (activeFilter === 'active') {
-            result = result.filter(p => {
-                if (!p.end_date) return true;
-                return new Date(p.end_date) >= new Date();
-            });
+            result = result.filter(p => !p.archived_at);
         } else if (activeFilter === 'completed') {
-            result = result.filter(p => {
-                if (!p.end_date) return false;
-                return new Date(p.end_date) < new Date();
-            });
+            result = result.filter(p => Boolean(p.archived_at));
         }
 
         // Theme filter
@@ -109,8 +103,8 @@ function PublicProjectList() {
     // Calculate stats
     const stats = {
         total: projects.length,
-        active: projects.filter(p => !p.end_date || new Date(p.end_date) >= new Date()).length,
-        completed: projects.filter(p => p.end_date && new Date(p.end_date) < new Date()).length,
+        active: projects.filter(p => !p.archived_at).length,
+        completed: projects.filter(p => p.archived_at).length,
         totalPositions: projects.reduce((sum, p) => sum + (p.open_positions || 0), 0),
         organizations: new Set(projects.map(p => p.business?.id).filter(Boolean)).size
     };

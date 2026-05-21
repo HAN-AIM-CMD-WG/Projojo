@@ -3,14 +3,16 @@ from typing import Optional
 from auth.permissions import auth
 from auth.jwt_utils import get_token_payload
 
-from domain.repositories import (
-    BusinessRepository,
-    ProjectRepository,
-    TaskRepository,
-    SkillRepository,
-)
+from domain.repositories import BusinessRepository, ProjectRepository, TaskRepository, SkillRepository
+from domain.repositories.archive_repository import ArchiveRepository
 
-from domain.models import Business
+from domain.models import (
+    Business,
+    ArchiveRequest,
+    RestoreRequest,
+    ArchivedBusinessItem,
+    ArchiveActionResponse,
+)
 from service import save_image
 from service.validation_service import is_valid_length
 
@@ -18,6 +20,7 @@ business_repo = BusinessRepository()
 project_repo = ProjectRepository()
 task_repo = TaskRepository()
 skill_repo = SkillRepository()
+archive_repo = ArchiveRepository()
 
 
 router = APIRouter(prefix="/businesses", tags=["Business Endpoints"])
@@ -55,7 +58,7 @@ async def get_all_businesses_with_full_nesting():
     return business_repo.get_all_with_full_nesting()
 
 
-@router.get("/archived", response_model=list[Business])
+@router.get("/archived", response_model=list[ArchivedBusinessItem])
 async def get_archived_businesses(payload: dict = Depends(get_token_payload)):
     """
     Get all archived businesses. Only accessible by teachers.
@@ -87,10 +90,9 @@ async def get_business_projects(business_id: str = Path(..., description="Busine
 
 @router.post("/", response_model=Business)
 @auth(role="teacher")
-async def create_business(name: str = Body(...), as_draft: bool = Body(False)):
+async def create_business(name: str = Body(...)):
     """
     Create a new business with the given name.
-    Set as_draft=True to create as archived (hidden from students).
     """
     if not is_valid_length(name, 100):
         raise HTTPException(
@@ -99,7 +101,7 @@ async def create_business(name: str = Body(...), as_draft: bool = Body(False)):
         )
 
     try:
-        created_business = business_repo.create(name, as_draft=as_draft)
+        created_business = business_repo.create(name)
         return created_business
     except Exception as e:
         if "has a key constraint violation" in str(e):
@@ -176,9 +178,10 @@ async def update_business(
         )
 
 
-@router.patch("/{business_id}/archive")
+@router.patch("/{business_id}/archive", response_model=ArchiveActionResponse)
 async def archive_business(
     business_id: str = Path(..., description="Business ID to archive"),
+    archive_request: ArchiveRequest = Body(...),
     payload: dict = Depends(get_token_payload)
 ):
     """
@@ -194,8 +197,8 @@ async def archive_business(
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     
     try:
-        business_repo.archive_business(business_id)
-        return {"message": "Bedrijf succesvol gearchiveerd"}
+        archive_repo.archive_business(business_id, payload.get("sub"), archive_request.archived_reason)
+        return ArchiveActionResponse(message="Bedrijf succesvol gearchiveerd")
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -203,9 +206,10 @@ async def archive_business(
         )
 
 
-@router.patch("/{business_id}/restore")
+@router.patch("/{business_id}/restore", response_model=ArchiveActionResponse)
 async def restore_business(
     business_id: str = Path(..., description="Business ID to restore"),
+    restore_request: RestoreRequest | None = Body(None),
     payload: dict = Depends(get_token_payload)
 ):
     """
@@ -220,64 +224,11 @@ async def restore_business(
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     
     try:
-        business_repo.restore_business(business_id)
-        return {"message": "Bedrijf succesvol hersteld"}
+        archive_repo.restore_business(business_id)
+        return ArchiveActionResponse(message="Bedrijf succesvol hersteld")
     except Exception as e:
         print(f"Error updating business {business_id}: {e}")
         raise HTTPException(
             status_code=500,
             detail="Er is een fout opgetreden bij het herstellen van het bedrijf: " + str(e)
-        )
-
-
-@router.patch("/{business_id}/archive")
-async def archive_business(
-    business_id: str = Path(..., description="Business ID to archive"),
-    payload: dict = Depends(get_token_payload)
-):
-    """
-    Archive a business. Only accessible by teachers.
-    Archived businesses are hidden from students and supervisors.
-    """
-    if payload.get("role") != "teacher":
-        raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven archiveren")
-    
-    # Verify business exists
-    existing_business = business_repo.get_by_id(business_id)
-    if not existing_business:
-        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
-    
-    try:
-        business_repo.archive_business(business_id)
-        return {"message": "Bedrijf succesvol gearchiveerd"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Er is een fout opgetreden bij het archiveren van het bedrijf: " + str(e)
-        )
-
-
-@router.patch("/{business_id}/restore")
-async def restore_business(
-    business_id: str = Path(..., description="Business ID to restore"),
-    payload: dict = Depends(get_token_payload)
-):
-    """
-    Restore an archived business. Only accessible by teachers.
-    """
-    if payload.get("role") != "teacher":
-        raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven herstellen")
-    
-    # Verify business exists
-    existing_business = business_repo.get_by_id(business_id)
-    if not existing_business:
-        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
-    
-    try:
-        business_repo.restore_business(business_id)
-        return {"message": "Bedrijf succesvol hersteld"}
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="Er is een fout opgetreden bij het bijwerken van het bedrijf." + str(e)
         )

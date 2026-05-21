@@ -100,8 +100,7 @@ export default function ProjectCard({ project, index = 0 }) {
     return sum;
   }, 0) || 0;
 
-  // Detect if project is archived (completed or end_date in the past)
-  const isArchived = status === 'completed' || (project.end_date && new Date(project.end_date) < new Date());
+  const isArchived = Boolean(project.archived_at);
 
   // Animation delay based on index for staggered entrance
   const animationClass = `fade-in-up-${(index % 4) + 1}`;

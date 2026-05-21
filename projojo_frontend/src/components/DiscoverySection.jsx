@@ -87,8 +87,8 @@ export default function DiscoverySection() {
     // Calculate stats
     const stats = {
         total: projects.length,
-        active: projects.filter(p => !p.end_date || new Date(p.end_date) >= new Date()).length,
-        completed: projects.filter(p => p.end_date && new Date(p.end_date) < new Date()).length,
+        active: projects.filter(p => !p.archived_at).length,
+        completed: projects.filter(p => p.archived_at).length,
         totalPositions: projects.reduce((sum, p) => sum + (p.open_positions || 0), 0),
         organizations: new Set(projects.map(p => p.business?.id).filter(Boolean)).size
     };

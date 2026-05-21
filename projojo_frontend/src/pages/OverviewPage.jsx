@@ -288,7 +288,7 @@ export default function OverviewPage() {
   const { totalProjects, matchingProjects } = shownBusinesses.reduce((acc, business) => {
     business.projects.forEach(project => {
       // Skip archived projects (completed or end_date in the past)
-      const isArchived = project.status === 'completed' || (project.end_date && new Date(project.end_date) < now);
+      const isArchived = Boolean(project.archived_at);
       if (isArchived) return;
       
       acc.totalProjects++;

@@ -283,6 +283,64 @@ insert
     $m10 isa manages (supervisor: $s10, business: $b10),
         has location "Utrecht";
 
+    # ============================================
+    # ARCHIVE SCENARIO FIXTURES
+    # ============================================
+
+    $b_arch_active isa business,
+        has id "seed-biz-collision-active",
+        has name "Test Bedrijf",
+        has description "Actief bedrijf voor restore name collision scenario",
+        has imagePath "default.png",
+        has location "Arnhem";
+
+    $b_arch_archived isa business,
+        has id "seed-biz-collision-archived",
+        has name "Test Bedrijf",
+        has description "Gearchiveerd bedrijf voor restore name collision scenario",
+        has imagePath "default.png",
+        has location "Arnhem",
+        has archivedAt 2026-04-20T09:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Seed restore collision scenario";
+
+    $b_arch1 isa business,
+        has id "seed-biz-archived-1",
+        has name "OudBedrijf BV",
+        has description "Volledig gearchiveerd seedbedrijf",
+        has imagePath "default.png",
+        has location "Nijmegen",
+        has archivedAt 2026-04-15T10:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Seed full archive cascade";
+
+    $s_arch_only isa supervisor,
+        has id "seed-sup-archived-only",
+        has fullName "Archived Supervisor",
+        has imagePath "supervisor_male1.png",
+        has email "archived.supervisor@example.com";
+
+    $auth_arch_only isa oauthAuthentication (user: $s_arch_only, provider: $op2),
+        has oauthSub "seed-sup-archived-only-sub";
+
+    $m_arch_only isa manages (supervisor: $s_arch_only, business: $b_arch1),
+        has location "Nijmegen";
+
+    $s_multi isa supervisor,
+        has id "seed-sup-multi",
+        has fullName "Jan Multi",
+        has imagePath "supervisor_male2.png",
+        has email "jan.multi@example.com";
+
+    $auth_multi isa oauthAuthentication (user: $s_multi, provider: $op3),
+        has oauthSub "seed-sup-multi-sub";
+
+    $m_multi_active isa manages (supervisor: $s_multi, business: $b1),
+        has location "Gelderland";
+
+    $m_multi_archived isa manages (supervisor: $s_multi, business: $b_arch1),
+        has location "Nijmegen";
+
     # Skills (agri-related)
     $sk1 isa skill,
         has id "c7852c64-eb33-4e82-9e42-d11f4108de03",
@@ -785,6 +843,34 @@ insert
         has createdAt 2025-02-20T11:20:00+0000;
     $c33 isa creates (supervisor: $s10, project: $p33),
         has createdAt 2025-02-21T13:45:00+0000;
+
+    $p_arch1 isa project,
+        has id "seed-proj-archived-1",
+        has name "Project X",
+        has description "Volledig gearchiveerd project onder volledig gearchiveerd bedrijf",
+        has imagePath "default.png",
+        has createdAt 2026-04-01T09:00:00+0000,
+        has archivedAt 2026-04-15T10:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Seed full archive cascade";
+
+    $c_arch1 isa creates (supervisor: $s_arch_only, project: $p_arch1),
+        has createdAt 2026-04-01T09:00:00+0000;
+    $bp_arch1 isa hasProjects (business: $b_arch1, project: $p_arch1);
+
+    $p_mixed_arch isa project,
+        has id "seed-proj-mixed-archived",
+        has name "Old Dashboard Seed",
+        has description "Onafhankelijk gearchiveerd project onder actieve business",
+        has imagePath "default.png",
+        has createdAt 2026-03-01T09:00:00+0000,
+        has archivedAt 2026-04-25T11:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Independent archived project seed";
+
+    $c_mixed_arch isa creates (supervisor: $s1, project: $p_mixed_arch),
+        has createdAt 2026-03-01T09:00:00+0000;
+    $bp_mixed_arch isa hasProjects (business: $b1, project: $p_mixed_arch);
 
     # Business projects relations
     $bp1 isa hasProjects (business: $b1, project: $p1);
@@ -1326,6 +1412,28 @@ insert
     $pt49 isa containsTask (project: $p33, task: $t35);
     $pt50 isa containsTask (project: $p33, task: $t50);
 
+    $t_arch1 isa task,
+        has id "seed-task-archived-1",
+        has name "Task X",
+        has description "Volledig gearchiveerde taak in cascade",
+        has totalNeeded 1,
+        has createdAt 2026-04-02T09:00:00+0000,
+        has archivedAt 2026-04-15T10:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Seed full archive cascade";
+    $pt_arch1 isa containsTask (project: $p_arch1, task: $t_arch1);
+
+    $t_mixed_arch isa task,
+        has id "seed-task-mixed-archived",
+        has name "Old Search Seed",
+        has description "Onafhankelijk gearchiveerde taak in actief project",
+        has totalNeeded 1,
+        has createdAt 2026-04-05T09:00:00+0000,
+        has archivedAt 2026-04-28T11:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Independent archived task seed";
+    $pt_mixed_arch isa containsTask (project: $p1, task: $t_mixed_arch);
+
     # Task-skill relations (each task requires 1-4 skills)
     $ts1 isa requiresSkill (task: $t1, skill: $sk12);
     $ts2 isa requiresSkill (task: $t1, skill: $sk2);
@@ -1656,6 +1764,33 @@ insert
         has createdAt 2025-02-22T16:20:00+0000,
         has requestedAt 2025-02-22T16:20:00+0000,
         has acceptedAt 2025-02-24T10:00:00+0000;
+
+    $tr_arch1 isa registersForTask (student: $u3, task: $t_arch1),
+        has description "Seed archived registration for full cascade",
+        has isAccepted true,
+        has response "Seed accepted",
+        has createdAt 2026-04-03T09:00:00+0000,
+        has requestedAt 2026-04-03T09:00:00+0000,
+        has acceptedAt 2026-04-04T09:00:00+0000,
+        has archivedAt 2026-04-15T10:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Seed full archive cascade";
+
+    $tr_recent_arch isa registersForTask (student: $u2, task: $t_mixed_arch),
+        has description "Recent archived registration seed",
+        has createdAt 2026-04-20T09:00:00+0000,
+        has requestedAt 2026-04-20T09:00:00+0000,
+        has archivedAt 2026-04-25T12:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Recent archived registration seed";
+
+    $tr_old_arch isa registersForTask (student: $u2, task: $t_arch1),
+        has description "Older archived registration seed",
+        has createdAt 2026-03-01T09:00:00+0000,
+        has requestedAt 2026-03-01T09:00:00+0000,
+        has archivedAt 2026-03-15T12:00:00+0000,
+        has archivedBy "4198c8e8-a160-4d9e-95f3-930089dc97d2",
+        has archivedReason "Older archived registration seed";
 
     # ============================================
     # Thema's voor Publieke Discovery

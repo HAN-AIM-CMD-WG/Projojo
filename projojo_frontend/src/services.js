@@ -635,15 +635,14 @@ export function getTaskSkills(taskId) {
 
 /**
  * @param {string} newBusinessName
- * @param {boolean} asDraft - If true, create as archived (hidden from students)
  */
-export function createNewBusiness(newBusinessName, asDraft = false) {
+export function createNewBusiness(newBusinessName) {
     return fetchWithError(`${API_BASE_URL}businesses/`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: newBusinessName, as_draft: asDraft }),
+        body: JSON.stringify(newBusinessName),
     });
 }
 
@@ -711,14 +710,24 @@ export function getArchivedBusinesses() {
     return fetchWithError(`${API_BASE_URL}businesses/archived`);
 }
 
+export function getArchivedProjects() {
+    return fetchWithError(`${API_BASE_URL}projects/archived`);
+}
+
+export function getArchivedTasks() {
+    return fetchWithError(`${API_BASE_URL}tasks/archived`);
+}
+
 /**
  * Archive a business (teacher only)
  * @param {string} businessId
+ * @param {string} archivedReason
  * @returns {Promise<{message: string}>}
  */
-export function archiveBusiness(businessId) {
+export function archiveBusiness(businessId, archivedReason) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessId}/archive`, {
         method: "PATCH",
+        body: JSON.stringify({ confirm: true, archived_reason: archivedReason }),
     });
 }
 
@@ -729,6 +738,19 @@ export function archiveBusiness(businessId) {
  */
 export function restoreBusiness(businessId) {
     return fetchWithError(`${API_BASE_URL}businesses/${businessId}/restore`, {
+        method: "PATCH",
+    });
+}
+
+export function archiveTask(taskId, archivedReason) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/archive`, {
+        method: "PATCH",
+        body: JSON.stringify({ confirm: true, archived_reason: archivedReason }),
+    });
+}
+
+export function restoreTask(taskId) {
+    return fetchWithError(`${API_BASE_URL}tasks/${taskId}/restore`, {
         method: "PATCH",
     });
 }
@@ -817,7 +839,7 @@ export function sendTestEmail(recipientEmail) {
 // ============================================================================
 
 // ============================================
-// Project Archive/Delete Functions
+// Project Archive Functions
 // ============================================
 
 /**
@@ -833,11 +855,13 @@ export function getProjectStudents(projectId) {
  * Archive a project (supervisor: own projects, teacher: all)
  * @param {string} projectId
  * @param {boolean} confirm - Set to true to confirm despite affected students
+ * @param {string} archivedReason
  * @returns {Promise<{message: string, notified_count?: number} | {message: string, affected_students: Array, requires_confirmation: boolean}>}
  */
-export function archiveProject(projectId, confirm = false) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectId}/archive?confirm=${confirm}`, {
+export function archiveProject(projectId, confirm = false, archivedReason = "") {
+    return fetchWithError(`${API_BASE_URL}projects/${projectId}/archive`, {
         method: "PATCH",
+        body: JSON.stringify({ confirm, archived_reason: archivedReason }),
     });
 }
 
@@ -849,19 +873,6 @@ export function archiveProject(projectId, confirm = false) {
 export function restoreProject(projectId) {
     return fetchWithError(`${API_BASE_URL}projects/${projectId}/restore`, {
         method: "PATCH",
-    });
-}
-
-/**
- * Permanently delete a project (teacher only)
- * Creates portfolio snapshots for completed tasks before deletion
- * @param {string} projectId
- * @param {boolean} confirm - Set to true to confirm despite affected students
- * @returns {Promise<{message: string, snapshots_created?: number, notified_count?: number} | {message: string, affected_students: Array, requires_confirmation: boolean}>}
- */
-export function deleteProject(projectId, confirm = false) {
-    return fetchWithError(`${API_BASE_URL}projects/${projectId}?confirm=${confirm}`, {
-        method: "DELETE",
     });
 }
 

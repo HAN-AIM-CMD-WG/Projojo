@@ -6,9 +6,8 @@ import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import SkeletonList from "../components/SkeletonList";
-import Tooltip from "../components/Tooltip";
 import Alert from "../components/Alert";
-import { createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
+import { createNewBusiness, getBusinessesBasic, getArchivedBusinesses, getArchivedProjects, getArchivedTasks, archiveBusiness, restoreBusiness, restoreProject, restoreTask, IMAGE_BASE_URL } from "../services";
 
 export default function TeacherPage() {
     const { authData } = useAuth();
@@ -16,14 +15,19 @@ export default function TeacherPage() {
     const [error, setError] = useState(null);
     const [businesses, setBusinesses] = useState([]);
     const [archivedBusinesses, setArchivedBusinesses] = useState([]);
+    const [archivedProjects, setArchivedProjects] = useState([]);
+    const [archivedTasks, setArchivedTasks] = useState([]);
     const [isCreateBusinessModalVisible, setIsCreateBusinessModalVisible] = useState(false);
     const [newBusinessName, setNewBusinessName] = useState("");
-    const [createAsDraft, setCreateAsDraft] = useState(false);
     const [createNewBusinessError, setCreateNewBusinessError] = useState("");
     const [numberToReloadBusinesses, setNumberToReloadBusinesses] = useState(0);
     const [archiveModalBusiness, setArchiveModalBusiness] = useState(null);
     const [isArchiving, setIsArchiving] = useState(false);
-    const [showArchivedSection, setShowArchivedSection] = useState(false);
+    const [showArchivedBusinesses, setShowArchivedBusinesses] = useState(false);
+    const [showArchivedProjects, setShowArchivedProjects] = useState(false);
+    const [showArchivedTasks, setShowArchivedTasks] = useState(false);
+    const [archiveReason, setArchiveReason] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!authData.isLoading && authData.type !== 'teacher') {
@@ -32,16 +36,11 @@ export default function TeacherPage() {
     }, [authData.isLoading]);
 
     const onCreateNewBusiness = () => {
-        createNewBusiness(newBusinessName, createAsDraft)
+        createNewBusiness(newBusinessName)
             .then(() => {
                 setCreateNewBusinessError(null);
                 setIsCreateBusinessModalVisible(false);
                 setNewBusinessName("");
-                setCreateAsDraft(false);
-                // If created as draft, show the archived section
-                if (createAsDraft) {
-                    setShowArchivedSection(true);
-                }
                 setNumberToReloadBusinesses(numberToReloadBusinesses + 1);
             })
             .catch(error => {
@@ -51,6 +50,7 @@ export default function TeacherPage() {
 
     useEffect(() => {
         let ignore = false;
+        setIsLoading(true);
 
         // Fetch active businesses first
         getBusinessesBasic()
@@ -73,6 +73,30 @@ export default function TeacherPage() {
                 // Silently fail - archived businesses are optional
                 if (ignore) return;
                 setArchivedBusinesses([]);
+            })
+            .finally(() => {
+                if (ignore) return;
+                setIsLoading(false);
+            });
+
+        getArchivedProjects()
+            .then(data => {
+                if (ignore) return;
+                setArchivedProjects(data);
+            })
+            .catch(() => {
+                if (ignore) return;
+                setArchivedProjects([]);
+            });
+
+        getArchivedTasks()
+            .then(data => {
+                if (ignore) return;
+                setArchivedTasks(data);
+            })
+            .catch(() => {
+                if (ignore) return;
+                setArchivedTasks([]);
             });
 
         return () => {
@@ -85,8 +109,9 @@ export default function TeacherPage() {
 
         setIsArchiving(true);
         try {
-            await archiveBusiness(archiveModalBusiness.id);
+            await archiveBusiness(archiveModalBusiness.id, archiveReason.trim());
             setArchiveModalBusiness(null);
+            setArchiveReason("");
             setNumberToReloadBusinesses(prev => prev + 1);
         } catch (err) {
             setError(err.message);
@@ -106,15 +131,29 @@ export default function TeacherPage() {
         }
     };
 
+    const handleRestoreProject = async (projectId) => {
+        try {
+            await restoreProject(projectId);
+            setNumberToReloadBusinesses(prev => prev + 1);
+        } catch (err) {
+            setError(err.message || "Er ging iets mis bij het herstellen van het project");
+        }
+    };
+
+    const handleRestoreTask = async (taskId) => {
+        try {
+            await restoreTask(taskId);
+            setNumberToReloadBusinesses(prev => prev + 1);
+        } catch (err) {
+            setError(err.message || "Er ging iets mis bij het herstellen van de taak");
+        }
+    };
+
     return (
         <>
             <Alert text={error} onClose={() => setError(null)} />
             <PageHeader name={'Beheerpagina'} />
             <div className="flex flex-wrap gap-4 justify-between mb-6">
-                <button onClick={() => openGenerateLinkModel()} className="neu-btn-primary">
-                    <span className="material-symbols-outlined text-sm mr-2">person_add</span>
-                    Nodig docenten uit
-                </button>
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="neu-btn-primary">
                     <span className="material-symbols-outlined text-sm mr-2">add_business</span>
                     Organisatie aanmaken
@@ -183,10 +222,10 @@ export default function TeacherPage() {
             {/* Archived Businesses Section */}
             <section className="mb-8">
                 <button
-                    onClick={() => setShowArchivedSection(!showArchivedSection)}
+                    onClick={() => setShowArchivedBusinesses(!showArchivedBusinesses)}
                     className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4"
                 >
-                    <span className={`material-symbols-outlined transition-transform ${showArchivedSection ? 'rotate-90' : ''}`}>
+                    <span className={`material-symbols-outlined transition-transform ${showArchivedBusinesses ? 'rotate-90' : ''}`}>
                         chevron_right
                     </span>
                     <span className="font-bold">Gearchiveerde Organisaties</span>
@@ -195,7 +234,7 @@ export default function TeacherPage() {
                     )}
                 </button>
 
-                {showArchivedSection && (
+                {showArchivedBusinesses && (
                     archivedBusinesses.length === 0 ? (
                         <div className="neu-pressed p-6 text-center">
                             <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inventory_2</span>
@@ -247,69 +286,86 @@ export default function TeacherPage() {
                 )}
             </section>
 
+            <section className="mb-8">
+                <button
+                    onClick={() => setShowArchivedProjects(!showArchivedProjects)}
+                    className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4"
+                >
+                    <span className={`material-symbols-outlined transition-transform ${showArchivedProjects ? 'rotate-90' : ''}`}>
+                        chevron_right
+                    </span>
+                    <span className="font-bold">Gearchiveerde Projecten</span>
+                    <span className="neu-badge-outline">{archivedProjects.length}</span>
+                </button>
+                {showArchivedProjects && (
+                    archivedProjects.length === 0 ? (
+                        <div className="neu-pressed p-6 text-center text-[var(--text-muted)] text-sm">Geen gearchiveerde projecten</div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {archivedProjects.map((project) => (
+                                <div key={project.id} className="neu-pressed p-4 opacity-75">
+                                    <div className="flex flex-col gap-2">
+                                        <h3 className="font-bold text-[var(--text-secondary)] truncate">{project.name}</h3>
+                                        <p className="text-sm text-[var(--text-muted)] truncate">Business: {project.business_id || 'Onbekend'}</p>
+                                        <p className="text-xs text-[var(--text-muted)] line-clamp-2">{project.archived_reason || 'Geen reden opgegeven'}</p>
+                                    </div>
+                                    <div className="flex gap-2 mt-4">
+                                        <Link to={`/projects/${project.id}`} className="neu-btn flex-1 text-sm justify-center">
+                                            <span className="material-symbols-outlined text-sm mr-1">visibility</span>
+                                            Bekijk
+                                        </Link>
+                                        <button onClick={() => handleRestoreProject(project.id)} className="neu-btn text-sm !text-green-600">
+                                            <span className="material-symbols-outlined text-sm">unarchive</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+            </section>
+
+            <section className="mb-8">
+                <button
+                    onClick={() => setShowArchivedTasks(!showArchivedTasks)}
+                    className="flex items-center gap-2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-4"
+                >
+                    <span className={`material-symbols-outlined transition-transform ${showArchivedTasks ? 'rotate-90' : ''}`}>
+                        chevron_right
+                    </span>
+                    <span className="font-bold">Gearchiveerde Taken</span>
+                    <span className="neu-badge-outline">{archivedTasks.length}</span>
+                </button>
+                {showArchivedTasks && (
+                    archivedTasks.length === 0 ? (
+                        <div className="neu-pressed p-6 text-center text-[var(--text-muted)] text-sm">Geen gearchiveerde taken</div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                            {archivedTasks.map((task) => (
+                                <div key={task.id} className="neu-pressed p-4 opacity-75">
+                                    <div className="flex flex-col gap-2">
+                                        <h3 className="font-bold text-[var(--text-secondary)] truncate">{task.name}</h3>
+                                        <p className="text-sm text-[var(--text-muted)] truncate">Project: {task.project_id || 'Onbekend'}</p>
+                                        <p className="text-xs text-[var(--text-muted)] line-clamp-2">{task.archived_reason || 'Geen reden opgegeven'}</p>
+                                    </div>
+                                    <div className="flex gap-2 mt-4">
+                                        <Link to={`/projects/${task.project_id}`} className="neu-btn flex-1 text-sm justify-center">
+                                            <span className="material-symbols-outlined text-sm mr-1">visibility</span>
+                                            Project
+                                        </Link>
+                                        <button onClick={() => handleRestoreTask(task.id)} className="neu-btn text-sm !text-green-600">
+                                            <span className="material-symbols-outlined text-sm">unarchive</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
+                )}
+            </section>
+
             <hr className="mt-8 mb-6 border-gray-200" />
             <NewSkillsManagement />
-
-            <Modal
-                modalHeader={`Collega toevoegen`}
-                isModalOpen={isModalOpen}
-                setIsModalOpen={setIsModalOpen}
-            >
-                <div className="p-4">
-                    {isLoading ?
-                        <div className='flex flex-col items-center gap-4'>
-                            <p className='font-semibold'>Aan het laden...</p>
-                            <Loading size="48px" />
-                        </div>
-                        : error ?
-                            <div className="flex flex-col items-center gap-2 text-red-600">
-                                <p className='font-semibold'>Er is iets misgegaan.</p>
-                                <p className='text-sm'>{error}</p>
-                                <button
-                                    type="button"
-                                    className="btn-primary mt-2"
-                                    onClick={openGenerateLinkModel}
-                                >
-                                    Probeer opnieuw
-                                </button>
-                            </div>
-                            : inviteLink &&
-                            <div className="flex flex-col items-center">
-                                <p className='font-semibold'>Deel de volgende link met een collega:</p>
-                                <div className='w-full flex flex-row gap-2 mt-2'>
-                                    <div className="basis-full">
-                                        <FormInput
-                                            placeholder={"Uitnodigingslink"}
-                                            readonly={true}
-                                            initialValue={inviteLink}
-                                        />
-                                    </div>
-                                    <button
-                                        className="hover:bg-gray-200 transition-colors p-2 rounded-md"
-                                        onClick={onCopyLink}
-                                        ref={toolTipRef}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className='w-5 h-5'><path stroke="currentColor" d="M104.6 48L64 48C28.7 48 0 76.7 0 112L0 384c0 35.3 28.7 64 64 64l96 0 0-48-96 0c-8.8 0-16-7.2-16-16l0-272c0-8.8 7.2-16 16-16l16 0c0 17.7 14.3 32 32 32l72.4 0C202 108.4 227.6 96 256 96l62 0c-7.1-27.6-32.2-48-62-48l-40.6 0C211.6 20.9 188.2 0 160 0s-51.6 20.9-55.4 48zM144 56a16 16 0 1 1 32 0 16 16 0 1 1 -32 0zM448 464l-192 0c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l140.1 0L464 243.9 464 448c0 8.8-7.2 16-16 16zM256 512l192 0c35.3 0 64-28.7 64-64l0-204.1c0-12.7-5.1-24.9-14.1-33.9l-67.9-67.9c-9-9-21.2-14.1-33.9-14.1L256 128c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64z" /></svg>
-                                        <div className="sr-only">Kopieer link</div>
-                                        <Tooltip parentRef={toolTipRef}>
-                                            {tooltipText}
-                                        </Tooltip>
-                                    </button>
-
-                                </div>
-                                <p className='text-sm mt-1 text-[var(--text-secondary)] italic'>Deze link is geldig tot {formatDate(expiry)}.</p>
-                                <p className='text-sm mt-4'>De link is slechts één keer bruikbaar.</p>
-                                <button
-                                    type="button"
-                                    className="btn-primary mt-2"
-                                    onClick={openGenerateLinkModel}
-                                >
-                                    Maak een nieuwe link
-                                </button>
-                            </div>
-                    }
-                </div>
-            </Modal>
 
             {/* Archive Confirmation Modal */}
             <Modal
@@ -331,6 +387,15 @@ export default function TeacherPage() {
                             </p>
                         </div>
                     </div>
+                    <div className="mb-4">
+                        <FormInput
+                            label="Reden voor archivering"
+                            placeholder="Waarom wordt deze organisatie gearchiveerd?"
+                            value={archiveReason}
+                            onChange={setArchiveReason}
+                            required
+                        />
+                    </div>
                     <div className="flex gap-3">
                         <button
                             onClick={() => setArchiveModalBusiness(null)}
@@ -341,7 +406,7 @@ export default function TeacherPage() {
                         </button>
                         <button
                             onClick={handleArchiveBusiness}
-                            disabled={isArchiving}
+                            disabled={isArchiving || !archiveReason.trim()}
                             className="neu-btn flex-1 !bg-red-500 !text-white hover:!bg-red-600"
                         >
                             {isArchiving ? (
@@ -370,37 +435,17 @@ export default function TeacherPage() {
                         e.preventDefault();
                         onCreateNewBusiness();
                     }}
+                    className="p-4"
                 >
                     <div className="flex flex-col mb-4">
                         <FormInput onChange={businessName => setNewBusinessName(businessName)} value={newBusinessName} type="text" label={`Organisatienaam`} placeholder={"Vul de naam van de organisatie in..."} name={`title`} required />
                         <p className="mt-1 text-sm italic text-[var(--text-secondary)]">De rest van de informatie vult de organisatie zelf in.</p>
                     </div>
 
-                    {/* Create as draft checkbox */}
-                    <label className="flex items-center gap-3 mb-4 cursor-pointer group">
-                        <div className="relative">
-                            <input
-                                type="checkbox"
-                                checked={createAsDraft}
-                                onChange={(e) => setCreateAsDraft(e.target.checked)}
-                                className="sr-only peer"
-                            />
-                            <div className="w-5 h-5 neu-pressed rounded-md peer-checked:bg-primary peer-checked:shadow-none transition-all flex items-center justify-center">
-                                {createAsDraft && (
-                                    <span className="material-symbols-outlined text-white text-sm">check</span>
-                                )}
-                            </div>
-                        </div>
-                        <div>
-                            <span className="font-medium text-[var(--text-primary)] group-hover:text-primary transition-colors">Aanmaken als concept</span>
-                            <p className="text-xs text-[var(--text-muted)]">De organisatie is verborgen totdat je het publiceert</p>
-                        </div>
-                    </label>
-
                     {createNewBusinessError && <p className="col-span-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200 mb-2">{createNewBusinessError}</p>}
-                    <button type="button" onClick={onCreateNewBusiness} name="Organisatie aanmaken" className="neu-btn-primary w-full justify-center">
-                        <span className="material-symbols-outlined text-sm mr-2">{createAsDraft ? 'edit_note' : 'add_business'}</span>
-                        {createAsDraft ? 'Concept aanmaken' : 'Organisatie aanmaken'}
+                    <button type="submit" name="Organisatie aanmaken" className="neu-btn-primary w-full justify-center">
+                        <span className="material-symbols-outlined text-sm mr-2">add_business</span>
+                        Organisatie aanmaken
                     </button>
                 </form>
             </Modal>

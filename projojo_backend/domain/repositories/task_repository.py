@@ -18,6 +18,11 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+                not { $task has archivedAt $task_archived_at; };
+                not {
+                    $projectTaskCheck isa containsTask (project: $project_check, task: $task);
+                    $project_check has archivedAt $project_archived_at;
+                };
                 $projectTask isa containsTask (project: $project, task: $task);
                 $project has id $project_id;
             fetch {
@@ -52,7 +57,10 @@ class TaskRepository(BaseRepository[Task]):
                     return count;
                 ),
                 'start_date': [$task.startDate],
-                'end_date': [$task.endDate]
+                'end_date': [$task.endDate],
+                'archived_at': [$task.archivedAt],
+                'archived_by': [$task.archivedBy],
+                'archived_reason': [$task.archivedReason]
             };
         """
         results = Db.read_transact(query, {"id": id})
@@ -71,6 +79,11 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+                not { $task has archivedAt $task_archived_at; };
+                not {
+                    $projectTaskCheck isa containsTask (project: $project_check, task: $task);
+                    $project_check has archivedAt $project_archived_at;
+                };
                 $projectTask isa containsTask (project: $project, task: $task);
                 $project has id $project_id;
             fetch {
@@ -105,7 +118,43 @@ class TaskRepository(BaseRepository[Task]):
                     return count;
                 ),
                 'start_date': [$task.startDate],
-                'end_date': [$task.endDate]
+                'end_date': [$task.endDate],
+                'archived_at': [$task.archivedAt],
+                'archived_by': [$task.archivedBy],
+                'archived_reason': [$task.archivedReason]
+            };
+        """
+        results = Db.read_transact(query)
+        return [Task.model_validate(result) for result in results]
+
+    def get_archived(self) -> list[Task]:
+        query = """
+            match
+                $task isa task,
+                has id $id,
+                has name $name,
+                has description $description,
+                has totalNeeded $totalNeeded,
+                has createdAt $createdAt,
+                has archivedAt $archived_at;
+                $projectTask isa containsTask (project: $project, task: $task);
+                $project has id $project_id;
+            fetch {
+                'id': $id,
+                'name': $name,
+                'description': $description,
+                'total_needed': $totalNeeded,
+                'created_at': $createdAt,
+                'project_id': $project_id,
+                'total_registered': 0,
+                'total_accepted': 0,
+                'total_started': 0,
+                'total_completed': 0,
+                'start_date': [$task.startDate],
+                'end_date': [$task.endDate],
+                'archived_at': [$task.archivedAt],
+                'archived_by': [$task.archivedBy],
+                'archived_reason': [$task.archivedReason]
             };
         """
         results = Db.read_transact(query)
@@ -117,6 +166,7 @@ class TaskRepository(BaseRepository[Task]):
                 $project isa project,
                 has id ~project_id,
                 has id $project_id;
+                not { $project has archivedAt $project_archived_at; };
                 $projectTask isa containsTask (project: $project, task: $task);
                 $task isa task,
                 has id $id,
@@ -124,6 +174,7 @@ class TaskRepository(BaseRepository[Task]):
                 has description $description,
                 has totalNeeded $totalNeeded,
                 has createdAt $createdAt;
+                not { $task has archivedAt $task_archived_at; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -156,7 +207,10 @@ class TaskRepository(BaseRepository[Task]):
                     return count;
                 ),
                 'start_date': [$task.startDate],
-                'end_date': [$task.endDate]
+                'end_date': [$task.endDate],
+                'archived_at': [$task.archivedAt],
+                'archived_by': [$task.archivedBy],
+                'archived_reason': [$task.archivedReason]
             };
         """
         results = Db.read_transact(query, {"project_id": project_id})
@@ -190,6 +244,7 @@ class TaskRepository(BaseRepository[Task]):
         validation_query = """
             match
                 $project isa project, has id ~project_id, has name $project_name;
+                not { $project has archivedAt $project_archived_at; };
             fetch {
                 'exists': true,
                 'project_name': $project_name,
@@ -258,8 +313,10 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id $student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+            not { $registration has archivedAt $registration_archived_at; };
             not { $registration has isAccepted $any_value; };
             fetch {
                 'reason': $registration.description,
@@ -294,8 +351,10 @@ class TaskRepository(BaseRepository[Task]):
         pending_query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id $student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+            not { $registration has archivedAt $registration_archived_at; };
             not { $registration has isAccepted $any_value; };
             fetch {
                 'reason': $registration.description,
@@ -321,8 +380,10 @@ class TaskRepository(BaseRepository[Task]):
         accepted_query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id $student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has archivedAt $registration_archived_at; };
                 $registration has isAccepted true;
             fetch {
                 'reason': $registration.description,
@@ -391,6 +452,9 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
+                $containsTask isa containsTask (project: $project, task: $task);
+                not { $project has archivedAt $project_archived_at; };
                 $student isa student, has id ~student_id;
             insert
                 $registration isa registersForTask (student: $student, task: $task),
@@ -418,8 +482,10 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has archivedAt $registration_archived_at; };
             update
                 $registration has isAccepted ~accepted;
                 $registration has response ~response;
@@ -437,8 +503,10 @@ class TaskRepository(BaseRepository[Task]):
             accept_time_query = """
                 match
                     $task isa task, has id ~task_id;
+                    not { $task has archivedAt $task_archived_at; };
                     $student isa student, has id ~student_id;
                     $registration isa registersForTask (student: $student, task: $task);
+                    not { $registration has archivedAt $registration_archived_at; };
                 update
                     $registration has acceptedAt ~accepted_at;
             """
@@ -460,8 +528,10 @@ class TaskRepository(BaseRepository[Task]):
         check_query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has archivedAt $registration_archived_at; };
                 not { $registration has isAccepted $any; };
             fetch {
                 'task_id': $task.id
@@ -480,8 +550,10 @@ class TaskRepository(BaseRepository[Task]):
         delete_query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has archivedAt $registration_archived_at; };
                 not { $registration has isAccepted $any; };
             delete
                 $registration;
@@ -502,11 +574,15 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $business isa business, has id ~business_id;
+                not { $business has archivedAt $business_archived_at; };
                 $hasProjects isa hasProjects (business: $business, project: $project);
+                not { $project has archivedAt $project_archived_at; };
                 $project has id $project_id, has name $project_name;
                 $containsTask isa containsTask (project: $project, task: $task);
+                not { $task has archivedAt $task_archived_at; };
                 $task has id $task_id, has name $task_name;
                 $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has archivedAt $registration_archived_at; };
                 not { $registration has isAccepted $any; };
                 $student has id $student_id, 
                     has fullName $student_name,
@@ -542,11 +618,15 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $business isa business, has id ~business_id;
+                not { $business has archivedAt $business_archived_at; };
                 $hasProjects isa hasProjects (business: $business, project: $project);
+                not { $project has archivedAt $project_archived_at; };
                 $project has id $project_id, has name $project_name;
                 $containsTask isa containsTask (project: $project, task: $task);
+                not { $task has archivedAt $task_archived_at; };
                 $task has id $task_id, has name $task_name;
                 $registration isa registersForTask (student: $student, task: $task),
+                    not { $registration has archivedAt $registration_archived_at; },
                     has isAccepted true;
                 $student has id $student_id, 
                     has fullName $student_name,
@@ -574,8 +654,10 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task),
+                    not { $registration has archivedAt $registration_archived_at; },
                     has isAccepted true;
             update
                 $registration has startedAt ~started_at;
@@ -597,8 +679,10 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task),
+                    not { $registration has archivedAt $registration_archived_at; },
                     has isAccepted true;
             update
                 $registration has completedAt ~completed_at;
@@ -617,8 +701,10 @@ class TaskRepository(BaseRepository[Task]):
         query = """
             match
                 $task isa task, has id ~task_id;
+                not { $task has archivedAt $task_archived_at; };
                 $student isa student, has id ~student_id;
                 $registration isa registersForTask (student: $student, task: $task);
+                not { $registration has archivedAt $registration_archived_at; };
             fetch {
                 'requested_at': [$registration.requestedAt],
                 'accepted_at': [$registration.acceptedAt],
@@ -728,4 +814,6 @@ class TaskRepository(BaseRepository[Task]):
         """
 
         Db.write_transact(query, update_params)
+
+
 

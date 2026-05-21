@@ -2,9 +2,7 @@ import { useState, useMemo } from 'react';
 import ProjectCard from './ProjectCard';
 
 function isProjectArchived(project) {
-    if (project.status === 'completed') return true;
-    if (project.end_date && new Date(project.end_date) < new Date()) return true;
-    return false;
+    return Boolean(project.archived_at);
 }
 
 export default function ProjectDashboard({ projects, isAlwaysExtended = false }) {
@@ -56,5 +54,6 @@ export default function ProjectDashboard({ projects, isAlwaysExtended = false })
         </div>
     );
 }
+
 
 

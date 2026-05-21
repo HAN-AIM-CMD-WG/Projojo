@@ -20,12 +20,12 @@ class Project(BaseModel):
     end_date: datetime | None = None
     is_public: bool | None = None
     impact_summary: str | None = None
+    archived_at: datetime | None = None
+    archived_by: str | None = None
+    archived_reason: str | None = None
 
     class Config:
         from_attributes = True
-        json_encoders = {
-            datetime: lambda dt: dt.strftime("%Y-%m-%dT%H:%M:%S")
-        }
 
 class ProjectCreation(Project):
     supervisor_id: str
