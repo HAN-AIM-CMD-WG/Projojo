@@ -132,10 +132,13 @@ When a future Archiving task starts, I should:
 - added blocked restore preview metadata to `RestorePreviewResponse` for spec-aligned parent-chain restore handling
 - added a small backend route test file for archive/restore contract coverage, but execution is currently deferred until pytest is available in the local environment
 - re-validated the touched backend files and the new test module with `python -m py_compile`
+- committed the backend preview/restore slice as:
+  - `347a356` — `ARCH-002: align archive preview and restore backend contracts`
 
 **Confirmed not yet done in this session:**
 
 - pytest execution is still unavailable locally, so route-test runtime verification is pending tool availability
+- latest ARCH-002 commit still needs push / final board alignment
 - broader ARCH-002 cleanup outside the completed business/project/task route flow still remains
 
 ### Next recommended active tasks
@@ -143,7 +146,7 @@ When a future Archiving task starts, I should:
 If a new task begins and no new instruction overrides this plan, the default next priorities are:
 
 1. **ARCH-task-002 / #319**
-   - commit and push the latest backend preview/restore slice
+   - push commit `347a356` if it is not yet on `origin/next-UI_Archive_Feature`
    - verify board state for #319 reflects the expanded ARCH-002 checkpoint
    - continue removing remaining ARCH-002 contract mismatches outside the completed business/project/task route flow
    - return to runtime test execution once pytest is available locally
