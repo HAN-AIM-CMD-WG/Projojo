@@ -35,8 +35,8 @@ Related story issues:
 ### High-confidence assessment
 
 - **ARCH-task-017** is **implemented, committed, pushed, and moved to AI Review**.
-- **ARCH-task-019** is **verified and moved to AI Review**, but **not safely pushable as a standalone change yet**.
-- **ARCH-task-002** has now been **advanced further locally** with new archive request/response models in `projojo_backend/domain/models/archive.py` and partial backend route contract wiring.
+- **ARCH-task-019** is **verified, included in a pushed review checkpoint, and still logically coupled to broader archive foundations work rather than a standalone seed-only slice**.
+- **ARCH-task-002** has now been **advanced further** with archive request/response models, typed route contracts, portfolio archive-metadata migration, and richer archived-list repository responses.
 - Archiving as a whole is **partially scaffolded**, but the full target spec is **not yet complete**.
 
 ### Current task status overview
@@ -44,7 +44,7 @@ Related story issues:
 | Task | GitHub | Status | Short assessment |
 |---|---:|---|---|
 | ARCH-task-001 | #318 | Done-ish | Schema now uses archive metadata fields. |
-| ARCH-task-002 | #319 | In progress | Archive model contract is upgraded and partially wired through backend route responses, but preview/restore flows and repository/list contract migration remain. |
+| ARCH-task-002 | #319 | In progress | Archive model contract is upgraded further: portfolio now uses `archived_at` semantics and archived list endpoints expose richer parent context, but preview/restore flows are still incomplete. |
 | ARCH-task-003 | #320 | Partial | Draft business path seems removed, but legacy hard-delete/archive-adjacent remnants still need cleanup. |
 | ARCH-task-004 | #321 | Partial | Many archive filters exist, but cleanup and consistency work remains. |
 | ARCH-task-005 | #322 | Not done | No complete edit-locking/archive guard pass yet. |
@@ -61,7 +61,7 @@ Related story issues:
 | ARCH-task-016 | #333 | Not done | Student recently archived dashboard flow not complete. |
 | ARCH-task-017 | #334 | AI Review | Implemented, isolated, committed, pushed, and moved to AI Review. |
 | ARCH-task-018 | #335 | Not done | Multi-business supervisor switcher not found. |
-| ARCH-task-019 | #336 | AI Review (not pushed) | Seed scenarios are present, but they are entangled with broader unstaged schema/backend work. |
+| ARCH-task-019 | #336 | AI Review | Seed scenarios are present and pushed inside the broader archive foundations checkpoint. |
 | ARCH-task-020 | #337 | Not done | Final cleanup/verification gate not complete. |
 
 ### Current checkpoint summary
@@ -90,8 +90,13 @@ Related story issues:
     - typed archived-list route response models in business/project/task routers
     - typed archive/restore action response models in business/task restore flows and business/task archive flows
     - typed restore action response model for project restore
+    - portfolio repository + student portfolio route/docs now use `archived_at` instead of legacy `is_archived` / `project.isArchived`
+    - portfolio frontend components now read `archived_at`
+    - archived project/task repository methods now return richer parent-context data aligned with `ArchivedProjectItem` / `ArchivedTaskItem`
   - checkpoint committed as:
     - `407b77f` — `ARCH-002/019: checkpoint archive contract and seed foundations`
+  - additional local checkpoint ready to commit:
+    - portfolio/archive contract cleanup + archived listing parent-context enrichment
 
 ---
 
@@ -119,30 +124,33 @@ When a future Archiving task starts, I should:
 - verified the touched backend files compile with `python -m py_compile`
 - committed the current archive foundations checkpoint as:
   - `407b77f` — `ARCH-002/019: checkpoint archive contract and seed foundations`
+- further advanced ARCH-002 by removing legacy portfolio `is_archived` semantics in favor of `archived_at`
+- enriched archived project/task repository responses with parent business/project context and blocking flags
+- re-validated the touched backend files with `python -m py_compile`
 
 **Confirmed not yet done in this session:**
 
 - ARCH-002 is **started but not finished**
-- current checkpoint still needs push / board alignment after commit
+- latest ARCH-002 cleanup slice still needs commit / push / board alignment
 
 ### Next recommended active tasks
 
 If a new task begins and no new instruction overrides this plan, the default next priorities are:
 
-1. **ARCH-task-019 / #336**
-   - isolate the minimum safe schema + seed slice
-   - commit it cleanly
-   - push it
-   - keep board state aligned
-
-2. **ARCH-task-002 / #319**
+1. **ARCH-task-002 / #319**
+   - commit and push the latest contract-cleanup slice
    - continue migrating routes/repositories to the new archive request/response model contract
    - remove remaining mismatches between placeholder models and spec-driven models
+   - finish preview/restore request-response wiring gaps
+
+2. **ARCH-task-019 / #336**
+   - keep board state aligned with the fact that seed coverage shipped inside the broader archive foundations checkpoint
+   - avoid reopening “seed-only isolation” unless a reviewer explicitly requests it
 
 If both are possible, do them in that order:
 
 ```text
-ARCH-019 isolation/push → ARCH-002 continuation
+ARCH-002 checkpoint/push → ARCH-002 continuation
 ```
 
 ---
@@ -192,7 +200,8 @@ ARCH-019 isolation/push → ARCH-002 continuation
 4. `AuthCallback.jsx` already routes blocked supervisors to `/publiek`.
 5. `auth_service.py` already checks `supervisor_has_active_business(...)`.
 6. `seed.tql` already contains strong archive scenario coverage.
-7. `portfolio_repository.py` still contains legacy archive concepts and must be treated carefully during cleanup.
+7. `portfolio_repository.py` no longer relies on `project.isArchived` for portfolio state; it now exposes `archived_at` for live/active items.
+8. archived project/task inventory queries now include richer parent context for later teacher restore UX work.
 
 ---
 
@@ -417,14 +426,14 @@ When implementing Archiving tasks, I should:
 At the latest checkpoint:
 
 - **ARCH-task-017 / #334** has already been committed, pushed, and moved to **AI Review**
-- **ARCH-task-019 / #336** has already been moved to **AI Review**, but still needs safe change isolation before commit/push
-- **ARCH-task-002 / #319** is the current active implementation task already started locally
+- **ARCH-task-019 / #336** is already represented in the pushed archive foundations checkpoint on `origin/next-UI_Archive_Feature`
+- **ARCH-task-002 / #319** remains the active implementation task with an additional uncommitted cleanup slice now ready
 
 That means the next implementation/release housekeeping step should be:
 
-1. isolate and safely commit/push **ARCH-019** if possible
+1. commit/push the latest **ARCH-002** cleanup slice
 2. continue **ARCH-002** route/repository migration work
-3. update this file again when the checkpoint changes
+3. update board state / this file again when the checkpoint changes
 
 ---
 
@@ -518,8 +527,8 @@ Remaining gap:
 
 - project archive still uses older warning/notification semantics instead of the spec-aligned preview contract
 - restore preview/selective restore request/response flow is not wired yet
-- repository methods still do not provide the full preview/list parent-context contract required by later archive UX tasks
-- legacy `is_archived` / `isArchived` semantics still exist in adjacent non-archiving areas such as portfolio-related code
+- repository methods still do not provide the full preview/list contract required by later archive UX tasks, even though archived project/task inventory context is now richer
+- some legacy `isArchived` semantics may still exist in adjacent non-archiving areas outside the portfolio path and should still be cleaned up systematically
 
 ---
 
@@ -1034,7 +1043,7 @@ Support visible switching between active businesses for supervisors.
 ## ARCH-task-019 — #336
 ### Seed Data for Archive Scenarios
 
-**Status:** AI Review / verified locally / not yet pushed separately
+**Status:** AI Review / verified locally / included in pushed archive foundations checkpoint
 
 **Relevant files**
 
@@ -1058,22 +1067,11 @@ Support visible switching between active businesses for supervisors.
 - `seed.tql` already contains archived metadata, independent archive seeds, recent/older archived registrations, and collision scenarios.
 - schema changes for archive metadata ownership are also present in `schema.tql`.
 - issue **#336** has been moved to **AI Review**.
+- this seed work is now pushed as part of the broader archive foundations checkpoint (`407b77f` and later branch state), rather than as a standalone seed-only commit.
 
-**Important push note**
+**Important note**
 
-Do **not** assume ARCH-019 is ready for standalone push just because the seed data looks complete.
-
-Current blocker:
-
-- ARCH-019 currently sits inside a broader unstaged archive-change set including schema, repositories, routes, frontend, and new files.
-- It must be isolated before commit/push.
-
-Default next move:
-
-1. inspect `schema.tql` + `seed.tql` dependency boundaries
-2. determine whether ARCH-019 can be committed as a clean schema+seed slice
-3. if yes, commit and push
-4. if no, document the dependency and continue ARCH-002
+Treat ARCH-019 as shipped inside the broader foundations slice unless a reviewer explicitly asks for seed-only isolation.
 
 ---
 

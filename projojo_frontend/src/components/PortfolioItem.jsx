@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
  */
 export default function PortfolioItem({ item, expanded = false, onToggleExpand }) {
     const isLive = item.source_type === "live";
-    const isArchived = item.is_archived;
+    const isArchived = Boolean(item.archived_at);
     const isSnapshot = item.source_type === "snapshot";
 
     // Parse timeline

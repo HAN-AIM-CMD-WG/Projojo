@@ -269,14 +269,14 @@ export default function PortfolioRoadmap({ items = [], studentName = "" }) {
     }, [itemBars]);
 
     const getStatusColor = (item) => {
-        if (item.is_archived) return "bg-amber-500";
+        if (item.archived_at) return "bg-amber-500";
         if (item.source_type === "snapshot") return "bg-gray-400";
         if (item.isCompleted) return "bg-green-500";
         return "bg-blue-500";
     };
 
     const getStatusBgColor = (item) => {
-        if (item.is_archived) return "bg-amber-500/20";
+        if (item.archived_at) return "bg-amber-500/20";
         if (item.source_type === "snapshot") return "bg-gray-400/20";
         if (item.isCompleted) return "bg-green-500/20";
         return "bg-blue-500/20";

@@ -113,7 +113,7 @@ class PortfolioRepository:
                 snapshots.append({
                     "id": r.get("id", ""),
                     "source_type": "snapshot",
-                    "is_archived": False,  # Snapshots don't have archived state
+                    "archived_at": None,  # Snapshots don't have archived state
                     "project_name": project_data.get("project_name", ""),
                     "project_description": project_data.get("project_description", ""),
                     "business_name": project_data.get("business_name", ""),
@@ -161,7 +161,7 @@ class PortfolioRepository:
                 'project_id': $project_id,
                 'project_name': $project_name,
                 'project_description': $project_description,
-                'project_archived': [$project.isArchived],
+                'project_archived_at': [$project.archivedAt],
                 'business_id': $business_id,
                 'business_name': $business_name,
                 'business_description': $business_description,
@@ -185,7 +185,7 @@ class PortfolioRepository:
         items = []
         for r in results:
             skills = [s.get("name", "") for s in r.get("skills", [])]
-            project_archived = r.get("project_archived", [])
+            project_archived_at = r.get("project_archived_at", [])
             requested_at = r.get("requested_at", [])
             accepted_at = r.get("accepted_at", [])
             started_at = r.get("started_at", [])
@@ -195,7 +195,7 @@ class PortfolioRepository:
             items.append({
                 "id": f"live-{r.get('task_id', '')}",
                 "source_type": "live",
-                "is_archived": project_archived[0] if project_archived else False,
+                "archived_at": project_archived_at[0] if project_archived_at else None,
                 "project_name": r.get("project_name", ""),
                 "project_description": r.get("project_description", ""),
                 "business_name": r.get("business_name", ""),
@@ -249,7 +249,7 @@ class PortfolioRepository:
                 'project_id': $project_id,
                 'project_name': $project_name,
                 'project_description': $project_description,
-                'project_archived': [$project.isArchived],
+                'project_archived_at': [$project.archivedAt],
                 'business_id': $business_id,
                 'business_name': $business_name,
                 'business_description': $business_description,
@@ -272,7 +272,7 @@ class PortfolioRepository:
         items = []
         for r in results:
             skills = [s.get("name", "") for s in r.get("skills", [])]
-            project_archived = r.get("project_archived", [])
+            project_archived_at = r.get("project_archived_at", [])
             requested_at = r.get("requested_at", [])
             accepted_at = r.get("accepted_at", [])
             started_at = r.get("started_at", [])
@@ -282,7 +282,7 @@ class PortfolioRepository:
             items.append({
                 "id": f"active-{r.get('task_id', '')}",
                 "source_type": "active",
-                "is_archived": project_archived[0] if project_archived else False,
+                "archived_at": project_archived_at[0] if project_archived_at else None,
                 "project_name": r.get("project_name", ""),
                 "project_description": r.get("project_description", ""),
                 "business_name": r.get("business_name", ""),
@@ -310,7 +310,7 @@ class PortfolioRepository:
         
         Returns a list of portfolio items with:
         - source_type: "active" | "live" | "snapshot"
-        - is_archived: bool (for live items)
+        - archived_at: datetime | null (for live/active items)
         - All project, task, business, and skills data
         """
         # Get active, completed live, and snapshot items

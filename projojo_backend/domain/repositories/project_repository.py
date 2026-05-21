@@ -2,7 +2,7 @@ from typing import Any
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import Project, ProjectCreation
+from domain.models import Project, ProjectCreation, ArchivedProjectItem
 from datetime import datetime
 from service.uuid_service import generate_uuid
 
@@ -77,7 +77,7 @@ class ProjectRepository(BaseRepository[Project]):
         results = Db.read_transact(query)
         return [self._map_to_model(result) for result in results]
 
-    def get_archived(self) -> list[Project]:
+    def get_archived(self) -> list[ArchivedProjectItem]:
         query = """
             match
                 $project isa project,
@@ -88,7 +88,9 @@ class ProjectRepository(BaseRepository[Project]):
                 has createdAt $createdAt,
                 has archivedAt $archived_at;
                 $hasProjects isa hasProjects(business: $business, project: $project);
-                $business has id $business_id;
+                $business has id $business_id,
+                    has name $business_name;
+                { $business has archivedAt $business_archived_at; } or { not { $business has archivedAt $business_archived_at; }; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -96,7 +98,9 @@ class ProjectRepository(BaseRepository[Project]):
                 'imagePath': $imagePath,
                 'location': $project.location,
                 'createdAt': $createdAt,
-                'business': $business_id,
+                'business_id': $business_id,
+                'business_name': $business_name,
+                'parent_business_archived': [ $business.archivedAt ],
                 'start_date': [$project.startDate],
                 'end_date': [$project.endDate],
                 'is_public': [$project.isPublic],
@@ -107,7 +111,30 @@ class ProjectRepository(BaseRepository[Project]):
             };
         """
         results = Db.read_transact(query)
-        return [self._map_to_model(result) for result in results]
+        archived_projects = []
+        for result in results:
+            archived_at_list = result.get("archived_at", [])
+            archived_by_list = result.get("archived_by", [])
+            archived_reason_list = result.get("archived_reason", [])
+            parent_business_archived = bool(result.get("parent_business_archived", []))
+
+            archived_projects.append(
+                ArchivedProjectItem(
+                    id=result.get("id", ""),
+                    name=result.get("name", ""),
+                    business_id=result.get("business_id", ""),
+                    business_name=result.get("business_name"),
+                    parent_business_archived=parent_business_archived,
+                    archived_at=archived_at_list[0] if archived_at_list else None,
+                    archived_by=archived_by_list[0] if archived_by_list else None,
+                    archived_reason=archived_reason_list[0] if archived_reason_list else None,
+                )
+            )
+
+        archived_projects.sort(key=lambda item: ((item.archived_at is None), item.archived_at, item.name.lower()), reverse=False)
+        archived_projects.sort(key=lambda item: item.name.lower())
+        archived_projects.sort(key=lambda item: item.archived_at or datetime.min, reverse=True)
+        return archived_projects
 
     def get_public_projects(self) -> list[dict]:
         """Get all public projects with business info for the public discovery page."""

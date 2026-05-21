@@ -34,9 +34,9 @@ export default function PortfolioList({
 
         // Apply filter
         if (filter === "live") {
-            result = result.filter(item => item.source_type === "live" && !item.is_archived);
+            result = result.filter(item => item.source_type === "live" && !item.archived_at);
         } else if (filter === "archived") {
-            result = result.filter(item => item.is_archived);
+            result = result.filter(item => Boolean(item.archived_at));
         } else if (filter === "snapshot") {
             result = result.filter(item => item.source_type === "snapshot");
         }
@@ -74,8 +74,8 @@ export default function PortfolioList({
     // Count items by type
     const counts = useMemo(() => ({
         all: items.length,
-        live: items.filter(item => item.source_type === "live" && !item.is_archived).length,
-        archived: items.filter(item => item.is_archived).length,
+        live: items.filter(item => item.source_type === "live" && !item.archived_at).length,
+        archived: items.filter(item => Boolean(item.archived_at)).length,
         snapshot: items.filter(item => item.source_type === "snapshot").length,
     }), [items]);
 

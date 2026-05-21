@@ -1,7 +1,7 @@
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
-from domain.models import Task
+from domain.models import Task, ArchivedTaskItem
 from datetime import datetime
 from service.uuid_service import generate_uuid
 
@@ -127,7 +127,7 @@ class TaskRepository(BaseRepository[Task]):
         results = Db.read_transact(query)
         return [Task.model_validate(result) for result in results]
 
-    def get_archived(self) -> list[Task]:
+    def get_archived(self) -> list[ArchivedTaskItem]:
         query = """
             match
                 $task isa task,
@@ -138,7 +138,13 @@ class TaskRepository(BaseRepository[Task]):
                 has createdAt $createdAt,
                 has archivedAt $archived_at;
                 $projectTask isa containsTask (project: $project, task: $task);
-                $project has id $project_id;
+                $project has id $project_id,
+                    has name $project_name;
+                $hasProjects isa hasProjects (business: $business, project: $project);
+                $business has id $business_id,
+                    has name $business_name;
+                { $project has archivedAt $project_archived_at; } or { not { $project has archivedAt $project_archived_at; }; };
+                { $business has archivedAt $business_archived_at; } or { not { $business has archivedAt $business_archived_at; }; };
             fetch {
                 'id': $id,
                 'name': $name,
@@ -146,6 +152,11 @@ class TaskRepository(BaseRepository[Task]):
                 'total_needed': $totalNeeded,
                 'created_at': $createdAt,
                 'project_id': $project_id,
+                'project_name': $project_name,
+                'business_id': $business_id,
+                'business_name': $business_name,
+                'parent_project_archived': [ $project.archivedAt ],
+                'parent_business_archived': [ $business.archivedAt ],
                 'total_registered': 0,
                 'total_accepted': 0,
                 'total_started': 0,
@@ -158,7 +169,31 @@ class TaskRepository(BaseRepository[Task]):
             };
         """
         results = Db.read_transact(query)
-        return [Task.model_validate(result) for result in results]
+        archived_tasks = []
+        for result in results:
+            archived_at_list = result.get("archived_at", [])
+            archived_by_list = result.get("archived_by", [])
+            archived_reason_list = result.get("archived_reason", [])
+
+            archived_tasks.append(
+                ArchivedTaskItem(
+                    id=result.get("id", ""),
+                    name=result.get("name", ""),
+                    project_id=result.get("project_id", ""),
+                    project_name=result.get("project_name"),
+                    business_id=result.get("business_id"),
+                    business_name=result.get("business_name"),
+                    parent_project_archived=bool(result.get("parent_project_archived", [])),
+                    parent_business_archived=bool(result.get("parent_business_archived", [])),
+                    archived_at=archived_at_list[0] if archived_at_list else None,
+                    archived_by=archived_by_list[0] if archived_by_list else None,
+                    archived_reason=archived_reason_list[0] if archived_reason_list else None,
+                )
+            )
+
+        archived_tasks.sort(key=lambda item: item.name.lower())
+        archived_tasks.sort(key=lambda item: item.archived_at or datetime.min, reverse=True)
+        return archived_tasks
 
     def get_tasks_by_project(self, project_id: str) -> list[Task]:
         query = """
@@ -814,6 +849,7 @@ class TaskRepository(BaseRepository[Task]):
         """
 
         Db.write_transact(query, update_params)
+
 
 
 

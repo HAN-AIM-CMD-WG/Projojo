@@ -171,7 +171,7 @@ async def get_student_portfolio(
     
     Each item contains:
     - source_type: "live" | "snapshot"
-    - is_archived: bool (for live items, indicates if project is archived)
+    - archived_at: datetime | null (for live/active items, indicates archive metadata)
     - Full project, business, task, and skills data
     - Timeline data for Gantt visualization
     
