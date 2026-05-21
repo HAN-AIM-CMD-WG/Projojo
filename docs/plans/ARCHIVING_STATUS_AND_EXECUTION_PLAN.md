@@ -44,16 +44,16 @@ Related story issues:
 | Task | GitHub | Status | Short assessment |
 |---|---:|---|---|
 | ARCH-task-001 | #318 | Done-ish | Schema now uses archive metadata fields. |
-| ARCH-task-002 | #319 | In progress | Archive model contract is upgraded further: portfolio now uses `archived_at` semantics and archived list endpoints expose richer parent context, but preview/restore flows are still incomplete. |
+| ARCH-task-002 | #319 | In progress | Archive model contract is upgraded further: business/project/task archive and restore routes now use preview-first contracts, but broader contract cleanup and verification still remain. |
 | ARCH-task-003 | #320 | Partial | Draft business path seems removed, but legacy hard-delete/archive-adjacent remnants still need cleanup. |
 | ARCH-task-004 | #321 | Partial | Many archive filters exist, but cleanup and consistency work remains. |
 | ARCH-task-005 | #322 | Not done | No complete edit-locking/archive guard pass yet. |
-| ARCH-task-006 | #323 | Partial | Business archive endpoint exists, but no preview/cascade/spec-complete execution. |
-| ARCH-task-007 | #324 | Partial | Project archive exists, but still old semantics and permissions. |
-| ARCH-task-008 | #325 | Partial | Task archive exists, but not preview-first/spec-complete. |
-| ARCH-task-009 | #326 | Not done | Business restore preview/selective restore not implemented. |
-| ARCH-task-010 | #327 | Not done | Project restore blocked-parent preview/execute not implemented. |
-| ARCH-task-011 | #328 | Not done | Task restore blocked-parent preview/execute not implemented. |
+| ARCH-task-006 | #323 | Partial | Backend preview/cascade execution wiring exists, but broader verification and surrounding archive work still remain. |
+| ARCH-task-007 | #324 | Partial | Backend preview/cascade execution wiring exists, but broader verification and surrounding archive work still remain. |
+| ARCH-task-008 | #325 | Partial | Backend preview/cascade execution wiring exists, but broader verification and surrounding archive work still remain. |
+| ARCH-task-009 | #326 | Partial | Business restore preview/selective backend flow now exists, but collision handling, UX, and verification still remain. |
+| ARCH-task-010 | #327 | Partial | Project restore blocked-parent backend flow now exists, but collision handling, UX, and verification still remain. |
+| ARCH-task-011 | #328 | Partial | Task restore blocked-parent backend flow now exists, but collision handling, UX, and verification still remain. |
 | ARCH-task-012 | #329 | Partial | Archived listing endpoints exist, but missing full parent-context contract. |
 | ARCH-task-013 | #330 | Partial | Teacher archived sections exist, but restore UX is still direct/non-preview. |
 | ARCH-task-014 | #331 | Partial | Archive reason UI exists, but no real backend preview-driven modal flow yet. |
@@ -127,21 +127,26 @@ When a future Archiving task starts, I should:
 - further advanced ARCH-002 by removing legacy portfolio `is_archived` semantics in favor of `archived_at`
 - enriched archived project/task repository responses with parent business/project context and blocking flags
 - re-validated the touched backend files with `python -m py_compile`
+- continued ARCH-002 by replacing remaining business/project/task archive and restore route semantics with preview-first request/response contracts
+- expanded `archive_repository.py` from root-only archive toggles into preview/execute support for business, project, and task archive/restore flows
+- added blocked restore preview metadata to `RestorePreviewResponse` for spec-aligned parent-chain restore handling
+- added a small backend route test file for archive/restore contract coverage, but execution is currently deferred until pytest is available in the local environment
+- re-validated the touched backend files and the new test module with `python -m py_compile`
 
 **Confirmed not yet done in this session:**
 
-- ARCH-002 is **started but not finished**
-- latest ARCH-002 cleanup slice still needs commit / push / board alignment
+- pytest execution is still unavailable locally, so route-test runtime verification is pending tool availability
+- broader ARCH-002 cleanup outside the completed business/project/task route flow still remains
 
 ### Next recommended active tasks
 
 If a new task begins and no new instruction overrides this plan, the default next priorities are:
 
 1. **ARCH-task-002 / #319**
-   - commit and push the latest contract-cleanup slice
-   - continue migrating routes/repositories to the new archive request/response model contract
-   - remove remaining mismatches between placeholder models and spec-driven models
-   - finish preview/restore request-response wiring gaps
+   - commit and push the latest backend preview/restore slice
+   - verify board state for #319 reflects the expanded ARCH-002 checkpoint
+   - continue removing remaining ARCH-002 contract mismatches outside the completed business/project/task route flow
+   - return to runtime test execution once pytest is available locally
 
 2. **ARCH-task-019 / #336**
    - keep board state aligned with the fact that seed coverage shipped inside the broader archive foundations checkpoint
@@ -194,8 +199,8 @@ ARCH-002 checkpoint/push → ARCH-002 continuation
 
 ### Current implementation findings worth remembering
 
-1. `archive_repository.py` currently archives/restores **root entities only**.
-2. `archive.py` now contains a much stronger spec-oriented archive/restore model contract, but routes and repositories still need to migrate to it.
+1. `archive_repository.py` now contains preview + execute support for business/project/task archive and restore flows, including synthetic registration identifiers for selection handling.
+2. `archive.py` now contains a much stronger spec-oriented archive/restore model contract, and the business/project/task routes have been moved much closer to it.
 3. `TeacherPage.jsx` already has archived business/project/task sections.
 4. `AuthCallback.jsx` already routes blocked supervisors to `/publiek`.
 5. `auth_service.py` already checks `supervisor_has_active_business(...)`.
@@ -525,9 +530,8 @@ This has now improved:
 
 Remaining gap:
 
-- project archive still uses older warning/notification semantics instead of the spec-aligned preview contract
-- restore preview/selective restore request/response flow is not wired yet
-- repository methods still do not provide the full preview/list contract required by later archive UX tasks, even though archived project/task inventory context is now richer
+- business/project/task archive and restore routes now use preview-first request/response contracts with teacher-only semantics and blocked child restore preview metadata
+- repository methods now provide archive preview and restore preview data for business/project/task flows, including descendant selection state and blocked reasons
 - some legacy `isArchived` semantics may still exist in adjacent non-archiving areas outside the portfolio path and should still be cleaned up systematically
 
 ---
@@ -667,7 +671,7 @@ Add preview-first business archive with full cascade.
 
 **Current gap**
 
-Current repository logic only archives the root business.
+Backend preview/execute wiring is now present, but downstream mutation guards, UX wiring, and runtime pytest/Qavajs verification still remain.
 
 ---
 
@@ -700,7 +704,7 @@ Add preview-first project archive with cascade to tasks and registrations.
 
 **Current gap**
 
-Current route still reflects older project-warning semantics and supervisor access.
+Backend preview/execute wiring is now present, but frontend/archive UX and broader consistency cleanup still remain.
 
 ---
 
@@ -732,14 +736,14 @@ Add preview-first task archive with cascade to registrations.
 
 **Current gap**
 
-Task archive exists, but not with the target preview/cascade contract.
+Backend preview/execute wiring is now present, but frontend/archive UX and broader consistency cleanup still remain.
 
 ---
 
 ## ARCH-task-009 — #326
 ### Business Restore: Preview, Selective Descendants, and Execute
 
-**Status:** Not done
+**Status:** Partial
 
 **Goal**
 
@@ -765,12 +769,16 @@ Implement business restore preview with metadata-based preselection and selectiv
 - 404 when missing.
 - Transaction rollback on failure.
 
+**Current gap**
+
+Business restore preview/execute wiring now exists in the backend, but name collision handling, broader verification, and frontend selective-restore UX are still pending.
+
 ---
 
 ## ARCH-task-010 — #327
 ### Project Restore: Preview, Blocked-Parent Check, and Execute
 
-**Status:** Not done
+**Status:** Partial
 
 **Goal**
 
@@ -794,12 +802,16 @@ Implement project restore with preview and parent-business blocking rules.
 - Teacher-only permission.
 - 404 when missing.
 
+**Current gap**
+
+Project restore preview/blocked-parent/execute wiring now exists in the backend, but name collision handling, broader verification, and frontend restore UX are still pending.
+
 ---
 
 ## ARCH-task-011 — #328
 ### Task Restore: Preview, Blocked-Parent Check, and Execute
 
-**Status:** Not done
+**Status:** Partial
 
 **Goal**
 
@@ -819,6 +831,10 @@ Implement task restore with preview and blocked parent-chain rules.
 - Execute restores task and selected registrations.
 - Name collision handling.
 - Standard `409` / `404` / `403` error behavior.
+
+**Current gap**
+
+Task restore preview/blocked-parent/execute wiring now exists in the backend, but name collision handling, broader verification, and frontend restore UX are still pending.
 
 ---
 

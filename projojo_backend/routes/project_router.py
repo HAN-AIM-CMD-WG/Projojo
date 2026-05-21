@@ -11,6 +11,8 @@ from domain.models import (
     ArchiveRequest,
     RestoreRequest,
     ArchivedProjectItem,
+    ArchivePreviewResponse,
+    RestorePreviewResponse,
     ArchiveActionResponse,
 )
 from service import task_service, save_image
@@ -20,18 +22,6 @@ from service.validation_service import is_valid_length
 project_repo = ProjectRepository()
 archive_repo = ArchiveRepository()
 
-
-class ProjectActionWarning(BaseModel):
-    """Response model when action requires confirmation due to affected students."""
-    message: str
-    affected_students: list[dict]
-    requires_confirmation: bool = True
-
-
-class ProjectActionResponse(BaseModel):
-    """Response model for successful project actions."""
-    message: str
-    notified_count: int = 0
 
 router = APIRouter(prefix="/projects", tags=["Project Endpoints"])
 
@@ -276,7 +266,7 @@ async def get_project_students(
     return students
 
 
-@router.patch("/{project_id}/archive")
+@router.patch("/{project_id}/archive", response_model=ArchivePreviewResponse | ArchiveActionResponse)
 async def archive_project(
     project_id: str = Path(..., description="Project ID"),
     archive_request: ArchiveRequest = None,
@@ -284,52 +274,29 @@ async def archive_project(
 ):
     """
     Archive a project.
-    - Supervisor: only their own projects
-    - Teacher: all projects
-
-    Returns 409 Conflict with student list if there are registrations and confirm=False.
-    With confirm=True: sends notifications and archives the project.
+    Only teachers may archive projects.
     """
     role = payload.get("role")
-    user_id = payload.get("sub")
-
-    # Check authorization
-    if role == "student":
-        raise HTTPException(status_code=403, detail="Studenten kunnen geen projecten archiveren")
 
     if archive_request is None:
         raise HTTPException(status_code=422, detail="Archive request body is verplicht")
 
-    if role == "supervisor":
-        if not project_repo.check_project_owner(project_id, user_id):
-            raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten archiveren")
-    elif role != "teacher":
-        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen projecten archiveren")
+    if role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen projecten archiveren")
 
-    # Check if already archived
-    if project_repo.is_archived(project_id):
-        raise HTTPException(status_code=400, detail="Dit project is al gearchiveerd")
+    project = project_repo.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
 
-    # Check for affected students
-    affected_students = project_repo.get_students_by_project(project_id)
+    preview = archive_repo.preview_project_archive(project_id)
+    if preview is None:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
 
-    if affected_students and not archive_request.confirm:
-        return ProjectActionWarning(
-            message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Weet je zeker dat je wilt archiveren?",
-            affected_students=affected_students,
-            requires_confirmation=True
-        )
+    if not archive_request.confirm:
+        return preview
 
-    # Archive the project
-    archive_repo.archive_project(project_id, user_id, archive_request.archived_reason)
-
-    # TODO: Send notifications to affected students and teacher
-    notified_count = len(affected_students) if affected_students else 0
-
-    return ProjectActionResponse(
-        message="Project succesvol gearchiveerd",
-        notified_count=notified_count
-    )
+    archive_repo.archive_project(project_id, payload.get("sub"), archive_request.archived_reason)
+    return ArchiveActionResponse(message="Project succesvol gearchiveerd")
 
 
 @router.patch("/{project_id}/visibility")
@@ -397,7 +364,7 @@ async def set_project_impact(
     return {"message": "Impact samenvatting bijgewerkt"}
 
 
-@router.patch("/{project_id}/restore", response_model=ArchiveActionResponse)
+@router.patch("/{project_id}/restore", response_model=RestorePreviewResponse | ArchiveActionResponse)
 async def restore_project(
     project_id: str = Path(..., description="Project ID"),
     restore_request: RestoreRequest | None = None,
@@ -405,27 +372,39 @@ async def restore_project(
 ):
     """
     Restore an archived project.
-    - Supervisor: only their own projects
-    - Teacher: all projects
+    Only teachers may restore archived projects.
     """
     role = payload.get("role")
-    user_id = payload.get("sub")
 
-    # Check authorization
-    if role == "student":
-        raise HTTPException(status_code=403, detail="Studenten kunnen geen projecten herstellen")
+    if role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen projecten herstellen")
 
-    if role == "supervisor":
-        if not project_repo.check_project_owner(project_id, user_id):
-            raise HTTPException(status_code=403, detail="Je kunt alleen je eigen projecten herstellen")
-    elif role != "teacher":
-        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen projecten herstellen")
+    preview = archive_repo.preview_project_restore(project_id)
+    if preview is None:
+        try:
+            project_repo.get_by_id(project_id)
+        except Exception:
+            raise HTTPException(status_code=404, detail="Project niet gevonden")
+        raise HTTPException(status_code=409, detail="Dit project is niet gearchiveerd")
 
-    # Check if actually archived
-    if not project_repo.is_archived(project_id):
-        raise HTTPException(status_code=400, detail="Dit project is niet gearchiveerd")
+    if not restore_request or not restore_request.confirm:
+        return preview
 
-    # Restore the project
-    archive_repo.restore_project(project_id)
+    if preview.blocked:
+        raise HTTPException(status_code=409, detail=preview.blocked_reason or "Project kan niet worden hersteld")
+
+    if not restore_request.selected and (preview.candidates.tasks or preview.candidates.registrations):
+        raise HTTPException(
+            status_code=422,
+            detail="Selecteer welke onderliggende items hersteld moeten worden",
+        )
+
+    result = archive_repo.restore_project(project_id, restore_request.selected)
+    if result == "blocked":
+        raise HTTPException(status_code=409, detail="Bovenliggend bedrijf is nog gearchiveerd")
+    if result == "active":
+        raise HTTPException(status_code=409, detail="Dit project is niet gearchiveerd")
+    if result == "missing":
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
 
     return ArchiveActionResponse(message="Project succesvol hersteld")

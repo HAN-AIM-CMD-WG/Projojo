@@ -11,6 +11,8 @@ from domain.models import (
     ArchiveRequest,
     RestoreRequest,
     ArchivedBusinessItem,
+    ArchivePreviewResponse,
+    RestorePreviewResponse,
     ArchiveActionResponse,
 )
 from service import save_image
@@ -178,7 +180,7 @@ async def update_business(
         )
 
 
-@router.patch("/{business_id}/archive", response_model=ArchiveActionResponse)
+@router.patch("/{business_id}/archive", response_model=ArchivePreviewResponse | ArchiveActionResponse)
 async def archive_business(
     business_id: str = Path(..., description="Business ID to archive"),
     archive_request: ArchiveRequest = Body(...),
@@ -196,7 +198,14 @@ async def archive_business(
     if not existing_business:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     
+    preview = archive_repo.preview_business_archive(business_id)
+    if preview is None:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
     try:
+        if not archive_request.confirm:
+            return preview
+
         archive_repo.archive_business(business_id, payload.get("sub"), archive_request.archived_reason)
         return ArchiveActionResponse(message="Bedrijf succesvol gearchiveerd")
     except Exception as e:
@@ -206,7 +215,7 @@ async def archive_business(
         )
 
 
-@router.patch("/{business_id}/restore", response_model=ArchiveActionResponse)
+@router.patch("/{business_id}/restore", response_model=RestorePreviewResponse | ArchiveActionResponse)
 async def restore_business(
     business_id: str = Path(..., description="Business ID to restore"),
     restore_request: RestoreRequest | None = Body(None),
@@ -218,14 +227,40 @@ async def restore_business(
     if payload.get("role") != "teacher":
         raise HTTPException(status_code=403, detail="Alleen docenten mogen bedrijven herstellen")
     
-    # Verify business exists
-    existing_business = business_repo.get_by_id(business_id)
-    if not existing_business:
-        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
-    
+    preview = archive_repo.preview_business_restore(business_id)
+    if preview is None:
+        existing_business = business_repo.get_by_id(business_id)
+        if not existing_business:
+            raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+        raise HTTPException(status_code=409, detail="Dit bedrijf is niet gearchiveerd")
+
     try:
-        archive_repo.restore_business(business_id)
+        if not restore_request or not restore_request.confirm:
+            return preview
+
+        if (
+            not restore_request.selected
+            and (
+                preview.candidates.projects
+                or preview.candidates.tasks
+                or preview.candidates.registrations
+                or preview.candidates.supervisors
+            )
+        ):
+            raise HTTPException(
+                status_code=422,
+                detail="Selecteer welke onderliggende items hersteld moeten worden",
+            )
+
+        result = archive_repo.restore_business(business_id, restore_request.selected)
+        if result == "missing":
+            raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+        if result == "active":
+            raise HTTPException(status_code=409, detail="Dit bedrijf is niet gearchiveerd")
+
         return ArchiveActionResponse(message="Bedrijf succesvol hersteld")
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"Error updating business {business_id}: {e}")
         raise HTTPException(

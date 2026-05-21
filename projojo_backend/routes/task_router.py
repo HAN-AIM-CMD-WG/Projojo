@@ -6,7 +6,14 @@ from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
 from service import task_service
 from domain.models.task import RegistrationCreate, RegistrationUpdate, Task, TaskCreate
-from domain.models import ArchiveRequest, RestoreRequest, ArchivedTaskItem, ArchiveActionResponse
+from domain.models import (
+    ArchiveRequest,
+    RestoreRequest,
+    ArchivedTaskItem,
+    ArchivePreviewResponse,
+    RestorePreviewResponse,
+    ArchiveActionResponse,
+)
 from service.validation_service import is_valid_length
 from datetime import datetime
 from typing import List, Optional
@@ -421,7 +428,7 @@ async def update_task(
         raise HTTPException(status_code=400, detail="Er is een fout opgetreden bij het bijwerken van de taak.")
 
 
-@router.patch("/{task_id}/archive", response_model=ArchiveActionResponse)
+@router.patch("/{task_id}/archive", response_model=ArchivePreviewResponse | ArchiveActionResponse)
 async def archive_task(
     task_id: str = Path(..., description="Task ID"),
     archive_request: ArchiveRequest = Body(...),
@@ -429,29 +436,29 @@ async def archive_task(
 ):
     """
     Archive a task.
-    - Supervisor: only tasks in their own business
-    - Teacher: all tasks
+    Only teachers may archive tasks.
     """
     role = payload.get("role")
 
-    if role == "student":
-        raise HTTPException(status_code=403, detail="Studenten kunnen geen taken archiveren")
+    if role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen taken archiveren")
 
-    task = task_repo.get_by_id(task_id)
+    task = archive_repo._get_task_root(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
-    if role not in ["supervisor", "teacher"]:
-        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen taken archiveren")
+    preview = archive_repo.preview_task_archive(task_id)
+    if preview is None:
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
 
-    if archive_repo.is_task_archived(task_id):
-        raise HTTPException(status_code=400, detail="Deze taak is al gearchiveerd")
+    if not archive_request.confirm:
+        return preview
 
     archive_repo.archive_task(task_id, payload.get("sub"), archive_request.archived_reason)
     return ArchiveActionResponse(message="Taak succesvol gearchiveerd")
 
 
-@router.patch("/{task_id}/restore", response_model=ArchiveActionResponse)
+@router.patch("/{task_id}/restore", response_model=RestorePreviewResponse | ArchiveActionResponse)
 async def restore_task(
     task_id: str = Path(..., description="Task ID"),
     restore_request: RestoreRequest | None = Body(None),
@@ -459,21 +466,40 @@ async def restore_task(
 ):
     """
     Restore an archived task.
-    - Supervisor: only tasks in their own business
-    - Teacher: all tasks
+    Only teachers may restore archived tasks.
     """
     role = payload.get("role")
 
-    if role == "student":
-        raise HTTPException(status_code=403, detail="Studenten kunnen geen taken herstellen")
+    if role != "teacher":
+        raise HTTPException(status_code=403, detail="Alleen docenten mogen taken herstellen")
 
-    if role not in ["supervisor", "teacher"]:
-        raise HTTPException(status_code=403, detail="Alleen supervisors en docenten kunnen taken herstellen")
+    preview = archive_repo.preview_task_restore(task_id)
+    if preview is None:
+        task = archive_repo._get_task_root(task_id)
+        if not task:
+            raise HTTPException(status_code=404, detail="Taak niet gevonden")
+        raise HTTPException(status_code=409, detail="Deze taak is niet gearchiveerd")
 
-    if not archive_repo.is_task_archived(task_id):
-        raise HTTPException(status_code=400, detail="Deze taak is niet gearchiveerd")
+    if not restore_request or not restore_request.confirm:
+        return preview
 
-    archive_repo.restore_task(task_id)
+    if preview.blocked:
+        raise HTTPException(status_code=409, detail=preview.blocked_reason or "Taak kan niet worden hersteld")
+
+    if not restore_request.selected and preview.candidates.registrations:
+        raise HTTPException(
+            status_code=422,
+            detail="Selecteer welke onderliggende items hersteld moeten worden",
+        )
+
+    result = archive_repo.restore_task(task_id, restore_request.selected)
+    if result == "blocked":
+        raise HTTPException(status_code=409, detail=preview.blocked_reason or "Taak kan niet worden hersteld")
+    if result == "active":
+        raise HTTPException(status_code=409, detail="Deze taak is niet gearchiveerd")
+    if result == "missing":
+        raise HTTPException(status_code=404, detail="Taak niet gevonden")
+
     return ArchiveActionResponse(message="Taak succesvol hersteld")
 
 

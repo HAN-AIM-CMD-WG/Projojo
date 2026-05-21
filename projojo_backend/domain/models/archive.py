@@ -104,6 +104,8 @@ class RestorePreviewResponse(BaseModel):
     entity_id: str
     root: RestoreRoot
     candidates: RestoreCandidates = Field(default_factory=RestoreCandidates)
+    blocked: bool = False
+    blocked_reason: str | None = None
 
 
 class ArchiveExecutionResponse(BaseModel):
