@@ -116,6 +116,23 @@ class UserRepository(BaseRepository[User]):
             return None
         return results[0]['business_id']
 
+    def supervisor_has_active_business(self, supervisor_id: str) -> bool:
+        """
+        Returns True when the supervisor manages at least one non-archived business.
+        Supervisors with only archived businesses, or no businesses at all, return False.
+        """
+        query = """
+            match
+                $supervisor isa supervisor, has id ~supervisor_id;
+                $manages isa manages(supervisor: $supervisor, business: $business);
+                not { $business has archivedAt $archived_at; };
+            fetch {
+                'has_active_business': true
+            };
+        """
+        results = Db.read_transact(query, {"supervisor_id": supervisor_id})
+        return len(results) > 0
+
     def get_student_by_id(self, id: str) -> dict | None:
         query = """
             match

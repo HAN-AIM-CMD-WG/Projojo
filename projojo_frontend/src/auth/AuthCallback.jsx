@@ -30,6 +30,8 @@ export default function AuthCallback() {
             notification.error(errorMessage);
             if (inviteToken) {
                 navigate(`/invite/${inviteToken}`, { replace: true });
+            } else if (message === "Je account is gearchiveerd. Neem contact op met een docent.") {
+                navigate('/publiek', { replace: true });
             } else {
                 navigate('/', { replace: true });
             }

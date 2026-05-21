@@ -192,6 +192,11 @@ class AuthService:
         if existing_user:
             if invite_token:
                 raise ValueError("Je hebt al een account. Log in zonder uitnodiging.")
+
+            if existing_user.type == "supervisor":
+                if not self.user_repo.supervisor_has_active_business(existing_user.id):
+                    raise ValueError("Je account is gearchiveerd. Neem contact op met een docent.")
+
             return existing_user, False
 
         # New user
