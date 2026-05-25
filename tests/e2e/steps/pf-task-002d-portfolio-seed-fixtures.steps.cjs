@@ -203,10 +203,13 @@ match
   $item isa portfolioItem, has id {quote(fixture['id'])};
 fetch {{
   'id': $item.id,
+  'source_student_id': $item.sourceStudentId,
   'source_registration_id': $item.sourceRegistrationId,
   'source_task_id': $item.sourceTaskId,
   'source_project_id': $item.sourceProjectId,
   'source_business_id': $item.sourceBusinessId,
+  'student_name': $item.studentName,
+  'student_image_path': [$item.studentImagePath],
   'task_name': $item.taskName,
   'project_name': $item.projectName,
   'business_name': $item.businessName,
@@ -524,9 +527,12 @@ Then('the portfolio seed should support baseline lookup by aliases without gener
       };
 
     assert.equal(item.source_registration_id, expectedSource.registration, `Unexpected source registration for ${key}`);
+    assert.equal(item.source_student_id, PORTFOLIO_SEED_ALIASES.actors.student.id, `Unexpected source student for ${key}`);
     assert.equal(item.source_task_id, expectedSource.task, `Unexpected source task for ${key}`);
     assert.equal(item.source_project_id, expectedSource.project, `Unexpected source project for ${key}`);
     assert.equal(item.source_business_id, expectedSource.business, `Unexpected source business for ${key}`);
+    assert.equal(item.student_name, PORTFOLIO_SEED_ALIASES.actors.student.fullName, `Unexpected copied student name for ${key}`);
+    assert.deepEqual(item.student_image_path, ['default.svg'], `Unexpected copied student image for ${key}`);
     assert.notEqual(item.source_business_id, PORTFOLIO_SEED_ALIASES.businesses.unrelated.id, `Unexpected unrelated source business for ${key}`);
   }
 });

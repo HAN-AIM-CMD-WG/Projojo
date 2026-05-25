@@ -327,7 +327,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
     return (
         <div className="group h-full">
-            <div id={`task-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
+            <div id={`task-${task.id}`} data-testid={`task-card-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
 
                 {/* === COMPACT HEADER === */}
                 <div className="p-3 sm:p-4 border-b border-[var(--neu-border)] rounded-t-2xl overflow-hidden">
@@ -546,6 +546,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                                 onClick={() => handleMarkStarted(reg.student.id)}
                                                                 disabled={isLoading}
                                                                 className="p-1.5 rounded text-amber-600 hover:bg-amber-100 transition-colors"
+                                                                aria-label={`Markeer ${reg.student.full_name} als gestart`}
                                                                 title="Start"
                                                             >
                                                                 {isLoading === 'starting'
@@ -559,6 +560,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                                 onClick={() => openCompletionReviewDialog(reg.student.id)}
                                                                 disabled={isLoading}
                                                                 className="p-1.5 rounded text-emerald-600 hover:bg-emerald-100 transition-colors"
+                                                                aria-label={`Rond ${reg.student.full_name} af`}
                                                                 title="Afronden"
                                                             >
                                                                 {isLoading === 'completing'
@@ -779,13 +781,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                     </div>
                                                     <div className="flex gap-2 flex-shrink-0">
                                                         {!isStarted && !isCompleted && (
-                                                            <button onClick={() => handleMarkStarted(registration.student.id)} disabled={isLoading} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors" title="Markeer als gestart">
+                                                            <button onClick={() => handleMarkStarted(registration.student.id)} disabled={isLoading} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors" aria-label={`Markeer ${registration.student.full_name} als gestart`} title="Markeer als gestart">
                                                                 {isLoading === 'starting' ? <span className="material-symbols-outlined animate-spin text-base">progress_activity</span> : <span className="material-symbols-outlined text-base">play_arrow</span>}
                                                                 Start
                                                             </button>
                                                         )}
                                                         {isStarted && !isCompleted && (
-                                                            <button onClick={() => openCompletionReviewDialog(registration.student.id)} disabled={isLoading} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5" title="Markeer als afgerond">
+                                                            <button onClick={() => openCompletionReviewDialog(registration.student.id)} disabled={isLoading} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5" aria-label={`Rond ${registration.student.full_name} af`} title="Markeer als afgerond">
                                                                 {isLoading === 'completing' ? <span className="material-symbols-outlined animate-spin text-base">progress_activity</span> : <span className="material-symbols-outlined text-base">check_circle</span>}
                                                                 Afronden
                                                             </button>
@@ -855,13 +857,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                         <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
                                                         <input type="hidden" name="userId" value={registration.student.id} />
                                                         <div className="flex gap-3 mt-3">
-                                                            <button type="submit" value={true} disabled={isFull} className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${isFull ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"}`} style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}>
+                                                            <button type="submit" value={true} disabled={isFull} className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${isFull ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"}`} aria-label={`Accepteer aanmelding van ${registration.student.full_name}`} style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}>
                                                                 <span className="flex items-center justify-center gap-2">
                                                                     <span className="material-symbols-outlined text-lg">check</span>
                                                                     Accepteren
                                                                 </span>
                                                             </button>
-                                                            <button type="submit" value={false} className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm" style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
+                                                            <button type="submit" value={false} className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm" aria-label={`Weiger aanmelding van ${registration.student.full_name}`} style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
                                                                 <span className="flex items-center justify-center gap-2">
                                                                     <span className="material-symbols-outlined text-lg">close</span>
                                                                     Weigeren

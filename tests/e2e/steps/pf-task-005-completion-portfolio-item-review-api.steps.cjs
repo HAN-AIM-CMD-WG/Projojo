@@ -74,7 +74,7 @@ fixture = json.loads(os.environ['PF_TASK_005_FIXTURE'])
 timeline = Db.read_transact("""
 match
   $task isa task, has id ~task_id;
-  $student isa student, has id ~student_id;
+  $student isa student, has id ~student_id, has fullName $student_name, has imagePath $student_image_path;
   $registration isa registersForTask (student: $student, task: $task), has id ~registration_id;
 fetch {
   'requested_at': [$registration.requestedAt],
@@ -91,7 +91,7 @@ fetch {
 
 source = Db.read_transact("""
 match
-  $student isa student, has id ~student_id;
+  $student isa student, has id ~student_id, has fullName $student_name, has imagePath $student_image_path;
   $task isa task, has id ~task_id, has name $task_name, has description $task_description;
   $registration isa registersForTask (student: $student, task: $task), has id $registration_id;
   $project isa project, has id $project_id, has name $project_name, has description $project_description;
@@ -100,6 +100,8 @@ match
   $has_projects isa hasProjects (business: $business, project: $project);
 fetch {
   'student_id': $student.id,
+  'student_name': $student_name,
+  'student_image_path': $student_image_path,
   'registration_id': $registration_id,
   'task_id': $task.id,
   'task_name': $task_name,
@@ -130,10 +132,13 @@ fetch {
   'id': $item.id,
   'created_at': $item.createdAt,
   'completed_at': $item.completedAt,
+  'source_student_id': $item.sourceStudentId,
   'source_registration_id': $item.sourceRegistrationId,
   'source_task_id': $item.sourceTaskId,
   'source_project_id': $item.sourceProjectId,
   'source_business_id': $item.sourceBusinessId,
+  'student_name': $item.studentName,
+  'student_image_path': [$item.studentImagePath],
   'task_name': $item.taskName,
   'task_description': [$item.taskDescription],
   'project_name': $item.projectName,
@@ -170,6 +175,62 @@ fetch {
 }, sort_fields=False)
 
 print(json.dumps({'timeline': timeline, 'source': source, 'items': items}, default=str))
+`;
+
+const COMPLETION_FAILURE_PROBE = String.raw`
+import json
+import os
+from uuid import uuid4
+
+import domain.repositories.task_repository as task_repository_module
+from domain.repositories.task_repository import TaskRepository
+from db.initDatabase import Db
+
+fixture = json.loads(os.environ['PF_TASK_005_FIXTURE'])
+student_id = os.environ['PF_TASK_005_STUDENT_ID']
+reviewer_id = os.environ['PF_TASK_005_REVIEWER_ID']
+item_id = f"pf-task-005-rollback-item-{uuid4()}"
+review_text = f"PF-task-005 forced rollback review {uuid4()}"
+generated_ids = [item_id, 'pf-seed-review-good-teacher']
+original_generate_uuid = task_repository_module.generate_uuid
+
+def fake_generate_uuid():
+    return generated_ids.pop(0) if generated_ids else original_generate_uuid()
+
+try:
+    task_repository_module.generate_uuid = fake_generate_uuid
+    TaskRepository().mark_registration_completed(
+        fixture['taskId'],
+        student_id,
+        reviewer_id=reviewer_id,
+        reviewer_role='teacher',
+        review_text=review_text,
+        public_review_notice_accepted=True,
+        rating=5,
+    )
+    result = {'failed_as_expected': False, 'error': None}
+except Exception as error:
+    result = {'failed_as_expected': True, 'error': str(error)}
+finally:
+    task_repository_module.generate_uuid = original_generate_uuid
+    item_rows = Db.read_transact("""
+    match
+      $item isa portfolioItem, has id ~item_id;
+    fetch { 'id': $item.id };
+    """, {'item_id': item_id}, sort_fields=False)
+    review_rows = Db.read_transact("""
+    match
+      $review isa portfolioReview, has reviewText ~review_text;
+    fetch { 'id': $review.id };
+    """, {'review_text': review_text}, sort_fields=False)
+    result.update({
+        'item_id': item_id,
+        'item_persisted': bool(item_rows),
+        'review_persisted': bool(review_rows),
+    })
+    Db.close()
+
+print(json.dumps(result))
 `;
 
 function getState(world) {
@@ -212,10 +273,13 @@ function normalizeItem(item) {
     id: valueOf(item.id),
     created_at: valueOf(item.created_at),
     completed_at: valueOf(item.completed_at),
+    source_student_id: valueOf(item.source_student_id),
     source_registration_id: valueOf(item.source_registration_id),
     source_task_id: valueOf(item.source_task_id),
     source_project_id: valueOf(item.source_project_id),
     source_business_id: valueOf(item.source_business_id),
+    student_name: valueOf(item.student_name),
+    student_image_path: scalar(item.student_image_path),
     task_name: valueOf(item.task_name),
     task_description: scalar(item.task_description),
     project_name: valueOf(item.project_name),
@@ -246,6 +310,8 @@ function normalizeSnapshot(payload) {
     },
     source: {
       student_id: valueOf(payload.source[0].student_id),
+      student_name: valueOf(payload.source[0].student_name),
+      student_image_path: valueOf(payload.source[0].student_image_path),
       registration_id: valueOf(payload.source[0].registration_id),
       task_id: valueOf(payload.source[0].task_id),
       task_name: valueOf(payload.source[0].task_name),
@@ -416,10 +482,13 @@ function itemByRememberedId(snapshot, world, fixtureName) {
 
 function assertCanonicalItemFields(snapshot, item) {
   const { source, timeline } = snapshot;
+  assert.equal(item.source_student_id, source.student_id, 'Expected source student id to be copied');
   assert.equal(item.source_registration_id, source.registration_id, 'Expected source registration id to be copied');
   assert.equal(item.source_task_id, source.task_id, 'Expected source task id to be copied');
   assert.equal(item.source_project_id, source.project_id, 'Expected source project id to be copied');
   assert.equal(item.source_business_id, source.business_id, 'Expected source business id to be copied');
+  assert.equal(item.student_name, source.student_name, 'Expected student display name to be copied');
+  assert.equal(item.student_image_path, source.student_image_path, 'Expected student image path to be copied');
   assert.equal(item.task_name, source.task_name, 'Expected task display name to be copied');
   assert.equal(item.task_description, source.task_description, 'Expected task description to be copied');
   assert.equal(item.project_name, source.project_name, 'Expected project display name to be copied');
@@ -483,6 +552,15 @@ When(/^I complete the PF-task-005 registration "([^"]+)" with raw rating (.+)$/u
   }));
 });
 
+When('a PF-task-005 completion persistence failure is simulated for {string}', async function (fixtureName) {
+  const fixture = fixtureFor(fixtureName);
+  getState(this).simulatedFailure = await runBackendProbe(COMPLETION_FAILURE_PROBE, {
+    PF_TASK_005_FIXTURE: JSON.stringify(fixture),
+    PF_TASK_005_STUDENT_ID: studentId,
+    PF_TASK_005_REVIEWER_ID: actors.teacher.id,
+  });
+});
+
 When('I complete the PF-task-005 registration {string} with review text and notice {string}', async function (fixtureName, notice) {
   await completeRegistration(this, fixtureName, buildCompletionBody(this, {
     useRememberedReviewText: true,
@@ -538,6 +616,14 @@ Then('the PF-task-005 completion side effects for {string} should be unchanged',
   const after = await readSnapshot(fixtureName);
   assert.deepEqual(after.timeline, before.timeline, `Expected ${fixtureName} lifecycle timestamps to be unchanged`);
   assert.deepEqual(after.items, before.items, `Expected ${fixtureName} portfolio evidence to be unchanged`);
+});
+
+Then('the PF-task-005 simulated persistence failure should be reported', function () {
+  const failure = getState(this).simulatedFailure;
+  assert.equal(failure?.failed_as_expected, true, `Expected simulated persistence failure, received ${JSON.stringify(failure)}`);
+  assert.equal(failure.item_persisted, false, `Expected rollback item not to persist, received ${JSON.stringify(failure)}`);
+  assert.equal(failure.review_persisted, false, `Expected rollback review not to persist, received ${JSON.stringify(failure)}`);
+  assert.ok(String(failure.error ?? '').length > 0, `Expected rollback failure to report an error, received ${JSON.stringify(failure)}`);
 });
 
 Then('the PF-task-005 canonical item for {string} should have one initial review with no rating', async function (fixtureName) {

@@ -5,7 +5,7 @@ Feature: PF-task-012b reviewer public-use notice enforcement
 
   @api @portfolio @pf-task-012b
   Scenario Outline: Completion review text is rejected without accepted public-use notice
-    Given I am authenticated as the PF-task-012b portfolio teacher
+    Given I am authenticated as the PF-task-012b <reviewer>
     And I remember unique PF-task-012b review text for "completion rejection"
     When I submit a PF-task-012b completion review for "startedForCompletion" with notice "<notice>"
     Then the latest PF-task-012b API response status should be 400
@@ -13,18 +13,25 @@ Feature: PF-task-012b reviewer public-use notice enforcement
     And no PF-task-012b review should be persisted for the remembered text
 
     Examples:
-      | notice  |
-      | missing |
-      | false   |
+      | reviewer                     | notice  |
+      | portfolio teacher            | missing |
+      | portfolio teacher            | false   |
+      | related portfolio supervisor | missing |
+      | related portfolio supervisor | false   |
 
   @api @portfolio @pf-task-012b
-  Scenario: Accepted completion review stores the public-use notice timestamp
-    Given I am authenticated as the PF-task-012b portfolio teacher
+  Scenario Outline: Accepted completion review stores the public-use notice timestamp
+    Given I am authenticated as the PF-task-012b <reviewer>
     And I remember unique PF-task-012b review text for "accepted completion"
     When I submit a PF-task-012b completion review for "startedForCompletion" with notice "accepted"
     Then the latest PF-task-012b API response status should be 200
     And the PF-task-012b completion state for "startedForCompletion" should have a completed timestamp
     And the persisted PF-task-012b review should store a public notice accepted timestamp
+
+    Examples:
+      | reviewer                     |
+      | portfolio teacher            |
+      | related portfolio supervisor |
 
   @api @portfolio @pf-task-012b
   Scenario Outline: Completion review rating is rejected outside the portfolio rating bounds
@@ -59,6 +66,22 @@ Feature: PF-task-012b reviewer public-use notice enforcement
     And no PF-task-012b visible portfolio review should be returned for the remembered text
 
   @api @portfolio @pf-task-012b
+  Scenario: Additional reviews cannot be added to retired completion evidence
+    Given I am authenticated as the PF-task-012b portfolio teacher
+    And I remember unique PF-task-012b review text for "retired completion source"
+    When I submit a PF-task-012b completion review for "startedForCompletion" with notice "accepted"
+    Then the latest PF-task-012b API response status should be 200
+    When I revert the PF-task-012b completion for "startedForCompletion"
+    Then the latest PF-task-012b API response status should be 200
+    Given I remember unique PF-task-012b review text for "retired additional rejection"
+    When I submit a PF-task-012b additional review for the remembered retired completion item with notice "accepted"
+    Then the latest PF-task-012b API response status should be 400
+    And no PF-task-012b review should be persisted for the remembered text
+    Given I remember unique PF-task-012b review text for "retired race rejection"
+    When PF-task-012b review creation races with retirement for the remembered completion item
+    Then the PF-task-012b race-safe review creation should fail without persisting a review
+
+  @api @portfolio @pf-task-012b
   Scenario Outline: Additional review creation is rejected without accepted public-use notice
     Given I am authenticated as the PF-task-012b <reviewer>
     And I remember unique PF-task-012b review text for "additional rejection"
@@ -74,12 +97,17 @@ Feature: PF-task-012b reviewer public-use notice enforcement
       | related portfolio supervisor | false   |
 
   @api @portfolio @pf-task-012b
-  Scenario: Accepted additional review stores the public-use notice timestamp
-    Given I am authenticated as the PF-task-012b related portfolio supervisor
+  Scenario Outline: Accepted additional review stores the public-use notice timestamp
+    Given I am authenticated as the PF-task-012b <reviewer>
     And I remember unique PF-task-012b review text for "accepted additional"
     When I submit a PF-task-012b additional review for "noRatings" with notice "accepted"
     Then the latest PF-task-012b API response status should be 201
     And the persisted PF-task-012b review should store a public notice accepted timestamp
+
+    Examples:
+      | reviewer                     |
+      | portfolio teacher            |
+      | related portfolio supervisor |
 
   @api @portfolio @pf-task-012b
   Scenario Outline: Additional review rating is rejected outside the portfolio rating bounds

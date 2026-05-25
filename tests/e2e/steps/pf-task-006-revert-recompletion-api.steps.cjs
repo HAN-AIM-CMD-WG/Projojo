@@ -508,7 +508,7 @@ Then('the PF-task-006 response should include a new portfolio item id as {string
   state.itemIds[itemAlias] = { id: itemId, fixtureName };
 });
 
-Then('I make the PF-task-006 portfolio item {string} visible in the public portfolio read model', async function (itemAlias) {
+Then('I set up the PF-task-006 fixture so portfolio item {string} is selected for public visibility', async function (itemAlias) {
   await runBackend(MAKE_ITEM_WORLD_VISIBLE, {
     PF_TASK_006_ITEM: JSON.stringify({ itemId: itemIdFor(this, itemAlias) }),
   });

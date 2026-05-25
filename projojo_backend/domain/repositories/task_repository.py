@@ -655,7 +655,7 @@ class TaskRepository(BaseRepository[Task]):
 
         context_query = """
             match
-                $student isa student, has id ~student_id;
+                $student isa student, has id ~student_id, has fullName $student_name, has imagePath $student_image_path;
                 $task isa task, has id ~task_id, has name $task_name, has description $task_description;
                 $registration isa registersForTask (student: $student, task: $task),
                     has id $registration_id,
@@ -667,6 +667,8 @@ class TaskRepository(BaseRepository[Task]):
                 $has_projects isa hasProjects (business: $business, project: $project);
             fetch {
                 'registration_id': $registration_id,
+                'student_name': $student_name,
+                'student_image_path': $student_image_path,
                 'task_name': $task_name,
                 'task_description': $task_description,
                 'project_id': $project_id,
@@ -698,6 +700,7 @@ class TaskRepository(BaseRepository[Task]):
         skill_lines = []
         params = {
             "student_id_for_item": student_id,
+            "source_student_id": student_id,
             "item_id": item_id,
             "item_created_at": now,
             "item_completed_at": completed_at,
@@ -705,6 +708,8 @@ class TaskRepository(BaseRepository[Task]):
             "source_task_id": task_id,
             "source_project_id": self._one(context.get("project_id")),
             "source_business_id": self._one(context.get("business_id")),
+            "student_name": self._one(context.get("student_name")),
+            "student_image_path": self._one(context.get("student_image_path")),
             "task_name": self._one(context.get("task_name")),
             "task_description": self._one(context.get("task_description")),
             "project_name": self._one(context.get("project_name")),
@@ -765,10 +770,13 @@ class TaskRepository(BaseRepository[Task]):
                     has id ~item_id,
                     has createdAt ~item_created_at,
                     has completedAt ~item_completed_at,
+                    has sourceStudentId ~source_student_id,
                     has sourceRegistrationId ~source_registration_id,
                     has sourceTaskId ~source_task_id,
                     has sourceProjectId ~source_project_id,
                     has sourceBusinessId ~source_business_id,
+                    has studentName ~student_name,
+                    has studentImagePath ~student_image_path,
                     has taskName ~task_name,
                     has taskDescription ~task_description,
                     has projectName ~project_name,

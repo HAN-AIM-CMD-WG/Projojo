@@ -27,6 +27,7 @@ const DOCKER_COMPOSE_ARGS = [
 ];
 
 const actors = PORTFOLIO_SEED_ALIASES.actors;
+const businesses = PORTFOLIO_SEED_ALIASES.businesses;
 const lifecycle = PORTFOLIO_SEED_ALIASES.lifecycle;
 const items = PORTFOLIO_SEED_ALIASES.items;
 const studentId = actors.student.id;
@@ -118,6 +119,46 @@ fetch {
 """, {'review_text': review_text}, sort_fields=False)
 
 print(json.dumps(rows, default=str))
+`;
+
+const RETIRED_REVIEW_RACE_PROBE = String.raw`
+import json
+import os
+
+from db.initDatabase import Db
+from domain.repositories.portfolio_repository import PortfolioRepository
+
+item_id = os.environ['PF_TASK_012B_ITEM_ID']
+author_id = os.environ['PF_TASK_012B_AUTHOR_ID']
+business_id = os.environ['PF_TASK_012B_BUSINESS_ID']
+review_text = os.environ['PF_TASK_012B_REVIEW_TEXT']
+
+repo = PortfolioRepository()
+repo._get_reviewable_item_state = lambda stale_item_id: {'business_id': business_id, 'is_retired': False}
+
+try:
+    repo.create_review(
+        item_id=item_id,
+        author_id=author_id,
+        author_role='teacher',
+        business_id=None,
+        review_text=review_text,
+        public_review_notice_accepted=True,
+        rating=4,
+    )
+    result = {'failed_as_expected': False, 'error': None}
+except Exception as error:
+    result = {'failed_as_expected': True, 'error': str(error)}
+finally:
+    review_rows = Db.read_transact("""
+    match
+      $review isa portfolioReview, has reviewText ~review_text;
+    fetch { 'id': $review.id };
+    """, {'review_text': review_text}, sort_fields=False)
+    result['review_persisted'] = bool(review_rows)
+    Db.close()
+
+print(json.dumps(result))
 `;
 
 function getState(world) {
@@ -261,12 +302,14 @@ function buildReviewBody(world, notice, rating = 4) {
 
 async function clickTaskTeamButton(page, fixtureName, buttonName) {
   const fixture = fixtureFor(fixtureName);
-  const taskCard = page.locator(`[id="task-${fixture.taskId}"].neu-flat`);
+  const taskCard = page.getByTestId(`task-card-${fixture.taskId}`);
   await taskCard.waitFor({ state: 'visible' });
   await taskCard.getByRole('button', { name: /Team/u }).click();
-  const namedButton = taskCard.getByRole('button', { name: buttonName });
-  const titleButton = taskCard.locator(`button[title="${buttonName.source.replace(/\\/gu, '')}"]`);
-  await (await namedButton.count() > 0 ? namedButton : titleButton).click();
+  await taskCard.getByRole('button', { name: buttonName }).click();
+}
+
+function completionDialog(page) {
+  return page.getByRole('dialog', { name: 'Afronding' });
 }
 
 Given('the PF-task-012b review notice fixtures are reset', async function () {
@@ -307,7 +350,9 @@ When('I submit a PF-task-012b completion review for {string} with notice {string
     body: JSON.stringify(buildReviewBody(this, notice)),
   });
 
-  rememberLatestApiResponse(this, response, await readJsonSafely(response));
+  const payload = await readJsonSafely(response);
+  if (payload?.portfolio_item_id) getState(this).completionItemId = payload.portfolio_item_id;
+  rememberLatestApiResponse(this, response, payload);
 });
 
 When('I submit a PF-task-012b completion review for {string} with notice {string} and rating {int}', async function (fixtureName, notice, rating) {
@@ -372,6 +417,34 @@ When('I submit a PF-task-012b additional review for {string} with notice {string
   rememberLatestApiResponse(this, response, await readJsonSafely(response));
 });
 
+When('I submit a PF-task-012b additional review for the remembered retired completion item with notice {string}', async function (notice) {
+  const itemId = getState(this).completionItemId;
+  assert.ok(itemId, 'Expected a remembered PF-task-012b completion portfolio item id');
+  const authToken = getAuthToken(this, 'submitting an additional review for retired evidence');
+  const response = await fetch(`${BACKEND_URL}/portfolio-items/${itemId}/reviews`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(buildReviewBody(this, notice)),
+  });
+
+  rememberLatestApiResponse(this, response, await readJsonSafely(response));
+});
+
+When('PF-task-012b review creation races with retirement for the remembered completion item', async function () {
+  const itemId = getState(this).completionItemId;
+  assert.ok(itemId, 'Expected a remembered PF-task-012b completion portfolio item id');
+  getState(this).raceResult = await runBackendProbe(RETIRED_REVIEW_RACE_PROBE, {
+    PF_TASK_012B_ITEM_ID: itemId,
+    PF_TASK_012B_AUTHOR_ID: actors.teacher.id,
+    PF_TASK_012B_BUSINESS_ID: businesses.related.id,
+    PF_TASK_012B_REVIEW_TEXT: getState(this).reviewText,
+  });
+});
+
 When('I submit a PF-task-012b additional review for {string} with notice {string} and rating {int}', async function (itemName, notice, rating) {
   const item = itemFor(itemName);
   const authToken = getAuthToken(this, 'submitting an additional review with a rating');
@@ -390,29 +463,38 @@ When('I submit a PF-task-012b additional review for {string} with notice {string
 
 When('I open the PF-task-012b completion dialog for {string}', async function (fixtureName) {
   await this.playwright.page.goto(`${FRONTEND_URL}/projects/${PROOF_PROJECT_ID}`);
-  await clickTaskTeamButton(this.playwright.page, fixtureName, /Afronden/u);
+  await clickTaskTeamButton(this.playwright.page, fixtureName, new RegExp(`Rond ${actors.student.fullName} af`, 'u'));
+  await completionDialog(this.playwright.page).waitFor({ state: 'visible' });
 });
 
 When('I enter PF-task-012b completion review text', async function () {
   const reviewText = getState(this).reviewText ?? `PF-task-012b browser completion ${Date.now()} ${Math.random().toString(16).slice(2)}`;
   getState(this).reviewText = reviewText;
-  await this.playwright.page.getByLabel('Reviewtekst').fill(reviewText);
+  await completionDialog(this.playwright.page).getByLabel('Reviewtekst').fill(reviewText);
 });
 
 When('I accept the PF-task-012b public-use notice', async function () {
-  await this.playwright.page.getByLabel(/Ik accepteer/u).check();
+  await completionDialog(this.playwright.page).getByLabel(/Ik accepteer/u).check();
 });
 
 When('I submit the PF-task-012b completion review form', async function () {
-  const submitButton = this.playwright.page.getByRole('button', { name: 'Review opslaan' });
+  const dialog = completionDialog(this.playwright.page);
+  const submitButton = dialog.getByRole('button', { name: 'Review opslaan' });
   await submitButton.click();
-  await submitButton.waitFor({ state: 'hidden' });
+  await dialog.waitFor({ state: 'hidden' });
 });
 
 Then('the PF-task-012b completion without review action should not be available', async function () {
-  const completeButton = this.playwright.page.getByRole('button', { name: 'Afronden zonder review' });
-  await this.playwright.page.getByRole('dialog').waitFor({ state: 'visible' });
+  const dialog = completionDialog(this.playwright.page);
+  const completeButton = dialog.getByRole('button', { name: 'Afronden zonder review' });
+  await dialog.waitFor({ state: 'visible' });
   assert.equal(await completeButton.count(), 0, 'Expected supervisors not to see a completion-without-review action');
+});
+
+Then('the PF-task-012b race-safe review creation should fail without persisting a review', function () {
+  const raceResult = getState(this).raceResult;
+  assert.equal(raceResult?.failed_as_expected, true, `Expected race-safe review creation to fail, received ${JSON.stringify(raceResult)}`);
+  assert.equal(raceResult.review_persisted, false, `Expected no raced review to persist, received ${JSON.stringify(raceResult)}`);
 });
 
 Then('the latest PF-task-012b API response status should be {int}', function (expectedStatus) {
@@ -467,7 +549,7 @@ Then('the persisted PF-task-012b review should store a public notice accepted ti
 });
 
 Then('the PF-task-012b public-use notice should be displayed', async function () {
-  const bodyText = await this.playwright.page.getByRole('dialog').innerText();
+  const bodyText = await completionDialog(this.playwright.page).innerText();
   assert.match(
     bodyText,
     /student kan deze review later tonen op de openbare portfolio-pagina/i,
@@ -477,12 +559,11 @@ Then('the PF-task-012b public-use notice should be displayed', async function ()
 });
 
 Then('the PF-task-012b completion review submit button should be disabled', async function () {
-  await assert.rejects(
-    () => this.playwright.page.getByRole('button', { name: 'Review opslaan' }).click({ trial: true }),
-    /not enabled|element is not enabled/i,
-  );
+  const submitButton = completionDialog(this.playwright.page).getByRole('button', { name: 'Review opslaan' });
+  assert.equal(await submitButton.isDisabled(), true, 'Expected completion review submit button to be disabled');
 });
 
 Then('the PF-task-012b completion review submit button should be enabled', async function () {
-  await this.playwright.page.getByRole('button', { name: 'Review opslaan' }).click({ trial: true });
+  const submitButton = completionDialog(this.playwright.page).getByRole('button', { name: 'Review opslaan' });
+  assert.equal(await submitButton.isEnabled(), true, 'Expected completion review submit button to be enabled');
 });

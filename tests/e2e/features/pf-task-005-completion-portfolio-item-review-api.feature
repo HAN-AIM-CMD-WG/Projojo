@@ -55,6 +55,13 @@ Feature: PF-task-005 completion creates canonical portfolio item and initial rev
       | "five" |
 
   @api @portfolio @pf-task-005
+  Scenario: Completion persistence failure leaves no partial side effects
+    Given I remember the PF-task-005 completion side effects for "startedForCompletion"
+    When a PF-task-005 completion persistence failure is simulated for "startedForCompletion"
+    Then the PF-task-005 simulated persistence failure should be reported
+    And the PF-task-005 completion side effects for "startedForCompletion" should be unchanged
+
+  @api @portfolio @pf-task-005
   Scenario Outline: Review text requires accepted public-use notice
     Given I am authenticated as the PF-task-005 portfolio teacher
     And I remember unique PF-task-005 review text for "notice rejection"

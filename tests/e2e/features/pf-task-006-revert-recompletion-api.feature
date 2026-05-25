@@ -13,7 +13,7 @@ Feature: PF-task-006 revert completion, revert start, and re-completion behavior
     And the PF-task-006 portfolio item "first item" should be visible to the portfolio owner student
     And the PF-task-006 portfolio item "first item" should be visible to the portfolio teacher
     And the PF-task-006 portfolio item "first item" should be visible to the related portfolio supervisor
-    And I make the PF-task-006 portfolio item "first item" visible in the public portfolio read model
+    And I set up the PF-task-006 fixture so portfolio item "first item" is selected for public visibility
     And the PF-task-006 public portfolio view should expose portfolio item "first item"
     When I request PF-task-006 lifecycle action "revert-completion" for "startedForCompletion"
     Then the latest PF-task-006 API response status should be 200
@@ -59,7 +59,7 @@ Feature: PF-task-006 revert completion, revert start, and re-completion behavior
     When I complete the PF-task-006 registration "startedForCompletion" with remembered review text "first review", accepted notice, and rating 5
     Then the latest PF-task-006 API response status should be 200
     And the PF-task-006 response should include a new portfolio item id as "first item"
-    And I make the PF-task-006 portfolio item "first item" visible in the public portfolio read model
+    And I set up the PF-task-006 fixture so portfolio item "first item" is selected for public visibility
     And the PF-task-006 public portfolio view should expose portfolio item "first item"
     When I request PF-task-006 lifecycle action "revert-completion" for "startedForCompletion"
     Then the latest PF-task-006 API response status should be 200

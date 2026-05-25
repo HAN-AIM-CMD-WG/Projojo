@@ -120,10 +120,13 @@ def portfolio_attrs(item_id: str, ids: dict, *, display_order: int, retired: boo
         f"has id {quote(item_id)}",
         f"has createdAt {CREATED_AT}",
         f"has completedAt {COMPLETED_AT}",
+        f"has sourceStudentId {quote(ids['student_id'])}",
         f"has sourceRegistrationId {quote(ids['registration_id'])}",
         f"has sourceTaskId {quote(ids['task_id'])}",
         f"has sourceProjectId {quote(ids['project_id'])}",
         f"has sourceBusinessId {quote(ids['business_id'])}",
+        f"has studentName {quote('PF-task-002a Schema Probe Student')}",
+        f"has studentImagePath {quote('/images/pf-task-002a-student.png')}",
         f"has taskName {quote('Canonical Schema Task')}",
         f"has taskDescription {quote('Portfolio evidence captured at completion time')}",
         f"has projectName {quote('Portfolio Backend Replacement')}",
@@ -174,10 +177,13 @@ fetch {{
   'id': $item.id,
   'created_at': $item.createdAt,
   'completed_at': $item.completedAt,
+  'source_student_id': $item.sourceStudentId,
   'source_registration_id': $item.sourceRegistrationId,
   'source_task_id': $item.sourceTaskId,
   'source_project_id': $item.sourceProjectId,
   'source_business_id': $item.sourceBusinessId,
+  'student_name': $item.studentName,
+  'student_image_path': [$item.studentImagePath],
   'task_name': $item.taskName,
   'task_description': [$item.taskDescription],
   'project_name': $item.projectName,
@@ -235,6 +241,7 @@ def probe_legacy_snapshot_attrs() -> dict:
     suffix = str(uuid4())
     student_id = f"pf-task-002a-snapshot-student-{suffix}"
     ids = {
+        'student_id': student_id,
         'registration_id': f"pf-task-002a-registration-{suffix}",
         'task_id': f"pf-task-002a-task-{suffix}",
         'project_id': f"pf-task-002a-project-{suffix}",
@@ -444,10 +451,13 @@ Then('the canonical portfolio item probe should confirm source identifiers and c
   const active = items.active;
 
   assert.equal(result.source_registration_id, ids.registration_id);
+  assert.equal(active.source_student_id, ids.student_id);
   assert.equal(active.source_registration_id, ids.registration_id);
   assert.equal(active.source_task_id, ids.task_id);
   assert.equal(active.source_project_id, ids.project_id);
   assert.equal(active.source_business_id, ids.business_id);
+  assert.equal(active.student_name, 'PF-task-002a Schema Probe Student');
+  assert.deepEqual(active.student_image_path, ['/images/pf-task-002a-student.png']);
   assert.equal(active.task_name, 'Canonical Schema Task');
   assert.deepEqual(active.task_description, ['Portfolio evidence captured at completion time']);
   assert.equal(active.project_name, 'Portfolio Backend Replacement');

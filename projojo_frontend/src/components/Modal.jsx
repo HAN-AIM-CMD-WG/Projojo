@@ -1,4 +1,34 @@
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+
+const openModalStack = [];
+const modalStackSubscribers = new Set();
+
+function notifyModalStackChange() {
+    modalStackSubscribers.forEach((subscriber) => subscriber());
+}
+
+function updateBodyScrollLock() {
+    document.body.style.overflow = openModalStack.length === 0 ? 'auto' : 'hidden';
+}
+
+function addModalToStack(modalId) {
+    if (!openModalStack.includes(modalId)) {
+        openModalStack.push(modalId);
+        updateBodyScrollLock();
+        notifyModalStackChange();
+    }
+    return openModalStack.indexOf(modalId);
+}
+
+function removeModalFromStack(modalId) {
+    const index = openModalStack.indexOf(modalId);
+    if (index !== -1) {
+        openModalStack.splice(index, 1);
+        updateBodyScrollLock();
+        notifyModalStackChange();
+    }
+}
 
 export default function Modal({
     isModalOpen,
@@ -13,25 +43,43 @@ export default function Modal({
     const closeButtonRef = useRef(null);
     const previousActiveElement = useRef(null);
     const hasFocusedOnOpen = useRef(false);
+    const modalInstanceId = useId();
     const titleId = useId();
+    const [stackIndex, setStackIndex] = useState(0);
+    const [, setStackVersion] = useState(0);
+
+    const forceModalStackRender = useCallback(() => {
+        setStackVersion((version) => version + 1);
+    }, []);
+
+    const isTopModal = useCallback(() => openModalStack[openModalStack.length - 1] === modalInstanceId, [modalInstanceId]);
 
     const handleClickOutside = () => {
         // This handler only fires for clicks on the backdrop
         // Clicks inside the modal are stopped by stopPropagation on the modal content
+        if (!isTopModal()) return;
         setIsModalOpen(false);
     };
 
     // Handle ESC key to close modal
     const handleKeyDown = useCallback((event) => {
+        if (!isTopModal()) return;
+
         if (event.key === 'Escape') {
+            event.preventDefault();
             setIsModalOpen(false);
         }
 
         // Focus trap - keep focus within modal
         if (event.key === 'Tab' && modalRef.current) {
             const focusableElements = modalRef.current.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
             );
+            if (focusableElements.length === 0) {
+                event.preventDefault();
+                modalRef.current.focus();
+                return;
+            }
             const firstElement = focusableElements[0];
             const lastElement = focusableElements[focusableElements.length - 1];
 
@@ -49,10 +97,20 @@ export default function Modal({
                 }
             }
         }
-    }, [setIsModalOpen]);
+    }, [isTopModal, setIsModalOpen]);
+
+    useEffect(() => {
+        modalStackSubscribers.add(forceModalStackRender);
+        return () => {
+            modalStackSubscribers.delete(forceModalStackRender);
+            removeModalFromStack(modalInstanceId);
+        };
+    }, [forceModalStackRender, modalInstanceId]);
 
     useEffect(() => {
         if (isModalOpen) {
+            setStackIndex(addModalToStack(modalInstanceId));
+
             if (!hasFocusedOnOpen.current) {
                 // Store currently focused element to restore later
                 previousActiveElement.current = document.activeElement;
@@ -64,14 +122,11 @@ export default function Modal({
                 hasFocusedOnOpen.current = true;
             }
 
-            // Prevent body scroll
-            document.body.style.overflow = 'hidden';
-
             // Add keyboard listener
             document.addEventListener('keydown', handleKeyDown);
         } else {
             hasFocusedOnOpen.current = false;
-            document.body.style.overflow = 'auto';
+            removeModalFromStack(modalInstanceId);
             document.removeEventListener('keydown', handleKeyDown);
 
             // Restore focus to previously focused element
@@ -83,23 +138,29 @@ export default function Modal({
         return () => {
             document.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isModalOpen, handleKeyDown]);
+    }, [isModalOpen, handleKeyDown, modalInstanceId]);
 
     if (!isModalOpen) {
         return null;
     }
 
-    return (
+    const isCurrentTop = openModalStack.length === 0 || isTopModal();
+
+    return createPortal(
         <div
-            className="overflow-y-auto overflow-x-hidden fixed inset-0 z-50 flex justify-center items-center px-4 py-12 bg-black/40 backdrop-blur-md"
+            className="overflow-y-auto overflow-x-hidden fixed inset-0 flex justify-center items-center px-4 py-12 bg-black/40 backdrop-blur-md"
+            style={{ zIndex: 50 + stackIndex * 10 }}
+            aria-hidden={isCurrentTop ? undefined : "true"}
+            inert={isCurrentTop ? undefined : ""}
             onMouseDown={handleClickOutside}
         >
             <div className={`relative w-full ${maxWidth} max-h-full`}>
                 <div
                     ref={modalRef}
                     role="dialog"
-                    aria-modal="true"
+                    aria-modal={isCurrentTop ? "true" : undefined}
                     aria-labelledby={titleId}
+                    tabIndex={-1}
                     className="rounded-3xl overflow-hidden bg-[var(--neu-bg)] border border-[var(--neu-border)]"
                     style={{
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.2)'
@@ -149,6 +210,7 @@ export default function Modal({
                 </div>
                 <div className="h-12" onMouseDown={handleClickOutside}></div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

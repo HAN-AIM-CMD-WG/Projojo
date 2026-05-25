@@ -152,10 +152,13 @@ entity portfolioItem,
     owns id @key,
     owns createdAt @card(1),
     owns completedAt @card(1),
+    owns sourceStudentId @card(0..1),
     owns sourceRegistrationId @card(1),
     owns sourceTaskId @card(1),
     owns sourceProjectId @card(1),
     owns sourceBusinessId @card(1),
+    owns studentName @card(0..1),
+    owns studentImagePath @card(0..1),
     owns taskName @card(1),
     owns taskDescription @card(0..1),
     owns projectName @card(1),
@@ -244,10 +247,13 @@ attribute startedAt value datetime-tz;
 attribute completedAt value datetime-tz;
 attribute updatedAt value datetime-tz;
 attribute publicNoticeAcceptedAt value datetime-tz;
+attribute sourceStudentId value string;
 attribute sourceRegistrationId value string;
 attribute sourceTaskId value string;
 attribute sourceProjectId value string;
 attribute sourceBusinessId value string;
+attribute studentName value string;
+attribute studentImagePath value string;
 attribute taskName value string;
 attribute taskDescription value string;
 attribute reviewText value string;

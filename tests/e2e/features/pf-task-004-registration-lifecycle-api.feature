@@ -134,6 +134,20 @@ Feature: PF-task-004 registration lifecycle API authorization and state machine
     Then the latest PF-task-004 API response status should be 401
 
   @api @portfolio @pf-task-004
+  Scenario Outline: Unauthenticated callers cannot mutate lifecycle state
+    Given I remember the PF-task-004 lifecycle state for "studentDenied"
+    When I request PF-task-004 lifecycle action "<action>" for "studentDenied" without authentication
+    Then the latest PF-task-004 API response status should be 401
+    And the PF-task-004 lifecycle state for "studentDenied" should keep its remembered timestamps
+
+    Examples:
+      | action            |
+      | start             |
+      | complete          |
+      | revert-start      |
+      | revert-completion |
+
+  @api @portfolio @pf-task-004
   Scenario: Teacher can revert valid lifecycle states
     Given I am authenticated as the PF-task-004 portfolio teacher
     When I request PF-task-004 lifecycle action "revert-start" for "startedForRevert"

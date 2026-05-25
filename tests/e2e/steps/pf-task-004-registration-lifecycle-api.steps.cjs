@@ -430,6 +430,10 @@ When('I request PF-task-004 lifecycle action {string} for {string}', async funct
   await requestLifecycleAction(this, action, fixtureName, { Authorization: `Bearer ${authToken}` });
 });
 
+When('I request PF-task-004 lifecycle action {string} for {string} without authentication', async function (action, fixtureName) {
+  await requestLifecycleAction(this, action, fixtureName);
+});
+
 When('I request PF-task-004 registration decision {string} for {string}', async function (decision, fixtureName) {
   const authToken = getAuthToken(this, `requesting PF-task-004 registration decision ${decision}`);
   await requestRegistrationDecision(this, decision, fixtureName, { Authorization: `Bearer ${authToken}` });

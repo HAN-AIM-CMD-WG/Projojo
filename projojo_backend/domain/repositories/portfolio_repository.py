@@ -22,9 +22,12 @@ class PortfolioRepository:
         if public_review_notice_accepted is not True:
             raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
 
-        item_business_id = self._get_item_business_id(item_id)
-        if item_business_id is None:
+        item_state = self._get_reviewable_item_state(item_id)
+        if item_state is None:
             raise ValueError("Portfolio-item niet gevonden.")
+        if item_state["is_retired"]:
+            raise ValueError("Reviews kunnen niet worden toegevoegd aan ingetrokken portfolio-evidence.")
+        item_business_id = item_state["business_id"]
         if author_role == "supervisor" and item_business_id != business_id:
             raise PermissionError("Je hebt hier geen rechten voor.")
 
@@ -32,7 +35,10 @@ class PortfolioRepository:
         now = datetime.now()
         query = f"""
             match
-                $item isa portfolioItem, has id ~item_id;
+                $item isa portfolioItem,
+                    has id ~item_id,
+                    has sourceBusinessId ~item_business_id,
+                    has isRetired false;
                 $author isa {author_role}, has id ~author_id;
             insert
                 $review isa portfolioReview,
@@ -48,6 +54,7 @@ class PortfolioRepository:
         """
         Db.write_transact(query, {
             "item_id": item_id,
+            "item_business_id": item_business_id,
             "author_id": author_id,
             "review_id": review_id,
             "review_text": review_text,
@@ -56,15 +63,30 @@ class PortfolioRepository:
             "updated_at": now,
             "public_notice_accepted_at": now,
         })
+        if not self._review_exists(review_id):
+            raise ValueError("Portfolio-item niet gevonden of niet meer reviewbaar.")
         return review_id
 
-    def _get_item_business_id(self, item_id: str) -> str | None:
+    def _review_exists(self, review_id: str) -> bool:
         rows = Db.read_transact("""
             match
-                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id;
-            fetch { 'business_id': $business_id };
+                $review isa portfolioReview, has id ~review_id;
+            fetch { 'id': $review.id };
+        """, {"review_id": review_id}, sort_fields=False)
+        return bool(rows)
+
+    def _get_reviewable_item_state(self, item_id: str) -> dict[str, Any] | None:
+        rows = Db.read_transact("""
+            match
+                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired;
+            fetch { 'business_id': $business_id, 'is_retired': $is_retired };
         """, {"item_id": item_id}, sort_fields=False)
-        return self._one(rows[0].get("business_id")) if rows else None
+        if not rows:
+            return None
+        return {
+            "business_id": self._one(rows[0].get("business_id")),
+            "is_retired": bool(self._one(rows[0].get("is_retired"), False)),
+        }
 
     def get_student_identity(self, student_id: str) -> dict[str, Any] | None:
         query = """
@@ -137,7 +159,7 @@ class PortfolioRepository:
     def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
         query = """
             match
-                $student isa student, has id ~student_id;
+                $student isa student, has id ~student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
                 $item isa portfolioItem,
                     has id $id,
                     has createdAt $created_at,
@@ -158,10 +180,16 @@ class PortfolioRepository:
                 'id': $id,
                 'created_at': $created_at,
                 'completed_at': $completed_at,
+                'owner_student_id': $student.id,
+                'owner_student_name': $owner_student_name,
+                'owner_student_image_path': $owner_student_image_path,
+                'source_student_id': [$item.sourceStudentId],
                 'source_registration_id': $source_registration_id,
                 'source_task_id': $source_task_id,
                 'source_project_id': $source_project_id,
                 'source_business_id': $source_business_id,
+                'student_name': [$item.studentName],
+                'student_image_path': [$item.studentImagePath],
                 'task_name': $task_name,
                 'task_description': $item.taskDescription,
                 'project_name': $project_name,
@@ -275,10 +303,15 @@ class PortfolioRepository:
             "id": self._one(row.get("id")),
             "created_at": self._date(row.get("created_at")),
             "completed_at": self._date(row.get("completed_at")),
+            "source_student_id": self._one(row.get("source_student_id"), self._one(row.get("owner_student_id"))),
             "source_registration_id": self._one(row.get("source_registration_id")),
             "source_task_id": self._one(row.get("source_task_id")),
             "source_project_id": self._one(row.get("source_project_id")),
             "source_business_id": self._one(row.get("source_business_id")),
+            "student": {
+                "full_name": self._one(row.get("student_name"), self._one(row.get("owner_student_name"))),
+                "image_path": self._one(row.get("student_image_path"), self._one(row.get("owner_student_image_path"))),
+            },
             "task": {
                 "name": self._one(row.get("task_name")),
                 "description": self._one(row.get("task_description")),
