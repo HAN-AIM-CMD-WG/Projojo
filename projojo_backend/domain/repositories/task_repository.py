@@ -902,15 +902,17 @@ class TaskRepository(BaseRepository[Task]):
             delete
                 has $completed_at of $registration;
         """
-        unretire_flag_query = """
+        clear_active_item_flag_query = """
             match
                 $item isa portfolioItem, has sourceRegistrationId ~source_registration_id, has isRetired $is_retired;
+                $is_retired == false;
             delete
                 has $is_retired of $item;
         """
-        retire_item_query = """
+        retire_active_item_query = """
             match
                 $item isa portfolioItem, has sourceRegistrationId ~source_registration_id;
+                not { $item has isRetired $is_retired; };
             update
                 $item has isRetired true;
                 $item has retiredAt ~retired_at;
@@ -921,8 +923,8 @@ class TaskRepository(BaseRepository[Task]):
         Db.write_transact_many(
             [
                 (delete_completion_query, params),
-                (unretire_flag_query, retire_params),
-                (retire_item_query, {**retire_params, "retired_at": datetime.now()}),
+                (clear_active_item_flag_query, retire_params),
+                (retire_active_item_query, {**retire_params, "retired_at": datetime.now()}),
             ]
         )
 

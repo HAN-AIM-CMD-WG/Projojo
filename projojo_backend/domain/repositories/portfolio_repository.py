@@ -93,6 +93,33 @@ class PortfolioRepository:
             "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
         }
 
+    def get_world_public_student_identity_by_slug(self, slug: str) -> dict[str, Any] | None:
+        query = """
+            match
+                $student isa student, has portfolioSlug ~slug, has isPortfolioWorldPublic true;
+            fetch {
+                'id': $student.id,
+                'full_name': $student.fullName,
+                'image_path': $student.imagePath,
+                'portfolio_summary': $student.portfolioSummary,
+                'portfolio_slug': $student.portfolioSlug,
+                'is_portfolio_world_public': $student.isPortfolioWorldPublic
+            };
+        """
+        results = Db.read_transact(query, {"slug": slug})
+        if not results:
+            return None
+
+        student = results[0]
+        return {
+            "id": self._one(student.get("id")),
+            "full_name": self._one(student.get("full_name")),
+            "image_path": self._one(student.get("image_path")),
+            "portfolio_summary": self._one(student.get("portfolio_summary")),
+            "portfolio_slug": self._one(student.get("portfolio_slug")),
+            "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
+        }
+
     def has_supervisor_relationship(self, student_id: str, business_id: str) -> bool:
         query = """
             match
@@ -163,6 +190,9 @@ class PortfolioRepository:
         rows = Db.read_transact(query, {"student_id": student_id})
         items = [self._map_item(row, viewer_role) for row in rows]
         return sorted(items, key=lambda item: (item["curation"]["display_order"] is None, item["curation"]["display_order"] or 0, item["id"]))
+
+    def get_world_public_items(self, student_id: str) -> list[dict[str, Any]]:
+        return [item for item in self.get_visible_items(student_id, "public") if item["curation"]["is_world_visible"]]
 
     def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
         if not item_ids:
@@ -236,6 +266,8 @@ class PortfolioRepository:
     def _map_item(self, row: dict[str, Any], viewer_role: str) -> dict[str, Any]:
         retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
         visibility_reason = "visible_to_authenticated_viewer"
+        if viewer_role == "public":
+            visibility_reason = "visible_to_world_public"
         if viewer_role == "supervisor" and retracted:
             visibility_reason = "hidden_by_authenticated_public_retraction"
 
@@ -279,7 +311,7 @@ class PortfolioRepository:
                 "business": bool(self._one(row.get("source_business_archived"), False)),
             },
             "visibility": {
-                "viewer_can_see": visibility_reason == "visible_to_authenticated_viewer",
+                "viewer_can_see": visibility_reason in {"visible_to_authenticated_viewer", "visible_to_world_public"},
                 "reason": visibility_reason,
             },
             "reviews": [],

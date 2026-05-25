@@ -141,7 +141,21 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
 
 @router.get(
     "/portfolio/{slug}",
+    response_model=PortfolioResponse,
     responses={404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}}},
 )
 async def get_public_portfolio(slug: str):
-    raise HTTPException(status_code=404, detail="Portfolio niet publiek")
+    student = portfolio_repo.get_world_public_student_identity_by_slug(slug)
+    if not student:
+        raise HTTPException(status_code=404, detail="Portfolio niet publiek")
+
+    items = portfolio_repo.get_world_public_items(student["id"])
+    reviews = [review for review in portfolio_repo.get_reviews_for_items([item["id"] for item in items]) if review["is_world_visible"]]
+    items = portfolio_repo.attach_reviews(items, reviews)
+
+    return {
+        "viewer_role": "public",
+        "student": student,
+        "items": items,
+        "reviews": reviews,
+    }
