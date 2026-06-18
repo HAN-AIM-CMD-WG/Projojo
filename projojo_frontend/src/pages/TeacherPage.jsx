@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import FormInput from "../components/FormInput";
@@ -7,6 +7,7 @@ import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import SkeletonList from "../components/SkeletonList";
 import Tooltip from "../components/Tooltip";
+import Loading from "../components/Loading";
 import Alert from "../components/Alert";
 import { createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
 
@@ -24,6 +25,34 @@ export default function TeacherPage() {
     const [archiveModalBusiness, setArchiveModalBusiness] = useState(null);
     const [isArchiving, setIsArchiving] = useState(false);
     const [showArchivedSection, setShowArchivedSection] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Invite teacher modal state
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [inviteLink, setInviteLink] = useState(null);
+    const [expiry, setExpiry] = useState(null);
+    const [tooltipText, setTooltipText] = useState("Kopieer link");
+    const toolTipRef = useRef(null);
+
+    const formatDate = (date) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        return date.toLocaleDateString("nl-NL", options);
+    };
+
+    const openGenerateLinkModel = () => {
+        setInviteLink(null);
+        setExpiry(null);
+        setError(null);
+        setIsModalOpen(true);
+        // TODO: call teacher invite API when available
+        setError("Docent uitnodigen is nog niet beschikbaar.");
+    };
+
+    const onCopyLink = () => {
+        navigator.clipboard.writeText(inviteLink);
+        setTooltipText("Gekopieerd!");
+        setTimeout(() => setTooltipText("Kopieer link"), 5000);
+    };
 
     useEffect(() => {
         if (!authData.isLoading && authData.type !== 'teacher') {
@@ -52,6 +81,8 @@ export default function TeacherPage() {
     useEffect(() => {
         let ignore = false;
 
+        setIsLoading(true);
+
         // Fetch active businesses first
         getBusinessesBasic()
             .then(data => {
@@ -61,6 +92,9 @@ export default function TeacherPage() {
             .catch(err => {
                 if (ignore) return;
                 setError(err.message);
+            })
+            .finally(() => {
+                if (!ignore) setIsLoading(false);
             })
 
         // Fetch archived businesses separately (non-blocking)
