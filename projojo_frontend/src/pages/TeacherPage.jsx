@@ -6,7 +6,6 @@ import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
 import PageHeader from '../components/PageHeader';
 import SkeletonList from "../components/SkeletonList";
-import Tooltip from "../components/Tooltip";
 import Alert from "../components/Alert";
 import { createNewBusiness, getBusinessesBasic, getArchivedBusinesses, archiveBusiness, restoreBusiness, IMAGE_BASE_URL } from "../services";
 
@@ -24,6 +23,7 @@ export default function TeacherPage() {
     const [archiveModalBusiness, setArchiveModalBusiness] = useState(null);
     const [isArchiving, setIsArchiving] = useState(false);
     const [showArchivedSection, setShowArchivedSection] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (!authData.isLoading && authData.type !== 'teacher') {
@@ -52,6 +52,8 @@ export default function TeacherPage() {
     useEffect(() => {
         let ignore = false;
 
+        setIsLoading(true);
+
         // Fetch active businesses first
         getBusinessesBasic()
             .then(data => {
@@ -61,6 +63,9 @@ export default function TeacherPage() {
             .catch(err => {
                 if (ignore) return;
                 setError(err.message);
+            })
+            .finally(() => {
+                if (!ignore) setIsLoading(false);
             })
 
         // Fetch archived businesses separately (non-blocking)
@@ -110,11 +115,7 @@ export default function TeacherPage() {
         <>
             <Alert text={error} onClose={() => setError(null)} />
             <PageHeader name={'Beheerpagina'} />
-            <div className="flex flex-wrap gap-4 justify-between mb-6">
-                <button onClick={() => openGenerateLinkModel()} className="neu-btn-primary">
-                    <span className="material-symbols-outlined text-sm mr-2">person_add</span>
-                    Nodig docenten uit
-                </button>
+            <div className="flex flex-wrap gap-4 justify-start mb-6">
                 <button onClick={() => setIsCreateBusinessModalVisible(true)} className="neu-btn-primary">
                     <span className="material-symbols-outlined text-sm mr-2">add_business</span>
                     Organisatie aanmaken
@@ -249,67 +250,6 @@ export default function TeacherPage() {
 
             <hr className="mt-8 mb-6 border-gray-200" />
             <NewSkillsManagement />
-
-            <Modal
-                modalHeader={`Collega toevoegen`}
-                isModalOpen={isModalOpen}
-                setIsModalOpen={setIsModalOpen}
-            >
-                <div className="p-4">
-                    {isLoading ?
-                        <div className='flex flex-col items-center gap-4'>
-                            <p className='font-semibold'>Aan het laden...</p>
-                            <Loading size="48px" />
-                        </div>
-                        : error ?
-                            <div className="flex flex-col items-center gap-2 text-red-600">
-                                <p className='font-semibold'>Er is iets misgegaan.</p>
-                                <p className='text-sm'>{error}</p>
-                                <button
-                                    type="button"
-                                    className="btn-primary mt-2"
-                                    onClick={openGenerateLinkModel}
-                                >
-                                    Probeer opnieuw
-                                </button>
-                            </div>
-                            : inviteLink &&
-                            <div className="flex flex-col items-center">
-                                <p className='font-semibold'>Deel de volgende link met een collega:</p>
-                                <div className='w-full flex flex-row gap-2 mt-2'>
-                                    <div className="basis-full">
-                                        <FormInput
-                                            placeholder={"Uitnodigingslink"}
-                                            readonly={true}
-                                            initialValue={inviteLink}
-                                        />
-                                    </div>
-                                    <button
-                                        className="hover:bg-gray-200 transition-colors p-2 rounded-md"
-                                        onClick={onCopyLink}
-                                        ref={toolTipRef}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className='w-5 h-5'><path stroke="currentColor" d="M104.6 48L64 48C28.7 48 0 76.7 0 112L0 384c0 35.3 28.7 64 64 64l96 0 0-48-96 0c-8.8 0-16-7.2-16-16l0-272c0-8.8 7.2-16 16-16l16 0c0 17.7 14.3 32 32 32l72.4 0C202 108.4 227.6 96 256 96l62 0c-7.1-27.6-32.2-48-62-48l-40.6 0C211.6 20.9 188.2 0 160 0s-51.6 20.9-55.4 48zM144 56a16 16 0 1 1 32 0 16 16 0 1 1 -32 0zM448 464l-192 0c-8.8 0-16-7.2-16-16l0-256c0-8.8 7.2-16 16-16l140.1 0L464 243.9 464 448c0 8.8-7.2 16-16 16zM256 512l192 0c35.3 0 64-28.7 64-64l0-204.1c0-12.7-5.1-24.9-14.1-33.9l-67.9-67.9c-9-9-21.2-14.1-33.9-14.1L256 128c-35.3 0-64 28.7-64 64l0 256c0 35.3 28.7 64 64 64z" /></svg>
-                                        <div className="sr-only">Kopieer link</div>
-                                        <Tooltip parentRef={toolTipRef}>
-                                            {tooltipText}
-                                        </Tooltip>
-                                    </button>
-
-                                </div>
-                                <p className='text-sm mt-1 text-[var(--text-secondary)] italic'>Deze link is geldig tot {formatDate(expiry)}.</p>
-                                <p className='text-sm mt-4'>De link is slechts één keer bruikbaar.</p>
-                                <button
-                                    type="button"
-                                    className="btn-primary mt-2"
-                                    onClick={openGenerateLinkModel}
-                                >
-                                    Maak een nieuwe link
-                                </button>
-                            </div>
-                    }
-                </div>
-            </Modal>
 
             {/* Archive Confirmation Modal */}
             <Modal
