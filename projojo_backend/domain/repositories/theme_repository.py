@@ -53,6 +53,10 @@ class ThemeRepository(BaseRepository[Theme]):
         # Sort by display_order, then name
         return sorted(themes, key=lambda t: (t.display_order or 999, t.name))
 
+    def get_by_name_case_insensitive(self, name: str) -> Theme | None:
+        normalized_name = name.casefold()
+        return next((theme for theme in self.get_all() if theme.name.casefold() == normalized_name), None)
+
     def _map_to_model(self, result: dict[str, Any]) -> Theme:
         sdg_code_list = result.get("sdg_code", [])
         icon_list = result.get("icon", [])
@@ -71,6 +75,9 @@ class ThemeRepository(BaseRepository[Theme]):
         )
 
     def create(self, theme: ThemeCreate) -> Theme:
+        if self.get_by_name_case_insensitive(theme.name):
+            raise ValueError("Er bestaat al een thema met deze naam")
+
         id = generate_uuid()
         
         query = """
@@ -109,6 +116,10 @@ class ThemeRepository(BaseRepository[Theme]):
         params = {"theme_id": theme_id}
 
         if theme.name is not None:
+            duplicate = self.get_by_name_case_insensitive(theme.name)
+            if duplicate and duplicate.id != theme_id:
+                raise ValueError("Er bestaat al een thema met deze naam")
+
             update_clauses.append("$theme has name ~name;")
             params["name"] = theme.name
         if theme.sdg_code is not None:

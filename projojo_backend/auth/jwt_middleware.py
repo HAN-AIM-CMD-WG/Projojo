@@ -50,7 +50,9 @@ class JWTMiddleware(BaseHTTPMiddleware):
         request.state.business_id = None
 
         # Check if the request path should be excluded from JWT validation (System endpoints)
-        if self._is_excluded_path(request.url.path):
+        path = request.url.path
+        is_theme_path = path == "/themes" or path.startswith("/themes/")
+        if self._is_excluded_path(path) and (request.method == "GET" or not is_theme_path):
             return await call_next(request)
 
         only_unauthenticated_allowed = True if self._get_route_auth_role(request) == "unauthenticated" else False

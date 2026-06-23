@@ -41,8 +41,11 @@ async def create_theme(theme: ThemeCreate):
     """
     Create a new theme (teacher only).
     """
-    created_theme = theme_repo.create(theme)
-    return created_theme
+    try:
+        created_theme = theme_repo.create(theme)
+        return created_theme
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{theme_id}", response_model=Theme)
@@ -57,6 +60,8 @@ async def update_theme(
     try:
         updated_theme = theme_repo.update(theme_id, theme)
         return updated_theme
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
