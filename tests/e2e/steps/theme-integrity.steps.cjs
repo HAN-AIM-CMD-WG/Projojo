@@ -113,11 +113,22 @@ When('I inspect the TypeDB seed file for theme data', async function () {
   inspectedText = await fs.readFile(path.join(REPO_ROOT, 'projojo_backend/db/seed.tql'), 'utf8');
 });
 
-Then('the seed file should declare exactly the expected six theme names once', function () {
+Then('the seed file should declare each expected theme name once and no duplicate theme names', function () {
+  const themeEntityBlocks = [...inspectedText.matchAll(/^\s*\$theme\w*\s+isa\s+theme,[\s\S]*?;/gm)].map((match) => match[0]);
+  const seedThemeNames = themeEntityBlocks
+    .map((block) => block.match(/has name "([^"]+)"/)?.[1])
+    .filter(Boolean);
+
   for (const expectedName of EXPECTED_SEED_THEME_NAMES) {
-    const occurrences = inspectedText.split(`has name "${expectedName}"`).length - 1;
+    const occurrences = seedThemeNames.filter((name) => name === expectedName).length;
     assert.equal(occurrences, 1, `Expected seed theme '${expectedName}' once, found ${occurrences}`);
   }
+
+  assert.equal(
+    new Set(seedThemeNames).size,
+    seedThemeNames.length,
+    `Expected all seed theme names to be unique, found: ${seedThemeNames.join(', ')}`,
+  );
 });
 
 Given('I am authenticated as the E2E teacher', async function () {
