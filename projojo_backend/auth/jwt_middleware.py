@@ -5,9 +5,9 @@ from starlette.routing import Match
 from auth.jwt_utils import get_token_payload
 from auth.permissions import set_request_context
 
-# List of endpoints that should be excluded from JWT validation
-# These are system endpoints or static files that don't use the @auth decorator
-EXCLUDED_ENDPOINTS = [
+# Path-only endpoints that should be excluded from JWT validation.
+# These are system endpoints or static files that don't use the @auth decorator.
+PATH_EXCLUDED_ENDPOINTS = [
     "/",  # Root endpoint
     "/docs",  # Swagger UI
     "/redoc",  # ReDoc
@@ -19,14 +19,15 @@ EXCLUDED_ENDPOINTS = [
     # Public discovery endpoints (no authentication required)
     "/projects/public",  # List all public projects
     "/projects/public/*",  # Get specific public project
-    "/themes",  # List all themes (public)
-    "/themes/*",  # Get specific theme (public for GET)
 
     # Development
     "/typedb/status",  # TypeDB status check
     "/auth/test/login/*",  # Localhost testing - test login
     "/users/",  # Localhost testing - all users
 ]
+
+# Theme endpoints are public only for reads; theme writes must validate JWT.
+PUBLIC_THEME_READ_ENDPOINTS = ["/themes", "/themes/*"]
 
 
 class JWTMiddleware(BaseHTTPMiddleware):
@@ -51,8 +52,7 @@ class JWTMiddleware(BaseHTTPMiddleware):
 
         # Check if the request path should be excluded from JWT validation (System endpoints)
         path = request.url.path
-        is_theme_path = path == "/themes" or path.startswith("/themes/")
-        if self._is_excluded_path(path) and (request.method == "GET" or not is_theme_path):
+        if self._should_skip_jwt_validation(path, request.method):
             return await call_next(request)
 
         only_unauthenticated_allowed = True if self._get_route_auth_role(request) == "unauthenticated" else False
@@ -87,12 +87,25 @@ class JWTMiddleware(BaseHTTPMiddleware):
         # Proceed to the next middleware/route handler
         return await call_next(request)
 
+    def _should_skip_jwt_validation(self, path: str, method: str) -> bool:
+        """
+        Theme endpoints are public only for reads; theme writes must validate JWT.
+        Other excluded endpoints keep their path-only exclusion behavior.
+        """
+        if method == "GET" and self._matches_excluded_path(path, PUBLIC_THEME_READ_ENDPOINTS):
+            return True
+
+        return self._is_excluded_path(path)
+
     def _is_excluded_path(self, path: str) -> bool:
         """
         Check if the request path should skip JWT validation.
         Supports exact matches and prefix matches (e.g., /auth/*).
         """
-        for excluded in EXCLUDED_ENDPOINTS:
+        return self._matches_excluded_path(path, PATH_EXCLUDED_ENDPOINTS)
+
+    def _matches_excluded_path(self, path: str, excluded_paths: list[str]) -> bool:
+        for excluded in excluded_paths:
             # Exact match
             if path == excluded:
                 return True

@@ -4,9 +4,10 @@ const path = require('node:path');
 
 const { Given, Then, When } = require('@qavajs/core');
 
-const { BACKEND_URL } = require('../support/test-data.cjs');
+const { BACKEND_URL, PROOF_PROJECT_ID } = require('../support/test-data.cjs');
 
 const TEACHER_USER_ID = '20000000-0000-4000-8000-000000000001';
+const STUDENT_USER_ID = '20000000-0000-4000-8000-000000000002';
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
 const EXPECTED_SEED_THEME_NAMES = [
@@ -39,6 +40,7 @@ let authToken = null;
 let lastThemeApiStatus = null;
 let lastThemeApiPayload = null;
 let inspectedText = '';
+const themesByName = new Map();
 
 async function themeApi(pathname, options = {}) {
   const headers = {
@@ -84,7 +86,10 @@ async function createTheme(name) {
 
 async function ensureTheme(name) {
   const existingTheme = await findThemeByName(name);
-  if (existingTheme) return existingTheme;
+  if (existingTheme) {
+    themesByName.set(name, existingTheme);
+    return existingTheme;
+  }
 
   const payload = await createTheme(name);
   assert.equal(
@@ -92,7 +97,44 @@ async function ensureTheme(name) {
     201,
     `Expected setup create for '${name}' to return 201, received ${lastThemeApiStatus}: ${JSON.stringify(payload)}`,
   );
+  themesByName.set(name, payload);
   return payload;
+}
+
+async function authenticateAs(userId, expectedType) {
+  const response = await fetch(`${BACKEND_URL}/auth/test/login/${userId}`, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  });
+  assert.equal(response.status, 200, `Expected E2E ${expectedType} login to return 200, received ${response.status}`);
+
+  const payload = await response.json();
+  assert.equal(payload?.user?.type, expectedType, `Expected test login to authenticate a ${expectedType}`);
+  assert.ok(payload?.access_token, 'Expected test login to return an access token');
+  authToken = payload.access_token;
+}
+
+function requestBodyFor(method, pathname) {
+  if (method === 'POST' && pathname === '/themes/') {
+    return JSON.stringify({
+      name: 'JWT Middleware Probe',
+      sdg_code: 'SDG1',
+      icon: 'lock',
+      description: 'This request should be rejected before persistence.',
+      color: '#4CAF50',
+      display_order: 99,
+    });
+  }
+
+  if (method === 'PUT' && pathname.startsWith('/themes/project/')) {
+    return JSON.stringify({ theme_ids: [] });
+  }
+
+  if (method === 'PUT') {
+    return JSON.stringify({ name: 'JWT Middleware Probe Update' });
+  }
+
+  return undefined;
 }
 
 When('I inspect the TypeDB schema for the theme entity', async function () {
@@ -132,16 +174,15 @@ Then('the seed file should declare each expected theme name once and no duplicat
 });
 
 Given('I am authenticated as the E2E teacher', async function () {
-  const response = await fetch(`${BACKEND_URL}/auth/test/login/${TEACHER_USER_ID}`, {
-    method: 'POST',
-    headers: { Accept: 'application/json' },
-  });
-  assert.equal(response.status, 200, `Expected E2E teacher login to return 200, received ${response.status}`);
+  await authenticateAs(TEACHER_USER_ID, 'teacher');
+});
 
-  const payload = await response.json();
-  assert.equal(payload?.user?.type, 'teacher', 'Expected test login to authenticate a teacher');
-  assert.ok(payload?.access_token, 'Expected test login to return an access token');
-  authToken = payload.access_token;
+Given('I am authenticated as the E2E student', async function () {
+  await authenticateAs(STUDENT_USER_ID, 'student');
+});
+
+Given('I do not send a JWT token to the theme API', function () {
+  authToken = null;
 });
 
 Given('theme {string} exists', async function (name) {
@@ -150,8 +191,54 @@ Given('theme {string} exists', async function (name) {
 });
 
 When('I create a theme named {string}', async function (name) {
-  assert.ok(authToken, 'Expected an authenticated teacher before creating a theme');
   await createTheme(name);
+});
+
+When('I request the public theme collection', async function () {
+  await themeApi('/themes/');
+});
+
+When('I request public theme {string} by id', async function (name) {
+  const theme = themesByName.get(name) ?? await findThemeByName(name);
+  assert.ok(theme?.id, `Expected theme '${name}' to exist before requesting it by id`);
+
+  await themeApi(`/themes/${theme.id}`);
+});
+
+When('I request public theme id {string}', async function (themeId) {
+  await themeApi(`/themes/${themeId}`);
+});
+
+When('I request the public themes for the E2E proof project', async function () {
+  await themeApi(`/themes/project/${PROOF_PROJECT_ID}`);
+});
+
+When('I call the theme API with method {string} and path {string}', async function (method, pathname) {
+  await themeApi(pathname, {
+    method,
+    body: requestBodyFor(method, pathname),
+  });
+});
+
+When('I call the teacher-only theme API with method {string} and path {string} using theme {string}', async function (method, pathTemplate, name) {
+  let pathname = pathTemplate;
+  if (pathTemplate.includes('{theme_id}')) {
+    const theme = themesByName.get(name) ?? await findThemeByName(name);
+    assert.ok(theme?.id, `Expected theme '${name}' to exist before calling ${method} ${pathTemplate}`);
+    pathname = pathTemplate.replace('{theme_id}', theme.id);
+  }
+
+  await themeApi(pathname, {
+    method,
+    body: requestBodyFor(method, pathname),
+  });
+});
+
+When("I replace the E2E proof project's theme links with no themes", async function () {
+  await themeApi(`/themes/project/${PROOF_PROJECT_ID}`, {
+    method: 'PUT',
+    body: JSON.stringify({ theme_ids: [] }),
+  });
 });
 
 When('I rename theme {string} to {string}', async function (currentName, newName) {
@@ -167,6 +254,10 @@ When('I rename theme {string} to {string}', async function (currentName, newName
 
 Then('the latest theme API response status should be {int}', function (expectedStatus) {
   assert.equal(lastThemeApiStatus, expectedStatus, `Expected latest theme API status to be ${expectedStatus}, received ${lastThemeApiStatus}`);
+});
+
+Then('the latest theme API response should be a list', function () {
+  assert.ok(Array.isArray(lastThemeApiPayload), `Expected latest theme API response to be a list, received ${JSON.stringify(lastThemeApiPayload)}`);
 });
 
 Then('the latest API error detail should equal {string}', function (expectedDetail) {
