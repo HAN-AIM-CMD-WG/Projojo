@@ -133,6 +133,7 @@ async function getProjectThemeNames(projectId) {
   const payload = await themeApi(`/themes/project/${projectId}`);
   assert.equal(lastThemeApiStatus, 200, `Expected project theme lookup to return 200, received ${lastThemeApiStatus}`);
   assert.ok(Array.isArray(payload), `Expected project theme lookup to return a list, received ${JSON.stringify(payload)}`);
+  // TS-task-003 proves authorization and visible membership, not hasTheme relation cardinality.
   return [...new Set(payload.map((theme) => theme?.name).filter(Boolean))].sort();
 }
 

@@ -199,7 +199,7 @@ async def _validate_ownership(
     elif user_role == "supervisor":
         # Supervisors own resources within their company
         # The actual ownership validation depends on the resource type
-        return await _check_supervisor_ownership(
+        return await check_supervisor_ownership(
             supervisor_company_id=user_company_id,
             resource_key=owner_key,
             resource_id=resource_id
@@ -209,7 +209,7 @@ async def _validate_ownership(
     return False
 
 
-async def _check_supervisor_ownership(
+async def check_supervisor_ownership(
     supervisor_company_id: str,
     resource_key: str,
     resource_id: str
