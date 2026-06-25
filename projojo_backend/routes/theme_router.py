@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Path, HTTPException, Depends, Body
-from auth.permissions import auth
+from auth.permissions import auth, _check_supervisor_ownership
 from auth.jwt_utils import get_token_payload
 
 from domain.repositories import ThemeRepository
@@ -103,12 +103,18 @@ async def link_project_themes(
     
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen geen thema's koppelen")
-    
-    # Note: For full authorization, we'd need to check project ownership
-    # For now, allow all supervisors and teachers
-    if role not in ["supervisor", "teacher"]:
+
+    if role == "supervisor":
+        is_owner = await _check_supervisor_ownership(
+            supervisor_company_id=payload.get("businessId"),
+            resource_key="project_id",
+            resource_id=project_id,
+        )
+        if not is_owner:
+            raise HTTPException(status_code=403, detail="Onvoldoende rechten")
+    elif role != "teacher":
         raise HTTPException(status_code=403, detail="Onvoldoende rechten")
-    
+
     try:
         theme_repo.link_project_to_themes(project_id, theme_ids)
         return {"message": f"Project gekoppeld aan {len(theme_ids)} thema's"}

@@ -4,7 +4,12 @@ const path = require('node:path');
 
 const { Given, Then, When } = require('@qavajs/core');
 
-const { BACKEND_URL, PROOF_PROJECT_ID } = require('../support/test-data.cjs');
+const {
+  BACKEND_URL,
+  CROSS_BUSINESS_PROJECT_ID,
+  PROOF_PROJECT_ID,
+  PROOF_SUPERVISOR_USER_ID,
+} = require('../support/test-data.cjs');
 
 const TEACHER_USER_ID = '20000000-0000-4000-8000-000000000001';
 const STUDENT_USER_ID = '20000000-0000-4000-8000-000000000002';
@@ -41,6 +46,7 @@ let lastThemeApiStatus = null;
 let lastThemeApiPayload = null;
 let inspectedText = '';
 const themesByName = new Map();
+const rememberedProjectThemeNames = new Map();
 
 async function themeApi(pathname, options = {}) {
   const headers = {
@@ -99,6 +105,35 @@ async function ensureTheme(name) {
   );
   themesByName.set(name, payload);
   return payload;
+}
+
+function parseThemeNames(names) {
+  return names.split(',').map((name) => name.trim()).filter(Boolean);
+}
+
+async function themeIdsForNames(names) {
+  const themeIds = [];
+  for (const name of parseThemeNames(names)) {
+    const theme = themesByName.get(name) ?? await findThemeByName(name);
+    assert.ok(theme?.id, `Expected theme '${name}' to exist before linking it to a project`);
+    themesByName.set(name, theme);
+    themeIds.push(theme.id);
+  }
+  return themeIds;
+}
+
+async function replaceProjectThemes(projectId, names) {
+  await themeApi(`/themes/project/${projectId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ theme_ids: await themeIdsForNames(names) }),
+  });
+}
+
+async function getProjectThemeNames(projectId) {
+  const payload = await themeApi(`/themes/project/${projectId}`);
+  assert.equal(lastThemeApiStatus, 200, `Expected project theme lookup to return 200, received ${lastThemeApiStatus}`);
+  assert.ok(Array.isArray(payload), `Expected project theme lookup to return a list, received ${JSON.stringify(payload)}`);
+  return [...new Set(payload.map((theme) => theme?.name).filter(Boolean))].sort();
 }
 
 async function authenticateAs(userId, expectedType) {
@@ -181,6 +216,10 @@ Given('I am authenticated as the E2E student', async function () {
   await authenticateAs(STUDENT_USER_ID, 'student');
 });
 
+Given('I am authenticated as the E2E supervisor', async function () {
+  await authenticateAs(PROOF_SUPERVISOR_USER_ID, 'supervisor');
+});
+
 Given('I do not send a JWT token to the theme API', function () {
   authToken = null;
 });
@@ -188,6 +227,13 @@ Given('I do not send a JWT token to the theme API', function () {
 Given('theme {string} exists', async function (name) {
   assert.ok(authToken, 'Expected an authenticated teacher before creating setup themes');
   await ensureTheme(name);
+});
+
+Given('the E2E theme catalog contains themes {string}', async function (names) {
+  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  for (const name of parseThemeNames(names)) {
+    await ensureTheme(name);
+  }
 });
 
 When('I create a theme named {string}', async function (name) {
@@ -241,6 +287,42 @@ When("I replace the E2E proof project's theme links with no themes", async funct
   });
 });
 
+Given('the E2E proof project is linked to themes {string}', async function (names) {
+  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  await replaceProjectThemes(PROOF_PROJECT_ID, names);
+  assert.equal(
+    lastThemeApiStatus,
+    200,
+    `Expected setup link for E2E proof project to return 200, received ${lastThemeApiStatus}: ${JSON.stringify(lastThemeApiPayload)}`,
+  );
+});
+
+Given('the cross-business E2E project is linked to themes {string}', async function (names) {
+  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  await replaceProjectThemes(CROSS_BUSINESS_PROJECT_ID, names);
+  assert.equal(
+    lastThemeApiStatus,
+    200,
+    `Expected setup link for cross-business E2E project to return 200, received ${lastThemeApiStatus}: ${JSON.stringify(lastThemeApiPayload)}`,
+  );
+});
+
+Given("I remember the E2E proof project's theme links", async function () {
+  rememberedProjectThemeNames.set(PROOF_PROJECT_ID, await getProjectThemeNames(PROOF_PROJECT_ID));
+});
+
+Given("I remember the cross-business E2E project's theme links", async function () {
+  rememberedProjectThemeNames.set(CROSS_BUSINESS_PROJECT_ID, await getProjectThemeNames(CROSS_BUSINESS_PROJECT_ID));
+});
+
+When("I replace the E2E proof project's theme links with themes {string}", async function (names) {
+  await replaceProjectThemes(PROOF_PROJECT_ID, names);
+});
+
+When("I replace the cross-business E2E project's theme links with themes {string}", async function (names) {
+  await replaceProjectThemes(CROSS_BUSINESS_PROJECT_ID, names);
+});
+
 When('I rename theme {string} to {string}', async function (currentName, newName) {
   assert.ok(authToken, 'Expected an authenticated teacher before updating a theme');
   const theme = await findThemeByName(currentName);
@@ -262,6 +344,39 @@ Then('the latest theme API response should be a list', function () {
 
 Then('the latest API error detail should equal {string}', function (expectedDetail) {
   assert.equal(lastThemeApiPayload?.detail, expectedDetail);
+});
+
+Then('the latest theme API response status should be 401 or 403', function () {
+  assert.ok(
+    [401, 403].includes(lastThemeApiStatus),
+    `Expected latest theme API status to be 401 or 403, received ${lastThemeApiStatus}`,
+  );
+});
+
+Then('the latest theme API response message should equal {string}', function (expectedMessage) {
+  assert.equal(lastThemeApiPayload?.message, expectedMessage);
+});
+
+Then('the E2E proof project should be linked to themes {string}', async function (names) {
+  const actualNames = await getProjectThemeNames(PROOF_PROJECT_ID);
+  assert.deepEqual(actualNames, parseThemeNames(names).sort());
+});
+
+Then('the cross-business E2E project should be linked to themes {string}', async function (names) {
+  const actualNames = await getProjectThemeNames(CROSS_BUSINESS_PROJECT_ID);
+  assert.deepEqual(actualNames, parseThemeNames(names).sort());
+});
+
+Then("the E2E proof project should keep its remembered theme links", async function () {
+  const expectedNames = rememberedProjectThemeNames.get(PROOF_PROJECT_ID);
+  assert.ok(expectedNames, 'Expected E2E proof project theme links to be remembered before this assertion');
+  assert.deepEqual(await getProjectThemeNames(PROOF_PROJECT_ID), expectedNames);
+});
+
+Then("the cross-business E2E project should keep its remembered theme links", async function () {
+  const expectedNames = rememberedProjectThemeNames.get(CROSS_BUSINESS_PROJECT_ID);
+  assert.ok(expectedNames, 'Expected cross-business E2E project theme links to be remembered before this assertion');
+  assert.deepEqual(await getProjectThemeNames(CROSS_BUSINESS_PROJECT_ID), expectedNames);
 });
 
 Then('exactly one theme named {string} should exist', async function (name) {
