@@ -8,11 +8,11 @@ const {
   BACKEND_URL,
   CROSS_BUSINESS_PROJECT_ID,
   PROOF_PROJECT_ID,
+  PROOF_TEACHER_USER_ID,
+  PROOF_STUDENT_USER_ID,
   PROOF_SUPERVISOR_USER_ID,
 } = require('../support/test-data.cjs');
 
-const TEACHER_USER_ID = '20000000-0000-4000-8000-000000000001';
-const STUDENT_USER_ID = '20000000-0000-4000-8000-000000000002';
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 
 const EXPECTED_SEED_THEME_NAMES = [
@@ -210,11 +210,11 @@ Then('the seed file should declare each expected theme name once and no duplicat
 });
 
 Given('I am authenticated as the E2E teacher', async function () {
-  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  await authenticateAs(PROOF_TEACHER_USER_ID, 'teacher');
 });
 
 Given('I am authenticated as the E2E student', async function () {
-  await authenticateAs(STUDENT_USER_ID, 'student');
+  await authenticateAs(PROOF_STUDENT_USER_ID, 'student');
 });
 
 Given('I am authenticated as the E2E supervisor', async function () {
@@ -231,7 +231,7 @@ Given('theme {string} exists', async function (name) {
 });
 
 Given('the E2E theme catalog contains themes {string}', async function (names) {
-  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  await authenticateAs(PROOF_TEACHER_USER_ID, 'teacher');
   for (const name of parseThemeNames(names)) {
     await ensureTheme(name);
   }
@@ -289,7 +289,7 @@ When("I replace the E2E proof project's theme links with no themes", async funct
 });
 
 Given('the E2E proof project is linked to themes {string}', async function (names) {
-  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  await authenticateAs(PROOF_TEACHER_USER_ID, 'teacher');
   await replaceProjectThemes(PROOF_PROJECT_ID, names);
   assert.equal(
     lastThemeApiStatus,
@@ -299,7 +299,7 @@ Given('the E2E proof project is linked to themes {string}', async function (name
 });
 
 Given('the cross-business E2E project is linked to themes {string}', async function (names) {
-  await authenticateAs(TEACHER_USER_ID, 'teacher');
+  await authenticateAs(PROOF_TEACHER_USER_ID, 'teacher');
   await replaceProjectThemes(CROSS_BUSINESS_PROJECT_ID, names);
   assert.equal(
     lastThemeApiStatus,
