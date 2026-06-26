@@ -49,6 +49,12 @@ function createThemeIntegrityState() {
     inspectedText: '',
     themesByName: new Map(),
     rememberedProjectThemeNames: new Map(),
+    validationCounter: 0,
+    latestValidationOperation: null,
+    latestValidationThemeId: null,
+    latestValidationSentName: null,
+    latestValidationOriginalTheme: null,
+    latestValidationThemeCountBefore: null,
   };
 }
 
@@ -92,6 +98,12 @@ async function findThemeByName(world, name) {
   return themes.find((theme) => theme?.name === name) ?? null;
 }
 
+async function getThemeById(world, themeId) {
+  const payload = await themeApi(world, `/themes/${themeId}`);
+  assert.equal(themeState(world).lastThemeApiStatus, 200, `Expected GET /themes/${themeId} to return 200`);
+  return payload;
+}
+
 async function createTheme(world, name) {
   const fixture = themeFixtures[name] ?? {
     sdg_code: 'SDG1',
@@ -105,6 +117,49 @@ async function createTheme(world, name) {
     method: 'POST',
     body: JSON.stringify({ name, ...fixture }),
   });
+}
+
+function nextValidationThemeName(world) {
+  const state = themeState(world);
+  state.validationCounter += 1;
+  return `TS004 Validation ${Date.now()}-${state.validationCounter}`;
+}
+
+function validationValue(field, value) {
+  if (value === 'empty') return '';
+  if (value === 'whitespace only') return '   ';
+  if (value === '101 characters') return 'N'.repeat(101);
+  if (value === '51 characters') return 'i'.repeat(51);
+  if (value === '501 characters') return 'd'.repeat(501);
+  if (value === 'non-integer') return 'not-a-number';
+  if (value === 'null') return null;
+  if (field === 'display_order') return Number(value);
+  return value;
+}
+
+function createThemeValidationPayload(world) {
+  return {
+    name: nextValidationThemeName(world),
+    sdg_code: 'SDG1',
+    icon: 'label',
+    description: 'E2E theme validation fixture.',
+    color: '#4CAF50',
+    display_order: 99,
+  };
+}
+
+function setValidationField(payload, field, value) {
+  assert.ok(
+    ['name', 'sdg_code', 'icon', 'description', 'color', 'display_order'].includes(field),
+    `Unsupported theme validation field '${field}'`,
+  );
+
+  if (value === 'omitted') {
+    delete payload[field];
+    return;
+  }
+
+  payload[field] = validationValue(field, value);
 }
 
 async function ensureTheme(world, name) {
@@ -359,6 +414,89 @@ When('I rename theme {string} to {string}', async function (currentName, newName
   });
 });
 
+When('I submit a theme {string} request with validation field {string} set to {string}', async function (operation, field, value) {
+  const state = themeState(this);
+  assert.ok(state.authToken, 'Expected an authenticated teacher before submitting a validation request');
+  state.latestValidationOperation = operation;
+  state.latestValidationThemeId = null;
+  state.latestValidationSentName = null;
+  state.latestValidationOriginalTheme = null;
+  state.latestValidationThemeCountBefore = null;
+
+  if (operation === 'create') {
+    const payload = createThemeValidationPayload(this);
+    setValidationField(payload, field, value);
+    state.latestValidationSentName = payload.name;
+    state.latestValidationThemeCountBefore = (await getThemes(this)).length;
+    await themeApi(this, '/themes/', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return;
+  }
+
+  if (operation === 'update') {
+    const setupPayload = await themeApi(this, '/themes/', {
+      method: 'POST',
+      body: JSON.stringify(createThemeValidationPayload(this)),
+    });
+    assert.equal(
+      themeState(this).lastThemeApiStatus,
+      201,
+      `Expected setup theme create to return 201, received ${themeState(this).lastThemeApiStatus}: ${JSON.stringify(setupPayload)}`,
+    );
+    state.latestValidationThemeId = setupPayload.id;
+    state.latestValidationOriginalTheme = await getThemeById(this, setupPayload.id);
+
+    const updatePayload = {};
+    setValidationField(updatePayload, field, value);
+    await themeApi(this, `/themes/${setupPayload.id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updatePayload),
+    });
+    return;
+  }
+
+  assert.fail(`Unsupported theme validation operation '${operation}'`);
+});
+
+When('I create a theme with validation field {string} set to {string}', async function (field, value) {
+  const state = themeState(this);
+  assert.ok(state.authToken, 'Expected an authenticated teacher before creating a validation theme');
+  state.latestValidationOperation = 'create';
+  state.latestValidationThemeId = null;
+  const payload = createThemeValidationPayload(this);
+  setValidationField(payload, field, value);
+  const responsePayload = await themeApi(this, '/themes/', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  state.latestValidationThemeId = responsePayload?.id ?? null;
+});
+
+When('I update a theme with validation field {string} set to {string}', async function (field, value) {
+  const state = themeState(this);
+  assert.ok(state.authToken, 'Expected an authenticated teacher before updating a validation theme');
+  const setupPayload = await themeApi(this, '/themes/', {
+    method: 'POST',
+    body: JSON.stringify(createThemeValidationPayload(this)),
+  });
+  assert.equal(
+    state.lastThemeApiStatus,
+    201,
+    `Expected setup theme create to return 201, received ${state.lastThemeApiStatus}: ${JSON.stringify(setupPayload)}`,
+  );
+
+  const updatePayload = {};
+  setValidationField(updatePayload, field, value);
+  const responsePayload = await themeApi(this, `/themes/${setupPayload.id}`, {
+    method: 'PUT',
+    body: JSON.stringify(updatePayload),
+  });
+  state.latestValidationOperation = 'update';
+  state.latestValidationThemeId = responsePayload?.id ?? setupPayload.id;
+});
+
 Then('the latest theme API response status should be {int}', function (expectedStatus) {
   const state = themeState(this);
   assert.equal(state.lastThemeApiStatus, expectedStatus, `Expected latest theme API status to be ${expectedStatus}, received ${state.lastThemeApiStatus}`);
@@ -420,4 +558,45 @@ Then('theme {string} should still exist', async function (name) {
 
 Then('the latest theme response name should equal {string}', function (expectedName) {
   assert.equal(themeState(this).lastThemeApiPayload?.name, expectedName);
+});
+
+Then('the latest theme response field {string} should equal {string}', function (field, expectedValue) {
+  assert.equal(themeState(this).lastThemeApiPayload?.[field], validationValue(field, expectedValue));
+});
+
+Then('the persisted latest theme field {string} should equal {string}', async function (field, expectedValue) {
+  const themeId = themeState(this).latestValidationThemeId;
+  assert.ok(themeId, 'Expected latest validation request to store a theme id');
+  const persistedTheme = await getThemeById(this, themeId);
+  assert.equal(persistedTheme?.[field], validationValue(field, expectedValue));
+});
+
+Then('no invalid theme data should be persisted from the latest validation request', async function () {
+  const state = themeState(this);
+  if (state.latestValidationOperation === 'create') {
+    const themes = await getThemes(this);
+    assert.equal(
+      themes.length,
+      state.latestValidationThemeCountBefore,
+      'Expected invalid create to leave the theme catalog size unchanged',
+    );
+    if (state.latestValidationSentName !== undefined && state.latestValidationSentName !== null) {
+      assert.equal(
+        themes.filter((theme) => theme?.name === state.latestValidationSentName).length,
+        0,
+        `Expected invalid create not to persist theme name '${state.latestValidationSentName}'`,
+      );
+    }
+    return;
+  }
+
+  if (state.latestValidationOperation === 'update') {
+    const persistedTheme = await getThemeById(this, state.latestValidationThemeId);
+    for (const field of ['name', 'sdg_code', 'icon', 'description', 'color', 'display_order']) {
+      assert.equal(persistedTheme?.[field], state.latestValidationOriginalTheme?.[field], `Expected invalid update to preserve ${field}`);
+    }
+    return;
+  }
+
+  assert.fail(`Unsupported validation operation '${state.latestValidationOperation}'`);
 });
