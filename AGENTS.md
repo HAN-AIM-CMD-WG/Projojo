@@ -164,7 +164,13 @@ When making a risky change, document: which existing logic must change, new vali
 
 - **JWT**: HS256, 8-hour expiry, secret from `JWT_SECRET_KEY`. Payload carries `sub` (user id), `role`, `iss="projojo"`, and `businessId` for supervisors.
 - **OAuth**: Authlib with `google`, `github`, `microsoft`. Flow is `/auth/login/{provider}` -> `/auth/callback/{provider}`. Provider redirect URIs must point to the **backend callback**, not the frontend.
-- **Roles**: `unauthenticated`, `authenticated`, `student`, `supervisor` (supervisor + teacher), `teacher` (teacher ⊇ supervisor). Students are separate.
+- **Roles**: A JWT `role` field holds exactly one value: `student`, `supervisor`, or `teacher`. Keep this separate from the `@auth(role=...)` gate level, which sets the _minimum_ needed to pass:
+  - `unauthenticated` - anyone.
+  - `authenticated` - any of `student` / `supervisor` / `teacher`.
+  - `student` - only `student`.
+  - `supervisor` - `supervisor` **or** `teacher` (teachers pass the supervisor gate).
+  - `teacher` - only `teacher`.
+  - So the gate name is not always the JWT value: `@auth(role="supervisor")` also admits teachers, while `@auth(role="teacher")` admits only teachers. Students are never in the supervisor/teacher chain.
 - **Preferred authorization**: stack the `@auth(role=...)` decorator under the route decorator. For owner-scoped resources use `@auth(role=..., owner_id_key="...")` - students may only touch their own resources; supervisors are validated against their company; teachers bypass ownership.
 - Some legacy endpoints do manual `Depends(get_token_payload)` + `if payload.get("role")` checks. **For new endpoints, prefer `@auth`** and do not mix both styles in one handler.
 
