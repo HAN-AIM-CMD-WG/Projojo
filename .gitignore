@@ -41,6 +41,7 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+settings.local.json
 
 # Optional npm cache directory
 .npm
