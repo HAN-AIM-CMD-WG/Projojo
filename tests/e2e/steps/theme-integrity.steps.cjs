@@ -406,6 +406,23 @@ When("I replace the E2E proof project's theme links with themes {string} and inv
   });
 });
 
+When("I replace the E2E proof project's theme links with theme {string} sent twice", async function (name) {
+  const [themeId] = await themeIdsForNames(this, name);
+  await themeApi(this, `/themes/project/${PROOF_PROJECT_ID}`, {
+    method: 'PUT',
+    body: JSON.stringify({ theme_ids: [themeId, themeId] }),
+  });
+});
+
+Then("the E2E proof project's theme list should contain {string} exactly once", async function (name) {
+  const state = themeState(this);
+  const payload = await themeApi(this, `/themes/project/${PROOF_PROJECT_ID}`);
+  assert.equal(state.lastThemeApiStatus, 200, `Expected project theme lookup to return 200, received ${state.lastThemeApiStatus}`);
+  assert.ok(Array.isArray(payload), `Expected project theme lookup to return a list, received ${JSON.stringify(payload)}`);
+  const occurrences = payload.filter((theme) => theme?.name === name).length;
+  assert.equal(occurrences, 1, `Expected theme '${name}' to appear exactly once in the project's theme list, found ${occurrences}`);
+});
+
 When("I replace the cross-business E2E project's theme links with themes {string}", async function (names) {
   await replaceProjectThemes(this, CROSS_BUSINESS_PROJECT_ID, names);
 });

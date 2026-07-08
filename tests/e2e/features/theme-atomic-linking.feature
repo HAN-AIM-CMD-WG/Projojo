@@ -43,3 +43,13 @@ Feature: TS-task-005 make project-theme linking atomic
     Then the latest theme API response status should be 200
     And the latest theme API response message should equal "Project gekoppeld aan 1 thema's"
     And the E2E proof project should be linked to themes "Duurzaamheid"
+
+  @api @theme @integrity @TS-task-005
+  Scenario: Duplicate theme ids in one request create a single link
+    Given the E2E theme catalog contains themes "Duurzaamheid"
+    And the E2E proof project is linked to themes ""
+    And I am authenticated as the E2E supervisor
+    When I replace the E2E proof project's theme links with theme "Duurzaamheid" sent twice
+    Then the latest theme API response status should be 200
+    And the latest theme API response message should equal "Project gekoppeld aan 1 thema's"
+    And the E2E proof project's theme list should contain "Duurzaamheid" exactly once

@@ -210,8 +210,12 @@ class ThemeRepository(BaseRepository[Theme]):
         results = Db.read_transact(query, {"project_id": project_id})
         return [self._map_to_model(result) for result in results]
 
-    def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> None:
-        """Atomically replace a project's theme links: all changes succeed or none are applied."""
+    def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> int:
+        """Atomically replace a project's theme links: all changes succeed or none are applied.
+
+        Duplicate theme ids are ignored. Returns the number of links created.
+        """
+        theme_ids = list(dict.fromkeys(theme_ids))
         delete_query = build_query("""
             match
                 $project isa project, has id ~project_id;
@@ -237,3 +241,4 @@ class ThemeRepository(BaseRepository[Theme]):
                 if not rows:
                     raise ValueError(f"Thema '{theme_id}' bestaat niet")
             tx.commit()
+        return len(theme_ids)

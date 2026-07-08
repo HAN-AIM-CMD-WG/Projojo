@@ -148,7 +148,7 @@ async def link_project_themes(
         raise HTTPException(status_code=403, detail="Onvoldoende rechten")
 
     try:
-        theme_repo.link_project_to_themes(project_id, theme_ids)
-        return {"message": f"Project gekoppeld aan {len(theme_ids)} thema's"}
+        linked_count = theme_repo.link_project_to_themes(project_id, theme_ids)
+        return {"message": f"Project gekoppeld aan {linked_count} thema's"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
