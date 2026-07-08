@@ -1,5 +1,6 @@
 from typing import Any
-from db.initDatabase import Db
+from db.initDatabase import Db, build_query
+from typedb.driver import TransactionType
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Theme, ThemeCreate, ThemeUpdate
@@ -210,30 +211,29 @@ class ThemeRepository(BaseRepository[Theme]):
         return [self._map_to_model(result) for result in results]
 
     def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> None:
-        """Link a project to multiple themes (replaces existing links)"""
-        # First remove existing theme links
-        delete_query = """
+        """Atomically replace a project's theme links: all changes succeed or none are applied."""
+        delete_query = build_query("""
             match
                 $project isa project, has id ~project_id;
                 $hasTheme isa hasTheme(project: $project);
             delete
-                $hasTheme isa hasTheme;
+                $hasTheme;
+        """, {"project_id": project_id})
+        insert_template = """
+            match
+                $project isa project, has id ~project_id;
+                $theme isa theme, has id ~theme_id;
+            insert
+                $hasTheme isa hasTheme($project, $theme);
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass
 
-        # Then add new theme links
-        for theme_id in theme_ids:
-            insert_query = """
-                match
-                    $project isa project, has id ~project_id;
-                    $theme isa theme, has id ~theme_id;
-                insert
-                    $hasTheme isa hasTheme($project, $theme);
-            """
-            Db.write_transact(insert_query, {
-                "project_id": project_id,
-                "theme_id": theme_id
-            })
+        Db.ensure_connection()
+        assert Db.driver is not None
+        with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
+            tx.query(delete_query).resolve()
+            for theme_id in theme_ids:
+                query = build_query(insert_template, {"project_id": project_id, "theme_id": theme_id})
+                rows = list(tx.query(query).resolve())
+                if not rows:
+                    raise ValueError(f"Thema '{theme_id}' bestaat niet")
+            tx.commit()

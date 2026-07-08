@@ -399,6 +399,13 @@ When("I replace the E2E proof project's theme links with themes {string}", async
   await replaceProjectThemes(this, PROOF_PROJECT_ID, names);
 });
 
+When("I replace the E2E proof project's theme links with themes {string} and invalid theme id {string}", async function (names, invalidThemeId) {
+  await themeApi(this, `/themes/project/${PROOF_PROJECT_ID}`, {
+    method: 'PUT',
+    body: JSON.stringify({ theme_ids: [...await themeIdsForNames(this, names), invalidThemeId] }),
+  });
+});
+
 When("I replace the cross-business E2E project's theme links with themes {string}", async function (names) {
   await replaceProjectThemes(this, CROSS_BUSINESS_PROJECT_ID, names);
 });
