@@ -1,6 +1,6 @@
+import re
 from typing import Any
 from db.initDatabase import Db, build_query
-from typedb.driver import TransactionType
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Theme, ThemeCreate, ThemeUpdate
@@ -216,6 +216,10 @@ class ThemeRepository(BaseRepository[Theme]):
         Duplicate theme ids are ignored. Returns the number of links created.
         """
         theme_ids = list(dict.fromkeys(theme_ids))
+        project_query = build_query("""
+            match
+                $project isa project, has id ~project_id;
+        """, {"project_id": project_id})
         delete_query = build_query("""
             match
                 $project isa project, has id ~project_id;
@@ -231,17 +235,17 @@ class ThemeRepository(BaseRepository[Theme]):
                 $hasTheme isa hasTheme($project, $theme);
         """
 
-        Db.ensure_connection()
-        assert Db.driver is not None
-        with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
-            tx.query(delete_query).resolve()
-            invalid_theme_ids = []
-            for theme_id in theme_ids:
-                query = build_query(insert_template, {"project_id": project_id, "theme_id": theme_id})
-                rows = list(tx.query(query).resolve())
-                if not rows:
-                    invalid_theme_ids.append(theme_id)
-            if invalid_theme_ids:
-                raise ValueError(f"Thema's niet gevonden: {', '.join(invalid_theme_ids)}")
-            tx.commit()
+        insert_queries = [
+            build_query(insert_template, {"project_id": project_id, "theme_id": theme_id})
+            for theme_id in theme_ids
+        ]
+
+        def validate(results: list[list]) -> None:
+            if not results[0]:
+                raise ItemRetrievalException("Project", f"Project met ID '{project_id}' niet gevonden.")
+            invalid = [theme_id for theme_id, rows in zip(theme_ids, results[2:]) if not rows]
+            if invalid:
+                raise ValueError(f"Thema's niet gevonden: {', '.join(invalid)}")
+
+        Db.write_transact_atomic([project_query, delete_query, *insert_queries], validate=validate)
         return len(theme_ids)

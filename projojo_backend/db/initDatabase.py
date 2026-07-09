@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
 import re
@@ -176,6 +176,28 @@ class Db:
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(query).resolve()
             tx.commit()
+
+    @staticmethod
+    def write_transact_atomic(queries: list[str], validate: Callable[[list[list[Any]]], None] | None = None) -> list[list[Any]]:
+        """
+        Execute multiple write queries in a single transaction (all-or-nothing).
+
+        Args:
+            queries: Fully-built TypeQL query strings (already parameterized via build_query).
+            validate: Optional callback receiving all resolved rows before commit;
+                      raising from it rolls back the whole transaction.
+
+        Returns:
+            The resolved rows for each query, in order.
+        """
+        Db.ensure_connection()
+        assert Db.driver is not None
+        with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
+            results = [list(tx.query(query).resolve()) for query in queries]
+            if validate is not None:
+                validate(results)
+            tx.commit()
+        return results
 
     @staticmethod
     def close():
