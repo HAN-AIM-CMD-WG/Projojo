@@ -193,6 +193,42 @@ insert
   $supervisor_completion has acceptedAt 2026-01-21T11:13:00.000+0000;
   $supervisor_completion has startedAt 2026-01-22T09:13:00.000+0000;
 """)
+
+# A genuinely completed registration always owns an active portfolio item (created at completion).
+# Recreate that evidence for the completed-for-revert fixture so revert-completion can retire it.
+Db.write_transact("""
+match
+  $student isa student, has id "20000000-0000-4000-8000-000000000002";
+insert
+  $completed_revert_item isa portfolioItem,
+    has id "pf-task-004-completed-revert-item",
+    has createdAt 2026-01-23T17:11:00.000+0000,
+    has completedAt 2026-01-23T17:11:00.000+0000,
+    has sourceStudentId "20000000-0000-4000-8000-000000000002",
+    has sourceRegistrationId "pf-task-004-completed-for-revert",
+    has sourceTaskId "50000000-0000-4000-8000-000000000021",
+    has sourceProjectId "40000000-0000-4000-8000-000000000001",
+    has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+    has studentName "Tom Teststudent",
+    has studentImagePath "default.svg",
+    has taskName "PF-task-004 Completed Revert Task",
+    has taskDescription "Completed registration fixture for valid revert-completion lifecycle coverage.",
+    has projectName "E2E Infrastructure Proof Project",
+    has projectDescription "Neutraal publiek project dat alleen de lokale testinfrastructuur bewijst.",
+    has businessName "E2E Infrastructure Business",
+    has businessLocation "Arnhem",
+    has skillName "Deterministisch Testen",
+    has timelineStartDate 2026-01-22T09:11:00.000+0000,
+    has timelineEndDate 2026-01-23T17:11:00.000+0000,
+    has isRetired false,
+    has isHidden false,
+    has isAuthenticatedPublicRetraction false,
+    has isWorldVisible false,
+    has sourceTaskArchived false,
+    has sourceProjectArchived false,
+    has sourceBusinessArchived false;
+  $completed_revert_ownership isa hasPortfolio (student: $student, item: $completed_revert_item);
+""")
 `;
 
 function fixtureFor(name) {
