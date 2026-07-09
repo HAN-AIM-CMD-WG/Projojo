@@ -143,7 +143,7 @@ async def link_project_themes(
     # are random UUIDs. Revisit if projects ever become private.
     try:
         project_repo.get_by_id(project_id)
-    except Exception:
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Project niet gevonden")
 
     if role == "student":
