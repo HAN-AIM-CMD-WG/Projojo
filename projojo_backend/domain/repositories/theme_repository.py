@@ -229,7 +229,7 @@ class ThemeRepository(BaseRepository[Theme]):
 
         def validate(results: list[list]) -> None:
             if not results[0]:
-                raise ItemRetrievalException("Project", f"Project met ID '{project_id}' niet gevonden.")
+                raise ValueError(f"Project met ID '{project_id}' niet gevonden.")
             invalid = [theme_id for theme_id, rows in zip(theme_ids, results[2:]) if not rows]
             if invalid:
                 raise ValueError(f"Thema's niet gevonden: {', '.join(invalid)}")
