@@ -100,7 +100,7 @@ Read example (optional fields wrapped in `[ ]`):
 ```python
 query = """
 match
-    $business isa business, has id ~id, has name $name;
+    $business isa business, has id ~id, has id $id, has name $name;
 fetch {
     'id': $id,
     'name': $name,
