@@ -10,6 +10,7 @@ from service.validation_service import (
     THEME_NAME_VALIDATION_ERROR,
     validate_theme,
 )
+from exceptions import ItemRetrievalException
 
 theme_repo = ThemeRepository()
 project_repo = ProjectRepository()
@@ -59,7 +60,7 @@ async def get_theme(theme_id: str = Path(..., description="Theme ID")):
     try:
         theme = theme_repo.get_by_id(theme_id)
         return theme
-    except Exception as e:
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
 
@@ -95,7 +96,7 @@ async def update_theme(
         return updated_theme
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
 
@@ -106,9 +107,10 @@ async def delete_theme(theme_id: str = Path(..., description="Theme ID")):
     Delete a theme (teacher only).
     """
     try:
+        theme_repo.get_by_id(theme_id)  # raises ItemRetrievalException if not found
         theme_repo.delete(theme_id)
         return {"message": "Theme succesvol verwijderd"}
-    except Exception as e:
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
 
