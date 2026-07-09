@@ -1,4 +1,3 @@
-import re
 from typing import Any
 from db.initDatabase import Db, build_query
 from exceptions import ItemRetrievalException
@@ -55,26 +54,14 @@ class ThemeRepository(BaseRepository[Theme]):
         return sorted(themes, key=lambda t: (t.display_order or 999, t.name))
 
     def get_by_name_case_insensitive(self, name: str) -> Theme | None:
-        query = """
-            match
-                $theme isa theme,
-                has id $id,
-                has name $name;
-                $name like ~pattern;
-            fetch {
-                'id': $id,
-                'name': $name,
-                'sdg_code': [$theme.sdgCode],
-                'icon': [$theme.icon],
-                'description': [$theme.themeDescription],
-                'color': [$theme.color],
-                'display_order': [$theme.displayOrder]
-            };
-        """
-        results = Db.read_transact(query, {"pattern": f"(?i)^{re.escape(name)}$"})
-        if not results:
-            return None
-        return self._map_to_model(results[0])
+        # Compare in Python instead of a TypeQL `like` regex: names may contain
+        # characters (spaces, '&', ...) that TypeDB's regex literal parser rejects
+        # when escaped via re.escape, and the theme catalog is small.
+        target = name.casefold()
+        for theme in self.get_all():
+            if theme.name.casefold() == target:
+                return theme
+        return None
 
     def _map_to_model(self, result: dict[str, Any]) -> Theme:
         sdg_code_list = result.get("sdg_code", [])
