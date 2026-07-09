@@ -107,7 +107,7 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
         if not business_id or not portfolio_repo.has_supervisor_relationship(student_id, business_id):
             raise HTTPException(status_code=403, detail="Je hebt hier geen rechten voor.")
 
-    items = portfolio_repo.get_visible_items(student_id, viewer_role)
+    items = portfolio_repo.get_visible_items(student_id)
     reviews = portfolio_repo.get_reviews_for_items([item["id"] for item in items])
     items, reviews = portfolio_repo.filter_items_for_viewer(items, reviews, viewer_role)
     items = portfolio_repo.attach_reviews(items, reviews)

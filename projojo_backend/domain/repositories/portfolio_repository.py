@@ -47,7 +47,7 @@ class PortfolioRepository:
         """
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
 
-    def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
+    def get_visible_items(self, student_id: str) -> list[dict[str, Any]]:
         query = """
             match
                 $student isa student, has id ~student_id;
@@ -101,7 +101,7 @@ class PortfolioRepository:
             };
         """
         rows = Db.read_transact(query, {"student_id": student_id})
-        items = [self._map_item(row, viewer_role) for row in rows]
+        items = [self._map_item(row) for row in rows]
         return sorted(items, key=lambda item: (item["curation"]["display_order"] is None, item["curation"]["display_order"] or 0, item["id"]))
 
     def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
@@ -173,11 +173,8 @@ class PortfolioRepository:
             reviews_by_item.setdefault(review["item_id"], []).append(review)
         return [{**item, "reviews": reviews_by_item.get(item["id"], [])} for item in items]
 
-    def _map_item(self, row: dict[str, Any], viewer_role: str) -> dict[str, Any]:
+    def _map_item(self, row: dict[str, Any]) -> dict[str, Any]:
         retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
-        visibility_reason = "visible_to_authenticated_viewer"
-        if viewer_role == "supervisor" and retracted:
-            visibility_reason = "hidden_by_authenticated_public_retraction"
 
         return {
             "id": self._one(row.get("id")),
@@ -219,8 +216,8 @@ class PortfolioRepository:
                 "business": bool(self._one(row.get("source_business_archived"), False)),
             },
             "visibility": {
-                "viewer_can_see": visibility_reason == "visible_to_authenticated_viewer",
-                "reason": visibility_reason,
+                "viewer_can_see": True,
+                "reason": "visible_to_authenticated_viewer",
             },
             "reviews": [],
         }
