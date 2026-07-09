@@ -71,7 +71,7 @@ class ThemeRepository(BaseRepository[Theme]):
                 'display_order': [$theme.displayOrder]
             };
         """
-        results = Db.read_transact(query, {"pattern": f"(?i)^{name}$"})
+        results = Db.read_transact(query, {"pattern": f"(?i)^{re.escape(name)}$"})
         if not results:
             return None
         return self._map_to_model(results[0])
