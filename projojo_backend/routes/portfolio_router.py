@@ -1,7 +1,7 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 
 from auth.permissions import auth
-from domain.models.portfolio import PortfolioResponse
+from domain.models.portfolio import PortfolioResponse, PortfolioReviewCreateRequest
 from domain.repositories.portfolio_repository import PortfolioRepository
 
 
@@ -9,37 +9,66 @@ router = APIRouter(tags=["Portfolio Endpoints"])
 portfolio_repo = PortfolioRepository()
 
 
+@router.post("/portfolio-items/{item_id}/reviews", status_code=status.HTTP_201_CREATED)
+@auth(role="supervisor")
+async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateRequest, request: Request):
+    review_text = review.review_text.strip()
+    if not review_text:
+        raise HTTPException(status_code=400, detail="Reviewtekst is verplicht.")
+    if review.public_review_notice_accepted is not True:
+        raise HTTPException(
+            status_code=400, detail="Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient."
+        )
+
+    try:
+        review_id = portfolio_repo.create_review(
+            item_id=item_id,
+            author_id=request.state.user_id,
+            author_role=request.state.user_role,
+            business_id=request.state.business_id,
+            review_text=review_text,
+            public_review_notice_accepted=review.public_review_notice_accepted,
+            rating=review.rating,
+        )
+        return {"id": review_id}
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
 @router.get(
     "/portfolios/students/{student_id}",
     response_model=PortfolioResponse,
     responses={
         200: {
-            "description": "Authenticated canonical portfolio baseline. Includes viewer role, allowed student identity fields, item collection shape, review collection shape, curation fields, visibility reasons, and archived-source metadata.",
             "content": {
                 "application/json": {
                     "example": {
                         "viewer_role": "teacher",
                         "student": {
-                            "id": "student-id",
-                            "full_name": "Student Name",
-                            "image_path": "default.svg",
-                            "portfolio_summary": "Short portfolio summary",
-                            "portfolio_slug": "student-slug",
-                            "is_portfolio_world_public": False,
+                            "id": "20000000-0000-4000-8000-000000000002",
+                            "full_name": "Tom Teststudent",
+                            "image_path": "/images/students/tom-teststudent.png",
+                            "portfolio_summary": "Leert door praktijkprojecten.",
+                            "portfolio_slug": "portfolio-seed-world-public",
+                            "is_portfolio_world_public": True,
                         },
                         "items": [
                             {
-                                "id": "portfolio-item-id",
+                                "id": "pf-seed-item-no-ratings",
                                 "created_at": "2026-02-20T17:05:00+00:00",
                                 "completed_at": "2026-02-20T17:00:00+00:00",
-                                "source_registration_id": "registration-id",
-                                "source_task_id": "task-id",
-                                "source_project_id": "project-id",
-                                "source_business_id": "business-id",
-                                "task": {"name": "Task", "description": "Copied task description"},
-                                "project": {"name": "Project", "description": "Copied project description"},
-                                "business": {"name": "Business", "location": "Arnhem"},
-                                "skills": ["Skill"],
+                                "source_student_id": "20000000-0000-4000-8000-000000000002",
+                                "source_registration_id": "pf-seed-registration-completed",
+                                "source_task_id": "50000000-0000-4000-8000-000000000001",
+                                "source_project_id": "40000000-0000-4000-8000-000000000001",
+                                "source_business_id": "30000000-0000-4000-8000-000000000001",
+                                "student": {"full_name": "Tom Teststudent", "image_path": "/images/students/tom-teststudent.png"},
+                                "task": {"name": "Infrastructure Proof Task", "description": "Task evidence copied at completion."},
+                                "project": {"name": "E2E Infrastructure Proof Project", "description": "Project evidence copied at completion."},
+                                "business": {"name": "E2E Infrastructure Business", "location": "Arnhem"},
+                                "skills": ["Samenwerken"],
                                 "timeline_start_date": "2026-01-20T09:00:00+00:00",
                                 "timeline_end_date": "2026-02-20T17:00:00+00:00",
                                 "curation": {
@@ -55,41 +84,33 @@ portfolio_repo = PortfolioRepository()
                                 },
                                 "archived_source": {"task": False, "project": False, "business": False},
                                 "visibility": {"viewer_can_see": True, "reason": "visible_to_authenticated_viewer"},
-                                "reviews": [
-                                    {
-                                        "id": "portfolio-review-id",
-                                        "item_id": "portfolio-item-id",
-                                        "review_text": "Constructive portfolio review.",
-                                        "rating": 4,
-                                        "created_at": "2026-02-20T18:00:00+00:00",
-                                        "updated_at": "2026-02-20T18:00:00+00:00",
-                                        "is_world_visible": False,
-                                        "public_notice_accepted_at": "2026-02-20T18:00:00+00:00",
-                                        "author": {"id": "teacher-id", "role": "teacher", "full_name": "Teacher Name"},
-                                    }
-                                ],
+                                "reviews": [],
                             }
                         ],
                         "reviews": [
                             {
-                                "id": "portfolio-review-id",
-                                "item_id": "portfolio-item-id",
-                                "review_text": "Constructive portfolio review.",
-                                "rating": 4,
-                                "created_at": "2026-02-20T18:00:00+00:00",
-                                "updated_at": "2026-02-20T18:00:00+00:00",
+                                "id": "pf-seed-review-good-teacher",
+                                "item_id": "pf-seed-item-all-ratings-good",
+                                "review_text": "Sterke afronding met duidelijke reflectie.",
+                                "rating": 5,
+                                "created_at": "2026-02-20T17:10:00+00:00",
+                                "updated_at": "2026-02-20T17:10:00+00:00",
                                 "is_world_visible": False,
-                                "public_notice_accepted_at": "2026-02-20T18:00:00+00:00",
-                                "author": {"id": "teacher-id", "role": "teacher", "full_name": "Teacher Name"},
+                                "public_notice_accepted_at": "2026-02-20T17:09:00+00:00",
+                                "author": {
+                                    "id": "20000000-0000-4000-8000-000000000001",
+                                    "role": "teacher",
+                                    "full_name": "Tessa Testdocent",
+                                },
                             }
                         ],
                     }
                 }
-            },
+            }
         },
-        401: {"description": "Authentication required", "content": {"application/json": {"example": {"detail": "Je moet ingelogd zijn om deze actie uit te kunnen voeren."}}}},
-        403: {"description": "No portfolio relationship", "content": {"application/json": {"example": {"detail": "Je hebt hier geen rechten voor."}}}},
-        404: {"description": "Student not found", "content": {"application/json": {"example": {"detail": "Portfolio niet gevonden"}}}},
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Je hebt hier geen rechten voor."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio niet gevonden"}}}},
     },
 )
 @auth(role="authenticated")
@@ -107,7 +128,7 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
         if not business_id or not portfolio_repo.has_supervisor_relationship(student_id, business_id):
             raise HTTPException(status_code=403, detail="Je hebt hier geen rechten voor.")
 
-    items = portfolio_repo.get_visible_items(student_id)
+    items = portfolio_repo.get_visible_items(student_id, viewer_role)
     reviews = portfolio_repo.get_reviews_for_items([item["id"] for item in items])
     items, reviews = portfolio_repo.filter_items_for_viewer(items, reviews, viewer_role)
     items = portfolio_repo.attach_reviews(items, reviews)
@@ -122,12 +143,21 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
 
 @router.get(
     "/portfolio/{slug}",
-    responses={
-        404: {
-            "description": "Public portfolio is private by default or not found. The response intentionally omits item and review collections.",
-            "content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}},
-        }
-    },
+    response_model=PortfolioResponse,
+    responses={404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}}},
 )
 async def get_public_portfolio(slug: str):
-    raise HTTPException(status_code=404, detail="Portfolio niet publiek")
+    student = portfolio_repo.get_world_public_student_identity_by_slug(slug)
+    if not student:
+        raise HTTPException(status_code=404, detail="Portfolio niet publiek")
+
+    items = portfolio_repo.get_world_public_items(student["id"])
+    reviews = [review for review in portfolio_repo.get_reviews_for_items([item["id"] for item in items]) if review["is_world_visible"]]
+    items = portfolio_repo.attach_reviews(items, reviews)
+
+    return {
+        "viewer_role": "public",
+        "student": student,
+        "items": items,
+        "reviews": reviews,
+    }

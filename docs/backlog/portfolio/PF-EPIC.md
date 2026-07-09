@@ -8,7 +8,6 @@ This umbrella story is implemented through [PF-story-001](PF-story-001-portfolio
 
 ## Master Backlog Table
 
-
 | ID                                                                                          | Title                                                                    | User Story                                                                                          | Phase                                      | Priority       | Type                                    | Dependencies                                                                                               |
 | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------ | -------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | [PF-task-001](PF-task-001-remove-stale-portfolio-backend.md)                                | Remove Stale Snapshot and Mixed Portfolio Backend                        | [PF-story-001](PF-story-001-portfolio-backend-replacement-foundation.md)                            | 1 — Backend / Schema                       | 🔴 Critical    | Technical Task                          | SF-task-001, SF-task-003                                                                                   |
@@ -47,11 +46,9 @@ This umbrella story is implemented through [PF-story-001](PF-story-001-portfolio
 | [PF-task-021b](PF-task-021b-additional-review-creation-ui.md)                               | Additional Review Creation UI                                            | [PF-story-006](PF-story-006-authenticated-portfolio-frontend-integration.md)                        | 5 — Frontend Integration                   | 🔴 Critical    | Functional Task (Frontend / API Wiring) | PF-task-008, PF-task-012b, PF-task-016a                                                                    |
 | [PF-task-021c](PF-task-021c-review-editing-ui.md)                                           | Review Editing UI                                                        | [PF-story-006](PF-story-006-authenticated-portfolio-frontend-integration.md)                        | 5 — Frontend Integration                   | 🔴 Critical    | Functional Task (Frontend / API Wiring) | PF-task-008, PF-task-016a, PF-task-016b                                                                    |
 
-
 ---
 
 ## Explicit User Story Records
-
 
 | User Story                                                                                          | Title                                                                 | Parent Story | Child Tasks                                                                                             |
 | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------- |
@@ -63,7 +60,6 @@ This umbrella story is implemented through [PF-story-001](PF-story-001-portfolio
 | [PF-story-005](PF-story-005-public-portfolio-viewing.md)                                            | Public Portfolio Viewing                                              | PF-story-000 | PF-task-013, PF-task-017, PF-task-019                                                                   |
 | [PF-story-006](PF-story-006-authenticated-portfolio-frontend-integration.md)                        | Authenticated Portfolio Frontend Integration                          | PF-story-000 | PF-task-014–PF-task-015, PF-task-016a–PF-task-016d, PF-task-020, PF-task-021a–PF-task-021c, PF-task-019 |
 | [PF-story-007](PF-story-007-release-readiness-cross-epic-regression-and-documentation-alignment.md) | Release Readiness, Cross-Epic Regression, and Documentation Alignment | PF-story-000 | PF-task-018a–PF-task-018b, PF-task-019                                                                  |
-
 
 The `User Story` column in the master backlog table above shows which story owns each task. [PF-task-019](PF-task-019-portfolio-bdd-api-and-browser-coverage.md) is intentionally cross-cutting because it supplies phase-gated automated coverage for all seven stories.
 
@@ -290,12 +286,16 @@ flowchart TD
     S005 -.-> T019
     S006 -.-> T019
     S007 -.-> T019
+
+    %% Completed work (Phase 1 and Phase 2)
+    classDef done fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20;
+    class T001,T002A,T002B,T002C,T002D,T003,G1 done;
+    class T004,T005,T006,T012B,G2 done;
 ```
 
 ---
 
 ## Phase Summary
-
 
 | Phase                                         | Tasks  | Critical | Medium-High |
 | --------------------------------------------- | ------ | -------- | ----------- |
@@ -308,11 +308,9 @@ flowchart TD
 | All Portfolio Phases — Automated Gate Support | 1      | 1        | —           |
 | **Total**                                     | **35** | **34**   | **1**       |
 
-
 ---
 
 ## Traceability Matrix
-
 
 | Portfolio Capability                                                                                  | Covered by                                                                                                                              |
 | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -330,13 +328,11 @@ flowchart TD
 | Provide phase-gated BDD/API/browser coverage                                                          | PF-task-019                                                                                                                             |
 | Verify cross-epic readiness and remove stale documentation assumptions                                | PF-task-018a, PF-task-018b                                                                                                              |
 
-
 ---
 
 ## Out of Scope (Deferred)
 
 These items from the current portfolio backlog and specification are explicitly excluded from this backlog:
-
 
 | Item                                                  | Reason                                                                                                                            | Source                        |
 | ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
@@ -347,7 +343,6 @@ These items from the current portfolio backlog and specification are explicitly 
 | Notification system implementation                    | Deferred; only documentation of notification copy debt appears in [PF-task-018b](PF-task-018b-portfolio-documentation-cleanup.md) | PF-task-018b                  |
 | Admin-only hidden or retired item review UI           | Current tasks exclude normal-view hidden/retired records and defer admin context                                                  | PF-task-006, PF-task-011b     |
 | Performance targets beyond correctness-oriented tests | Current automated coverage is correctness, security, lifecycle, visibility, and public-sharing focused                            | PF-task-019                   |
-
 
 ---
 
@@ -363,4 +358,4 @@ These items from the current portfolio backlog and specification are explicitly 
 
 ---
 
-*All 35 portfolio tasks are individually filed in this folder with full acceptance criteria, implementation notes, ambiguity defaults, and test expectations. The seven portfolio user stories provide the product-level organization for the task set, with [PF-task-019](PF-task-019-portfolio-bdd-api-and-browser-coverage.md) tracking phase-gated automated coverage across the epic.*
+_All 35 portfolio tasks are individually filed in this folder with full acceptance criteria, implementation notes, ambiguity defaults, and test expectations. The seven portfolio user stories provide the product-level organization for the task set, with [PF-task-019](PF-task-019-portfolio-bdd-api-and-browser-coverage.md) tracking phase-gated automated coverage across the epic._

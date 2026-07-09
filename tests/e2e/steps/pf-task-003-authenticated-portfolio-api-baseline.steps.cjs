@@ -108,6 +108,8 @@ function assertItemShape(item) {
   assert.equal(typeof item.id, 'string', 'Expected item id');
   assert.equal(typeof item.created_at, 'string', 'Expected item created_at');
   assert.equal(typeof item.completed_at, 'string', 'Expected item completed_at');
+  assert.equal(typeof item.source_student_id, 'string', 'Expected source student id');
+  assert.equal(typeof item.student?.full_name, 'string', 'Expected copied student display fields');
   assert.equal(typeof item.task?.name, 'string', 'Expected copied task display fields');
   assert.equal(typeof item.project?.name, 'string', 'Expected copied project display fields');
   assert.equal(typeof item.business?.name, 'string', 'Expected copied business display fields');

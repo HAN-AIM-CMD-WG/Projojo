@@ -25,6 +25,11 @@ class PortfolioBusinessDisplay(BaseModel):
     location: str | None = None
 
 
+class PortfolioStudentDisplay(BaseModel):
+    full_name: str
+    image_path: str | None = None
+
+
 class PortfolioCuration(BaseModel):
     is_retired: bool
     retired_at: str | None = None
@@ -54,6 +59,12 @@ class PortfolioReviewAuthor(BaseModel):
     full_name: str
 
 
+class PortfolioReviewCreateRequest(BaseModel):
+    review_text: str = Field(max_length=2000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+    public_review_notice_accepted: bool = False
+
+
 class PortfolioReviewResponse(BaseModel):
     id: str
     item_id: str
@@ -70,10 +81,12 @@ class PortfolioItemResponse(BaseModel):
     id: str
     created_at: str
     completed_at: str
+    source_student_id: str
     source_registration_id: str
     source_task_id: str
     source_project_id: str
     source_business_id: str
+    student: PortfolioStudentDisplay
     task: PortfolioTaskDisplay
     project: PortfolioProjectDisplay
     business: PortfolioBusinessDisplay

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
 from .skill import Skill
@@ -46,6 +46,11 @@ class RegistrationCreate(BaseModel):
 class RegistrationUpdate(BaseModel):
     accepted: bool
     response: str = ""
+
+class RegistrationCompletionRequest(BaseModel):
+    review_text: str | None = Field(default=None, max_length=2000, description="Optional completion review text, max 2000 characters.")
+    rating: int | None = Field(default=None, ge=1, le=5)
+    public_review_notice_accepted: bool = False
 
 class TaskCreate(BaseModel):
     name: str
