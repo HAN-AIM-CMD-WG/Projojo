@@ -140,7 +140,7 @@ class PortfolioRepository:
                 'id': $student.id,
                 'full_name': $student.fullName,
                 'image_path': $student.imagePath,
-                'portfolio_summary': $student.portfolioSummary,
+                'portfolio_summary': [ $student.portfolioSummary ],
                 'portfolio_slug': $student.portfolioSlug,
                 'is_portfolio_world_public': $student.isPortfolioWorldPublic
             };
