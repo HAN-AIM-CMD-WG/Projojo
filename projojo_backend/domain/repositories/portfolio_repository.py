@@ -7,6 +7,11 @@ from service.uuid_service import generate_uuid
 
 
 class PortfolioRepository:
+    _ROLE_TYPE_TOKENS: dict[str, str] = {
+        "teacher": "teacher",
+        "supervisor": "supervisor",
+    }
+
     def create_review(
         self,
         item_id: str,
@@ -17,7 +22,8 @@ class PortfolioRepository:
         public_review_notice_accepted: bool,
         rating: int | None = None,
     ) -> str:
-        if author_role not in {"teacher", "supervisor"}:
+        author_type_token = self._ROLE_TYPE_TOKENS.get(author_role)
+        if author_type_token is None:
             raise PermissionError("Alleen docenten en begeleiders kunnen portfolio-reviews schrijven.")
         if public_review_notice_accepted is not True:
             raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
@@ -39,7 +45,7 @@ class PortfolioRepository:
                     has id ~item_id,
                     has sourceBusinessId ~item_business_id,
                     has isRetired false;
-                $author isa {author_role}, has id ~author_id;
+                $author isa {author_type_token}, has id ~author_id;
             insert
                 $review isa portfolioReview,
                     has id ~review_id,
@@ -52,35 +58,46 @@ class PortfolioRepository:
                 $review_link isa hasPortfolioReview (item: $item, review: $review);
                 $author_link isa portfolioReviewAuthor (review: $review, author: $author);
         """
-        Db.write_transact(query, {
-            "item_id": item_id,
-            "item_business_id": item_business_id,
-            "author_id": author_id,
-            "review_id": review_id,
-            "review_text": review_text,
-            "rating": rating,
-            "created_at": now,
-            "updated_at": now,
-            "public_notice_accepted_at": now,
-        })
+        Db.write_transact(
+            query,
+            {
+                "item_id": item_id,
+                "item_business_id": item_business_id,
+                "author_id": author_id,
+                "review_id": review_id,
+                "review_text": review_text,
+                "rating": rating,
+                "created_at": now,
+                "updated_at": now,
+                "public_notice_accepted_at": now,
+            },
+        )
         if not self._review_exists(review_id):
             raise ValueError("Portfolio-item niet gevonden of niet meer reviewbaar.")
         return review_id
 
     def _review_exists(self, review_id: str) -> bool:
-        rows = Db.read_transact("""
+        rows = Db.read_transact(
+            """
             match
                 $review isa portfolioReview, has id ~review_id;
             fetch { 'id': $review.id };
-        """, {"review_id": review_id}, sort_fields=False)
+        """,
+            {"review_id": review_id},
+            sort_fields=False,
+        )
         return bool(rows)
 
     def _get_reviewable_item_state(self, item_id: str) -> dict[str, Any] | None:
-        rows = Db.read_transact("""
+        rows = Db.read_transact(
+            """
             match
                 $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired;
             fetch { 'business_id': $business_id, 'is_retired': $is_retired };
-        """, {"item_id": item_id}, sort_fields=False)
+        """,
+            {"item_id": item_id},
+            sort_fields=False,
+        )
         if not rows:
             return None
         return {
@@ -217,7 +234,14 @@ class PortfolioRepository:
         """
         rows = Db.read_transact(query, {"student_id": student_id})
         items = [self._map_item(row, viewer_role) for row in rows]
-        return sorted(items, key=lambda item: (item["curation"]["display_order"] is None, item["curation"]["display_order"] or 0, item["id"]))
+        return sorted(
+            items,
+            key=lambda item: (
+                item["curation"]["display_order"] is None,
+                item["curation"]["display_order"] or 0,
+                item["id"],
+            ),
+        )
 
     def get_world_public_items(self, student_id: str) -> list[dict[str, Any]]:
         return [item for item in self.get_visible_items(student_id, "public") if item["curation"]["is_world_visible"]]
@@ -256,7 +280,9 @@ class PortfolioRepository:
         item_id_pattern = self._id_pattern(item_ids)
         rows = Db.read_transact(query, {"item_id_pattern": item_id_pattern})
         author_roles = self._get_author_roles([self._one(row.get("author_id")) for row in rows])
-        return sorted([self._map_review(row, author_roles) for row in rows], key=lambda review: (review["item_id"], review["id"]))
+        return sorted(
+            [self._map_review(row, author_roles) for row in rows], key=lambda review: (review["item_id"], review["id"])
+        )
 
     def filter_items_for_viewer(
         self,
@@ -375,10 +401,10 @@ class PortfolioRepository:
             return roles
 
         user_id_pattern = self._id_pattern(user_ids)
-        for role in ("teacher", "supervisor"):
+        for role, role_type_token in self._ROLE_TYPE_TOKENS.items():
             query = f"""
                 match
-                    $user isa {role}, has id $user_id;
+                    $user isa {role_type_token}, has id $user_id;
                     $user_id like ~user_id_pattern;
                 fetch {{ 'id': $user_id }};
             """
