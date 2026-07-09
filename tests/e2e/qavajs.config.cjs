@@ -2,6 +2,7 @@ const { App } = require('./support/page-object.cjs');
 
 function createBaseConfig() {
   return {
+    // Lifecycle feature files reset shared deterministic TypeDB fixtures, so keep E2E execution serial.
     parallel: 1,
     defaultTimeout: 20_000,
     require: [

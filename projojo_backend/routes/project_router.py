@@ -1,21 +1,21 @@
 from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Depends, Query
-from typing import Annotated, Optional
+from typing import Annotated
 from datetime import datetime
 from pydantic import BaseModel
 from auth.permissions import auth
 
-from domain.repositories import ProjectRepository, PortfolioRepository
+from domain.repositories import ProjectRepository
 from domain.models import ProjectCreation
 from service import task_service, save_image
 from auth.jwt_utils import get_token_payload
 from service.validation_service import is_valid_length
 
 project_repo = ProjectRepository()
-portfolio_repo = PortfolioRepository()
 
 
 class ProjectActionWarning(BaseModel):
     """Response model when action requires confirmation due to affected students."""
+
     message: str
     affected_students: list[dict]
     requires_confirmation: bool = True
@@ -23,10 +23,13 @@ class ProjectActionWarning(BaseModel):
 
 class ProjectActionResponse(BaseModel):
     """Response model for successful project actions."""
+
     message: str
     notified_count: int = 0
 
+
 router = APIRouter(prefix="/projects", tags=["Project Endpoints"])
+
 
 # Public endpoints (no authentication required)
 @router.get("/public")
@@ -63,6 +66,7 @@ async def get_all_projects():
     projects = project_repo.get_all()
     return projects
 
+
 @router.get("/{project_id}")
 @auth(role="authenticated")
 async def get_project(project_id: str = Path(..., description="Project ID")):
@@ -96,6 +100,7 @@ async def get_project_tasks(project_id: str = Path(..., description="Project ID"
     tasks = task_service.get_tasks_with_skills_by_project(project_id)
     return tasks
 
+
 @router.post("/", response_model=ProjectCreation, status_code=201)
 @auth(role="supervisor", owner_id_key="business_id")
 async def create_project(
@@ -106,41 +111,28 @@ async def create_project(
     location: str | None = Form(None),
     start_date: str | None = Form(None),
     end_date: str | None = Form(None),
-    image: UploadFile = File(...)
+    image: UploadFile = File(...),
 ):
     """
     Create a new project with image upload
     """
     if not is_valid_length(name, 100):
-        raise HTTPException(
-            status_code=400,
-            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
-        )
+        raise HTTPException(status_code=400, detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen.")
 
     if location and not is_valid_length(location, 255):
-        raise HTTPException(
-            status_code=400,
-            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
-        )
+        raise HTTPException(status_code=400, detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen.")
 
     if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
-            status_code=400,
-            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+            status_code=400, detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Validate required fields
     if not image or not image.filename:
-        raise HTTPException(
-            status_code=400,
-            detail="Een projectafbeelding is verplicht."
-        )
+        raise HTTPException(status_code=400, detail="Een projectafbeelding is verplicht.")
 
     if project_repo.check_project_exists(name, business_id):
-        raise HTTPException(
-            status_code=400,
-            detail=f"Project met de naam '{name}' bestaat al binnen dit bedrijf."
-        )
+        raise HTTPException(status_code=400, detail=f"Project met de naam '{name}' bestaat al binnen dit bedrijf.")
 
     # Parse optional date fields
     parsed_start_date = datetime.fromisoformat(start_date) if start_date else None
@@ -148,10 +140,7 @@ async def create_project(
 
     # Validate dates if both provided
     if parsed_start_date and parsed_end_date and parsed_start_date > parsed_end_date:
-        raise HTTPException(
-            status_code=400,
-            detail="De startdatum mag niet na de einddatum liggen."
-        )
+        raise HTTPException(status_code=400, detail="De startdatum mag niet na de einddatum liggen.")
 
     # Save the image with a random filename
     unique_filename = save_image(image)
@@ -167,12 +156,13 @@ async def create_project(
         location=location,
         supervisor_id=supervisor_id,
         start_date=parsed_start_date,
-        end_date=parsed_end_date
+        end_date=parsed_end_date,
     )
 
     # Create the project in the database
     created_project = project_repo.create(project_creation)
     return created_project
+
 
 @router.put("/{project_id}")
 @auth(role="supervisor", owner_id_key="project_id")
@@ -195,27 +185,17 @@ async def update_project(
 
     # Validate dates if both provided
     if parsed_start_date and parsed_end_date and parsed_start_date > parsed_end_date:
-        raise HTTPException(
-            status_code=400,
-            detail="De startdatum mag niet na de einddatum liggen."
-        )
+        raise HTTPException(status_code=400, detail="De startdatum mag niet na de einddatum liggen.")
 
     if not is_valid_length(name, 100):
-        raise HTTPException(
-            status_code=400,
-            detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen."
-        )
+        raise HTTPException(status_code=400, detail="De lengte van de naam moet tussen de 1 en 100 tekens liggen.")
 
     if location and not is_valid_length(location, 255):
-        raise HTTPException(
-            status_code=400,
-            detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen."
-        )
+        raise HTTPException(status_code=400, detail="De lengte van de locatie moet tussen de 1 en 255 tekens liggen.")
 
     if not is_valid_length(description, 4000, strip_md=True):
         raise HTTPException(
-            status_code=400,
-            detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
+            status_code=400, detail="De lengte van de beschrijving moet tussen de 1 en 4000 tekens liggen."
         )
 
     # Handle photo upload if provided
@@ -224,7 +204,7 @@ async def update_project(
         try:
             image_filename = save_image(image)
         except Exception as e:
-            if hasattr(e, 'status_code'):
+            if hasattr(e, "status_code"):
                 raise HTTPException(status_code=e.status_code, detail=e.detail)
             print(f"Error saving image: {e}")
             raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het opslaan van de afbeelding")
@@ -233,7 +213,7 @@ async def update_project(
         project_repo.update(project_id, name, description, location, image_filename, parsed_start_date, parsed_end_date)
         return {"message": "Project succesvol bijgewerkt"}
     except Exception as e:
-        if hasattr(e, 'status_code'):
+        if hasattr(e, "status_code"):
             raise HTTPException(status_code=e.status_code, detail=e.detail)
         print(f"Error updating project: {e}")
         raise HTTPException(status_code=500, detail="Er is een fout opgetreden bij het bijwerken van het project")
@@ -241,8 +221,7 @@ async def update_project(
 
 @router.get("/{project_id}/students")
 async def get_project_students(
-    project_id: str = Path(..., description="Project ID"),
-    payload: dict = Depends(get_token_payload)
+    project_id: str = Path(..., description="Project ID"), payload: dict = Depends(get_token_payload)
 ):
     """
     Get all students with registrations for tasks of this project.
@@ -266,7 +245,7 @@ async def get_project_students(
 async def archive_project(
     project_id: str = Path(..., description="Project ID"),
     confirm: bool = Query(False, description="Confirm action despite affected students"),
-    payload: dict = Depends(get_token_payload)
+    payload: dict = Depends(get_token_payload),
 ):
     """
     Archive a project.
@@ -300,7 +279,7 @@ async def archive_project(
         return ProjectActionWarning(
             message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Weet je zeker dat je wilt archiveren?",
             affected_students=affected_students,
-            requires_confirmation=True
+            requires_confirmation=True,
         )
 
     # Archive the project
@@ -309,17 +288,14 @@ async def archive_project(
     # TODO: Send notifications to affected students and teacher
     notified_count = len(affected_students) if affected_students else 0
 
-    return ProjectActionResponse(
-        message="Project succesvol gearchiveerd",
-        notified_count=notified_count
-    )
+    return ProjectActionResponse(message="Project succesvol gearchiveerd", notified_count=notified_count)
 
 
 @router.patch("/{project_id}/visibility")
 async def set_project_visibility(
     project_id: str = Path(..., description="Project ID"),
     is_public: bool = Query(..., description="Whether the project should be publicly visible"),
-    payload: dict = Depends(get_token_payload)
+    payload: dict = Depends(get_token_payload),
 ):
     """
     Set the public visibility of a project.
@@ -346,6 +322,7 @@ async def set_project_visibility(
 
 class ImpactSummaryUpdate(BaseModel):
     """Request model for updating impact summary."""
+
     impact_summary: str | None = None
 
 
@@ -353,7 +330,7 @@ class ImpactSummaryUpdate(BaseModel):
 async def set_project_impact(
     project_id: str = Path(..., description="Project ID"),
     update: ImpactSummaryUpdate = None,
-    payload: dict = Depends(get_token_payload)
+    payload: dict = Depends(get_token_payload),
 ):
     """
     Set the impact summary of a project.
@@ -382,8 +359,7 @@ async def set_project_impact(
 
 @router.patch("/{project_id}/restore")
 async def restore_project(
-    project_id: str = Path(..., description="Project ID"),
-    payload: dict = Depends(get_token_payload)
+    project_id: str = Path(..., description="Project ID"), payload: dict = Depends(get_token_payload)
 ):
     """
     Restore an archived project.
@@ -417,13 +393,12 @@ async def restore_project(
 async def delete_project(
     project_id: str = Path(..., description="Project ID"),
     confirm: bool = Query(False, description="Confirm action despite affected students"),
-    payload: dict = Depends(get_token_payload)
+    payload: dict = Depends(get_token_payload),
 ):
     """
     Permanently delete a project. Only accessible by teachers.
 
     Before deletion:
-    - Creates portfolio snapshots for students with completed tasks
     - Sends notifications to affected students
 
     Returns 409 Conflict with student list if there are registrations and confirm=False.
@@ -432,10 +407,7 @@ async def delete_project(
 
     # Only teachers can hard delete
     if role != "teacher":
-        raise HTTPException(
-            status_code=403,
-            detail="Alleen docenten kunnen projecten permanent verwijderen"
-        )
+        raise HTTPException(status_code=403, detail="Alleen docenten kunnen projecten permanent verwijderen")
 
     # Check for affected students
     affected_students = project_repo.get_students_by_project(project_id)
@@ -444,42 +416,8 @@ async def delete_project(
         return ProjectActionWarning(
             message=f"Er zijn {len(affected_students)} student(en) gekoppeld aan dit project. Deze actie is onomkeerbaar!",
             affected_students=affected_students,
-            requires_confirmation=True
+            requires_confirmation=True,
         )
-
-    # Create portfolio snapshots for completed tasks before deletion
-    completed_tasks = project_repo.get_completed_tasks_by_project(project_id)
-    snapshots_created = 0
-
-    for task_data in completed_tasks:
-        try:
-            portfolio_repo.create_snapshot(
-                student_id=task_data["student_id"],
-                project_data={
-                    "project_id": task_data["project_id"],
-                    "project_name": task_data["project_name"],
-                    "project_description": task_data["project_description"],
-                    "business_id": task_data["business_id"],
-                    "business_name": task_data["business_name"],
-                    "business_description": task_data["business_description"],
-                    "business_location": task_data["business_location"],
-                },
-                task_data={
-                    "task_id": task_data["task_id"],
-                    "task_name": task_data["task_name"],
-                    "task_description": task_data["task_description"],
-                },
-                skills=task_data["skills"],
-                timeline={
-                    "requested_at": task_data["requested_at"],
-                    "accepted_at": task_data["accepted_at"],
-                    "started_at": task_data["started_at"],
-                    "completed_at": task_data["completed_at"],
-                }
-            )
-            snapshots_created += 1
-        except Exception as e:
-            print(f"Failed to create portfolio snapshot: {e}")
 
     # TODO: Send notifications to affected students and teacher
 
@@ -488,6 +426,5 @@ async def delete_project(
 
     return {
         "message": "Project succesvol verwijderd",
-        "snapshots_created": snapshots_created,
-        "notified_count": len(affected_students) if affected_students else 0
+        "notified_count": len(affected_students) if affected_students else 0,
     }

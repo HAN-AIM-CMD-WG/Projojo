@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { createRegistration, getAllRegistrations, updateRegistration, updateTaskSkills, updateTask, markTaskStarted, markTaskCompleted } from "../services";
 import { notification } from "./notifications/NotifySystem";
@@ -21,6 +21,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const { authData, user } = useAuth();
     const { studentSkills } = useStudentSkills();
     const { isWorkingOnTask, hasPendingOnTask } = useStudentWork();
+    const completionNoticeId = useId();
     const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
 
     // Tab state
@@ -32,6 +33,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [registrationErrors, setRegistrationErrors] = useState([]);
     const [taskSkillsError, setTaskSkillsError] = useState("");
     const [isRegistrationsModalOpen, setIsRegistrationsModalOpen] = useState(false);
+    const [completionReviewStudentId, setCompletionReviewStudentId] = useState(null);
+    const [completionReviewText, setCompletionReviewText] = useState("");
+    const [completionNoticeAccepted, setCompletionNoticeAccepted] = useState(false);
+    const [completionReviewError, setCompletionReviewError] = useState("");
     const [pendingRegistrations, setPendingRegistrations] = useState([]);
     const [acceptedRegistrations, setAcceptedRegistrations] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
@@ -52,6 +57,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
     const [isSavingSkills, setIsSavingSkills] = useState(false);
 
     const isOwner = (authData.type === "supervisor" && authData.businessId === businessId) || authData.type === "teacher";
+    const supervisorCompletionRequiresReview = authData.type === "supervisor";
 
     const isFull = task.total_accepted >= task.total_needed;
 
@@ -177,13 +183,32 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
         }
     };
 
-    const handleMarkCompleted = async (studentId) => {
+    const openCompletionReviewDialog = (studentId) => {
+        setCompletionReviewStudentId(studentId);
+        setCompletionReviewText("");
+        setCompletionNoticeAccepted(false);
+        setCompletionReviewError("");
+    };
+
+    const closeCompletionReviewDialog = () => {
+        setCompletionReviewStudentId(null);
+        setCompletionReviewText("");
+        setCompletionNoticeAccepted(false);
+        setCompletionReviewError("");
+    };
+
+    const handleMarkCompleted = async (studentId, completionReview = null) => {
         setProgressLoading(prev => ({ ...prev, [studentId]: 'completing' }));
+        setCompletionReviewError("");
         try {
-            await markTaskCompleted(task.id, studentId);
+            await markTaskCompleted(task.id, studentId, completionReview);
             refetchRegistrations();
             setFetchAmount((currentAmount) => currentAmount + 1);
+            closeCompletionReviewDialog();
         } catch (error) {
+            if (completionReviewStudentId === studentId) {
+                setCompletionReviewError(error.message);
+            }
             setRegistrationErrors(prev => [...prev, { userId: studentId, error: error.message }]);
         } finally {
             setProgressLoading(prev => ({ ...prev, [studentId]: null }));
@@ -302,7 +327,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
 
     return (
         <div className="group h-full">
-            <div id={`task-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
+            <div id={`task-${task.id}`} data-testid={`task-card-${task.id}`} className="neu-flat rounded-2xl h-full flex flex-col overflow-visible">
 
                 {/* === COMPACT HEADER === */}
                 <div className="p-3 sm:p-4 border-b border-[var(--neu-border)] rounded-t-2xl overflow-hidden">
@@ -521,6 +546,7 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                                 onClick={() => handleMarkStarted(reg.student.id)}
                                                                 disabled={isLoading}
                                                                 className="p-1.5 rounded text-amber-600 hover:bg-amber-100 transition-colors"
+                                                                aria-label={`Markeer ${reg.student.full_name} als gestart`}
                                                                 title="Start"
                                                             >
                                                                 {isLoading === 'starting'
@@ -531,9 +557,10 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                         )}
                                                         {isStarted && !isCompleted && (
                                                             <button
-                                                                onClick={() => handleMarkCompleted(reg.student.id)}
+                                                                onClick={() => openCompletionReviewDialog(reg.student.id)}
                                                                 disabled={isLoading}
                                                                 className="p-1.5 rounded text-emerald-600 hover:bg-emerald-100 transition-colors"
+                                                                aria-label={`Rond ${reg.student.full_name} af`}
                                                                 title="Afronden"
                                                             >
                                                                 {isLoading === 'completing'
@@ -754,13 +781,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                     </div>
                                                     <div className="flex gap-2 flex-shrink-0">
                                                         {!isStarted && !isCompleted && (
-                                                            <button onClick={() => handleMarkStarted(registration.student.id)} disabled={isLoading} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors" title="Markeer als gestart">
+                                                            <button onClick={() => handleMarkStarted(registration.student.id)} disabled={isLoading} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 hover:bg-amber-50 hover:text-amber-600 transition-colors" aria-label={`Markeer ${registration.student.full_name} als gestart`} title="Markeer als gestart">
                                                                 {isLoading === 'starting' ? <span className="material-symbols-outlined animate-spin text-base">progress_activity</span> : <span className="material-symbols-outlined text-base">play_arrow</span>}
                                                                 Start
                                                             </button>
                                                         )}
                                                         {isStarted && !isCompleted && (
-                                                            <button onClick={() => handleMarkCompleted(registration.student.id)} disabled={isLoading} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5" title="Markeer als afgerond">
+                                                            <button onClick={() => openCompletionReviewDialog(registration.student.id)} disabled={isLoading} className="neu-btn-primary !py-2 !px-3 text-sm flex items-center gap-1.5" aria-label={`Rond ${registration.student.full_name} af`} title="Markeer als afgerond">
                                                                 {isLoading === 'completing' ? <span className="material-symbols-outlined animate-spin text-base">progress_activity</span> : <span className="material-symbols-outlined text-base">check_circle</span>}
                                                                 Afronden
                                                             </button>
@@ -830,13 +857,13 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                                                         <FormInput label="Reactie (optioneel)" max={400} min={0} type="textarea" name="response" rows={2} placeholder="Voeg een persoonlijke boodschap toe..." />
                                                         <input type="hidden" name="userId" value={registration.student.id} />
                                                         <div className="flex gap-3 mt-3">
-                                                            <button type="submit" value={true} disabled={isFull} className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${isFull ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"}`} style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}>
+                                                            <button type="submit" value={true} disabled={isFull} className={`flex-1 rounded-xl py-2.5 font-bold transition-all text-sm ${isFull ? "bg-[var(--gray-200)] text-[var(--text-muted)] cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-600 hover:-translate-y-0.5"}`} aria-label={`Accepteer aanmelding van ${registration.student.full_name}`} style={!isFull ? { boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' } : {}}>
                                                                 <span className="flex items-center justify-center gap-2">
                                                                     <span className="material-symbols-outlined text-lg">check</span>
                                                                     Accepteren
                                                                 </span>
                                                             </button>
-                                                            <button type="submit" value={false} className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm" style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
+                                                            <button type="submit" value={false} className="flex-1 rounded-xl py-2.5 font-bold bg-red-500 text-white hover:bg-red-600 hover:-translate-y-0.5 transition-all text-sm" aria-label={`Weiger aanmelding van ${registration.student.full_name}`} style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}>
                                                                 <span className="flex items-center justify-center gap-2">
                                                                     <span className="material-symbols-outlined text-lg">close</span>
                                                                     Weigeren
@@ -857,6 +884,89 @@ export default function Task({ task, setFetchAmount, businessId, allSkills, stud
                             Sluiten
                         </button>
                     </div>
+                </Modal>
+            )}
+
+            {isOwner && (
+                <Modal
+                    modalHeader="Afronding"
+                    modalSubtitle={task.name}
+                    modalIcon="rate_review"
+                    isModalOpen={!!completionReviewStudentId}
+                    setIsModalOpen={(open) => {
+                        if (!open) closeCompletionReviewDialog();
+                    }}
+                >
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            if (!completionReviewStudentId) return;
+                            handleMarkCompleted(completionReviewStudentId, {
+                                review_text: completionReviewText.trim(),
+                                public_review_notice_accepted: completionNoticeAccepted,
+                            });
+                        }}
+                        className="flex flex-col gap-5"
+                    >
+                        <div className="neu-pressed flex items-start gap-3 p-4 rounded-xl">
+                            <span className="material-symbols-outlined text-lg mt-0.5 text-primary" aria-hidden="true">public</span>
+                            <p id={completionNoticeId} className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                                De student kan deze review later tonen op de openbare portfolio-pagina. Je moet dit expliciet accepteren voordat je de review indient.
+                            </p>
+                        </div>
+
+                        <Alert text={completionReviewError} />
+
+                        <label className="flex flex-col gap-2 text-sm font-bold text-[var(--text-primary)]">
+                            Reviewtekst
+                            {supervisorCompletionRequiresReview && (
+                                <span className="text-xs font-semibold text-[var(--text-secondary)]">
+                                    Verplicht voor begeleiders bij het afronden van een registratie.
+                                </span>
+                            )}
+                            <textarea
+                                className="neu-input min-h-28 resize-y font-normal"
+                                value={completionReviewText}
+                                onChange={(event) => setCompletionReviewText(event.target.value)}
+                                aria-describedby={completionNoticeId}
+                                placeholder="Beschrijf kort waarom deze afronding portfolio-waardig is..."
+                            />
+                        </label>
+
+                        <label className="flex items-start gap-3 text-sm text-[var(--text-secondary)] cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="mt-1 h-4 w-4 accent-primary"
+                                checked={completionNoticeAccepted}
+                                onChange={(event) => setCompletionNoticeAccepted(event.target.checked)}
+                                aria-describedby={completionNoticeId}
+                            />
+                            <span>Ik accepteer dat de student deze review later op de openbare portfolio-pagina mag tonen.</span>
+                        </label>
+
+                        <div className="flex flex-wrap items-center justify-end gap-3 pt-2 border-t border-[var(--neu-border)]">
+                            {!supervisorCompletionRequiresReview && (
+                                <button
+                                    type="button"
+                                    className="neu-btn mr-auto"
+                                    onClick={() => completionReviewStudentId && handleMarkCompleted(completionReviewStudentId)}
+                                    disabled={progressLoading[completionReviewStudentId] === 'completing'}
+                                >
+                                    Afronden zonder review
+                                </button>
+                            )}
+                            <button type="button" className="neu-btn" onClick={closeCompletionReviewDialog}>
+                                Annuleren
+                            </button>
+                            <button
+                                type="submit"
+                                className="neu-btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={!completionReviewText.trim() || !completionNoticeAccepted || progressLoading[completionReviewStudentId] === 'completing'}
+                            >
+                                Review opslaan
+                            </button>
+                        </div>
+                    </form>
                 </Modal>
             )}
 

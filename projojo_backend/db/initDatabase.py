@@ -200,6 +200,18 @@ class Db:
         return results
 
     @staticmethod
+    def write_transact_many(queries: list[tuple[str, dict[str, Any] | None]]):
+        """
+        Execute multiple parameterized write queries in one transaction (all-or-nothing).
+
+        Convenience wrapper around write_transact_atomic that builds each query
+        from a (template, params) tuple, mirroring write_transact semantics
+        (allow_none=True: None params drop the containing clause).
+        """
+        built_queries = [build_query(query, params, allow_none=True) if params else query for query, params in queries]
+        Db.write_transact_atomic(built_queries)
+
+    @staticmethod
     def close():
         if Db.driver is not None:
             Db.driver.close()

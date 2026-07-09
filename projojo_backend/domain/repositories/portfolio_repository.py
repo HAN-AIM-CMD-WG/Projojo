@@ -1,401 +1,432 @@
-import json
-from datetime import datetime
+from datetime import date, datetime
+import re
+from typing import Any
+
 from db.initDatabase import Db
 from service.uuid_service import generate_uuid
 
 
 class PortfolioRepository:
-    """Repository for managing portfolio snapshots."""
+    _ROLE_TYPE_TOKENS: dict[str, str] = {
+        "teacher": "teacher",
+        "supervisor": "supervisor",
+    }
 
-    def create_snapshot(
+    def create_review(
         self,
-        student_id: str,
-        project_data: dict,
-        task_data: dict,
-        skills: list[str],
-        timeline: dict
+        item_id: str,
+        author_id: str,
+        author_role: str,
+        business_id: str | None,
+        review_text: str,
+        public_review_notice_accepted: bool,
+        rating: int | None = None,
     ) -> str:
-        """
-        Create a portfolio snapshot before project deletion.
-        
-        Args:
-            student_id: The student's ID
-            project_data: Dict with project_name, project_description, business_name, 
-                         business_description, business_location
-            task_data: Dict with task_name, task_description
-            skills: List of skill names
-            timeline: Dict with requested_at, accepted_at, started_at, completed_at
-        
-        Returns:
-            The created portfolio item ID
-        """
-        portfolio_id = generate_uuid()
-        
-        # Create JSON snapshots
-        project_snapshot = json.dumps({
-            "project_name": project_data.get("project_name", ""),
-            "project_description": project_data.get("project_description", ""),
-            "business_name": project_data.get("business_name", ""),
-            "business_description": project_data.get("business_description", ""),
-            "business_location": project_data.get("business_location", ""),
-            "business_id": project_data.get("business_id", ""),
-            "project_id": project_data.get("project_id", ""),
-        })
-        
-        task_snapshot = json.dumps({
-            "task_name": task_data.get("task_name", ""),
-            "task_description": task_data.get("task_description", ""),
-            "task_id": task_data.get("task_id", ""),
-        })
-        
-        skills_snapshot = json.dumps(skills)
-        
-        timeline_snapshot = json.dumps({
-            "requested_at": timeline.get("requested_at"),
-            "accepted_at": timeline.get("accepted_at"),
-            "started_at": timeline.get("started_at"),
-            "completed_at": timeline.get("completed_at"),
-        })
-        
-        # Insert portfolio item and relation
-        query = """
+        author_type_token = self._ROLE_TYPE_TOKENS.get(author_role)
+        if author_type_token is None:
+            raise PermissionError("Alleen docenten en begeleiders kunnen portfolio-reviews schrijven.")
+        if public_review_notice_accepted is not True:
+            raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
+
+        item_state = self._get_reviewable_item_state(item_id)
+        if item_state is None:
+            raise ValueError("Portfolio-item niet gevonden.")
+        if item_state["is_retired"]:
+            raise ValueError("Reviews kunnen niet worden toegevoegd aan ingetrokken portfolio-evidence.")
+        item_business_id = item_state["business_id"]
+        if author_role == "supervisor" and item_business_id != business_id:
+            raise PermissionError("Je hebt hier geen rechten voor.")
+
+        review_id = generate_uuid()
+        now = datetime.now()
+        query = f"""
             match
-                $student isa student, has id ~student_id;
-            insert
                 $item isa portfolioItem,
-                    has id ~portfolio_id,
-                    has projectSnapshot ~project_snapshot,
-                    has taskSnapshot ~task_snapshot,
-                    has skillsSnapshot ~skills_snapshot,
-                    has timelineSnapshot ~timeline_snapshot;
-                $hasPortfolio isa hasPortfolio(student: $student, item: $item);
+                    has id ~item_id,
+                    has sourceBusinessId ~item_business_id,
+                    has isRetired false;
+                $author isa {author_type_token}, has id ~author_id;
+            insert
+                $review isa portfolioReview,
+                    has id ~review_id,
+                    has reviewText ~review_text,
+                    has rating ~rating,
+                    has createdAt ~created_at,
+                    has updatedAt ~updated_at,
+                    has isWorldVisible false,
+                    has publicNoticeAcceptedAt ~public_notice_accepted_at;
+                $review_link isa hasPortfolioReview (item: $item, review: $review);
+                $author_link isa portfolioReviewAuthor (review: $review, author: $author);
         """
-        Db.write_transact(query, {
-            "student_id": student_id,
-            "portfolio_id": portfolio_id,
-            "project_snapshot": project_snapshot,
-            "task_snapshot": task_snapshot,
-            "skills_snapshot": skills_snapshot,
-            "timeline_snapshot": timeline_snapshot,
-        })
-        
-        return portfolio_id
+        Db.write_transact(
+            query,
+            {
+                "item_id": item_id,
+                "item_business_id": item_business_id,
+                "author_id": author_id,
+                "review_id": review_id,
+                "review_text": review_text,
+                "rating": rating,
+                "created_at": now,
+                "updated_at": now,
+                "public_notice_accepted_at": now,
+            },
+        )
+        if not self._review_exists(review_id):
+            raise ValueError("Portfolio-item niet gevonden of niet meer reviewbaar.")
+        return review_id
 
-    def get_snapshots_by_student(self, student_id: str) -> list[dict]:
-        """Get all portfolio snapshots for a student."""
+    def _review_exists(self, review_id: str) -> bool:
+        rows = Db.read_transact(
+            """
+            match
+                $review isa portfolioReview, has id ~review_id;
+            fetch { 'id': $review.id };
+        """,
+            {"review_id": review_id},
+            sort_fields=False,
+        )
+        return bool(rows)
+
+    def _get_reviewable_item_state(self, item_id: str) -> dict[str, Any] | None:
+        rows = Db.read_transact(
+            """
+            match
+                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired;
+            fetch { 'business_id': $business_id, 'is_retired': $is_retired };
+        """,
+            {"item_id": item_id},
+            sort_fields=False,
+        )
+        if not rows:
+            return None
+        return {
+            "business_id": self._one(rows[0].get("business_id")),
+            "is_retired": bool(self._one(rows[0].get("is_retired"), False)),
+        }
+
+    def get_student_identity(self, student_id: str) -> dict[str, Any] | None:
         query = """
             match
                 $student isa student, has id ~student_id;
-                $hasPortfolio isa hasPortfolio(student: $student, item: $item);
-                $item has id $item_id,
-                    has projectSnapshot $project_snapshot,
-                    has taskSnapshot $task_snapshot,
-                    has skillsSnapshot $skills_snapshot,
-                    has timelineSnapshot $timeline_snapshot;
             fetch {
-                'id': $item_id,
-                'project_snapshot': $project_snapshot,
-                'task_snapshot': $task_snapshot,
-                'skills_snapshot': $skills_snapshot,
-                'timeline_snapshot': $timeline_snapshot
+                'id': $student.id,
+                'full_name': $student.fullName,
+                'image_path': $student.imagePath,
+                'portfolio_summary': [ $student.portfolioSummary ],
+                'portfolio_slug': [ $student.portfolioSlug ],
+                'is_portfolio_world_public': [ $student.isPortfolioWorldPublic ]
             };
         """
         results = Db.read_transact(query, {"student_id": student_id})
-        
-        snapshots = []
-        for r in results:
-            try:
-                project_data = json.loads(r.get("project_snapshot", "{}"))
-                task_data = json.loads(r.get("task_snapshot", "{}"))
-                skills = json.loads(r.get("skills_snapshot", "[]"))
-                timeline = json.loads(r.get("timeline_snapshot", "{}"))
-                
-                snapshots.append({
-                    "id": r.get("id", ""),
-                    "source_type": "snapshot",
-                    "is_archived": False,  # Snapshots don't have archived state
-                    "project_name": project_data.get("project_name", ""),
-                    "project_description": project_data.get("project_description", ""),
-                    "business_name": project_data.get("business_name", ""),
-                    "business_description": project_data.get("business_description", ""),
-                    "business_location": project_data.get("business_location", ""),
-                    "task_name": task_data.get("task_name", ""),
-                    "task_description": task_data.get("task_description", ""),
-                    "skills": skills,
-                    "timeline": timeline,
-                    "source_project_id": project_data.get("project_id"),
-                })
-            except json.JSONDecodeError:
-                continue  # Skip malformed snapshots
-        
-        return snapshots
+        if not results:
+            return None
 
-    def get_live_portfolio_items(self, student_id: str) -> list[dict]:
+        student = results[0]
+        return {
+            "id": self._one(student.get("id")),
+            "full_name": self._one(student.get("full_name")),
+            "image_path": self._one(student.get("image_path")),
+            "portfolio_summary": self._one(student.get("portfolio_summary")),
+            "portfolio_slug": self._one(student.get("portfolio_slug")),
+            "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
+        }
+
+    def get_world_public_student_identity_by_slug(self, slug: str) -> dict[str, Any] | None:
+        query = """
+            match
+                $student isa student, has portfolioSlug ~slug, has isPortfolioWorldPublic true;
+            fetch {
+                'id': $student.id,
+                'full_name': $student.fullName,
+                'image_path': $student.imagePath,
+                'portfolio_summary': [ $student.portfolioSummary ],
+                'portfolio_slug': $student.portfolioSlug,
+                'is_portfolio_world_public': $student.isPortfolioWorldPublic
+            };
         """
-        Get live portfolio items (completed tasks from existing projects).
-        These come from registrations with completedAt set.
-        """
+        results = Db.read_transact(query, {"slug": slug})
+        if not results:
+            return None
+
+        student = results[0]
+        return {
+            "id": self._one(student.get("id")),
+            "full_name": self._one(student.get("full_name")),
+            "image_path": self._one(student.get("image_path")),
+            "portfolio_summary": self._one(student.get("portfolio_summary")),
+            "portfolio_slug": self._one(student.get("portfolio_slug")),
+            "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
+        }
+
+    def has_supervisor_relationship(self, student_id: str, business_id: str) -> bool:
         query = """
             match
                 $student isa student, has id ~student_id;
-                $registration isa registersForTask(student: $student, task: $task),
-                    has completedAt $completed_at;
-                $task has id $task_id,
-                    has name $task_name,
-                    has description $task_description;
-                $containsTask isa containsTask(project: $project, task: $task);
-                $project has id $project_id,
-                    has name $project_name,
-                    has description $project_description;
+                $business isa business, has id ~business_id;
+                $project isa project;
+                $task isa task;
                 $hasProjects isa hasProjects(business: $business, project: $project);
-                $business has id $business_id,
-                    has name $business_name,
-                    has description $business_description,
-                    has location $business_location;
+                $containsTask isa containsTask(project: $project, task: $task);
+                $registration isa registersForTask(student: $student, task: $task), has isAccepted true;
+            fetch { 'student_id': $student.id };
+        """
+        return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
+
+    def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
+        query = """
+            match
+                $student isa student, has id ~student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
+                $item isa portfolioItem,
+                    has id $id,
+                    has createdAt $created_at,
+                    has completedAt $completed_at,
+                    has sourceRegistrationId $source_registration_id,
+                    has sourceTaskId $source_task_id,
+                    has sourceProjectId $source_project_id,
+                    has sourceBusinessId $source_business_id,
+                    has taskName $task_name,
+                    has projectName $project_name,
+                    has businessName $business_name,
+                    has isRetired false,
+                    has isHidden false,
+                    has isAuthenticatedPublicRetraction $is_authenticated_public_retraction,
+                    has isWorldVisible $is_world_visible;
+                $ownership isa hasPortfolio(student: $student, item: $item);
             fetch {
-                'task_id': $task_id,
-                'task_name': $task_name,
-                'task_description': $task_description,
-                'task_start_date': [$task.startDate],
-                'task_end_date': [$task.endDate],
-                'project_id': $project_id,
-                'project_name': $project_name,
-                'project_description': $project_description,
-                'project_archived': [$project.isArchived],
-                'business_id': $business_id,
-                'business_name': $business_name,
-                'business_description': $business_description,
-                'business_location': $business_location,
+                'id': $id,
+                'created_at': $created_at,
                 'completed_at': $completed_at,
-                'requested_at': [$registration.requestedAt],
-                'accepted_at': [$registration.acceptedAt],
-                'started_at': [$registration.startedAt],
-                'skills': [
-                    match
-                        $requiresSkill isa requiresSkill(task: $task, skill: $skill);
-                        $skill has name $skill_name;
-                    fetch {
-                        'name': $skill_name
-                    };
-                ]
-            };
-        """
-        results = Db.read_transact(query, {"student_id": student_id})
-        
-        items = []
-        for r in results:
-            skills = [s.get("name", "") for s in r.get("skills", [])]
-            project_archived = r.get("project_archived", [])
-            requested_at = r.get("requested_at", [])
-            accepted_at = r.get("accepted_at", [])
-            started_at = r.get("started_at", [])
-            task_start_date = r.get("task_start_date", [])
-            task_end_date = r.get("task_end_date", [])
-            
-            items.append({
-                "id": f"live-{r.get('task_id', '')}",
-                "source_type": "live",
-                "is_archived": project_archived[0] if project_archived else False,
-                "project_name": r.get("project_name", ""),
-                "project_description": r.get("project_description", ""),
-                "business_name": r.get("business_name", ""),
-                "business_description": r.get("business_description", ""),
-                "business_location": r.get("business_location", ""),
-                "task_name": r.get("task_name", ""),
-                "task_description": r.get("task_description", ""),
-                "task_start_date": task_start_date[0] if task_start_date else None,
-                "task_end_date": task_end_date[0] if task_end_date else None,
-                "skills": skills,
-                "timeline": {
-                    "requested_at": requested_at[0] if requested_at else None,
-                    "accepted_at": accepted_at[0] if accepted_at else None,
-                    "started_at": started_at[0] if started_at else None,
-                    "completed_at": r.get("completed_at", ""),
-                },
-                "source_project_id": r.get("project_id", ""),
-            })
-        
-        return items
-
-    def get_active_portfolio_items(self, student_id: str) -> list[dict]:
-        """
-        Get active portfolio items (accepted/started tasks that are not yet completed).
-        These are tasks the student is currently working on.
-        """
-        query = """
-            match
-                $student isa student, has id ~student_id;
-                $registration isa registersForTask(student: $student, task: $task),
-                    has isAccepted true;
-                not { $registration has completedAt $any_completed; };
-                $task has id $task_id,
-                    has name $task_name,
-                    has description $task_description;
-                $containsTask isa containsTask(project: $project, task: $task);
-                $project has id $project_id,
-                    has name $project_name,
-                    has description $project_description;
-                $hasProjects isa hasProjects(business: $business, project: $project);
-                $business has id $business_id,
-                    has name $business_name,
-                    has description $business_description,
-                    has location $business_location;
-            fetch {
-                'task_id': $task_id,
+                'owner_student_id': $student.id,
+                'owner_student_name': $owner_student_name,
+                'owner_student_image_path': $owner_student_image_path,
+                'source_student_id': [$item.sourceStudentId],
+                'source_registration_id': $source_registration_id,
+                'source_task_id': $source_task_id,
+                'source_project_id': $source_project_id,
+                'source_business_id': $source_business_id,
+                'student_name': [$item.studentName],
+                'student_image_path': [$item.studentImagePath],
                 'task_name': $task_name,
-                'task_description': $task_description,
-                'task_start_date': [$task.startDate],
-                'task_end_date': [$task.endDate],
-                'project_id': $project_id,
+                'task_description': [ $item.taskDescription ],
                 'project_name': $project_name,
-                'project_description': $project_description,
-                'project_archived': [$project.isArchived],
-                'business_id': $business_id,
+                'project_description': [ $item.projectDescription ],
                 'business_name': $business_name,
-                'business_description': $business_description,
-                'business_location': $business_location,
-                'requested_at': [$registration.requestedAt],
-                'accepted_at': [$registration.acceptedAt],
-                'started_at': [$registration.startedAt],
+                'business_location': [ $item.businessLocation ],
                 'skills': [
                     match
-                        $requiresSkill isa requiresSkill(task: $task, skill: $skill);
-                        $skill has name $skill_name;
-                    fetch {
-                        'name': $skill_name
-                    };
-                ]
+                        $item has skillName $skill_name;
+                    fetch { 'name': $skill_name };
+                ],
+                'timeline_start_date': [ $item.timelineStartDate ],
+                'timeline_end_date': [ $item.timelineEndDate ],
+                'retired_at': [ $item.retiredAt ],
+                'hidden_at': [ $item.hiddenAt ],
+                'hidden_by_role': [ $item.hiddenByRole ],
+                'hidden_by_user_id': [ $item.hiddenByUserId ],
+                'display_order': [ $item.displayOrder ],
+                'is_authenticated_public_retraction': $is_authenticated_public_retraction,
+                'is_world_visible': $is_world_visible,
+                'source_task_archived': [$item.sourceTaskArchived],
+                'source_project_archived': [$item.sourceProjectArchived],
+                'source_business_archived': [$item.sourceBusinessArchived]
             };
         """
-        results = Db.read_transact(query, {"student_id": student_id})
-        
-        items = []
-        for r in results:
-            skills = [s.get("name", "") for s in r.get("skills", [])]
-            project_archived = r.get("project_archived", [])
-            requested_at = r.get("requested_at", [])
-            accepted_at = r.get("accepted_at", [])
-            started_at = r.get("started_at", [])
-            task_start_date = r.get("task_start_date", [])
-            task_end_date = r.get("task_end_date", [])
-            
-            items.append({
-                "id": f"active-{r.get('task_id', '')}",
-                "source_type": "active",
-                "is_archived": project_archived[0] if project_archived else False,
-                "project_name": r.get("project_name", ""),
-                "project_description": r.get("project_description", ""),
-                "business_name": r.get("business_name", ""),
-                "business_description": r.get("business_description", ""),
-                "business_location": r.get("business_location", ""),
-                "task_name": r.get("task_name", ""),
-                "task_description": r.get("task_description", ""),
-                "task_start_date": task_start_date[0] if task_start_date else None,
-                "task_end_date": task_end_date[0] if task_end_date else None,
-                "skills": skills,
-                "timeline": {
-                    "requested_at": requested_at[0] if requested_at else None,
-                    "accepted_at": accepted_at[0] if accepted_at else None,
-                    "started_at": started_at[0] if started_at else None,
-                    "completed_at": None,  # Not completed yet
-                },
-                "source_project_id": r.get("project_id", ""),
-            })
-        
-        return items
+        rows = Db.read_transact(query, {"student_id": student_id})
+        items = [self._map_item(row, viewer_role) for row in rows]
+        return sorted(
+            items,
+            key=lambda item: (
+                item["curation"]["display_order"] is None,
+                item["curation"]["display_order"] or 0,
+                item["id"],
+            ),
+        )
 
-    def get_student_portfolio(self, student_id: str) -> list[dict]:
-        """
-        Get unified portfolio combining active items, completed live items, and snapshots.
-        
-        Returns a list of portfolio items with:
-        - source_type: "active" | "live" | "snapshot"
-        - is_archived: bool (for live items)
-        - All project, task, business, and skills data
-        """
-        # Get active, completed live, and snapshot items
-        active_items = self.get_active_portfolio_items(student_id)
-        live_items = self.get_live_portfolio_items(student_id)
-        snapshot_items = self.get_snapshots_by_student(student_id)
-        
-        # Combine all items
-        all_items = active_items + live_items + snapshot_items
-        
-        # Sort: active items first (by started_at), then completed items (by completed_at)
-        def get_sort_date(item):
-            timeline = item.get("timeline", {})
-            source_type = item.get("source_type", "")
-            
-            # Active items come first, sorted by started_at
-            if source_type == "active":
-                started_at = timeline.get("started_at", "") or timeline.get("accepted_at", "")
-                if isinstance(started_at, str) and started_at:
-                    try:
-                        # Return a tuple: (0 for active, date)
-                        return (0, datetime.fromisoformat(started_at.replace("Z", "+00:00")))
-                    except ValueError:
-                        return (0, datetime.min)
-                return (0, datetime.min)
-            
-            # Completed items come after, sorted by completed_at
-            completed_at = timeline.get("completed_at", "")
-            if isinstance(completed_at, str) and completed_at:
-                try:
-                    return (1, datetime.fromisoformat(completed_at.replace("Z", "+00:00")))
-                except ValueError:
-                    return (1, datetime.min)
-            return (1, datetime.min)
-        
-        all_items.sort(key=get_sort_date, reverse=True)
-        
-        return all_items
+    def get_world_public_items(self, student_id: str) -> list[dict[str, Any]]:
+        return [item for item in self.get_visible_items(student_id, "public") if item["curation"]["is_world_visible"]]
 
-    def delete_snapshot(self, portfolio_id: str) -> bool:
-        """Delete a single portfolio snapshot (for GDPR requests)."""
-        # First delete the relation
-        delete_relation = """
-            match
-                $item isa portfolioItem, has id ~portfolio_id;
-                $hasPortfolio isa hasPortfolio(item: $item);
-            delete
-                $hasPortfolio isa hasPortfolio;
-        """
-        try:
-            Db.write_transact(delete_relation, {"portfolio_id": portfolio_id})
-        except Exception:
-            pass
+    def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
+        if not item_ids:
+            return []
 
-        # Then delete the item
-        delete_item = """
-            match
-                $item isa portfolioItem, has id ~portfolio_id;
-            delete
-                $item isa portfolioItem;
-        """
-        try:
-            Db.write_transact(delete_item, {"portfolio_id": portfolio_id})
-            return True
-        except Exception:
-            return False
-
-    def delete_snapshots_by_student(self, student_id: str) -> int:
-        """Delete all portfolio snapshots for a student (for GDPR requests)."""
-        # First get all snapshot IDs
         query = """
             match
-                $student isa student, has id ~student_id;
-                $hasPortfolio isa hasPortfolio(student: $student, item: $item);
-                $item has id $item_id;
+                $item isa portfolioItem, has id $item_id;
+                $item_id like ~item_id_pattern;
+                $review isa portfolioReview,
+                    has id $id,
+                    has reviewText $review_text,
+                    has createdAt $created_at,
+                    has updatedAt $updated_at,
+                    has isWorldVisible $is_world_visible,
+                    has publicNoticeAcceptedAt $public_notice_accepted_at;
+                $review_link isa hasPortfolioReview(item: $item, review: $review);
+                $author isa user, has id $author_id, has fullName $author_full_name;
+                $author_link isa portfolioReviewAuthor(review: $review, author: $author);
             fetch {
-                'id': $item_id
+                'id': $id,
+                'item_id': $item_id,
+                'review_text': $review_text,
+                'rating': [ $review.rating ],
+                'created_at': $created_at,
+                'updated_at': $updated_at,
+                'is_world_visible': $is_world_visible,
+                'public_notice_accepted_at': $public_notice_accepted_at,
+                'author_id': $author_id,
+                'author_full_name': $author_full_name
             };
         """
-        results = Db.read_transact(query, {"student_id": student_id})
-        
-        deleted_count = 0
-        for r in results:
-            portfolio_id = r.get("id", "")
-            if portfolio_id and self.delete_snapshot(portfolio_id):
-                deleted_count += 1
-        
-        return deleted_count
+        item_id_pattern = self._id_pattern(item_ids)
+        rows = Db.read_transact(query, {"item_id_pattern": item_id_pattern})
+        author_roles = self._get_author_roles([self._one(row.get("author_id")) for row in rows])
+        return sorted(
+            [self._map_review(row, author_roles) for row in rows], key=lambda review: (review["item_id"], review["id"])
+        )
+
+    def filter_items_for_viewer(
+        self,
+        items: list[dict[str, Any]],
+        reviews: list[dict[str, Any]],
+        viewer_role: str,
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        if viewer_role != "supervisor":
+            return items, reviews
+
+        ratings_by_item: dict[str, list[int]] = {}
+        for review in reviews:
+            if review["rating"] is not None:
+                ratings_by_item.setdefault(review["item_id"], []).append(review["rating"])
+
+        visible_items = []
+        for item in items:
+            ratings = ratings_by_item.get(item["id"], [])
+            if item["curation"]["is_authenticated_public_retraction"]:
+                continue
+            if ratings and not all(rating >= 3 for rating in ratings):
+                continue
+            visible_items.append(item)
+
+        visible_item_ids = {item["id"] for item in visible_items}
+        visible_reviews = [review for review in reviews if review["item_id"] in visible_item_ids]
+        return visible_items, visible_reviews
+
+    def attach_reviews(self, items: list[dict[str, Any]], reviews: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        reviews_by_item: dict[str, list[dict[str, Any]]] = {}
+        for review in reviews:
+            reviews_by_item.setdefault(review["item_id"], []).append(review)
+        return [{**item, "reviews": reviews_by_item.get(item["id"], [])} for item in items]
+
+    def _map_item(self, row: dict[str, Any], viewer_role: str) -> dict[str, Any]:
+        retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
+        visibility_reason = "visible_to_authenticated_viewer"
+        if viewer_role == "public":
+            visibility_reason = "visible_to_world_public"
+        if viewer_role == "supervisor" and retracted:
+            visibility_reason = "hidden_by_authenticated_public_retraction"
+
+        return {
+            "id": self._one(row.get("id")),
+            "created_at": self._date(row.get("created_at")),
+            "completed_at": self._date(row.get("completed_at")),
+            "source_student_id": self._one(row.get("source_student_id"), self._one(row.get("owner_student_id"))),
+            "source_registration_id": self._one(row.get("source_registration_id")),
+            "source_task_id": self._one(row.get("source_task_id")),
+            "source_project_id": self._one(row.get("source_project_id")),
+            "source_business_id": self._one(row.get("source_business_id")),
+            "student": {
+                "full_name": self._one(row.get("student_name"), self._one(row.get("owner_student_name"))),
+                "image_path": self._one(row.get("student_image_path"), self._one(row.get("owner_student_image_path"))),
+            },
+            "task": {
+                "name": self._one(row.get("task_name")),
+                "description": self._one(row.get("task_description")),
+            },
+            "project": {
+                "name": self._one(row.get("project_name")),
+                "description": self._one(row.get("project_description")),
+            },
+            "business": {
+                "name": self._one(row.get("business_name")),
+                "location": self._one(row.get("business_location")),
+            },
+            "skills": [self._one(skill.get("name")) for skill in row.get("skills", [])],
+            "timeline_start_date": self._date(row.get("timeline_start_date")),
+            "timeline_end_date": self._date(row.get("timeline_end_date")),
+            "curation": {
+                "is_retired": bool(self._one(row.get("is_retired"), False)),
+                "retired_at": self._date(row.get("retired_at")),
+                "is_hidden": bool(self._one(row.get("is_hidden"), False)),
+                "hidden_at": self._date(row.get("hidden_at")),
+                "hidden_by_role": self._one(row.get("hidden_by_role")),
+                "hidden_by_user_id": self._one(row.get("hidden_by_user_id")),
+                "display_order": self._one(row.get("display_order")),
+                "is_authenticated_public_retraction": retracted,
+                "is_world_visible": bool(self._one(row.get("is_world_visible"), False)),
+            },
+            "archived_source": {
+                "task": bool(self._one(row.get("source_task_archived"), False)),
+                "project": bool(self._one(row.get("source_project_archived"), False)),
+                "business": bool(self._one(row.get("source_business_archived"), False)),
+            },
+            "visibility": {
+                "viewer_can_see": visibility_reason in {"visible_to_authenticated_viewer", "visible_to_world_public"},
+                "reason": visibility_reason,
+            },
+            "reviews": [],
+        }
+
+    def _map_review(self, row: dict[str, Any], author_roles: dict[str, str]) -> dict[str, Any]:
+        author_id = self._one(row.get("author_id"))
+        return {
+            "id": self._one(row.get("id")),
+            "item_id": self._one(row.get("item_id")),
+            "review_text": self._one(row.get("review_text")),
+            "rating": self._one(row.get("rating")),
+            "created_at": self._date(row.get("created_at")),
+            "updated_at": self._date(row.get("updated_at")),
+            "is_world_visible": bool(self._one(row.get("is_world_visible"), False)),
+            "public_notice_accepted_at": self._date(row.get("public_notice_accepted_at")),
+            "author": {
+                "id": author_id,
+                "role": author_roles.get(author_id, "unknown"),
+                "full_name": self._one(row.get("author_full_name")),
+            },
+        }
+
+    def _get_author_roles(self, user_ids: list[str]) -> dict[str, str]:
+        roles: dict[str, str] = {}
+        user_ids = [user_id for user_id in dict.fromkeys(user_ids) if user_id]
+        if not user_ids:
+            return roles
+
+        user_id_pattern = self._id_pattern(user_ids)
+        for role, role_type_token in self._ROLE_TYPE_TOKENS.items():
+            query = f"""
+                match
+                    $user isa {role_type_token}, has id $user_id;
+                    $user_id like ~user_id_pattern;
+                fetch {{ 'id': $user_id }};
+            """
+            for row in Db.read_transact(query, {"user_id_pattern": user_id_pattern}):
+                roles[self._one(row.get("id"))] = role
+        return roles
+
+    def _id_pattern(self, ids: list[str]) -> str:
+        for id_value in ids:
+            if not re.fullmatch(r"[A-Za-z0-9_-]+", id_value):
+                raise ValueError(f"Unsupported id value for TypeDB regex filter: {id_value}")
+        return "^(" + "|".join(ids) + ")$"
+
+    def _date(self, value: Any) -> str | None:
+        value = self._one(value)
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        return str(value) if value is not None else None
+
+    def _one(self, value: Any, default: Any = None) -> Any:
+        if isinstance(value, list):
+            return value[0] if value else default
+        return default if value is None else value
