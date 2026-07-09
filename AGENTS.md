@@ -77,7 +77,7 @@ The intended flow is **route -> service -> repository -> `Db`**. The service lay
 ### Pydantic / Domain Models
 
 - All models extend `pydantic.BaseModel` directly. There is no shared base model.
-- Use `class Config: from_attributes = True` where appropriate.Expand commentComment on line R80Resolved
+- Use `class Config: from_attributes = True` where appropriate.
 - User roles use inheritance: `User` base with `Supervisor`, `Student`, `Teacher` subclasses; `type` is auto-derived from the subclass name.
 - Optional fields use `X | None = None`; lists default to `[]`.
 - Re-export new models from `domain/models/__init__.py`.
