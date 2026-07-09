@@ -63,12 +63,18 @@ const PORTFOLIO_SEED_ALIASES = Object.freeze({
     supervisorStartAllowed: Object.freeze({ alias: 'portfolio-lifecycle-supervisor-start-allowed', taskId: '50000000-0000-4000-8000-000000000022', registrationId: 'pf-task-004-supervisor-start-allowed' }),
     supervisorCompletionAllowed: Object.freeze({ alias: 'portfolio-lifecycle-supervisor-completion-allowed', taskId: '50000000-0000-4000-8000-000000000023', registrationId: 'pf-task-004-supervisor-completion-allowed' }),
   }),
+  // NOTE: every alias listed under `items` is automatically enrolled into the
+  // pf-task-002d seed-fixtures probe, which asserts each item's source fields match the
+  // shared "completed" source (see pf-task-002d-...steps.cjs). Keep new items' source_*,
+  // student name and image consistent with that source, or add archived-source handling there.
   items: Object.freeze({
     noRatings: Object.freeze({ alias: 'portfolio-item-no-ratings', id: 'pf-seed-item-no-ratings' }),
     allRatingsGood: Object.freeze({ alias: 'portfolio-item-all-ratings-good', id: 'pf-seed-item-all-ratings-good' }),
     lowRating: Object.freeze({ alias: 'portfolio-item-low-rating', id: 'pf-seed-item-low-rating' }),
+    mixedRatings: Object.freeze({ alias: 'portfolio-item-mixed-ratings', id: 'pf-seed-item-mixed-ratings' }),
     hidden: Object.freeze({ alias: 'portfolio-item-hidden', id: 'pf-seed-item-hidden' }),
     retractedAuthenticatedPublic: Object.freeze({ alias: 'portfolio-item-retracted-authenticated-public', id: 'pf-seed-item-retracted-authenticated-public' }),
+    retired: Object.freeze({ alias: 'portfolio-item-retired', id: 'pf-seed-item-retired' }),
     worldPublicSelected: Object.freeze({ alias: 'portfolio-item-world-public-selected', id: 'pf-seed-item-world-public-selected' }),
     archivedSource: Object.freeze({ alias: 'portfolio-item-archived-source', id: 'pf-seed-item-archived-source' }),
   }),
