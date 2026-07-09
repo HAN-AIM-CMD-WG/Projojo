@@ -60,7 +60,7 @@ class PortfolioReviewAuthor(BaseModel):
 
 
 class PortfolioReviewCreateRequest(BaseModel):
-    review_text: str
+    review_text: str = Field(max_length=2000)
     rating: int | None = Field(default=None, ge=1, le=5)
     public_review_notice_accepted: bool = False
 
