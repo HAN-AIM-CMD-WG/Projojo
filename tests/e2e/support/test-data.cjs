@@ -25,6 +25,7 @@ const PORTFOLIO_SEED_ALIASES = Object.freeze({
     teacher: Object.freeze({ alias: 'portfolio-teacher', id: E2E_TEACHER_ID, fullName: 'Tessa Testdocent' }),
     relatedSupervisor: Object.freeze({ alias: 'portfolio-related-supervisor', id: '20000000-0000-4000-8000-000000000003', fullName: 'Sanne Testbegeleider' }),
     unrelatedSupervisor: Object.freeze({ alias: 'portfolio-unrelated-supervisor', id: '20000000-0000-4000-8000-000000000004', fullName: 'Umar Onverwant' }),
+    everAcceptedSupervisor: Object.freeze({ alias: 'portfolio-ever-accepted-supervisor', id: '20000000-0000-4000-8000-000000000008', fullName: 'Evi Eerdergeaccepteerd' }),
     openApplicationSupervisor: Object.freeze({ alias: 'portfolio-open-application-supervisor', id: '20000000-0000-4000-8000-000000000006', fullName: 'Otis Openaanvraag' }),
     rejectedApplicationSupervisor: Object.freeze({ alias: 'portfolio-rejected-application-supervisor', id: '20000000-0000-4000-8000-000000000007', fullName: 'Rian Afgewezen' }),
   }),
@@ -32,6 +33,9 @@ const PORTFOLIO_SEED_ALIASES = Object.freeze({
     related: Object.freeze({ alias: 'portfolio-related-business', id: PROOF_BUSINESS_ID, name: 'E2E Infrastructure Business' }),
     unrelated: Object.freeze({ alias: 'portfolio-unrelated-business', id: '30000000-0000-4000-8000-000000000002', name: 'Portfolio Unrelated Business' }),
     archivedSource: Object.freeze({ alias: 'portfolio-archived-source-business', id: ARCHIVED_SOURCE_BUSINESS_ID, name: 'Portfolio Archived Source Business' }),
+    openApplication: Object.freeze({ alias: 'portfolio-open-application-business', id: '30000000-0000-4000-8000-000000000004', name: 'Portfolio Open Application Business' }),
+    rejectedApplication: Object.freeze({ alias: 'portfolio-rejected-application-business', id: '30000000-0000-4000-8000-000000000005', name: 'Portfolio Rejected Application Business' }),
+    everAccepted: Object.freeze({ alias: 'portfolio-ever-accepted-business', id: '30000000-0000-4000-8000-000000000006', name: 'Portfolio Ever Accepted Business' }),
   }),
   source: Object.freeze({
     registration: Object.freeze({ alias: 'portfolio-completed-registration', id: 'pf-seed-registration-completed' }),

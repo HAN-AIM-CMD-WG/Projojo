@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from auth.permissions import auth
 from domain.models.portfolio import PortfolioResponse, PortfolioReviewCreateRequest
 from domain.repositories.portfolio_repository import PortfolioRepository
+from service.portfolio_policy import can_read_authenticated_student_portfolio
 
 
 router = APIRouter(tags=["Portfolio Endpoints"])
@@ -120,13 +121,14 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
         raise HTTPException(status_code=404, detail="Portfolio niet gevonden")
 
     viewer_role = request.state.user_role
-    if viewer_role == "student" and request.state.user_id != student_id:
+    if not can_read_authenticated_student_portfolio(
+        student_id=student_id,
+        viewer_id=request.state.user_id,
+        viewer_role=viewer_role,
+        viewer_business_id=request.state.business_id,
+        portfolio_repo=portfolio_repo,
+    ):
         raise HTTPException(status_code=403, detail="Je hebt hier geen rechten voor.")
-
-    if viewer_role == "supervisor":
-        business_id = request.state.business_id
-        if not business_id or not portfolio_repo.has_supervisor_relationship(student_id, business_id):
-            raise HTTPException(status_code=403, detail="Je hebt hier geen rechten voor.")
 
     items = portfolio_repo.get_visible_items(student_id, viewer_role)
     reviews = portfolio_repo.get_reviews_for_items([item["id"] for item in items])

@@ -172,7 +172,7 @@ class PortfolioRepository:
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $containsTask isa containsTask(project: $project, task: $task);
                 $registration isa registersForTask(student: $student, task: $task);
-                { $registration has isAccepted true; } or { not { $registration has isAccepted $decision; }; };
+                { $registration has acceptedAt $accepted_at; } or { not { $registration has isAccepted $decision; }; };
             fetch { 'student_id': $student.id };
         """
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))

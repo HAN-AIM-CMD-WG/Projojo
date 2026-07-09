@@ -554,6 +554,54 @@ insert
         has createdAt 2026-01-25T10:00:00.000+0000,
         has requestedAt 2026-01-25T10:00:00.000+0000;
 
+    # Evi manages a business where the seeded student was accepted before, but is not currently accepted.
+    $pf_007a_ever_accepted_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000008",
+        has email "portfolio.ever.accepted.supervisor@projojo.local",
+        has fullName "Evi Eerdergeaccepteerd",
+        has imagePath "default.svg";
+
+    $pf_007a_ever_accepted_supervisor_auth isa oauthAuthentication (user: $pf_007a_ever_accepted_supervisor, provider: $provider_github),
+        has oauthSub "pf-007a-ever-accepted-supervisor-github-sub";
+
+    $pf_007a_ever_accepted_business isa business,
+        has id "30000000-0000-4000-8000-000000000006",
+        has name "Portfolio Ever Accepted Business",
+        has description "Organisatie waar de seed student ooit geaccepteerd is.",
+        has imagePath "default.svg",
+        has location "Arnhem";
+
+    $pf_007a_ever_accepted_project isa project,
+        has id "40000000-0000-4000-8000-000000000006",
+        has name "Portfolio Ever Accepted Project",
+        has description "Project voor de ooit-geaccepteerde relatiepoort van PF-task-007a.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-25T09:00:00.000+0000,
+        has isPublic false;
+
+    $pf_007a_ever_accepted_task isa task,
+        has id "50000000-0000-4000-8000-000000000032",
+        has name "Portfolio Ever Accepted Task",
+        has description "Taak met een eerdere acceptatie van de seed student.",
+        has totalNeeded 1,
+        has createdAt 2026-01-25T09:15:00.000+0000;
+
+    $pf_007a_ever_accepted_manages isa manages (supervisor: $pf_007a_ever_accepted_supervisor, business: $pf_007a_ever_accepted_business),
+        has location "Arnhem";
+
+    $pf_007a_ever_accepted_has_projects isa hasProjects (business: $pf_007a_ever_accepted_business, project: $pf_007a_ever_accepted_project);
+
+    $pf_007a_ever_accepted_contains_task isa containsTask (project: $pf_007a_ever_accepted_project, task: $pf_007a_ever_accepted_task);
+
+    $pf_007a_ever_accepted_registration isa registersForTask (student: $student, task: $pf_007a_ever_accepted_task),
+        has id "pf-007a-ever-accepted-application",
+        has description "Eerder geaccepteerde aanvraag met latere afwijzing voor de relatiepoort.",
+        has isAccepted false,
+        has response "Later afgewezen na eerdere acceptatie voor PF-task-007a dekking.",
+        has createdAt 2026-01-25T10:00:00.000+0000,
+        has requestedAt 2026-01-25T10:00:00.000+0000,
+        has acceptedAt 2026-01-25T11:00:00.000+0000;
+
     # Rian manages a business where the seeded student has ONLY a rejected application (never open, never accepted).
     $pf_007a_rejected_supervisor isa supervisor,
         has id "20000000-0000-4000-8000-000000000007",
