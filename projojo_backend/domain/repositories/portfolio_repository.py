@@ -14,9 +14,9 @@ class PortfolioRepository:
                 'id': $student.id,
                 'full_name': $student.fullName,
                 'image_path': $student.imagePath,
-                'portfolio_summary': $student.portfolioSummary,
-                'portfolio_slug': $student.portfolioSlug,
-                'is_portfolio_world_public': $student.isPortfolioWorldPublic
+                'portfolio_summary': [ $student.portfolioSummary ],
+                'portfolio_slug': [ $student.portfolioSlug ],
+                'is_portfolio_world_public': [ $student.isPortfolioWorldPublic ]
             };
         """
         results = Db.read_transact(query, {"student_id": student_id})
@@ -76,23 +76,23 @@ class PortfolioRepository:
                 'source_project_id': $source_project_id,
                 'source_business_id': $source_business_id,
                 'task_name': $task_name,
-                'task_description': $item.taskDescription,
+                'task_description': [ $item.taskDescription ],
                 'project_name': $project_name,
-                'project_description': $item.projectDescription,
+                'project_description': [ $item.projectDescription ],
                 'business_name': $business_name,
-                'business_location': $item.businessLocation,
+                'business_location': [ $item.businessLocation ],
                 'skills': [
                     match
                         $item has skillName $skill_name;
                     fetch { 'name': $skill_name };
                 ],
-                'timeline_start_date': $item.timelineStartDate,
-                'timeline_end_date': $item.timelineEndDate,
-                'retired_at': $item.retiredAt,
-                'hidden_at': $item.hiddenAt,
-                'hidden_by_role': $item.hiddenByRole,
-                'hidden_by_user_id': $item.hiddenByUserId,
-                'display_order': $item.displayOrder,
+                'timeline_start_date': [ $item.timelineStartDate ],
+                'timeline_end_date': [ $item.timelineEndDate ],
+                'retired_at': [ $item.retiredAt ],
+                'hidden_at': [ $item.hiddenAt ],
+                'hidden_by_role': [ $item.hiddenByRole ],
+                'hidden_by_user_id': [ $item.hiddenByUserId ],
+                'display_order': [ $item.displayOrder ],
                 'is_authenticated_public_retraction': $is_authenticated_public_retraction,
                 'is_world_visible': $is_world_visible,
                 'source_task_archived': [$item.sourceTaskArchived],
@@ -126,7 +126,7 @@ class PortfolioRepository:
                 'id': $id,
                 'item_id': $item_id,
                 'review_text': $review_text,
-                'rating': $review.rating,
+                'rating': [ $review.rating ],
                 'created_at': $created_at,
                 'updated_at': $updated_at,
                 'is_world_visible': $is_world_visible,
