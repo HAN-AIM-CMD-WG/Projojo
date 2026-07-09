@@ -1,5 +1,5 @@
 from typing import Any
-from db.initDatabase import Db
+from db.initDatabase import Db, build_query
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Theme, ThemeCreate, ThemeUpdate
@@ -53,6 +53,16 @@ class ThemeRepository(BaseRepository[Theme]):
         # Sort by display_order, then name
         return sorted(themes, key=lambda t: (t.display_order or 999, t.name))
 
+    def get_by_name_case_insensitive(self, name: str) -> Theme | None:
+        # Compare in Python instead of a TypeQL `like` regex: names may contain
+        # characters (spaces, '&', ...) that TypeDB's regex literal parser rejects
+        # when escaped via re.escape, and the theme catalog is small.
+        target = name.casefold()
+        for theme in self.get_all():
+            if theme.name.casefold() == target:
+                return theme
+        return None
+
     def _map_to_model(self, result: dict[str, Any]) -> Theme:
         sdg_code_list = result.get("sdg_code", [])
         icon_list = result.get("icon", [])
@@ -71,6 +81,9 @@ class ThemeRepository(BaseRepository[Theme]):
         )
 
     def create(self, theme: ThemeCreate) -> Theme:
+        if self.get_by_name_case_insensitive(theme.name):
+            raise ValueError("Er bestaat al een thema met deze naam")
+
         id = generate_uuid()
         
         query = """
@@ -109,6 +122,10 @@ class ThemeRepository(BaseRepository[Theme]):
         params = {"theme_id": theme_id}
 
         if theme.name is not None:
+            duplicate = self.get_by_name_case_insensitive(theme.name)
+            if duplicate and duplicate.id != theme_id:
+                raise ValueError("Er bestaat al een thema met deze naam")
+
             update_clauses.append("$theme has name ~name;")
             params["name"] = theme.name
         if theme.sdg_code is not None:
@@ -180,31 +197,42 @@ class ThemeRepository(BaseRepository[Theme]):
         results = Db.read_transact(query, {"project_id": project_id})
         return [self._map_to_model(result) for result in results]
 
-    def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> None:
-        """Link a project to multiple themes (replaces existing links)"""
-        # First remove existing theme links
-        delete_query = """
+    def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> int:
+        """Atomically replace a project's theme links: all changes succeed or none are applied.
+
+        Duplicate theme ids are ignored. Returns the number of links created.
+        """
+        theme_ids = list(dict.fromkeys(theme_ids))
+        project_query = build_query("""
+            match
+                $project isa project, has id ~project_id;
+        """, {"project_id": project_id})
+        delete_query = build_query("""
             match
                 $project isa project, has id ~project_id;
                 $hasTheme isa hasTheme(project: $project);
             delete
-                $hasTheme isa hasTheme;
+                $hasTheme;
+        """, {"project_id": project_id})
+        insert_template = """
+            match
+                $project isa project, has id ~project_id;
+                $theme isa theme, has id ~theme_id;
+            insert
+                $hasTheme isa hasTheme($project, $theme);
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass
 
-        # Then add new theme links
-        for theme_id in theme_ids:
-            insert_query = """
-                match
-                    $project isa project, has id ~project_id;
-                    $theme isa theme, has id ~theme_id;
-                insert
-                    $hasTheme isa hasTheme($project, $theme);
-            """
-            Db.write_transact(insert_query, {
-                "project_id": project_id,
-                "theme_id": theme_id
-            })
+        insert_queries = [
+            build_query(insert_template, {"project_id": project_id, "theme_id": theme_id})
+            for theme_id in theme_ids
+        ]
+
+        def validate(results: list[list]) -> None:
+            if not results[0]:
+                raise ValueError(f"Project met ID '{project_id}' niet gevonden.")
+            invalid = [theme_id for theme_id, rows in zip(theme_ids, results[2:]) if not rows]
+            if invalid:
+                raise ValueError(f"Thema's niet gevonden: {', '.join(invalid)}")
+
+        Db.write_transact_atomic([project_query, delete_query, *insert_queries], validate=validate)
+        return len(theme_ids)
