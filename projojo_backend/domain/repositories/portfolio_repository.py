@@ -203,9 +203,9 @@ class PortfolioRepository:
             "timeline_start_date": self._date(row.get("timeline_start_date")),
             "timeline_end_date": self._date(row.get("timeline_end_date")),
             "curation": {
-                "is_retired": False,
+                "is_retired": bool(self._one(row.get("is_retired"), False)),
                 "retired_at": self._date(row.get("retired_at")),
-                "is_hidden": False,
+                "is_hidden": bool(self._one(row.get("is_hidden"), False)),
                 "hidden_at": self._date(row.get("hidden_at")),
                 "hidden_by_role": self._one(row.get("hidden_by_role")),
                 "hidden_by_user_id": self._one(row.get("hidden_by_user_id")),
