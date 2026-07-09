@@ -3,7 +3,7 @@ from pydantic import ValidationError
 from auth.permissions import auth, check_supervisor_ownership
 from auth.jwt_utils import get_token_payload
 
-from domain.repositories import ThemeRepository
+from domain.repositories import ProjectRepository, ThemeRepository
 from domain.models import Theme, ThemeCreate, ThemeUpdate
 from service.validation_service import (
     THEME_DISPLAY_ORDER_VALIDATION_ERROR,
@@ -12,6 +12,7 @@ from service.validation_service import (
 )
 
 theme_repo = ThemeRepository()
+project_repo = ProjectRepository()
 
 
 def parse_theme_payload(model, payload: dict):
@@ -132,7 +133,17 @@ async def link_project_themes(
     Only supervisors who own the project or teachers can do this.
     """
     role = payload.get("role")
-    
+
+    # Existence is checked before role/ownership so every authenticated caller gets a
+    # consistent 404 for a nonexistent project (clear feedback when e.g. a project was
+    # deleted mid-edit). This discloses project existence before authorization; that is
+    # acceptable here because project existence is public via the discovery page and ids
+    # are random UUIDs. Revisit if projects ever become private.
+    try:
+        project_repo.get_by_id(project_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen geen thema's koppelen")
 
@@ -150,5 +161,5 @@ async def link_project_themes(
     try:
         linked_count = theme_repo.link_project_to_themes(project_id, theme_ids)
         return {"message": f"Project gekoppeld aan {linked_count} thema's"}
-    except Exception as e:
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

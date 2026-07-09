@@ -399,11 +399,23 @@ When("I replace the E2E proof project's theme links with themes {string}", async
   await replaceProjectThemes(this, PROOF_PROJECT_ID, names);
 });
 
-When("I replace the E2E proof project's theme links with themes {string} and invalid theme id {string}", async function (names, invalidThemeId) {
+When("I replace the E2E proof project's theme links with themes {string} and invalid theme ids {string}", async function (names, invalidThemeIds) {
   await themeApi(this, `/themes/project/${PROOF_PROJECT_ID}`, {
     method: 'PUT',
-    body: JSON.stringify({ theme_ids: [...await themeIdsForNames(this, names), invalidThemeId] }),
+    body: JSON.stringify({ theme_ids: [...await themeIdsForNames(this, names), ...parseThemeNames(invalidThemeIds)] }),
   });
+});
+
+When('I replace the theme links of nonexistent project {string} with themes {string}', async function (projectId, names) {
+  await replaceProjectThemes(this, projectId, names);
+});
+
+Then('the latest API error detail should contain {string}', function (expectedFragment) {
+  const detail = themeState(this).lastThemeApiPayload?.detail;
+  assert.ok(
+    typeof detail === 'string' && detail.includes(expectedFragment),
+    `Expected error detail to contain '${expectedFragment}', received ${JSON.stringify(detail)}`,
+  );
 });
 
 When("I replace the E2E proof project's theme links with theme {string} sent twice", async function (name) {

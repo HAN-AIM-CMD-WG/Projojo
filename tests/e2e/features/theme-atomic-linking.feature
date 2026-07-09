@@ -20,7 +20,7 @@ Feature: TS-task-005 make project-theme linking atomic
     And the E2E proof project is linked to themes "Duurzaamheid,Klimaat & Milieu"
     And I remember the E2E proof project's theme links
     And I am authenticated as the E2E supervisor
-    When I replace the E2E proof project's theme links with themes "Innovatie & Technologie" and invalid theme id "nonexistent"
+    When I replace the E2E proof project's theme links with themes "Innovatie & Technologie" and invalid theme ids "nonexistent"
     Then the latest theme API response status should be 400
     And the E2E proof project should keep its remembered theme links
 

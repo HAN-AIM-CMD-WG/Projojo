@@ -235,10 +235,13 @@ class ThemeRepository(BaseRepository[Theme]):
         assert Db.driver is not None
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
             tx.query(delete_query).resolve()
+            invalid_theme_ids = []
             for theme_id in theme_ids:
                 query = build_query(insert_template, {"project_id": project_id, "theme_id": theme_id})
                 rows = list(tx.query(query).resolve())
                 if not rows:
-                    raise ValueError(f"Thema '{theme_id}' bestaat niet")
+                    invalid_theme_ids.append(theme_id)
+            if invalid_theme_ids:
+                raise ValueError(f"Thema's niet gevonden: {', '.join(invalid_theme_ids)}")
             tx.commit()
         return len(theme_ids)
