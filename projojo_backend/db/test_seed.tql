@@ -1,5 +1,10 @@
 insert
 
+    # PF-task-002d portfolio seed reset contract:
+    # Reset deterministic E2E data with: task test:e2e:reset
+    # Direct backend/container reset command: uv run python db/reset_test_database.py --seed db/test_seed.tql
+    # Verify portfolio seed fixtures with: task test:e2e:run:selective CLI_ARGS="--paths features/pf-task-002d-portfolio-seed-fixtures-and-reset-contract.feature"
+
     # Identity providers required by schema for local development users
     $provider_google isa oauthProvider,
         has name "google";
@@ -22,12 +27,30 @@ insert
         has email "student.e2e@projojo.local",
         has fullName "Tom Teststudent",
         has imagePath "default.svg",
-        has description "Neutrale student voor de lokale E2E infrastructuur proof suite.";
+        has description "Neutrale student voor de lokale E2E infrastructuur proof suite.",
+        has portfolioSummary "Portfolio seed student with deterministic completed evidence fixtures.",
+        has portfolioSlug "portfolio-seed-world-public",
+        has isPortfolioWorldPublic true;
+
+    $portfolio_private_student isa student,
+        has id "20000000-0000-4000-8000-000000000005",
+        has email "portfolio.private.student@projojo.local",
+        has fullName "Priya Priveportfolio",
+        has imagePath "default.svg",
+        has portfolioSummary "Private-by-default portfolio slug fixture.",
+        has portfolioSlug "portfolio-seed-private",
+        has isPortfolioWorldPublic false;
 
     $supervisor isa supervisor,
         has id "20000000-0000-4000-8000-000000000003",
         has email "supervisor.e2e@projojo.local",
         has fullName "Sanne Testbegeleider",
+        has imagePath "default.svg";
+
+    $portfolio_unrelated_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000004",
+        has email "portfolio.unrelated.supervisor@projojo.local",
+        has fullName "Umar Onverwant",
         has imagePath "default.svg";
 
     # Required auth links
@@ -37,8 +60,14 @@ insert
     $student_auth isa oauthAuthentication (user: $student, provider: $provider_google),
         has oauthSub "e2e-student-google-sub";
 
+    $portfolio_private_student_auth isa oauthAuthentication (user: $portfolio_private_student, provider: $provider_google),
+        has oauthSub "portfolio-private-student-google-sub";
+
     $supervisor_auth isa oauthAuthentication (user: $supervisor, provider: $provider_github),
         has oauthSub "e2e-supervisor-github-sub";
+
+    $portfolio_unrelated_supervisor_auth isa oauthAuthentication (user: $portfolio_unrelated_supervisor, provider: $provider_github),
+        has oauthSub "portfolio-unrelated-supervisor-github-sub";
 
     # Dedicated deterministic business and project marker for preflight + suite assertions
     $business isa business,
@@ -50,6 +79,27 @@ insert
         has sector "Education",
         has companySize "1-10",
         has website "https://example.invalid/projojo-e2e";
+
+    $portfolio_unrelated_business isa business,
+        has id "30000000-0000-4000-8000-000000000002",
+        has name "Portfolio Unrelated Business",
+        has description "Organisatie zonder portfolio-relatie met de deterministische seed student.",
+        has imagePath "default.svg",
+        has location "Nijmegen",
+        has sector "Education",
+        has companySize "1-10",
+        has website "https://example.invalid/projojo-portfolio-unrelated";
+
+    $portfolio_archived_source_business isa business,
+        has id "30000000-0000-4000-8000-000000000003",
+        has name "Portfolio Archived Source Business",
+        has description "Gearchiveerde bronorganisatie voor deterministische portfolio-context.",
+        has imagePath "default.svg",
+        has location "Arnhem",
+        has sector "Education",
+        has companySize "1-10",
+        has website "https://example.invalid/projojo-portfolio-archived-source",
+        has isArchived true;
 
     $project isa project,
         has id "40000000-0000-4000-8000-000000000001",
@@ -72,6 +122,28 @@ insert
         has startDate 2026-01-15T09:15:00.000+0000,
         has endDate 2030-01-15T09:15:00.000+0000;
 
+    $portfolio_archived_source_project isa project,
+        has id "40000000-0000-4000-8000-000000000002",
+        has name "Portfolio Archived Source Project",
+        has description "Gearchiveerd bronproject voor portfolio-evidence die zichtbaar blijft.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-18T09:00:00.000+0000,
+        has location "Arnhem",
+        has isArchived true,
+        has isPublic false,
+        has impactSummary "Portfolio archived source fixture",
+        has startDate 2026-01-18T09:00:00.000+0000,
+        has endDate 2026-02-26T17:00:00.000+0000;
+
+    $portfolio_archived_source_task isa task,
+        has id "50000000-0000-4000-8000-000000000002",
+        has name "Portfolio Archived Source Task",
+        has description "Bron taak voor gearchiveerde portfolio-context.",
+        has totalNeeded 1,
+        has createdAt 2026-01-18T09:15:00.000+0000,
+        has startDate 2026-01-18T09:15:00.000+0000,
+        has endDate 2026-02-26T17:00:00.000+0000;
+
     $skill isa skill,
         has id "60000000-0000-4000-8000-000000000001",
         has name "Deterministisch Testen",
@@ -82,11 +154,324 @@ insert
     $manages isa manages (supervisor: $supervisor, business: $business),
         has location "Arnhem";
 
+    $portfolio_unrelated_manages isa manages (supervisor: $portfolio_unrelated_supervisor, business: $portfolio_unrelated_business),
+        has location "Nijmegen";
+
     $has_projects isa hasProjects (business: $business, project: $project);
 
     $contains_task isa containsTask (project: $project, task: $task);
 
     $requires_skill isa requiresSkill (task: $task, skill: $skill);
 
+    $portfolio_archived_source_has_projects isa hasProjects (business: $portfolio_archived_source_business, project: $portfolio_archived_source_project);
+
+    $portfolio_archived_source_contains_task isa containsTask (project: $portfolio_archived_source_project, task: $portfolio_archived_source_task);
+
+    $portfolio_archived_source_requires_skill isa requiresSkill (task: $portfolio_archived_source_task, skill: $skill);
+
     $creates_project isa creates (supervisor: $supervisor, project: $project),
         has createdAt 2026-01-15T09:00:00.000+0000;
+
+    $portfolio_registration isa registersForTask (student: $student, task: $task),
+        has id "pf-seed-registration-completed",
+        has description "Completed deterministic portfolio source registration.",
+        has isAccepted true,
+        has response "Accepted for deterministic portfolio seed coverage.",
+        has createdAt 2026-01-16T09:00:00.000+0000,
+        has requestedAt 2026-01-16T09:00:00.000+0000,
+        has acceptedAt 2026-01-17T09:00:00.000+0000,
+        has startedAt 2026-01-20T09:00:00.000+0000,
+        has completedAt 2026-02-20T17:00:00.000+0000;
+
+    $portfolio_archived_source_registration isa registersForTask (student: $student, task: $portfolio_archived_source_task),
+        has id "pf-seed-registration-archived-source",
+        has description "Completed deterministic portfolio source registration for archived-source coverage.",
+        has isAccepted true,
+        has response "Accepted for deterministic archived-source portfolio seed coverage.",
+        has createdAt 2026-01-18T09:30:00.000+0000,
+        has requestedAt 2026-01-18T09:30:00.000+0000,
+        has acceptedAt 2026-01-19T09:00:00.000+0000,
+        has startedAt 2026-01-20T09:00:00.000+0000,
+        has completedAt 2026-02-26T17:00:00.000+0000;
+
+    $portfolio_item_no_ratings isa portfolioItem,
+        has id "pf-seed-item-no-ratings",
+        has createdAt 2026-02-20T17:05:00.000+0000,
+        has completedAt 2026-02-20T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "No-rating portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-20T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 1,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_all_ratings_good isa portfolioItem,
+        has id "pf-seed-item-all-ratings-good",
+        has createdAt 2026-02-21T17:05:00.000+0000,
+        has completedAt 2026-02-21T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "All-ratings-good portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-21T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 2,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_low_rating isa portfolioItem,
+        has id "pf-seed-item-low-rating",
+        has createdAt 2026-02-22T17:05:00.000+0000,
+        has completedAt 2026-02-22T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "Low-rating portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-22T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 3,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_hidden isa portfolioItem,
+        has id "pf-seed-item-hidden",
+        has createdAt 2026-02-23T17:05:00.000+0000,
+        has completedAt 2026-02-23T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "Hidden portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-23T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden true,
+        has hiddenAt 2026-02-24T09:00:00.000+0000,
+        has hiddenByRole "teacher",
+        has hiddenByUserId "20000000-0000-4000-8000-000000000001",
+        has displayOrder 4,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_retracted isa portfolioItem,
+        has id "pf-seed-item-retracted-authenticated-public",
+        has createdAt 2026-02-24T17:05:00.000+0000,
+        has completedAt 2026-02-24T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "Authenticated-public retracted portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-24T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 5,
+        has isAuthenticatedPublicRetraction true,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_world_public isa portfolioItem,
+        has id "pf-seed-item-world-public-selected",
+        has createdAt 2026-02-25T17:05:00.000+0000,
+        has completedAt 2026-02-25T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "World-public selected portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-25T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 6,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_archived_source isa portfolioItem,
+        has id "pf-seed-item-archived-source",
+        has createdAt 2026-02-26T17:05:00.000+0000,
+        has completedAt 2026-02-26T17:00:00.000+0000,
+        has sourceRegistrationId "pf-seed-registration-archived-source",
+        has sourceTaskId "50000000-0000-4000-8000-000000000002",
+        has sourceProjectId "40000000-0000-4000-8000-000000000002",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000003",
+        has taskName "Portfolio Archived Source Task",
+        has taskDescription "Archived-source portfolio seed item.",
+        has projectName "Portfolio Archived Source Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "Portfolio Archived Source Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-26T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 7,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived true,
+        has sourceProjectArchived true,
+        has sourceBusinessArchived true;
+
+    $portfolio_ownership_no_ratings isa hasPortfolio (student: $student, item: $portfolio_item_no_ratings);
+    $portfolio_ownership_all_ratings_good isa hasPortfolio (student: $student, item: $portfolio_item_all_ratings_good);
+    $portfolio_ownership_low_rating isa hasPortfolio (student: $student, item: $portfolio_item_low_rating);
+    $portfolio_ownership_hidden isa hasPortfolio (student: $student, item: $portfolio_item_hidden);
+    $portfolio_ownership_retracted isa hasPortfolio (student: $student, item: $portfolio_item_retracted);
+    $portfolio_ownership_world_public isa hasPortfolio (student: $student, item: $portfolio_item_world_public);
+    $portfolio_ownership_archived_source isa hasPortfolio (student: $student, item: $portfolio_item_archived_source);
+
+    $portfolio_review_no_rating isa portfolioReview,
+        has id "pf-seed-review-no-rating",
+        has reviewText "No rating was provided for this deterministic portfolio review.",
+        has createdAt 2026-02-20T18:00:00.000+0000,
+        has updatedAt 2026-02-20T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-20T18:00:00.000+0000;
+
+    $portfolio_review_good_teacher isa portfolioReview,
+        has id "pf-seed-review-good-teacher",
+        has reviewText "Teacher review with rating three for deterministic rating-gate coverage.",
+        has rating 3,
+        has createdAt 2026-02-21T18:00:00.000+0000,
+        has updatedAt 2026-02-21T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-21T18:00:00.000+0000;
+
+    $portfolio_review_good_supervisor isa portfolioReview,
+        has id "pf-seed-review-good-supervisor",
+        has reviewText "Supervisor review with rating five for deterministic rating-gate coverage.",
+        has rating 5,
+        has createdAt 2026-02-21T18:30:00.000+0000,
+        has updatedAt 2026-02-21T18:30:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-21T18:30:00.000+0000;
+
+    $portfolio_review_low_rating isa portfolioReview,
+        has id "pf-seed-review-low-rating",
+        has reviewText "Supervisor review below the authenticated-public rating threshold.",
+        has rating 2,
+        has createdAt 2026-02-22T18:00:00.000+0000,
+        has updatedAt 2026-02-22T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-22T18:00:00.000+0000;
+
+    $portfolio_review_hidden isa portfolioReview,
+        has id "pf-seed-review-hidden",
+        has reviewText "Review attached to the hidden deterministic portfolio item.",
+        has rating 4,
+        has createdAt 2026-02-23T18:00:00.000+0000,
+        has updatedAt 2026-02-23T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-23T18:00:00.000+0000;
+
+    $portfolio_review_retracted isa portfolioReview,
+        has id "pf-seed-review-retracted",
+        has reviewText "Review attached to the retracted authenticated-public deterministic item.",
+        has rating 4,
+        has createdAt 2026-02-24T18:00:00.000+0000,
+        has updatedAt 2026-02-24T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-24T18:00:00.000+0000;
+
+    $portfolio_review_world_public isa portfolioReview,
+        has id "pf-seed-review-world-public-selected",
+        has reviewText "Selected world-public review for deterministic public portfolio coverage.",
+        has rating 5,
+        has createdAt 2026-02-25T18:00:00.000+0000,
+        has updatedAt 2026-02-25T18:00:00.000+0000,
+        has isWorldVisible true,
+        has publicNoticeAcceptedAt 2026-02-25T18:00:00.000+0000;
+
+    $portfolio_review_archived_source isa portfolioReview,
+        has id "pf-seed-review-archived-source",
+        has reviewText "Review attached to archived-source portfolio evidence.",
+        has rating 4,
+        has createdAt 2026-02-26T18:00:00.000+0000,
+        has updatedAt 2026-02-26T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-26T18:00:00.000+0000;
+
+    $portfolio_review_link_no_rating isa hasPortfolioReview (item: $portfolio_item_no_ratings, review: $portfolio_review_no_rating);
+    $portfolio_review_link_good_teacher isa hasPortfolioReview (item: $portfolio_item_all_ratings_good, review: $portfolio_review_good_teacher);
+    $portfolio_review_link_good_supervisor isa hasPortfolioReview (item: $portfolio_item_all_ratings_good, review: $portfolio_review_good_supervisor);
+    $portfolio_review_link_low_rating isa hasPortfolioReview (item: $portfolio_item_low_rating, review: $portfolio_review_low_rating);
+    $portfolio_review_link_hidden isa hasPortfolioReview (item: $portfolio_item_hidden, review: $portfolio_review_hidden);
+    $portfolio_review_link_retracted isa hasPortfolioReview (item: $portfolio_item_retracted, review: $portfolio_review_retracted);
+    $portfolio_review_link_world_public isa hasPortfolioReview (item: $portfolio_item_world_public, review: $portfolio_review_world_public);
+    $portfolio_review_link_archived_source isa hasPortfolioReview (item: $portfolio_item_archived_source, review: $portfolio_review_archived_source);
+
+    $portfolio_author_no_rating isa portfolioReviewAuthor (review: $portfolio_review_no_rating, author: $teacher);
+    $portfolio_author_good_teacher isa portfolioReviewAuthor (review: $portfolio_review_good_teacher, author: $teacher);
+    $portfolio_author_good_supervisor isa portfolioReviewAuthor (review: $portfolio_review_good_supervisor, author: $supervisor);
+    $portfolio_author_low_rating isa portfolioReviewAuthor (review: $portfolio_review_low_rating, author: $supervisor);
+    $portfolio_author_hidden isa portfolioReviewAuthor (review: $portfolio_review_hidden, author: $teacher);
+    $portfolio_author_retracted isa portfolioReviewAuthor (review: $portfolio_review_retracted, author: $supervisor);
+    $portfolio_author_world_public isa portfolioReviewAuthor (review: $portfolio_review_world_public, author: $teacher);
+    $portfolio_author_archived_source isa portfolioReviewAuthor (review: $portfolio_review_archived_source, author: $supervisor);

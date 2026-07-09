@@ -9,16 +9,21 @@ entity user @abstract,
 
 entity supervisor sub user,
     plays manages:supervisor @card(1),
-    plays creates:supervisor @card(0..);
+    plays creates:supervisor @card(0..),
+    plays portfolioReviewAuthor:author @card(0..);
 
 entity student sub user,
     owns description @card(0..1),
     owns cvPath @card(0..1),
+    owns portfolioSummary @card(0..1),
+    owns portfolioSlug @card(0..1) @unique,
+    owns isPortfolioWorldPublic @card(0..1),
     plays hasSkill:student @card(0..),
     plays registersForTask:student @card(0..),
     plays hasPortfolio:student @card(0..);
 
-entity teacher sub user;
+entity teacher sub user,
+    plays portfolioReviewAuthor:author @card(0..);
 
 entity oauthProvider,
     owns name @key, # e.g. "microsoft", "google"
@@ -129,6 +134,7 @@ relation hasSkill,
 relation registersForTask,
     relates student @card(1),
     relates task @card(1),
+    owns id @card(0..1) @unique,
     owns description @card(1),
     owns isAccepted @card(0..1),
     owns response @card(0..1),
@@ -144,29 +150,67 @@ relation businessInvite,
 
 entity portfolioItem,
     owns id @key,
-    owns timelineSnapshot @card(1),
-    owns projectSnapshot @card(1),
-    owns taskSnapshot @card(1),
-    owns skillsSnapshot @card(1),
-    plays hasPortfolio:item @card(1);
+    owns createdAt @card(1),
+    owns completedAt @card(1),
+    owns sourceRegistrationId @card(1),
+    owns sourceTaskId @card(1),
+    owns sourceProjectId @card(1),
+    owns sourceBusinessId @card(1),
+    owns taskName @card(1),
+    owns taskDescription @card(0..1),
+    owns projectName @card(1),
+    owns projectDescription @card(0..1),
+    owns businessName @card(1),
+    owns businessLocation @card(0..1),
+    owns skillName @card(0..),
+    owns timelineStartDate @card(0..1),
+    owns timelineEndDate @card(0..1),
+    owns isRetired @card(1),
+    owns retiredAt @card(0..1),
+    owns isHidden @card(1),
+    owns hiddenAt @card(0..1),
+    owns hiddenByRole @card(0..1),
+    owns hiddenByUserId @card(0..1),
+    owns displayOrder @card(0..1),
+    owns isAuthenticatedPublicRetraction @card(1),
+    owns isWorldVisible @card(1),
+    owns sourceTaskArchived @card(0..1),
+    owns sourceProjectArchived @card(0..1),
+    owns sourceBusinessArchived @card(0..1),
+    plays hasPortfolio:item @card(1),
+    plays hasPortfolioReview:item @card(0..);
+
+entity portfolioReview,
+    owns id @key,
+    owns reviewText @card(1),
+    owns rating @card(0..1),
+    owns createdAt @card(1),
+    owns updatedAt @card(1),
+    owns isWorldVisible @card(1),
+    owns publicNoticeAcceptedAt @card(1),
+    plays hasPortfolioReview:review @card(1),
+    plays portfolioReviewAuthor:review @card(1);
 
 relation hasPortfolio,
     relates student @card(1),
     relates item @card(1);
 
+# Review author design: the creation API must attach exactly one portfolioReviewAuthor relation.
+# Editing authorization matches the current caller by user id through the author role, not display names.
+# Read models display author details from the related author entity.
+# Normal review reads join through the portfolio item and exclude retired items.
+relation hasPortfolioReview,
+    relates item @card(1),
+    relates review @card(1);
+
+relation portfolioReviewAuthor,
+    relates review @card(1),
+    relates author @card(1);
+
 # Project-Thema koppeling
 relation hasTheme,
     relates project @card(1),
     relates theme @card(1);
-
-#Werkt helaas nog niet :(
-# TLDR: maakt automatisch een permission relatie aan als een supervisor een project aanmaakt permissie voor wat? zien we dan wel maar wss aanpassingen doen etc
-# nu ik erover nadenk moet dit eigenlijk gebeuren met projectCreation.. TODO: apply rule for projectCreation relation
-#rule access: when {
-#    (supervisor: $s, project: $p) isa projectCreation;
-#} then {
-#    (supervisorRole: $s, projectRole: $p) isa accessPermission;
-#};
 
 
 attribute email value string;
@@ -174,6 +218,9 @@ attribute name value string;
 attribute fullName value string;
 attribute imagePath value string;
 attribute cvPath value string;
+attribute portfolioSummary value string;
+attribute portfolioSlug value string;
+attribute isPortfolioWorldPublic value boolean;
 attribute id value string;
 attribute oauthSub value string;
 attribute description value string;
@@ -195,10 +242,29 @@ attribute requestedAt value datetime-tz;
 attribute acceptedAt value datetime-tz;
 attribute startedAt value datetime-tz;
 attribute completedAt value datetime-tz;
-attribute timelineSnapshot value string;
-attribute projectSnapshot value string;
-attribute taskSnapshot value string;
-attribute skillsSnapshot value string;
+attribute updatedAt value datetime-tz;
+attribute publicNoticeAcceptedAt value datetime-tz;
+attribute sourceRegistrationId value string;
+attribute sourceTaskId value string;
+attribute sourceProjectId value string;
+attribute sourceBusinessId value string;
+attribute taskName value string;
+attribute taskDescription value string;
+attribute reviewText value string;
+attribute rating value integer @range(1..5);
+attribute projectName value string;
+attribute projectDescription value string;
+attribute businessName value string;
+attribute businessLocation value string;
+attribute skillName value string;
+attribute timelineStartDate value datetime-tz;
+attribute timelineEndDate value datetime-tz;
+attribute isRetired value boolean;
+attribute retiredAt value datetime-tz;
+attribute isHidden value boolean;
+attribute hiddenAt value datetime-tz;
+attribute hiddenByRole value string @values("student", "teacher");
+attribute hiddenByUserId value string;
 attribute startDate value datetime-tz;
 attribute endDate value datetime-tz;
 attribute isPublic value boolean;
@@ -208,5 +274,10 @@ attribute icon value string;
 attribute themeDescription value string;
 attribute color value string;
 attribute displayOrder value integer;
+attribute isAuthenticatedPublicRetraction value boolean;
+attribute isWorldVisible value boolean;
+attribute sourceTaskArchived value boolean;
+attribute sourceProjectArchived value boolean;
+attribute sourceBusinessArchived value boolean;
 attribute usedAt value datetime-tz;
 attribute expiresAt value datetime-tz;

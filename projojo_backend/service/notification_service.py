@@ -78,7 +78,6 @@ class NotificationService:
         project_name: str,
         affected_students: list[dict],
         teacher_email: str,
-        snapshots_created: int,
         reason: Optional[str] = None
     ) -> dict:
         """
@@ -88,7 +87,6 @@ class NotificationService:
             project_name: Name of the deleted project
             affected_students: List of dicts with student_name, student_email, task_name
             teacher_email: Email of the teacher who deleted the project
-            snapshots_created: Number of portfolio snapshots created
             reason: Optional reason for deletion
         
         Returns:
@@ -104,7 +102,7 @@ class NotificationService:
                 student_name=student.get("student_name", ""),
                 project_name=project_name,
                 task_name=student.get("task_name", ""),
-                has_portfolio_snapshot=student.get("is_completed", False),
+                has_completed_portfolio_evidence=student.get("is_completed", False),
                 reason=reason
             )
             if success:
@@ -116,8 +114,7 @@ class NotificationService:
             "notified_count": len(notified),
             "failed_count": len(failed),
             "notified_emails": notified,
-            "failed_emails": failed,
-            "snapshots_created": snapshots_created
+            "failed_emails": failed
         }
     
     def _send_student_archive_notification(
@@ -164,7 +161,7 @@ Projojo
         student_name: str,
         project_name: str,
         task_name: str,
-        has_portfolio_snapshot: bool,
+        has_completed_portfolio_evidence: bool,
         reason: Optional[str] = None
     ) -> bool:
         """Send deletion notification to a student."""
@@ -174,15 +171,15 @@ Projojo
             print(f"  Student: {student_name}")
             print(f"  Project: {project_name}")
             print(f"  Task: {task_name}")
-            print(f"  Has portfolio snapshot: {has_portfolio_snapshot}")
+            print(f"  Has completed portfolio evidence: {has_completed_portfolio_evidence}")
             if reason:
                 print(f"  Reason: {reason}")
             return True
         
         # TODO: Implement actual email sending
         portfolio_message = (
-            "Je voltooide werk is opgeslagen in je portfolio."
-            if has_portfolio_snapshot else
+            "Je voltooide werk blijft beschikbaar als portfolio-bewijs."
+            if has_completed_portfolio_evidence else
             "Dit project is verwijderd voordat je de taak had voltooid."
         )
         

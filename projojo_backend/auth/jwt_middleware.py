@@ -19,6 +19,7 @@ EXCLUDED_ENDPOINTS = [
     # Public discovery endpoints (no authentication required)
     "/projects/public",  # List all public projects
     "/projects/public/*",  # Get specific public project
+    "/portfolio/{slug}",  # Public portfolio slug guard (single segment only)
     "/themes",  # List all themes (public)
     "/themes/*",  # Get specific theme (public for GET)
 
@@ -59,12 +60,9 @@ class JWTMiddleware(BaseHTTPMiddleware):
         try:
             payload = get_token_payload(request)
 
-            if (payload.get("role") == "supervisor"):
-                if ("businessId" not in payload):
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Je sessie is ongeldig. Log opnieuw in."
-                    )
+            if payload.get("role") == "supervisor":
+                if "businessId" not in payload:
+                    raise HTTPException(status_code=401, detail="Je sessie is ongeldig. Log opnieuw in.")
 
             request.state.user = payload
             request.state.user_id = payload.get("sub")
@@ -78,9 +76,12 @@ class JWTMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             if not only_unauthenticated_allowed:
                 print(f"JWT validation error: {e}")
-                if (hasattr(e, 'status_code')):
+                if hasattr(e, "status_code"):
                     return JSONResponse(status_code=e.status_code, content={"detail": str(e)})
-                return JSONResponse(status_code=401, content={"detail": "Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw."})
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Er is iets misgegaan bij de authenticatie. Probeer het later opnieuw."},
+                )
 
         # Proceed to the next middleware/route handler
         return await call_next(request)
@@ -94,6 +95,14 @@ class JWTMiddleware(BaseHTTPMiddleware):
             # Exact match
             if path == excluded:
                 return True
+            # Single-segment placeholder match (e.g., /portfolio/{slug} matches /portfolio/my-slug but NOT /portfolio/my-slug/reviews)
+            if "{" in excluded:
+                prefix = excluded[: excluded.index("{")]
+                if path.startswith(prefix):
+                    remainder = path[len(prefix) :]
+                    if remainder and "/" not in remainder:
+                        return True
+                continue
             # Prefix match (e.g., /auth/* matches /auth/login, /auth/oauth/callback)
             if excluded.endswith("*"):
                 prefix = excluded[:-1]
