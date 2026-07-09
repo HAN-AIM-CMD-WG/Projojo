@@ -25,6 +25,8 @@ const PORTFOLIO_SEED_ALIASES = Object.freeze({
     teacher: Object.freeze({ alias: 'portfolio-teacher', id: E2E_TEACHER_ID, fullName: 'Tessa Testdocent' }),
     relatedSupervisor: Object.freeze({ alias: 'portfolio-related-supervisor', id: '20000000-0000-4000-8000-000000000003', fullName: 'Sanne Testbegeleider' }),
     unrelatedSupervisor: Object.freeze({ alias: 'portfolio-unrelated-supervisor', id: '20000000-0000-4000-8000-000000000004', fullName: 'Umar Onverwant' }),
+    openApplicationSupervisor: Object.freeze({ alias: 'portfolio-open-application-supervisor', id: '20000000-0000-4000-8000-000000000006', fullName: 'Otis Openaanvraag' }),
+    rejectedApplicationSupervisor: Object.freeze({ alias: 'portfolio-rejected-application-supervisor', id: '20000000-0000-4000-8000-000000000007', fullName: 'Rian Afgewezen' }),
   }),
   businesses: Object.freeze({
     related: Object.freeze({ alias: 'portfolio-related-business', id: PROOF_BUSINESS_ID, name: 'E2E Infrastructure Business' }),

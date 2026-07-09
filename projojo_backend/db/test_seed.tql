@@ -508,6 +508,99 @@ insert
         has acceptedAt 2026-01-21T11:13:00.000+0000,
         has startedAt 2026-01-22T09:13:00.000+0000;
 
+    # PF-task-007a supervisor relationship-gate fixtures.
+    # Otis manages a business where the seeded student has ONLY a currently open (pending) application.
+    $pf_007a_open_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000006",
+        has email "portfolio.open.supervisor@projojo.local",
+        has fullName "Otis Openaanvraag",
+        has imagePath "default.svg";
+
+    $pf_007a_open_supervisor_auth isa oauthAuthentication (user: $pf_007a_open_supervisor, provider: $provider_github),
+        has oauthSub "pf-007a-open-supervisor-github-sub";
+
+    $pf_007a_open_business isa business,
+        has id "30000000-0000-4000-8000-000000000004",
+        has name "Portfolio Open Application Business",
+        has description "Organisatie waar de seed student alleen een openstaande aanvraag heeft.",
+        has imagePath "default.svg",
+        has location "Arnhem";
+
+    $pf_007a_open_project isa project,
+        has id "40000000-0000-4000-8000-000000000004",
+        has name "Portfolio Open Application Project",
+        has description "Project voor de open-aanvraag relatiepoort van PF-task-007a.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-25T09:00:00.000+0000,
+        has isPublic false;
+
+    $pf_007a_open_task isa task,
+        has id "50000000-0000-4000-8000-000000000030",
+        has name "Portfolio Open Application Task",
+        has description "Taak met een openstaande aanvraag van de seed student.",
+        has totalNeeded 1,
+        has createdAt 2026-01-25T09:15:00.000+0000;
+
+    $pf_007a_open_manages isa manages (supervisor: $pf_007a_open_supervisor, business: $pf_007a_open_business),
+        has location "Arnhem";
+
+    $pf_007a_open_has_projects isa hasProjects (business: $pf_007a_open_business, project: $pf_007a_open_project);
+
+    $pf_007a_open_contains_task isa containsTask (project: $pf_007a_open_project, task: $pf_007a_open_task);
+
+    $pf_007a_open_registration isa registersForTask (student: $student, task: $pf_007a_open_task),
+        has id "pf-007a-open-application",
+        has description "Openstaande aanvraag zonder acceptatiebeslissing voor de relatiepoort.",
+        has createdAt 2026-01-25T10:00:00.000+0000,
+        has requestedAt 2026-01-25T10:00:00.000+0000;
+
+    # Rian manages a business where the seeded student has ONLY a rejected application (never open, never accepted).
+    $pf_007a_rejected_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000007",
+        has email "portfolio.rejected.supervisor@projojo.local",
+        has fullName "Rian Afgewezen",
+        has imagePath "default.svg";
+
+    $pf_007a_rejected_supervisor_auth isa oauthAuthentication (user: $pf_007a_rejected_supervisor, provider: $provider_github),
+        has oauthSub "pf-007a-rejected-supervisor-github-sub";
+
+    $pf_007a_rejected_business isa business,
+        has id "30000000-0000-4000-8000-000000000005",
+        has name "Portfolio Rejected Application Business",
+        has description "Organisatie waar de seed student alleen een afgewezen aanvraag heeft.",
+        has imagePath "default.svg",
+        has location "Nijmegen";
+
+    $pf_007a_rejected_project isa project,
+        has id "40000000-0000-4000-8000-000000000005",
+        has name "Portfolio Rejected Application Project",
+        has description "Project voor de afgewezen-aanvraag grens van PF-task-007a.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-25T09:00:00.000+0000,
+        has isPublic false;
+
+    $pf_007a_rejected_task isa task,
+        has id "50000000-0000-4000-8000-000000000031",
+        has name "Portfolio Rejected Application Task",
+        has description "Taak met een afgewezen aanvraag van de seed student.",
+        has totalNeeded 1,
+        has createdAt 2026-01-25T09:15:00.000+0000;
+
+    $pf_007a_rejected_manages isa manages (supervisor: $pf_007a_rejected_supervisor, business: $pf_007a_rejected_business),
+        has location "Nijmegen";
+
+    $pf_007a_rejected_has_projects isa hasProjects (business: $pf_007a_rejected_business, project: $pf_007a_rejected_project);
+
+    $pf_007a_rejected_contains_task isa containsTask (project: $pf_007a_rejected_project, task: $pf_007a_rejected_task);
+
+    $pf_007a_rejected_registration isa registersForTask (student: $student, task: $pf_007a_rejected_task),
+        has id "pf-007a-rejected-application",
+        has description "Afgewezen aanvraag voor de relatiepoort grens.",
+        has isAccepted false,
+        has response "Afgewezen voor PF-task-007a relatiepoort dekking.",
+        has createdAt 2026-01-25T10:00:00.000+0000,
+        has requestedAt 2026-01-25T10:00:00.000+0000;
+
     $portfolio_item_no_ratings isa portfolioItem,
         has id "pf-seed-item-no-ratings",
         has createdAt 2026-02-20T17:05:00.000+0000,

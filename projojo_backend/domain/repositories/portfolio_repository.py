@@ -160,6 +160,9 @@ class PortfolioRepository:
         }
 
     def has_supervisor_relationship(self, student_id: str, business_id: str) -> bool:
+        # Portfolio-level gate: a supervisor's business relates to the student when the student
+        # has a currently open application (no acceptance decision yet) or has ever been accepted
+        # for a task in that business. A rejected-only application (isAccepted false) does not qualify.
         query = """
             match
                 $student isa student, has id ~student_id;
@@ -168,7 +171,8 @@ class PortfolioRepository:
                 $task isa task;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $containsTask isa containsTask(project: $project, task: $task);
-                $registration isa registersForTask(student: $student, task: $task), has isAccepted true;
+                $registration isa registersForTask(student: $student, task: $task);
+                { $registration has isAccepted true; } or { not { $registration has isAccepted $decision; }; };
             fetch { 'student_id': $student.id };
         """
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
