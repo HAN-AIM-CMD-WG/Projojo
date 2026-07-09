@@ -899,6 +899,18 @@ class TaskRepository(BaseRepository[Task]):
             raise ValueError("Registratie niet gevonden")
         registration_id = self._one(registration_rows[0].get("registration_id"))
 
+        active_item_rows = Db.read_transact(
+            """
+            match
+                $item isa portfolioItem, has sourceRegistrationId ~source_registration_id, has isRetired false;
+            fetch { 'id': $item.id };
+        """,
+            {"source_registration_id": registration_id},
+            sort_fields=False,
+        )
+        if not active_item_rows:
+            raise ValueError("Geen actief portfolio-item gevonden om terug te zetten voor deze registratie")
+
         delete_completion_query = """
             match
                 $task isa task, has id ~task_id;
