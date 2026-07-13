@@ -126,11 +126,11 @@ export default function ThemeManagement() {
                                     </td>
                                     <td className="px-4 md:px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            <button type="button" className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                                            <button type="button" aria-label={`Bewerken: ${theme.name}`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
                                                 <span className="material-symbols-outlined text-base" aria-hidden="true">edit</span>
                                                 Bewerken
                                             </button>
-                                            <button type="button" className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 !text-red-600 hover:!bg-red-50">
+                                            <button type="button" aria-label={`Verwijderen: ${theme.name}`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 !text-red-600 hover:!bg-red-50">
                                                 <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
                                                 Verwijderen
                                             </button>

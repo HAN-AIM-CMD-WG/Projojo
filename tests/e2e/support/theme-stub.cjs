@@ -18,9 +18,9 @@ const THEMES_ROUTE = /\/themes\/(\?.*)?$/;
  * Intercept GET /themes/ for a page and fulfil it with a controlled response.
  *
  * @param {import('playwright').Page} page
- * @param {{ status?: number, body?: unknown, delayMs?: number, allowOrigin?: string }} [options]
+ * @param {{ status?: number, body?: unknown, delayMs?: number }} [options]
  */
-async function stubThemesEndpoint(page, { status = 200, body = [], delayMs = 0, allowOrigin = '*' } = {}) {
+async function stubThemesEndpoint(page, { status = 200, body = [], delayMs = 0 } = {}) {
   // Drop any previously installed themes stub so scenarios can re-stub cleanly.
   await page.unroute(THEMES_ROUTE).catch(() => {});
   await page.route(THEMES_ROUTE, async (route) => {
@@ -33,7 +33,7 @@ async function stubThemesEndpoint(page, { status = 200, body = [], delayMs = 0, 
       // The frontend (:10121) fetches the backend (:10122) cross-origin, so the
       // fulfilled response must expose CORS or the browser fetch would reject
       // and the happy-path scenarios would incorrectly fall into the error state.
-      headers: { 'Access-Control-Allow-Origin': allowOrigin },
+      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify(body),
     });
   });

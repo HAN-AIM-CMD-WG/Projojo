@@ -50,8 +50,9 @@ class ThemeRepository(BaseRepository[Theme]):
         """
         results = Db.read_transact(query)
         themes = [self._map_to_model(result) for result in results]
-        # Sort by display_order, then name
-        return sorted(themes, key=lambda t: (t.display_order or 999, t.name))
+        # Sort by display_order, then name. Treat only a missing display_order as
+        # last (a real 0 sorts first), matching the frontend's `?? 999` semantics.
+        return sorted(themes, key=lambda t: (999 if t.display_order is None else t.display_order, t.name))
 
     def get_by_name_case_insensitive(self, name: str) -> Theme | None:
         # Compare in Python instead of a TypeQL `like` regex: names may contain

@@ -36,10 +36,17 @@ const SAMPLE_THEMES = [
   { id: 'ts010-klimaat', name: 'Klimaat & Milieu', sdg_code: 'SDG13', icon: 'public', color: '#2196F3', display_order: 2, description: LONG_DESCRIPTION },
 ];
 
-// Same comparator the component must apply: display_order asc, then name.
-const EXPECTED_SORTED_NAMES = [...SAMPLE_THEMES]
-  .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999) || a.name.localeCompare(b.name))
-  .map((theme) => theme.name);
+// Expected teacher-visible order: display_order ascending, then name. Alpha
+// Thema precedes Bravo Thema at the shared display_order 3. Hardcoded on purpose
+// so the assertion does not mirror the component's own comparator.
+const EXPECTED_SORTED_NAMES = [
+  'Duurzaamheid',
+  'Klimaat & Milieu',
+  'Alpha Thema',
+  'Bravo Thema',
+  'Water',
+  'Onderwijs',
+];
 
 function page(world) {
   const current = world?.playwright?.page;
@@ -183,8 +190,18 @@ Then('every theme row should have a {string} and a {string} action', async funct
 
   for (const row of rows) {
     const name = (await row.getByTestId('theme-name').innerText()).trim();
-    assert.equal(await row.getByRole('button', { name: editLabel }).count(), 1, `Expected a '${editLabel}' action on row '${name}'`);
-    assert.equal(await row.getByRole('button', { name: deleteLabel }).count(), 1, `Expected a '${deleteLabel}' action on row '${name}'`);
+    // Require the per-row accessible name so a screen reader user knows which
+    // theme each action belongs to (exact match, not a substring).
+    assert.equal(
+      await row.getByRole('button', { name: `${editLabel}: ${name}`, exact: true }).count(),
+      1,
+      `Expected a '${editLabel}' action labelled for row '${name}'`,
+    );
+    assert.equal(
+      await row.getByRole('button', { name: `${deleteLabel}: ${name}`, exact: true }).count(),
+      1,
+      `Expected a '${deleteLabel}' action labelled for row '${name}'`,
+    );
   }
 });
 
