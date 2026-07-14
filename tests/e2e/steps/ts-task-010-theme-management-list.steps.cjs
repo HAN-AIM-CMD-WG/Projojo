@@ -1,17 +1,14 @@
 const assert = require('node:assert/strict');
 
-const { Given, Then, When } = require('@qavajs/core');
+const { Given, Then } = require('@qavajs/core');
 
 const {
-  BACKEND_URL,
-  FRONTEND_URL,
   E2E_TEACHER_ID,
   E2E_STUDENT_ID,
   PROOF_SUPERVISOR_USER_ID,
 } = require('../support/test-data.cjs');
 const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
-
-const TEACHER_PAGE_URL = `${FRONTEND_URL}/teacher`;
+const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
 
 const THEME_ERROR_MESSAGE = "Er is iets misgegaan bij het ophalen van de thema's.";
 
@@ -48,37 +45,12 @@ const EXPECTED_SORTED_NAMES = [
   'Onderwijs',
 ];
 
-function page(world) {
-  const current = world?.playwright?.page;
-  assert.ok(current, 'Expected the qavajs world to expose playwright.page');
-  return current;
-}
-
 function hexToRgb(hex) {
   const value = hex.replace('#', '');
   const r = parseInt(value.slice(0, 2), 16);
   const g = parseInt(value.slice(2, 4), 16);
   const b = parseInt(value.slice(4, 6), 16);
   return `rgb(${r}, ${g}, ${b})`;
-}
-
-async function loginToken(userId) {
-  const response = await fetch(`${BACKEND_URL}/auth/test/login/${userId}`, {
-    method: 'POST',
-    headers: { Accept: 'application/json' },
-  });
-  assert.equal(response.status, 200, `Expected test login for ${userId} to return 200, received ${response.status}`);
-  const payload = await response.json();
-  assert.ok(payload?.access_token, `Expected test login for ${userId} to return an access_token`);
-  return payload.access_token;
-}
-
-async function authenticateInBrowser(world, role) {
-  const userId = ROLE_USER_IDS[role];
-  assert.ok(userId, `Unknown TS-task-010 role '${role}'`);
-  const token = await loginToken(userId);
-  await page(world).goto(FRONTEND_URL);
-  await page(world).evaluate((authToken) => localStorage.setItem('token', authToken), token);
 }
 
 async function readThemeRowsByName(world) {
@@ -92,7 +64,9 @@ async function readThemeRowsByName(world) {
 }
 
 Given('I am authenticated in the browser as the TS-task-010 {word}', async function (role) {
-  await authenticateInBrowser(this, role);
+  const userId = ROLE_USER_IDS[role];
+  assert.ok(userId, `Unknown TS-task-010 role '${role}'`);
+  await authenticateInBrowser(this, userId);
 });
 
 Given('the themes endpoint returns the TS-task-010 sample catalog', async function () {
@@ -109,10 +83,6 @@ Given('the themes endpoint returns no themes', async function () {
 
 Given('the themes endpoint fails', async function () {
   await stubThemesEndpoint(page(this), { status: 500, body: { detail: 'boom' } });
-});
-
-When('I open the TeacherPage', async function () {
-  await page(this).goto(TEACHER_PAGE_URL);
 });
 
 Then('the themes management section should be visible', async function () {

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { getThemes } from "../services";
 import Alert from "./Alert";
 import Loading from "./Loading";
+import ThemeCreateModal from "./ThemeCreateModal";
+import { notification } from "./notifications/NotifySystem";
 
 const DESCRIPTION_MAX_LENGTH = 100;
 
@@ -12,17 +14,24 @@ function truncateDescription(text) {
         : text;
 }
 
+function sortThemes(list) {
+    return [...(list || [])].sort(
+        (a, b) => (a.display_order ?? 999) - (b.display_order ?? 999) || a.name.localeCompare(b.name)
+    );
+}
+
 /**
  * Teacher-facing overview of the theme catalog (TS-task-010, read/display only).
  *
- * The "Nieuw thema", "Bewerken" and "Verwijderen" actions are intentionally
- * inert here: creating, editing and deleting themes are handled by TS-task-011,
- * TS-task-012 and TS-task-013 respectively.
+ * Creating a theme is handled by the "Nieuw thema" button (TS-task-011). The
+ * per-row "Bewerken" and "Verwijderen" actions are still inert here: editing
+ * and deleting are handled by TS-task-012 and TS-task-013 respectively.
  */
 export default function ThemeManagement() {
     const [themes, setThemes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
         let ignore = false;
@@ -30,10 +39,7 @@ export default function ThemeManagement() {
         getThemes()
             .then(data => {
                 if (ignore) return;
-                const sorted = [...(data || [])].sort(
-                    (a, b) => (a.display_order ?? 999) - (b.display_order ?? 999) || a.name.localeCompare(b.name)
-                );
-                setThemes(sorted);
+                setThemes(sortThemes(data));
             })
             .catch(() => {
                 if (ignore) return;
@@ -60,7 +66,7 @@ export default function ThemeManagement() {
                         Er {themes.length === 1 ? "is" : "zijn"} <strong className="text-primary">{themes.length}</strong> thema{themes.length !== 1 ? "'s" : ""} in de catalogus.
                     </p>
                 </div>
-                <button type="button" className="neu-btn-primary">
+                <button type="button" className="neu-btn-primary" onClick={() => setIsCreateOpen(true)}>
                     <span className="material-symbols-outlined text-sm mr-2" aria-hidden="true">add</span>
                     Nieuw thema
                 </button>
@@ -142,6 +148,16 @@ export default function ThemeManagement() {
                     </table>
                 </div>
             )}
+
+            <ThemeCreateModal
+                isOpen={isCreateOpen}
+                onClose={() => setIsCreateOpen(false)}
+                existingThemes={themes}
+                onCreated={theme => {
+                    setThemes(prev => sortThemes([...prev, theme]));
+                    notification.success("Thema aangemaakt");
+                }}
+            />
         </section>
     );
 }

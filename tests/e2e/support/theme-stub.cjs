@@ -39,4 +39,66 @@ async function stubThemesEndpoint(page, { status = 200, body = [], delayMs = 0 }
   });
 }
 
-module.exports = { stubThemesEndpoint, THEMES_ROUTE };
+// createTheme() posts to `${API_BASE_URL}themes` (no trailing slash), which is
+// exactly the collection resource without a slash and never `/themes/`,
+// `/themes/:id` or `/themes/project/:id`. Matching on the missing trailing
+// slash keeps this stub disjoint from stubThemesEndpoint above.
+const CREATE_THEME_ROUTE = /\/themes$/;
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization,content-type',
+};
+
+/**
+ * Intercept POST /themes and record every create request the form sends.
+ *
+ * The cross-origin JSON+Authorization POST triggers a CORS preflight, so the
+ * OPTIONS request is answered here too; otherwise the real POST would be
+ * blocked and the happy path could never reach the stub.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ status?: number, detail?: string, body?: unknown }} [options]
+ * @returns {Array<object>} a live array that collects each parsed request body
+ */
+async function stubCreateThemeEndpoint(page, { status = 201, detail, body } = {}) {
+  const requests = [];
+  await page.unroute(CREATE_THEME_ROUTE).catch(() => {});
+  await page.route(CREATE_THEME_ROUTE, async (route) => {
+    const request = route.request();
+
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: CORS_HEADERS });
+      return;
+    }
+
+    if (request.method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+
+    let payload = null;
+    try {
+      payload = JSON.parse(request.postData() || 'null');
+    } catch {
+      payload = null;
+    }
+    requests.push(payload);
+
+    // On success echo the payload back as the created resource (mirrors the
+    // backend response_model=Theme) so the UI can render the new row.
+    const responseBody =
+      body ?? (status < 400 ? { id: `ts011-created-${requests.length}`, ...payload } : { detail: detail ?? 'error' });
+
+    await route.fulfill({
+      status,
+      contentType: 'application/json',
+      headers: CORS_HEADERS,
+      body: JSON.stringify(responseBody),
+    });
+  });
+  return requests;
+}
+
+module.exports = { stubThemesEndpoint, THEMES_ROUTE, stubCreateThemeEndpoint, CREATE_THEME_ROUTE };
