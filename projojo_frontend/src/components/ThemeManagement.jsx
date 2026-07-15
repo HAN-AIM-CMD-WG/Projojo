@@ -152,7 +152,6 @@ export default function ThemeManagement() {
             <ThemeCreateModal
                 isOpen={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
-                existingThemes={themes}
                 onCreated={theme => {
                     setThemes(prev => sortThemes([...prev, theme]));
                     notification.success("Thema aangemaakt");

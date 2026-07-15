@@ -51,13 +51,16 @@ const EMPTY_FORM = { name: "", description: "", sdgCodes: [], icon: "", color: D
 /**
  * Teacher-facing "Nieuw thema" create form (TS-task-011).
  *
+ * display_order is deliberately not sent: the server assigns max(existing) + 1
+ * from the authoritative catalog (TS-task-011 AC-3). Computing it here would
+ * mean trusting a theme list that may still be loading or have failed to load.
+ *
  * @param {object} props
  * @param {boolean} props.isOpen
  * @param {() => void} props.onClose
- * @param {{display_order?: number}[]} props.existingThemes  used to auto-assign display_order
  * @param {(theme: object) => void} props.onCreated
  */
-export default function ThemeCreateModal({ isOpen, onClose, existingThemes = [], onCreated }) {
+export default function ThemeCreateModal({ isOpen, onClose, onCreated }) {
     const [form, setForm] = useState(EMPTY_FORM);
     const [error, setError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
@@ -80,8 +83,6 @@ export default function ThemeCreateModal({ isOpen, onClose, existingThemes = [],
         if (iconDetailsRef.current) iconDetailsRef.current.open = false;
     };
 
-    const nextDisplayOrder = Math.max(0, ...existingThemes.map(theme => theme.display_order ?? 0)) + 1;
-
     const handleSave = async () => {
         if (isSaving) return;
         setIsSaving(true);
@@ -90,7 +91,7 @@ export default function ThemeCreateModal({ isOpen, onClose, existingThemes = [],
         // Keep SDG codes in canonical SDG1..SDG17 order regardless of click order.
         const sdgCode = SDG_OPTIONS.filter(option => form.sdgCodes.includes(option.code)).map(option => option.code).join(",");
 
-        const payload = { name: form.name.trim(), color: form.color, display_order: nextDisplayOrder };
+        const payload = { name: form.name.trim(), color: form.color };
         if (sdgCode) payload.sdg_code = sdgCode;
         if (form.icon) payload.icon = form.icon;
         if (form.description.trim()) payload.description = form.description.trim();

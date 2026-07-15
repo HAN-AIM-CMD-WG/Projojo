@@ -81,12 +81,29 @@ class ThemeRepository(BaseRepository[Theme]):
             display_order=display_order_list[0] if display_order_list else None
         )
 
+    def _next_display_order(self) -> int:
+        """
+        The display_order a new theme gets when the caller does not supply one:
+        max(existing display_order) + 1.
+
+        `default=0` keeps an empty catalog valid (max() of an empty sequence
+        raises), so the first theme in an empty catalog becomes 1.
+        """
+        orders = [theme.display_order for theme in self.get_all() if theme.display_order is not None]
+        return max(orders, default=0) + 1
+
     def create(self, theme: ThemeCreate) -> Theme:
         if self.get_by_name_case_insensitive(theme.name):
             raise ValueError("Er bestaat al een thema met deze naam")
 
+        # The teacher never picks a sort order (TS-task-011 AC-3). When the caller
+        # omits display_order the server assigns it here, from the authoritative
+        # catalog, instead of trusting a client that may hold a stale or empty
+        # list. An explicit display_order (including 0) is always honoured.
+        display_order = theme.display_order if theme.display_order is not None else self._next_display_order()
+
         id = generate_uuid()
-        
+
         query = """
             insert
                 $theme isa theme,

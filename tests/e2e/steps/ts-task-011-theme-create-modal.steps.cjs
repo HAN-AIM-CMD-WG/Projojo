@@ -60,6 +60,12 @@ Given('the theme catalog contains only the TS-011 baseline themes', async functi
   await resetThemeCatalog();
 });
 
+Given('the theme catalog is empty', async function () {
+  // Exercises the empty-catalog edge of the server's display_order assignment
+  // (max of nothing + 1 = 1) that the baseline scenarios can never reach.
+  await resetThemeCatalog([]);
+});
+
 When('I open the theme create modal', async function () {
   await page(this).getByRole('button', { name: 'Nieuw thema' }).click();
   await createModal(this).waitFor({ state: 'visible' });
@@ -191,6 +197,15 @@ Then('the created theme display_order should equal the highest baseline display 
     created.display_order,
     MAX_BASELINE_DISPLAY_ORDER + 1,
     `Expected the persisted display_order to be ${MAX_BASELINE_DISPLAY_ORDER + 1}, got ${created.display_order}`,
+  );
+});
+
+Then('the created theme display_order should equal {int}', async function (expected) {
+  const created = await waitForThemeByName(this.themeName);
+  assert.equal(
+    created.display_order,
+    expected,
+    `Expected the persisted display_order to be ${expected}, got ${created.display_order}`,
   );
 });
 

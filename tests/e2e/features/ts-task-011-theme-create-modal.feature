@@ -45,6 +45,16 @@ Feature: TS-task-011 theme create modal for teachers
     Then the created theme display_order should equal the highest baseline display order plus one
 
   @ui @theme @TS-task-011
+  Scenario: AC-3 the first theme in an empty catalog gets display order one
+    Given I am authenticated in the browser as the TS-task-011 teacher
+    And the theme catalog is empty
+    When I open the TeacherPage
+    And I open the theme create modal
+    And I fill in the theme name "Eerste Thema"
+    And I save the new theme
+    Then the created theme display_order should equal 1
+
+  @ui @theme @TS-task-011
   Scenario: AC-4 a valid theme is created, listed and confirmed
     Given I am authenticated in the browser as the TS-task-011 teacher
     And the theme catalog contains only the TS-011 baseline themes
