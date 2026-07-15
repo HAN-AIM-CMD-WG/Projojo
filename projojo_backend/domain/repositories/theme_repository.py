@@ -122,7 +122,7 @@ class ThemeRepository(BaseRepository[Theme]):
             "icon": theme.icon,
             "description": theme.description,
             "color": theme.color,
-            "display_order": theme.display_order
+            "display_order": display_order
         })
 
         return Theme(
@@ -132,7 +132,7 @@ class ThemeRepository(BaseRepository[Theme]):
             icon=theme.icon,
             description=theme.description,
             color=theme.color,
-            display_order=theme.display_order
+            display_order=display_order
         )
 
     def update(self, theme_id: str, theme: ThemeUpdate) -> Theme:
