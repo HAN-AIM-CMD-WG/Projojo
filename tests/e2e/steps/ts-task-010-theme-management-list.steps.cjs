@@ -9,6 +9,12 @@ const {
 } = require('../support/test-data.cjs');
 const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
 const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
+const {
+  THEME_SEED_BASELINE,
+  EXPECTED_SORTED_NAMES,
+  LONG_DESCRIPTION,
+  resetThemeCatalog,
+} = require('../support/theme-catalog.cjs');
 
 const THEME_ERROR_MESSAGE = "Er is iets misgegaan bij het ophalen van de thema's.";
 
@@ -18,32 +24,16 @@ const ROLE_USER_IDS = {
   supervisor: PROOF_SUPERVISOR_USER_ID,
 };
 
-// Deliberately supplied to the stub in an unsorted order, with a display_order
-// tie (3) whose names are NOT alphabetical, so AC-2 truly proves the list is
-// rendered sorted by display_order then name rather than in received order.
-const LONG_DESCRIPTION =
-  'Dit is een opzettelijk zeer lange themabeschrijving die ruim voorbij de afkapgrens loopt zodat de weergave de tekst zichtbaar moet inkorten in de lijst.';
+// The deterministic baseline catalog, its expected sorted order, and the long
+// description live in the shared theme-catalog helper, so the real-backend reset
+// (AC-1..AC-4) and the stub-based states (AC-5..AC-7) assert against one source
+// of truth. Aliased locally to keep the assertion steps below unchanged.
+const SAMPLE_THEMES = THEME_SEED_BASELINE;
 
-const SAMPLE_THEMES = [
-  { id: 'ts010-onderwijs', name: 'Onderwijs', sdg_code: 'SDG4', icon: 'school', color: '#E91E63', display_order: 6, description: 'Educatie en kennisoverdracht.' },
-  { id: 'ts010-bravo', name: 'Bravo Thema', sdg_code: 'SDG9', icon: 'lightbulb', color: '#9C27B0', display_order: 3, description: 'Beschrijving bravo.' },
-  { id: 'ts010-duurzaamheid', name: 'Duurzaamheid', sdg_code: 'SDG12', icon: 'eco', color: '#4CAF50', display_order: 1, description: 'Duurzame praktijken.' },
-  { id: 'ts010-water', name: 'Water', sdg_code: 'SDG14', icon: 'water_drop', color: '#00BCD4', display_order: 5, description: 'Waterbeheer en biodiversiteit.' },
-  { id: 'ts010-alpha', name: 'Alpha Thema', sdg_code: 'SDG2', icon: 'restaurant', color: '#FF9800', display_order: 3, description: 'Beschrijving alpha.' },
-  { id: 'ts010-klimaat', name: 'Klimaat & Milieu', sdg_code: 'SDG13', icon: 'public', color: '#2196F3', display_order: 2, description: LONG_DESCRIPTION },
-];
-
-// Expected teacher-visible order: display_order ascending, then name. Alpha
-// Thema precedes Bravo Thema at the shared display_order 3. Hardcoded on purpose
-// so the assertion does not mirror the component's own comparator.
-const EXPECTED_SORTED_NAMES = [
-  'Duurzaamheid',
-  'Klimaat & Milieu',
-  'Alpha Thema',
-  'Bravo Thema',
-  'Water',
-  'Onderwijs',
-];
+// Loading/error/empty states cannot be produced against a healthy backend, so
+// those scenarios still stub GET /themes/. The stub body needs stable ids for
+// React keys; the real-backend scenarios receive ids from the backend on create.
+const STUB_CATALOG = SAMPLE_THEMES.map((theme, index) => ({ id: `ts010-stub-${index}`, ...theme }));
 
 function hexToRgb(hex) {
   const value = hex.replace('#', '');
@@ -69,12 +59,15 @@ Given('I am authenticated in the browser as the TS-task-010 {word}', async funct
   await authenticateInBrowser(this, userId);
 });
 
-Given('the themes endpoint returns the TS-task-010 sample catalog', async function () {
-  await stubThemesEndpoint(page(this), { status: 200, body: SAMPLE_THEMES });
+Given('the theme catalog contains only the TS-010 baseline themes', async function () {
+  // Real backend: wipe the live catalog and recreate the deterministic baseline
+  // via the teacher-authenticated theme API, so the list assertions run against
+  // the real GET /themes/ response rather than a stubbed one.
+  await resetThemeCatalog();
 });
 
 Given('the themes endpoint returns the TS-task-010 sample catalog after a delay', async function () {
-  await stubThemesEndpoint(page(this), { status: 200, body: SAMPLE_THEMES, delayMs: 2000 });
+  await stubThemesEndpoint(page(this), { status: 200, body: STUB_CATALOG, delayMs: 2000 });
 });
 
 Given('the themes endpoint returns no themes', async function () {
