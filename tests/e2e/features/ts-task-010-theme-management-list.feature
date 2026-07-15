@@ -4,22 +4,24 @@ Feature: TS-task-010 theme management list on the teacher page
   I want to see all themes in a manageable list on my teacher page
   So that I can oversee the theme catalog and reach the management actions
 
-  # Theme data is stubbed at the network boundary. The shared E2E TypeDB seed
-  # holds no themes and the other theme scenarios mutate the catalog without
-  # cleanup, so a real-stack list assertion here would be order-dependent and
-  # could never produce a loading/error state on demand.
+  # The list/render scenarios (AC-1..AC-4) run against the real backend: they
+  # reset the catalog to a deterministic baseline via the teacher theme API
+  # before asserting, so the shared, mutable catalog can no longer make them
+  # order-dependent. The loading, fetch-error and empty states (AC-5..AC-7)
+  # cannot be produced against a healthy backend, so those remain stubbed at the
+  # network boundary.
 
   @ui @theme @TS-task-010
   Scenario: AC-1 the themes management section is visible on the teacher page
     Given I am authenticated in the browser as the TS-task-010 teacher
-    And the themes endpoint returns the TS-task-010 sample catalog
+    And the theme catalog contains only the TS-010 baseline themes
     When I open the TeacherPage
     Then the themes management section should be visible
 
   @ui @theme @TS-task-010
   Scenario: AC-2 all themes are listed sorted by display order then name
     Given I am authenticated in the browser as the TS-task-010 teacher
-    And the themes endpoint returns the TS-task-010 sample catalog
+    And the theme catalog contains only the TS-010 baseline themes
     When I open the TeacherPage
     Then the theme list should show every sample theme sorted by display order then name
     And every theme row should show its color swatch, icon, name, SDG code and description
@@ -28,14 +30,14 @@ Feature: TS-task-010 theme management list on the teacher page
   @ui @theme @TS-task-010
   Scenario: AC-3 every theme row exposes edit and delete actions
     Given I am authenticated in the browser as the TS-task-010 teacher
-    And the themes endpoint returns the TS-task-010 sample catalog
+    And the theme catalog contains only the TS-010 baseline themes
     When I open the TeacherPage
     Then every theme row should have a "Bewerken" and a "Verwijderen" action
 
   @ui @theme @TS-task-010
   Scenario: AC-4 a new theme button is available above the list
     Given I am authenticated in the browser as the TS-task-010 teacher
-    And the themes endpoint returns the TS-task-010 sample catalog
+    And the theme catalog contains only the TS-010 baseline themes
     When I open the TeacherPage
     Then a "Nieuw thema" button should be visible and clickable
 
