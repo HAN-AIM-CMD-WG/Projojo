@@ -163,7 +163,7 @@ class ThemeRepository(BaseRepository[Theme]):
                 $theme isa theme, has id ~theme_id;
                 $hasTheme isa hasTheme(theme: $theme);
             delete
-                $hasTheme isa hasTheme;
+                $hasTheme;
         """
         try:
             Db.write_transact(delete_relations, {"theme_id": theme_id})
@@ -175,7 +175,7 @@ class ThemeRepository(BaseRepository[Theme]):
             match
                 $theme isa theme, has id ~theme_id;
             delete
-                $theme isa theme;
+                $theme;
         """
         Db.write_transact(delete_theme, {"theme_id": theme_id})
 
