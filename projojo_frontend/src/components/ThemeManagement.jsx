@@ -5,12 +5,12 @@ import Loading from "./Loading";
 import ThemeCreateModal from "./ThemeCreateModal";
 import { notification } from "./notifications/NotifySystem";
 
-const DESCRIPTION_MAX_LENGTH = 100;
+const DESCRIPTION_TRUNCATE_LENGTH = 100;
 
 function truncateDescription(text) {
     if (!text) return "";
-    return text.length > DESCRIPTION_MAX_LENGTH
-        ? `${text.slice(0, DESCRIPTION_MAX_LENGTH).trimEnd()}…`
+    return text.length > DESCRIPTION_TRUNCATE_LENGTH
+        ? `${text.slice(0, DESCRIPTION_TRUNCATE_LENGTH).trimEnd()}…`
         : text;
 }
 

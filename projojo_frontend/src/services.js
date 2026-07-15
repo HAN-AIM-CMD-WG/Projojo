@@ -268,7 +268,7 @@ export function getProjectThemes(projectId) {
  * @returns {Promise<object>}
  */
 export function createTheme(theme) {
-    return fetchWithError(`${API_BASE_URL}themes`, {
+    return fetchWithError(`${API_BASE_URL}themes/`, {
         method: 'POST',
         body: JSON.stringify(theme)
     });
