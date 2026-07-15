@@ -73,8 +73,8 @@ Feature: TS-task-011 theme create modal for teachers
     When I open the TeacherPage
     And I open the theme create modal
     And I save the new theme
-    Then the theme create modal should stay open
-    And the inline create error "Naam is verplicht en mag maximaal 100 tekens zijn" should be shown
+    Then the inline create error "Naam is verplicht en mag maximaal 100 tekens zijn" should be shown
+    And the theme create modal should stay open
 
   @ui @theme @TS-task-011
   Scenario: AC-6 a duplicate name error is shown inline
@@ -82,10 +82,10 @@ Feature: TS-task-011 theme create modal for teachers
     And the theme catalog contains only the TS-011 baseline themes
     When I open the TeacherPage
     And I open the theme create modal
-    And I fill in the theme name "Duurzaamheid"
+    And I fill in the theme name of an existing theme
     And I save the new theme
-    Then the theme create modal should stay open
-    And the inline create error "Er bestaat al een thema met deze naam" should be shown
+    Then the inline create error "Er bestaat al een thema met deze naam" should be shown
+    And the theme create modal should stay open
 
   @ui @theme @TS-task-011
   Scenario: AC-7 cancelling discards the input without creating a theme

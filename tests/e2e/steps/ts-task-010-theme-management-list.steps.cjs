@@ -70,10 +70,6 @@ Given('the themes endpoint returns the TS-task-010 sample catalog after a delay'
   await stubThemesEndpoint(page(this), { status: 200, body: STUB_CATALOG, delayMs: 2000 });
 });
 
-Given('the themes endpoint returns no themes', async function () {
-  await stubThemesEndpoint(page(this), { status: 200, body: [] });
-});
-
 Given('the themes endpoint fails', async function () {
   await stubThemesEndpoint(page(this), { status: 500, body: { detail: 'boom' } });
 });

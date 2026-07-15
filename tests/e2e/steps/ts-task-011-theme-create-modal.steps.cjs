@@ -6,6 +6,7 @@ const { E2E_TEACHER_ID } = require('../support/test-data.cjs');
 const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
 const {
   THEME_SEED_BASELINE,
+  BASELINE_DUPLICATE_NAME,
   resetThemeCatalog,
   getThemeByName,
   waitForThemeByName,
@@ -49,6 +50,16 @@ function createModal(world) {
   return page(world).getByTestId('theme-create-modal');
 }
 
+/**
+ * Read back the theme the scenario just created. Guards the implicit coupling to
+ * the fill step: without it, a scenario that reads back without filling a name
+ * polls for ten seconds and then fails with "a theme named 'undefined'".
+ */
+async function readCreatedTheme(world) {
+  assert.ok(world.themeName, 'Expected the scenario to fill in a theme name before reading the created theme back');
+  return waitForThemeByName(world.themeName);
+}
+
 Given('I am authenticated in the browser as the TS-task-011 teacher', async function () {
   await authenticateInBrowser(this, E2E_TEACHER_ID);
 });
@@ -60,11 +71,6 @@ Given('the theme catalog contains only the TS-011 baseline themes', async functi
   await resetThemeCatalog();
 });
 
-Given('the theme catalog is empty', async function () {
-  // Exercises the empty-catalog edge of the server's display_order assignment
-  // (max of nothing + 1 = 1) that the baseline scenarios can never reach.
-  await resetThemeCatalog([]);
-});
 
 When('I open the theme create modal', async function () {
   await page(this).getByRole('button', { name: 'Nieuw thema' }).click();
@@ -75,6 +81,13 @@ When('I fill in the theme name {string}', async function (name) {
   // Remembered so the persisted-theme assertions know which theme to read back.
   this.themeName = name;
   await createModal(this).getByTestId('theme-name-input').fill(name);
+});
+
+When('I fill in the theme name of an existing theme', async function () {
+  // Derived from the baseline so the duplicate-name scenario cannot silently
+  // decouple from the fixture it depends on.
+  this.themeName = BASELINE_DUPLICATE_NAME;
+  await createModal(this).getByTestId('theme-name-input').fill(BASELINE_DUPLICATE_NAME);
 });
 
 When('I save the new theme', async function () {
@@ -192,7 +205,7 @@ Then('the create form should not show a display order field', async function () 
 });
 
 Then('the created theme display_order should equal the highest baseline display order plus one', async function () {
-  const created = await waitForThemeByName(this.themeName);
+  const created = await readCreatedTheme(this);
   assert.equal(
     created.display_order,
     MAX_BASELINE_DISPLAY_ORDER + 1,
@@ -201,7 +214,7 @@ Then('the created theme display_order should equal the highest baseline display 
 });
 
 Then('the created theme display_order should equal {int}', async function (expected) {
-  const created = await waitForThemeByName(this.themeName);
+  const created = await readCreatedTheme(this);
   assert.equal(
     created.display_order,
     expected,
@@ -227,8 +240,9 @@ Then('a theme row named {string} should be listed', async function (name) {
 });
 
 Then('the theme create modal should stay open', async function () {
-  // Give the failed request time to resolve, then confirm the modal is still up.
-  await page(this).waitForTimeout(500);
+  // Ordered after the inline-error assertion, which waits for the failed response
+  // to render. The save has therefore already resolved, so a still-visible modal
+  // is a real assertion rather than a sleep racing the request.
   assert.equal(await createModal(this).isVisible(), true, 'Expected the create modal to stay open after a failed save');
 });
 
@@ -245,28 +259,51 @@ Then('no theme named {string} should exist', async function (name) {
 });
 
 Then('the created theme sdg_code should equal {string}', async function (expected) {
-  const created = await waitForThemeByName(this.themeName);
+  const created = await readCreatedTheme(this);
   assert.equal(created.sdg_code, expected, `Expected the persisted sdg_code to be '${expected}', got '${created.sdg_code}'`);
 });
 
 Then('every icon option should render its Material Symbols glyph next to its name', async function () {
   const modal = createModal(this);
-  const options = await modal.getByTestId('theme-icon-option').all();
-  assert.ok(options.length > 0, 'Expected the icon dropdown to be open with options');
+  await modal.getByTestId('theme-icon-option').first().waitFor({ state: 'visible' });
 
-  for (const option of options) {
-    const glyph = option.locator('.material-symbols-outlined');
-    assert.equal(await glyph.count(), 1, 'Expected each icon option to render exactly one Material Symbols glyph');
+  // Inspected in a single round trip: walking ~90 options through the driver with
+  // three calls each was slow and proved nothing extra.
+  //
+  // This asserts structure, not pixels: each option carries exactly one icon-font
+  // element whose ligature is the icon name, plus that same name as separate
+  // readable text. It deliberately does NOT assert that the font itself painted a
+  // glyph - Material Symbols is loaded from the Google Fonts CDN (index.html), so
+  // any such check would fail whenever the runner is offline or the CDN blips,
+  // trading a real bug for a flake in a suite built to be deterministic.
+  const { total, offenders } = await modal.evaluate((root) => {
+    const options = [...root.querySelectorAll('[data-testid="theme-icon-option"]')];
+    const bad = [];
 
-    const glyphName = (await glyph.innerText()).trim();
-    assert.ok(glyphName.length > 0, 'Expected the glyph to carry the icon ligature name');
+    for (const option of options) {
+      const glyphs = option.querySelectorAll('.material-symbols-outlined');
+      const ligature = glyphs.length === 1 ? (glyphs[0].textContent || '').trim() : '';
+      const label = [...option.children]
+        .filter((child) => !child.classList.contains('material-symbols-outlined'))
+        .map((child) => (child.textContent || '').trim())
+        .join(' ')
+        .trim();
 
-    // The visible option text must also show the icon name as readable text
-    // (the ligature is repeated: once as the glyph, once as the readable label).
-    const fullText = (await option.innerText()).replace(/\s+/g, ' ').trim();
-    const label = fullText.replace(glyphName, '').trim();
-    assert.ok(label.length > 0, `Expected the icon name to be shown as text beside the glyph, got '${fullText}'`);
-  }
+      // The readable label must name the same icon the ligature renders.
+      if (glyphs.length !== 1 || !ligature || !label || label !== ligature) {
+        bad.push({ text: (option.textContent || '').trim(), glyphs: glyphs.length, ligature, label });
+      }
+    }
+
+    return { total: options.length, offenders: bad.slice(0, 5) };
+  });
+
+  assert.ok(total > 0, 'Expected the icon dropdown to be open with options');
+  assert.deepEqual(
+    offenders,
+    [],
+    `Expected every icon option to render one icon-font glyph beside its readable name; first offenders: ${JSON.stringify(offenders)}`,
+  );
 });
 
 Then('the color field should be a native color input', async function () {

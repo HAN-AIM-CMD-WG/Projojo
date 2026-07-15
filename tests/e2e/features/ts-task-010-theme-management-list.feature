@@ -4,12 +4,13 @@ Feature: TS-task-010 theme management list on the teacher page
   I want to see all themes in a manageable list on my teacher page
   So that I can oversee the theme catalog and reach the management actions
 
-  # The list/render scenarios (AC-1..AC-4) run against the real backend: they
-  # reset the catalog to a deterministic baseline via the teacher theme API
-  # before asserting, so the shared, mutable catalog can no longer make them
-  # order-dependent. The loading, fetch-error and empty states (AC-5..AC-7)
-  # cannot be produced against a healthy backend, so those remain stubbed at the
-  # network boundary.
+  # The list/render scenarios (AC-1..AC-4) and the empty state (AC-7) run against
+  # the real backend: they reset the catalog - to a deterministic baseline, or to
+  # nothing at all - via the teacher theme API before asserting, so the shared,
+  # mutable catalog can no longer make them order-dependent.
+  #
+  # Only the loading indicator (AC-5) and the fetch error (AC-6) remain stubbed at
+  # the network boundary: a healthy backend cannot be made slow or broken on demand.
 
   @ui @theme @TS-task-010
   Scenario: AC-1 the themes management section is visible on the teacher page
@@ -59,7 +60,7 @@ Feature: TS-task-010 theme management list on the teacher page
   @ui @theme @TS-task-010
   Scenario: AC-7 an empty state is shown when there are no themes
     Given I am authenticated in the browser as the TS-task-010 teacher
-    And the themes endpoint returns no themes
+    And the theme catalog is empty
     When I open the TeacherPage
     Then the theme empty message "Nog geen thema's aangemaakt" should be visible
     And a "Nieuw thema" button should be visible and clickable

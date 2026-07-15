@@ -9,13 +9,17 @@
 //
 // This is the theme analogue of the portfolio reset contract (PF-task-004):
 // real backend + known fixtures + reset-to-baseline. Network stubs are reserved
-// only for the states the real backend cannot produce on demand (loading,
-// fetch error, empty catalog) and live in theme-stub.cjs.
+// only for the states the real backend cannot produce on demand - a slow
+// response and a failed fetch - and live in theme-stub.cjs.
 //
 // DELETE /themes/{id} first removes the theme's hasTheme links and then the
-// theme, so wiping a catalog whose themes are linked to projects is safe. Both
-// theme suites re-establish their own preconditions per scenario, so resetting
-// the shared catalog between scenarios does not leak state across suites.
+// theme, so wiping a catalog whose themes are linked to projects is safe.
+//
+// The invariant this reset depends on is SERIAL execution (parallel: 1 in
+// qavajs.config.cjs). Every theme suite re-establishes its own preconditions per
+// scenario, so a wipe between scenarios is harmless; with parallel > 1 this would
+// delete themes out from under a concurrent theme-integrity scenario, between its
+// setup and its assertion. It does NOT depend on feature file ordering.
 
 const assert = require('node:assert/strict');
 
@@ -52,6 +56,17 @@ const EXPECTED_SORTED_NAMES = Object.freeze([
   'Water', // 5
   'Onderwijs', // 6
 ]);
+
+// The existing theme the duplicate-name scenario (TS-task-011 AC-6) re-creates.
+// Guarded against the baseline rather than hardcoded in the feature, so renaming
+// a fixture fails here immediately instead of surfacing far away as a confusing
+// "expected an inline error, but the modal closed".
+const BASELINE_DUPLICATE_NAME = 'Duurzaamheid';
+
+assert.ok(
+  THEME_SEED_BASELINE.some((theme) => theme.name === BASELINE_DUPLICATE_NAME),
+  `The theme baseline must contain '${BASELINE_DUPLICATE_NAME}' for the duplicate-name scenario (TS-task-011 AC-6)`,
+);
 
 async function themeApi(pathname, token, options = {}) {
   const headers = {
@@ -146,6 +161,7 @@ module.exports = {
   THEME_SEED_BASELINE,
   EXPECTED_SORTED_NAMES,
   LONG_DESCRIPTION,
+  BASELINE_DUPLICATE_NAME,
   resetThemeCatalog,
   fetchThemes,
   getThemeByName,
