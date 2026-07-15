@@ -3,19 +3,23 @@ const assert = require('node:assert/strict');
 const { Given, Then, When } = require('@qavajs/core');
 
 const { E2E_TEACHER_ID } = require('../support/test-data.cjs');
-const { stubThemesEndpoint, stubCreateThemeEndpoint } = require('../support/theme-stub.cjs');
 const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
+const {
+  THEME_SEED_BASELINE,
+  resetThemeCatalog,
+  getThemeByName,
+  waitForThemeByName,
+} = require('../support/theme-catalog.cjs');
 
-// Sample catalog served for GET /themes/. Display orders are deliberately not
-// contiguous and their max (6) is on a theme whose name is not last
-// alphabetically, so "max display order + 1" (AC-3) is an unambiguous target.
-const SAMPLE_THEMES = [
-  { id: 'ts011-duurzaamheid', name: 'Duurzaamheid', sdg_code: 'SDG12', icon: 'eco', color: '#4CAF50', display_order: 1, description: 'Duurzame praktijken.' },
-  { id: 'ts011-klimaat', name: 'Klimaat & Milieu', sdg_code: 'SDG13', icon: 'public', color: '#2196F3', display_order: 2, description: 'Klimaat en milieu.' },
-  { id: 'ts011-innovatie', name: 'Innovatie', sdg_code: 'SDG9', icon: 'lightbulb', color: '#9C27B0', display_order: 6, description: 'Innovatie en technologie.' },
-];
-
-const MAX_SAMPLE_DISPLAY_ORDER = Math.max(...SAMPLE_THEMES.map((theme) => theme.display_order));
+// This suite runs entirely against the real backend: the create happy path, the
+// auto-assigned display_order and the comma-joined SDG code are asserted on what
+// the backend actually persisted, and the AC-5/AC-6 error states are the real
+// 400s the backend returns for an empty and a duplicate name. Nothing is stubbed,
+// so the real POST /themes contract (including its slash redirect) is exercised.
+//
+// The shared baseline's highest display_order is on a theme whose name is not
+// last alphabetically, so "max display order + 1" (AC-3) is an unambiguous target.
+const MAX_BASELINE_DISPLAY_ORDER = Math.max(...THEME_SEED_BASELINE.map((theme) => theme.display_order));
 
 // Canonical Dutch SDG labels (issue example "SDG1 — Geen armoede" +
 // THEME_SDG_IMPLEMENTATION_PLAN.md §3.1). Hardcoded here on purpose so the
@@ -49,16 +53,11 @@ Given('I am authenticated in the browser as the TS-task-011 teacher', async func
   await authenticateInBrowser(this, E2E_TEACHER_ID);
 });
 
-Given('the themes endpoint returns the TS-task-011 sample catalog', async function () {
-  await stubThemesEndpoint(page(this), { status: 200, body: SAMPLE_THEMES });
-});
-
-Given('the theme create endpoint will succeed', async function () {
-  this.createRequests = await stubCreateThemeEndpoint(page(this), { status: 201 });
-});
-
-Given('the theme create endpoint will fail with status {int} and message {string}', async function (status, message) {
-  this.createRequests = await stubCreateThemeEndpoint(page(this), { status, detail: message });
+Given('the theme catalog contains only the TS-011 baseline themes', async function () {
+  // Real backend: reset to the shared deterministic baseline so the create form
+  // sees a known catalog (fixed max display_order, and an existing
+  // "Duurzaamheid" for the duplicate-name scenario).
+  await resetThemeCatalog();
 });
 
 When('I open the theme create modal', async function () {
@@ -67,6 +66,8 @@ When('I open the theme create modal', async function () {
 });
 
 When('I fill in the theme name {string}', async function (name) {
+  // Remembered so the persisted-theme assertions know which theme to read back.
+  this.themeName = name;
   await createModal(this).getByTestId('theme-name-input').fill(name);
 });
 
@@ -184,13 +185,12 @@ Then('the create form should not show a display order field', async function () 
   assert.ok(!/sorteervolgorde|display.?order|weergavevolgorde/i.test(text), 'Expected no display order field label in the form');
 });
 
-Then('the create request display_order should equal the highest sample display order plus one', async function () {
-  await assert_one_create_request.call(this);
-  const payload = this.createRequests[0];
+Then('the created theme display_order should equal the highest baseline display order plus one', async function () {
+  const created = await waitForThemeByName(this.themeName);
   assert.equal(
-    payload.display_order,
-    MAX_SAMPLE_DISPLAY_ORDER + 1,
-    `Expected display_order ${MAX_SAMPLE_DISPLAY_ORDER + 1}, got ${payload.display_order}`,
+    created.display_order,
+    MAX_BASELINE_DISPLAY_ORDER + 1,
+    `Expected the persisted display_order to be ${MAX_BASELINE_DISPLAY_ORDER + 1}, got ${created.display_order}`,
   );
 });
 
@@ -223,14 +223,15 @@ Then('the inline create error {string} should be shown', async function (message
   assert.equal((await error.innerText()).trim(), message, `Expected the inline error to read '${message}'`);
 });
 
-Then('no theme create request should have been sent', async function () {
-  assert.ok(Array.isArray(this.createRequests), 'Expected the create endpoint to have been stubbed');
-  assert.equal(this.createRequests.length, 0, `Expected no create requests, but ${this.createRequests.length} were sent`);
+Then('no theme named {string} should exist', async function (name) {
+  // Give any (unwanted) in-flight create a chance to land before asserting absence.
+  await page(this).waitForTimeout(500);
+  assert.equal(await getThemeByName(name), null, `Expected no theme named '${name}' to have been created`);
 });
 
-Then('the create request sdg_code should equal {string}', async function (expected) {
-  await assert_one_create_request.call(this);
-  assert.equal(this.createRequests[0].sdg_code, expected, `Expected sdg_code '${expected}', got '${this.createRequests[0].sdg_code}'`);
+Then('the created theme sdg_code should equal {string}', async function (expected) {
+  const created = await waitForThemeByName(this.themeName);
+  assert.equal(created.sdg_code, expected, `Expected the persisted sdg_code to be '${expected}', got '${created.sdg_code}'`);
 });
 
 Then('every icon option should render its Material Symbols glyph next to its name', async function () {
@@ -266,12 +267,3 @@ Then('the color hex value {string} should be displayed next to the picker', asyn
   );
   assert.equal((await hexDisplay.innerText()).trim().toLowerCase(), hex.toLowerCase(), `Expected the hex display to read '${hex}'`);
 });
-
-async function assert_one_create_request() {
-  assert.ok(Array.isArray(this.createRequests), 'Expected the create endpoint to have been stubbed');
-  const deadline = Date.now() + 10_000;
-  while (this.createRequests.length === 0 && Date.now() < deadline) {
-    await page(this).waitForTimeout(100);
-  }
-  assert.equal(this.createRequests.length, 1, `Expected exactly one create request, got ${this.createRequests.length}`);
-}

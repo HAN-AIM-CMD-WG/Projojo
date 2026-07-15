@@ -114,4 +114,40 @@ async function resetThemeCatalog(baseline = THEME_SEED_BASELINE) {
   return created;
 }
 
-module.exports = { THEME_SEED_BASELINE, EXPECTED_SORTED_NAMES, LONG_DESCRIPTION, resetThemeCatalog };
+/** Read the live theme catalog via the public GET /themes/ endpoint. */
+async function fetchThemes() {
+  const result = await themeApi('/themes/', null);
+  assert.equal(result.status, 200, `Expected GET /themes/ to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
+  assert.ok(Array.isArray(result.body), `Expected GET /themes/ to return an array, received ${JSON.stringify(result.body)}`);
+  return result.body;
+}
+
+/** Find a persisted theme by exact name, or null when it does not exist. */
+async function getThemeByName(name) {
+  const themes = await fetchThemes();
+  return themes.find((theme) => theme?.name === name) ?? null;
+}
+
+/**
+ * Poll until a theme with `name` is persisted, so assertions on what the UI
+ * actually saved do not race the browser's in-flight create request.
+ */
+async function waitForThemeByName(name, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const theme = await getThemeByName(name);
+    if (theme) return theme;
+    await new Promise((resolve) => setTimeout(resolve, 200));
+  }
+  assert.fail(`Expected a theme named '${name}' to be persisted within ${timeoutMs}ms`);
+}
+
+module.exports = {
+  THEME_SEED_BASELINE,
+  EXPECTED_SORTED_NAMES,
+  LONG_DESCRIPTION,
+  resetThemeCatalog,
+  fetchThemes,
+  getThemeByName,
+  waitForThemeByName,
+};
