@@ -102,7 +102,7 @@ Feature: TS-task-011 theme create modal for teachers
     When I open the TeacherPage
     And I open the theme create modal
     And I fill in the theme name "Water en Voedsel"
-    And I select the SDG options "SDG2" and "SDG12"
+    And I select the SDG options "SDG12" and "SDG2"
     And I save the new theme
     Then the create request sdg_code should equal "SDG2,SDG12"
 

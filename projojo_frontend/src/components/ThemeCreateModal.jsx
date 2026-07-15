@@ -93,7 +93,7 @@ export default function ThemeCreateModal({ isOpen, onClose, existingThemes = [],
         const payload = { name: form.name.trim(), color: form.color, display_order: nextDisplayOrder };
         if (sdgCode) payload.sdg_code = sdgCode;
         if (form.icon) payload.icon = form.icon;
-        if (form.description.trim()) payload.description = form.description;
+        if (form.description.trim()) payload.description = form.description.trim();
 
         try {
             const created = await createTheme(payload);
