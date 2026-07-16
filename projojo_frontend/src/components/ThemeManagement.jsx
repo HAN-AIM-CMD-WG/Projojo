@@ -62,9 +62,11 @@ export default function ThemeManagement() {
                         <span className="material-symbols-outlined text-primary" aria-hidden="true">category</span>
                         Thema&apos;s
                     </h2>
-                    <p className="text-[var(--text-muted)] mt-1">
-                        Er {themes.length === 1 ? "is" : "zijn"} <strong className="text-primary">{themes.length}</strong> thema{themes.length !== 1 ? "'s" : ""} in de catalogus.
-                    </p>
+                    {!isLoading && !error && (
+                        <p className="text-[var(--text-muted)] mt-1">
+                            Er {themes.length === 1 ? "is" : "zijn"} <strong className="text-primary">{themes.length}</strong> thema{themes.length !== 1 ? "'s" : ""} in de catalogus.
+                        </p>
+                    )}
                 </div>
                 <button type="button" className="neu-btn-primary" onClick={() => setIsCreateOpen(true)}>
                     <span className="material-symbols-outlined text-sm mr-2" aria-hidden="true">add</span>
