@@ -242,7 +242,7 @@ export default function ThemeCreateModal({ isOpen, onClose, onCreated }) {
                 </div>
 
                 {error && (
-                    <p data-testid="theme-form-error" className="text-red-600 bg-red-50 p-3 rounded-md border border-red-200 text-sm">{error}</p>
+                    <p role="alert" data-testid="theme-form-error" className="text-red-600 bg-red-50 p-3 rounded-md border border-red-200 text-sm">{error}</p>
                 )}
 
                 <div className="flex gap-3 pt-1">
