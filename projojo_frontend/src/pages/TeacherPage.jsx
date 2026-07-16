@@ -4,6 +4,7 @@ import { useAuth } from "../auth/AuthProvider";
 import FormInput from "../components/FormInput";
 import Modal from "../components/Modal";
 import NewSkillsManagement from "../components/NewSkillsManagement";
+import ThemeManagement from "../components/ThemeManagement";
 import PageHeader from '../components/PageHeader';
 import SkeletonList from "../components/SkeletonList";
 import Alert from "../components/Alert";
@@ -250,6 +251,9 @@ export default function TeacherPage() {
 
             <hr className="mt-8 mb-6 border-gray-200" />
             <NewSkillsManagement />
+
+            <hr className="mt-8 mb-6 border-gray-200" />
+            <ThemeManagement />
 
             {/* Archive Confirmation Modal */}
             <Modal

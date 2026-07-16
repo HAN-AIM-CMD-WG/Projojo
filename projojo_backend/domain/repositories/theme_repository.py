@@ -1,4 +1,5 @@
 from typing import Any
+from typedb.common.exception import TypeDBDriverException
 from db.initDatabase import Db, build_query
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -50,18 +51,20 @@ class ThemeRepository(BaseRepository[Theme]):
         """
         results = Db.read_transact(query)
         themes = [self._map_to_model(result) for result in results]
-        # Sort by display_order, then name
-        return sorted(themes, key=lambda t: (t.display_order or 999, t.name))
+        # Sort by display_order, then name. Treat only a missing display_order as
+        # last (a real 0 sorts first), matching the frontend's `?? 999` semantics.
+        return sorted(themes, key=lambda t: (999 if t.display_order is None else t.display_order, t.name))
 
-    def get_by_name_case_insensitive(self, name: str) -> Theme | None:
+    @staticmethod
+    def _find_by_name_case_insensitive(themes: list[Theme], name: str) -> Theme | None:
         # Compare in Python instead of a TypeQL `like` regex: names may contain
         # characters (spaces, '&', ...) that TypeDB's regex literal parser rejects
         # when escaped via re.escape, and the theme catalog is small.
         target = name.casefold()
-        for theme in self.get_all():
-            if theme.name.casefold() == target:
-                return theme
-        return None
+        return next((theme for theme in themes if theme.name.casefold() == target), None)
+
+    def get_by_name_case_insensitive(self, name: str) -> Theme | None:
+        return self._find_by_name_case_insensitive(self.get_all(), name)
 
     def _map_to_model(self, result: dict[str, Any]) -> Theme:
         sdg_code_list = result.get("sdg_code", [])
@@ -80,12 +83,34 @@ class ThemeRepository(BaseRepository[Theme]):
             display_order=display_order_list[0] if display_order_list else None
         )
 
+    @staticmethod
+    def _next_display_order(themes: list[Theme]) -> int:
+        """
+        The display_order a new theme gets when the caller does not supply one:
+        max(existing display_order) + 1.
+
+        `default=0` keeps an empty catalog valid (max() of an empty sequence
+        raises), so the first theme in an empty catalog becomes 1.
+        """
+        orders = [theme.display_order for theme in themes if theme.display_order is not None]
+        return max(orders, default=0) + 1
+
     def create(self, theme: ThemeCreate) -> Theme:
-        if self.get_by_name_case_insensitive(theme.name):
+        # One read of the catalog serves both the duplicate check and the
+        # display_order assignment, so they also decide against the same snapshot.
+        existing = self.get_all()
+
+        if self._find_by_name_case_insensitive(existing, theme.name):
             raise ValueError("Er bestaat al een thema met deze naam")
 
+        # The teacher never picks a sort order (TS-task-011 AC-3). When the caller
+        # omits display_order the server assigns it here, from the authoritative
+        # catalog, instead of trusting a client that may hold a stale or empty
+        # list. An explicit display_order (including 0) is always honoured.
+        display_order = theme.display_order if theme.display_order is not None else self._next_display_order(existing)
+
         id = generate_uuid()
-        
+
         query = """
             insert
                 $theme isa theme,
@@ -97,15 +122,27 @@ class ThemeRepository(BaseRepository[Theme]):
                 has color ~color,
                 has displayOrder ~display_order;
         """
-        Db.write_transact(query, {
-            "id": id,
-            "name": theme.name,
-            "sdg_code": theme.sdg_code,
-            "icon": theme.icon,
-            "description": theme.description,
-            "color": theme.color,
-            "display_order": theme.display_order
-        })
+        try:
+            Db.write_transact(query, {
+                "id": id,
+                "name": theme.name,
+                "sdg_code": theme.sdg_code,
+                "icon": theme.icon,
+                "description": theme.description,
+                "color": theme.color,
+                "display_order": display_order
+            })
+        except TypeDBDriverException:
+            # TOCTOU backstop: the duplicate check above runs against a snapshot,
+            # so two concurrent creates with the same name can both pass it; the
+            # schema's `@unique` on name then rejects the losing insert at commit.
+            # Re-checking (rather than matching the driver's error text) keeps this
+            # robust to server message changes and avoids masking unrelated write
+            # failures as a name conflict. If the name now exists, surface the same
+            # ValueError the pre-check raises (clean 4xx); otherwise re-raise.
+            if self._find_by_name_case_insensitive(self.get_all(), theme.name):
+                raise ValueError("Er bestaat al een thema met deze naam") from None
+            raise
 
         return Theme(
             id=id,
@@ -114,7 +151,7 @@ class ThemeRepository(BaseRepository[Theme]):
             icon=theme.icon,
             description=theme.description,
             color=theme.color,
-            display_order=theme.display_order
+            display_order=display_order
         )
 
     def update(self, theme_id: str, theme: ThemeUpdate) -> Theme:
@@ -162,7 +199,7 @@ class ThemeRepository(BaseRepository[Theme]):
                 $theme isa theme, has id ~theme_id;
                 $hasTheme isa hasTheme(theme: $theme);
             delete
-                $hasTheme isa hasTheme;
+                $hasTheme;
         """
         try:
             Db.write_transact(delete_relations, {"theme_id": theme_id})
@@ -174,7 +211,7 @@ class ThemeRepository(BaseRepository[Theme]):
             match
                 $theme isa theme, has id ~theme_id;
             delete
-                $theme isa theme;
+                $theme;
         """
         Db.write_transact(delete_theme, {"theme_id": theme_id})
 
