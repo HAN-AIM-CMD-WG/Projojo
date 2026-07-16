@@ -1,4 +1,5 @@
 from typing import Any
+from typedb.common.exception import TypeDBDriverException
 from db.initDatabase import Db, build_query
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
@@ -121,15 +122,27 @@ class ThemeRepository(BaseRepository[Theme]):
                 has color ~color,
                 has displayOrder ~display_order;
         """
-        Db.write_transact(query, {
-            "id": id,
-            "name": theme.name,
-            "sdg_code": theme.sdg_code,
-            "icon": theme.icon,
-            "description": theme.description,
-            "color": theme.color,
-            "display_order": display_order
-        })
+        try:
+            Db.write_transact(query, {
+                "id": id,
+                "name": theme.name,
+                "sdg_code": theme.sdg_code,
+                "icon": theme.icon,
+                "description": theme.description,
+                "color": theme.color,
+                "display_order": display_order
+            })
+        except TypeDBDriverException:
+            # TOCTOU backstop: the duplicate check above runs against a snapshot,
+            # so two concurrent creates with the same name can both pass it; the
+            # schema's `@unique` on name then rejects the losing insert at commit.
+            # Re-checking (rather than matching the driver's error text) keeps this
+            # robust to server message changes and avoids masking unrelated write
+            # failures as a name conflict. If the name now exists, surface the same
+            # ValueError the pre-check raises (clean 4xx); otherwise re-raise.
+            if self._find_by_name_case_insensitive(self.get_all(), theme.name):
+                raise ValueError("Er bestaat al een thema met deze naam") from None
+            raise
 
         return Theme(
             id=id,
