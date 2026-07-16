@@ -223,6 +223,8 @@ async def create_task(
 
         created_task = task_repo.create(task)
         return created_task
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         if (hasattr(e, 'status_code')):
             raise HTTPException(status_code=e.status_code, detail=str(e))
@@ -260,6 +262,8 @@ async def update_task(
     try:
         task_repo.update(task_id, name, description, total_needed)
         return {"message": "Taak succesvol bijgewerkt"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         print(f"Error updating task {task_id}: {e}")
         raise HTTPException(status_code=400, detail="Er is een fout opgetreden bij het bijwerken van de taak.")
