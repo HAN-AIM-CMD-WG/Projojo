@@ -67,13 +67,15 @@ Feature: TS-task-011 theme create modal for teachers
     And a theme row named "Circulaire Economie" should be listed
 
   @ui @theme @TS-task-011
-  Scenario: AC-5 a backend validation error keeps the modal open with an inline message
+  Scenario: AC-5 a blank name is caught client-side and keeps the modal open with an inline message
     Given I am authenticated in the browser as the TS-task-011 teacher
     And the theme catalog contains only the TS-011 baseline themes
     When I open the TeacherPage
     And I open the theme create modal
+    # Whitespace passes the native `required` check but fails the client-side trim guard.
+    And I fill in the theme name "   "
     And I save the new theme
-    Then the inline create error "Naam is verplicht en mag maximaal 100 tekens zijn" should be shown
+    Then the inline create error "Naam is verplicht" should be shown
     And the theme create modal should stay open
 
   @ui @theme @TS-task-011

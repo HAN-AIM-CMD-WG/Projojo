@@ -85,6 +85,10 @@ export default function ThemeCreateModal({ isOpen, onClose, onCreated }) {
 
     const handleSave = async () => {
         if (isSaving) return;
+        if (!form.name.trim()) {
+            setError("Naam is verplicht");
+            return;
+        }
         setIsSaving(true);
         setError(null);
 
@@ -120,7 +124,7 @@ export default function ThemeCreateModal({ isOpen, onClose, onCreated }) {
             modalIcon="category"
             maxWidth="max-w-lg"
         >
-            <div data-testid="theme-create-modal" className="flex flex-col gap-4">
+            <form data-testid="theme-create-modal" className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
                 {/* Naam */}
                 <div>
                     <label htmlFor="theme-name" className="text-sm font-bold leading-6 text-text-primary block mb-1">
@@ -245,7 +249,7 @@ export default function ThemeCreateModal({ isOpen, onClose, onCreated }) {
                     <button type="button" data-testid="theme-cancel-button" onClick={close} className="neu-btn flex-1 justify-center">
                         Annuleren
                     </button>
-                    <button type="button" data-testid="theme-save-button" onClick={handleSave} disabled={isSaving} className="neu-btn-primary flex-1 justify-center">
+                    <button type="submit" data-testid="theme-save-button" disabled={isSaving} className="neu-btn-primary flex-1 justify-center">
                         {isSaving ? (
                             <>
                                 <span className="material-symbols-outlined text-sm animate-spin mr-1" aria-hidden="true">hourglass_empty</span>
@@ -254,7 +258,7 @@ export default function ThemeCreateModal({ isOpen, onClose, onCreated }) {
                         ) : "Opslaan"}
                     </button>
                 </div>
-            </div>
+            </form>
         </Modal>
     );
 }
