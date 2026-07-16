@@ -155,6 +155,7 @@ export default function ThemeManagement() {
                 isOpen={isCreateOpen}
                 onClose={() => setIsCreateOpen(false)}
                 onCreated={theme => {
+                    setError(null);
                     setThemes(prev => sortThemes([...prev, theme]));
                     notification.success("Thema aangemaakt");
                 }}
