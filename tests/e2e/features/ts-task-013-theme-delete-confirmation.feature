@@ -12,10 +12,12 @@ Feature: TS-task-013 theme delete with confirmation dialog
   #
   # Scope note on AC-7: these scenarios assert the cascade through the public API -
   # the theme is gone, each linked project still exists, no project still lists the
-  # deleted theme, and a project's OTHER theme links survive. That proves the delete
-  # removed exactly the right links and nothing else. It cannot inspect hasTheme
-  # relations directly, so it does not claim to; the "no orphaned relation" property
-  # is proven at the DB level in the repository, not here.
+  # deleted theme, and a project's OTHER theme links survive. That covers deleting
+  # too much. Deleting too little is covered by the schema rather than by an
+  # assertion here: hasTheme declares `relates theme @card(1)` (schema.tql:214-216),
+  # so TypeDB refuses to delete a theme entity while any of its relations survive.
+  # An under-scoped cascade therefore cannot orphan silently - it fails the delete,
+  # and "no theme named ... should exist" below catches it.
   #
   # AC-2 specifies a theme linked to 4 projects. The deterministic E2E seed contains
   # 3 projects, so the linked-count scenarios use 3 and 1 instead. Two different

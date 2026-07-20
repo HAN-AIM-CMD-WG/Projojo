@@ -82,4 +82,4 @@ async function stubThemeDeleteEndpoint(page, { status = 500, detail = 'Verwijder
   });
 }
 
-module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, THEMES_ROUTE, THEME_RESOURCE_ROUTE };
+module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, THEMES_ROUTE };

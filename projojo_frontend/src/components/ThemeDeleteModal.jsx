@@ -3,13 +3,13 @@ import { deleteTheme } from "../services";
 import Modal from "./Modal";
 
 /** Reported when the theme turned out to be gone already, instead of an error. */
-export const ALREADY_DELETED_MESSAGE = "Thema was al verwijderd";
+const ALREADY_DELETED_MESSAGE = "Thema was al verwijderd";
 
 /**
  * The impact warning a teacher must read before deleting a theme (TS-task-013
  * AC-2/AC-3): how many projects lose a theme link, or that none do.
  */
-export function deleteImpactMessage(theme) {
+function deleteImpactMessage(theme) {
     const question = `Weet je zeker dat je het thema '${theme.name}' wilt verwijderen?`;
     const count = theme.project_count ?? 0;
     return count > 0
@@ -37,10 +37,15 @@ export default function ThemeDeleteModal({ theme, isOpen, onClose, onDeleted }) 
     const [error, setError] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Clear a previous failure before paint, so reopening never shows a stale error.
+    // Clear a previous attempt before paint, so reopening never shows a stale error
+    // or a "Bezig…" confirm button left over from a delete that was dismissed while
+    // still in flight.
     useLayoutEffect(() => {
-        if (isOpen) setError(null);
-    }, [isOpen, theme]);
+        if (isOpen) {
+            setError(null);
+            setIsDeleting(false);
+        }
+    }, [isOpen]);
 
     const handleConfirm = async () => {
         if (isDeleting) return;
