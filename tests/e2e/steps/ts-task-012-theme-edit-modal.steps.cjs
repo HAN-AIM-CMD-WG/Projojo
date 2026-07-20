@@ -1,3 +1,8 @@
+// Heads up before refactoring: the TS-task-013 delete suite reuses the edit-flow
+// steps below ("open the edit modal", "change the theme description", "save the
+// theme changes") for its count-after-edit regression scenario. Renaming or
+// removing them breaks a scenario in another feature file.
+
 const assert = require('node:assert/strict');
 
 const { Given, Then, When } = require('@qavajs/core');
@@ -163,16 +168,3 @@ Then('the theme row {string} should show no SDG code', async function (name) {
   assert.equal((await sdgCell.innerText()).trim(), '—', `Expected the '${name}' row to show '—' for a theme with no SDG codes`);
 });
 
-Then('the {string} button for {string} should be focused', async function (label, name) {
-  // Focus restoration runs in an effect after the modal closes, so poll rather than
-  // read once. Proves the shared Modal returned focus to the row's trigger (a11y).
-  const button = page(this).getByRole('button', { name: `${label}: ${name}` });
-  const deadline = Date.now() + 5_000;
-  let focused = false;
-  while (Date.now() < deadline) {
-    focused = await button.evaluate(element => element === document.activeElement);
-    if (focused) break;
-    await page(this).waitForTimeout(100);
-  }
-  assert.equal(focused, true, `Expected focus to return to the "${label}: ${name}" button after closing the edit modal`);
-});

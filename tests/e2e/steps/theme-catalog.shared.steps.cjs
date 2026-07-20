@@ -37,6 +37,21 @@ Then('no theme row named {string} should be listed', async function (name) {
   assert.equal(await row.count(), 0, `Expected no theme row named '${name}' to be listed`);
 });
 
+Then('the {string} button for {string} should be focused', async function (label, name) {
+  // Focus restoration runs in an effect after the modal closes, so poll rather than
+  // read once. Proves the shared Modal returned focus to the row's trigger (a11y).
+  // Shared because both the edit (TS-012) and delete (TS-013) modals close this way.
+  const button = page(this).getByRole('button', { name: `${label}: ${name}` });
+  const deadline = Date.now() + 5_000;
+  let focused = false;
+  while (Date.now() < deadline) {
+    focused = await button.evaluate(element => element === document.activeElement);
+    if (focused) break;
+    await page(this).waitForTimeout(100);
+  }
+  assert.equal(focused, true, `Expected focus to return to the "${label}: ${name}" button after the modal closed`);
+});
+
 Then('no theme named {string} should exist', async function (name) {
   // Give any (unwanted) in-flight write a chance to land before asserting absence.
   await page(this).waitForTimeout(500);

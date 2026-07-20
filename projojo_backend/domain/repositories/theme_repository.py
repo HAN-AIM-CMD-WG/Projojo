@@ -55,7 +55,8 @@ class ThemeRepository(BaseRepository[Theme]):
         # last (a real 0 sorts first), matching the frontend's `?? 999` semantics.
         return sorted(themes, key=lambda t: (999 if t.display_order is None else t.display_order, t.name))
 
-    def _with_project_counts(self, themes: list[Theme]) -> list[Theme]:
+    @staticmethod
+    def _with_project_counts(themes: list[Theme]) -> list[Theme]:
         """
         Fill in how many projects each theme is linked to, so the teacher's delete
         confirmation can state the impact before anything is removed (TS-task-013).
@@ -257,8 +258,11 @@ class ThemeRepository(BaseRepository[Theme]):
                 'display_order': [$theme.displayOrder]
             };
         """
+        # No project counts here: nothing renders them for a project's own themes,
+        # and this endpoint is called once per project by the overview page, where
+        # a catalog-wide relation scan per call is real cost for an unread field.
         results = Db.read_transact(query, {"project_id": project_id})
-        return self._with_project_counts([self._map_to_model(result) for result in results])
+        return [self._map_to_model(result) for result in results]
 
     def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> int:
         """Atomically replace a project's theme links: all changes succeed or none are applied.
