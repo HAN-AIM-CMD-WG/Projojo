@@ -10,6 +10,7 @@ class Theme(BaseModel):
     description: str | None = None
     color: str | None = None  # Color code e.g. "#4CAF50"
     display_order: int | None = None
+    project_count: int = 0  # Projects linked via hasTheme; drives the delete impact warning
 
     class Config:
         from_attributes = True

@@ -39,4 +39,47 @@ async function stubThemesEndpoint(page, { status = 200, body = [], delayMs = 0 }
   });
 }
 
-module.exports = { stubThemesEndpoint, THEMES_ROUTE };
+// A single theme resource: `/themes/{id}`, and deliberately NOT the `/themes/`
+// collection (trailing slash) or the two-segment `/themes/project/{id}`.
+const THEME_RESOURCE_ROUTE = /\/themes\/[^/?]+$/;
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'DELETE, GET, PUT, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, content-type, accept',
+};
+
+/**
+ * Make DELETE /themes/{id} fail for a page, leaving every other request alone.
+ *
+ * A healthy backend only fails a delete for reasons the UI cannot stage on demand
+ * (the real 404 for an already-deleted theme is covered without a stub), so this
+ * exists purely to drive the server-error branch of the delete confirmation.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ status?: number, detail?: string }} [options]
+ */
+async function stubThemeDeleteEndpoint(page, { status = 500, detail = 'Verwijderen is mislukt' } = {}) {
+  await page.unroute(THEME_RESOURCE_ROUTE).catch(() => {});
+  await page.route(THEME_RESOURCE_ROUTE, async (route) => {
+    const method = route.request().method();
+    // The frontend (:10121) calls the backend (:10122) cross-origin, so a DELETE
+    // carrying an Authorization header is preflighted. Answer that preflight here;
+    // otherwise the browser blocks the request and the UI would show a generic
+    // network failure instead of the server error this stub is staging.
+    if (method === 'OPTIONS') {
+      return route.fulfill({ status: 204, headers: CORS_HEADERS });
+    }
+    if (method !== 'DELETE') {
+      return route.fallback();
+    }
+    await route.fulfill({
+      status,
+      contentType: 'application/json',
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ detail }),
+    });
+  });
+}
+
+module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, THEMES_ROUTE, THEME_RESOURCE_ROUTE };

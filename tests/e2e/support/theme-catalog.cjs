@@ -68,6 +68,12 @@ assert.ok(
   `The theme baseline must contain '${BASELINE_DUPLICATE_NAME}' for the duplicate-name scenario (TS-task-011 AC-6)`,
 );
 
+/**
+ * Call the backend with an optional bearer token and parse the response.
+ *
+ * Named for its first consumer, but the pathname is free-form: the theme suites
+ * also use it for the project endpoints a theme link touches.
+ */
 async function themeApi(pathname, token, options = {}) {
   const headers = {
     Accept: 'application/json',
@@ -162,6 +168,7 @@ module.exports = {
   EXPECTED_SORTED_NAMES,
   LONG_DESCRIPTION,
   BASELINE_DUPLICATE_NAME,
+  themeApi,
   resetThemeCatalog,
   fetchThemes,
   getThemeByName,

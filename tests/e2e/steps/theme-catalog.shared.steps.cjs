@@ -31,6 +31,12 @@ Then('a theme row named {string} should be listed', async function (name) {
   assert.equal(await row.count(), 1, `Expected exactly one theme row named '${name}'`);
 });
 
+Then('no theme row named {string} should be listed', async function (name) {
+  const row = page(this).getByTestId('theme-row').filter({ hasText: name });
+  await row.waitFor({ state: 'detached', timeout: 10_000 });
+  assert.equal(await row.count(), 0, `Expected no theme row named '${name}' to be listed`);
+});
+
 Then('no theme named {string} should exist', async function (name) {
   // Give any (unwanted) in-flight write a chance to land before asserting absence.
   await page(this).waitForTimeout(500);

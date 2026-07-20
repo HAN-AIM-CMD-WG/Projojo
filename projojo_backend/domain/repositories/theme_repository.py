@@ -31,7 +31,7 @@ class ThemeRepository(BaseRepository[Theme]):
         results = Db.read_transact(query, {"id": id})
         if not results:
             raise ItemRetrievalException(Theme, f"Theme with ID {id} not found.")
-        return self._map_to_model(results[0])
+        return self._with_project_counts([self._map_to_model(results[0])])[0]
 
     def get_all(self) -> list[Theme]:
         query = """
@@ -50,10 +50,36 @@ class ThemeRepository(BaseRepository[Theme]):
             };
         """
         results = Db.read_transact(query)
-        themes = [self._map_to_model(result) for result in results]
+        themes = self._with_project_counts([self._map_to_model(result) for result in results])
         # Sort by display_order, then name. Treat only a missing display_order as
         # last (a real 0 sorts first), matching the frontend's `?? 999` semantics.
         return sorted(themes, key=lambda t: (999 if t.display_order is None else t.display_order, t.name))
+
+    def _with_project_counts(self, themes: list[Theme]) -> list[Theme]:
+        """
+        Fill in how many projects each theme is linked to, so the teacher's delete
+        confirmation can state the impact before anything is removed (TS-task-013).
+
+        One query returns a row per hasTheme relation and the counting happens here:
+        the catalog is small, and a single read serves a whole list of themes.
+        """
+        query = """
+            match
+                $hasTheme isa hasTheme(theme: $theme);
+                $theme has id $theme_id;
+            fetch {
+                'theme_id': $theme_id
+            };
+        """
+        counts: dict[str, int] = {}
+        for row in Db.read_transact(query):
+            theme_id = row.get("theme_id")
+            if theme_id:
+                counts[theme_id] = counts.get(theme_id, 0) + 1
+
+        for theme in themes:
+            theme.project_count = counts.get(theme.id, 0)
+        return themes
 
     @staticmethod
     def _find_by_name_case_insensitive(themes: list[Theme], name: str) -> Theme | None:
@@ -193,7 +219,10 @@ class ThemeRepository(BaseRepository[Theme]):
         return self.get_by_id(theme_id)
 
     def delete(self, theme_id: str) -> None:
-        # First remove all hasTheme relations for this theme
+        # First remove all hasTheme relations for this theme. Unguarded on purpose:
+        # a match that finds no relations is a no-op rather than an error, so a
+        # theme without project links needs no special case, and a relation delete
+        # that genuinely fails must surface instead of leaving the links behind.
         delete_relations = """
             match
                 $theme isa theme, has id ~theme_id;
@@ -201,10 +230,7 @@ class ThemeRepository(BaseRepository[Theme]):
             delete
                 $hasTheme;
         """
-        try:
-            Db.write_transact(delete_relations, {"theme_id": theme_id})
-        except Exception:
-            pass
+        Db.write_transact(delete_relations, {"theme_id": theme_id})
 
         # Then delete the theme itself
         delete_theme = """
@@ -232,7 +258,7 @@ class ThemeRepository(BaseRepository[Theme]):
             };
         """
         results = Db.read_transact(query, {"project_id": project_id})
-        return [self._map_to_model(result) for result in results]
+        return self._with_project_counts([self._map_to_model(result) for result in results])
 
     def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> int:
         """Atomically replace a project's theme links: all changes succeed or none are applied.
