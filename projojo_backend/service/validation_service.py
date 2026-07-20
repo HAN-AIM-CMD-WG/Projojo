@@ -59,7 +59,10 @@ def validate_theme(theme, require_name: bool = False) -> None:
     if (require_name or "name" in fields_set) and not is_valid_length(theme.name, 100):
         raise ValueError(THEME_NAME_VALIDATION_ERROR)
 
-    if "sdg_code" in fields_set and theme.sdg_code is not None:
+    # An empty sdg_code clears the (optional) SDG link, mirroring how an empty
+    # icon/description clears those. Only a non-empty value is format-checked;
+    # None still means "leave unchanged" on update.
+    if "sdg_code" in fields_set and theme.sdg_code:
         if not re.fullmatch(r"SDG([1-9]|1[0-7])(,SDG([1-9]|1[0-7]))*", theme.sdg_code):
             raise ValueError(THEME_SDG_CODE_VALIDATION_ERROR)
 
