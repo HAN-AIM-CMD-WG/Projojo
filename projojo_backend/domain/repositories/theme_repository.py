@@ -184,6 +184,10 @@ class ThemeRepository(BaseRepository[Theme]):
     def update(self, theme_id: str, theme: ThemeUpdate) -> Theme:
         update_clauses = []
         params = {"theme_id": theme_id}
+        # Clears and field updates run together in one all-or-nothing
+        # transaction (below), so a caller never receives a successful or
+        # partially applied update: either every change commits or none do.
+        operations: list[tuple[str, dict[str, Any] | None]] = []
 
         if theme.name is not None:
             duplicate = self.get_by_name_case_insensitive(theme.name)
@@ -207,7 +211,7 @@ class ThemeRepository(BaseRepository[Theme]):
             if value is None:
                 continue
             if value == "":
-                self._clear_attribute(theme_id, attr)
+                operations.append(self._clear_attribute_query(theme_id, attr))
             else:
                 update_clauses.append(f"$theme has {attr} ~{attr};")
                 params[attr] = value
@@ -223,14 +227,18 @@ class ThemeRepository(BaseRepository[Theme]):
                 update
                     {' '.join(update_clauses)}
             """
-            Db.write_transact(query, params)
+            operations.append((query, params))
+
+        if operations:
+            Db.write_transact_many(operations)
 
         return self.get_by_id(theme_id)
 
     @staticmethod
-    def _clear_attribute(theme_id: str, attribute: str) -> None:
+    def _clear_attribute_query(theme_id: str, attribute: str) -> tuple[str, dict[str, Any]]:
         """
-        Remove an optional attribute from a theme if it is present.
+        Build the (query, params) that removes an optional attribute from a theme
+        if it is present, for inclusion in the update transaction.
 
         Mirrors set_impact_summary's delete-then-set approach: matching on
         `has {attribute} $val` yields nothing when the attribute is absent, so
@@ -244,10 +252,7 @@ class ThemeRepository(BaseRepository[Theme]):
             delete
                 has $val of $theme;
         """
-        try:
-            Db.write_transact(query, {"theme_id": theme_id})
-        except Exception:
-            pass
+        return query, {"theme_id": theme_id}
 
     def delete(self, theme_id: str) -> None:
         # Remove all hasTheme relations and the theme itself in one
