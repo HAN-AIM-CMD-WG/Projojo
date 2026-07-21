@@ -220,10 +220,9 @@ class ThemeRepository(BaseRepository[Theme]):
         return self.get_by_id(theme_id)
 
     def delete(self, theme_id: str) -> None:
-        # First remove all hasTheme relations for this theme. Unguarded on purpose:
-        # a match that finds no relations is a no-op rather than an error, so a
-        # theme without project links needs no special case, and a relation delete
-        # that genuinely fails must surface instead of leaving the links behind.
+        # Remove all hasTheme relations and the theme itself in one
+        # all-or-nothing transaction so we never leave a theme without
+        # its links (or vice versa) if one write fails.
         delete_relations = """
             match
                 $theme isa theme, has id ~theme_id;
@@ -231,16 +230,16 @@ class ThemeRepository(BaseRepository[Theme]):
             delete
                 $hasTheme;
         """
-        Db.write_transact(delete_relations, {"theme_id": theme_id})
-
-        # Then delete the theme itself
         delete_theme = """
             match
                 $theme isa theme, has id ~theme_id;
             delete
                 $theme;
         """
-        Db.write_transact(delete_theme, {"theme_id": theme_id})
+        Db.write_transact_many([
+            (delete_relations, {"theme_id": theme_id}),
+            (delete_theme, {"theme_id": theme_id}),
+        ])
 
     def get_themes_by_project(self, project_id: str) -> list[Theme]:
         query = """
