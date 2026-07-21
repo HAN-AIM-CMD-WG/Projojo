@@ -106,11 +106,15 @@ export default function Modal({
         };
     }, [forceModalStackRender, modalInstanceId]);
 
-    // Focus lifecycle, keyed on isModalOpen alone. handleKeyDown is a fresh
-    // function on every render, so keeping focus restoration out of the stack
-    // effect below (which depends on it) is deliberate: focus is captured once
-    // when the modal opens and restored exactly once when it closes or unmounts.
-    // It is never re-grabbed on an unrelated re-render of the modal's parent.
+    // Focus lifecycle, keyed on isModalOpen alone. Keeping focus restoration out
+    // of the stack effect below (which also depends on handleKeyDown) is
+    // deliberate: focus is captured once when the modal opens and restored
+    // exactly once when it closes or unmounts. Isolating it here means a re-run
+    // of the stack effect can never re-grab focus on an unrelated re-render.
+    // Note: unlike the old single-effect version (which only restored focus on an
+    // explicit true -> false transition), this cleanup also runs when the modal
+    // unmounts while still open (e.g. parent navigates away). This is intentional
+    // for accessibility - focus always returns to the trigger - not a regression.
     useEffect(() => {
         if (!isModalOpen) {
             return;
@@ -129,9 +133,12 @@ export default function Modal({
         };
     }, [isModalOpen]);
 
-    // Stack membership and the keydown listener. This re-runs on every render
-    // (handleKeyDown changes each time), which is harmless: joining the stack and
-    // (re)binding the listener are idempotent and carry no focus side effect.
+    // Stack membership and the keydown listener. handleKeyDown is stable by
+    // default (its useCallback deps isTopModal and setIsModalOpen are both
+    // stable), so this normally only re-runs when isModalOpen changes. Even if a
+    // caller passed an unstable setIsModalOpen, extra re-runs would be harmless:
+    // joining the stack and (re)binding the listener are idempotent, the cleanup
+    // removes the old listener first, and there is no focus side effect here.
     useEffect(() => {
         if (isModalOpen) {
             setStackIndex(addModalToStack(modalInstanceId));
