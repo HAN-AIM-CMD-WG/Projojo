@@ -563,17 +563,17 @@ class ProjectRepository(BaseRepository[Project]):
 
     def archive_project(self, project_id: str) -> None:
         """Archive a project (set isArchived to true)."""
-        # First check if isArchived already exists and delete it
+        # Remove any existing isArchived attribute first so re-archiving stays idempotent.
+        # Uses TypeDB 3.x attribute-delete syntax (`delete has $val of $entity;`, matching
+        # restore_project and business_repository). A project without isArchived matches
+        # nothing, so the delete is a harmless no-op and needs no error swallowing.
         delete_query = """
             match
                 $project isa project, has id ~project_id, has isArchived $val;
             delete
-                $project has $val;
+                has $val of $project;
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass  # No existing isArchived attribute
+        Db.write_transact(delete_query, {"project_id": project_id})
 
         # Now insert isArchived = true
         insert_query = """
@@ -590,7 +590,7 @@ class ProjectRepository(BaseRepository[Project]):
             match
                 $project isa project, has id ~project_id, has isArchived $val;
             delete
-                $project has $val;
+                has $val of $project;
         """
         Db.write_transact(delete_query, {"project_id": project_id})
 

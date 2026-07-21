@@ -48,10 +48,7 @@ _PORTFOLIO_ITEM_FETCH_PROJECTION = """
         'hidden_by_user_id': [ $item.hiddenByUserId ],
         'display_order': [ $item.displayOrder ],
         'is_authenticated_public_retraction': $item.isAuthenticatedPublicRetraction,
-        'is_world_visible': $item.isWorldVisible,
-        'source_task_archived': [ $item.sourceTaskArchived ],
-        'source_project_archived': [ $item.sourceProjectArchived ],
-        'source_business_archived': [ $item.sourceBusinessArchived ]
+        'is_world_visible': $item.isWorldVisible
     };
 """
 
@@ -241,7 +238,8 @@ class PortfolioRepository:
             + _PORTFOLIO_ITEM_FETCH_PROJECTION
         )
         rows = Db.read_transact(query, {"student_id": student_id})
-        items = [self._map_item(row, viewer_role) for row in rows]
+        archived_projects, archived_businesses = self._archived_source_sets(rows)
+        items = [self._map_item(row, viewer_role, archived_projects, archived_businesses) for row in rows]
         return sorted(
             items,
             key=lambda item: (
@@ -270,7 +268,8 @@ class PortfolioRepository:
         rows = Db.read_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id})
         if not rows:
             return None
-        return self._map_item(rows[0], "student")
+        archived_projects, archived_businesses = self._archived_source_sets(rows)
+        return self._map_item(rows[0], "student", archived_projects, archived_businesses)
 
     def set_authenticated_public_retraction(self, item_id: str, owner_student_id: str, retracted: bool) -> None:
         # Owner-scoped write (defense in depth): the match requires the caller to own the item via
@@ -359,13 +358,37 @@ class PortfolioRepository:
             reviews_by_item.setdefault(review["item_id"], []).append(review)
         return [{**item, "reviews": reviews_by_item.get(item["id"], [])} for item in items]
 
-    def _map_item(self, row: dict[str, Any], viewer_role: str) -> dict[str, Any]:
+    def _map_item(
+        self,
+        row: dict[str, Any],
+        viewer_role: str,
+        archived_projects: frozenset[str],
+        archived_businesses: frozenset[str],
+    ) -> dict[str, Any]:
         retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
         visibility_reason = "visible_to_authenticated_viewer"
         if viewer_role == "public":
             visibility_reason = "visible_to_world_public"
         if viewer_role == "supervisor" and retracted:
             visibility_reason = "hidden_by_authenticated_public_retraction"
+
+        source_project_id = self._one(row.get("source_project_id"))
+        source_business_id = self._one(row.get("source_business_id"))
+        # Archived-source state is derived live from the current archive state of the source
+        # records, not from a stored snapshot, so it stays correct after archive and restore.
+        # Tasks have no archive state in the schema, so task is always False.
+        project_archived = source_project_id in archived_projects
+        business_archived = source_business_id in archived_businesses
+
+        # Source navigation targets the source project. An archived source project is not
+        # navigable for normal portfolio viewers; the reason is user-facing Dutch copy that
+        # states the source is archived while the completed work stays visible.
+        if project_archived:
+            navigation_state = "disabled"
+            navigation_reason = "Het bronproject is gearchiveerd. Je voltooide werk blijft zichtbaar."
+        else:
+            navigation_state = "enabled"
+            navigation_reason = "De bron is beschikbaar."
 
         return {
             "id": self._one(row.get("id")),
@@ -374,8 +397,8 @@ class PortfolioRepository:
             "source_student_id": self._one(row.get("source_student_id"), self._one(row.get("owner_student_id"))),
             "source_registration_id": self._one(row.get("source_registration_id")),
             "source_task_id": self._one(row.get("source_task_id")),
-            "source_project_id": self._one(row.get("source_project_id")),
-            "source_business_id": self._one(row.get("source_business_id")),
+            "source_project_id": source_project_id,
+            "source_business_id": source_business_id,
             "student": {
                 "full_name": self._one(row.get("student_name"), self._one(row.get("owner_student_name"))),
                 "image_path": self._one(row.get("student_image_path"), self._one(row.get("owner_student_image_path"))),
@@ -407,9 +430,13 @@ class PortfolioRepository:
                 "is_world_visible": bool(self._one(row.get("is_world_visible"), False)),
             },
             "archived_source": {
-                "task": bool(self._one(row.get("source_task_archived"), False)),
-                "project": bool(self._one(row.get("source_project_archived"), False)),
-                "business": bool(self._one(row.get("source_business_archived"), False)),
+                "task": False,
+                "project": project_archived,
+                "business": business_archived,
+            },
+            "source_navigation": {
+                "state": navigation_state,
+                "reason": navigation_reason,
             },
             "visibility": {
                 "viewer_can_see": visibility_reason in {"visible_to_authenticated_viewer", "visible_to_world_public"},
@@ -453,6 +480,29 @@ class PortfolioRepository:
             for row in Db.read_transact(query, {"user_id_pattern": user_id_pattern}):
                 roles[self._one(row.get("id"))] = role
         return roles
+
+    def _archived_source_sets(self, rows: list[dict[str, Any]]) -> tuple[frozenset[str], frozenset[str]]:
+        # Resolve, in one query per entity type, which source projects and businesses referenced by
+        # these portfolio items are currently archived. Returned as sets so _map_item can flag each
+        # item's archived-source state without re-querying per row.
+        project_ids = {self._one(row.get("source_project_id")) for row in rows}
+        business_ids = {self._one(row.get("source_business_id")) for row in rows}
+        return self._archived_ids("project", project_ids), self._archived_ids("business", business_ids)
+
+    def _archived_ids(self, entity_type: str, ids: set[str]) -> frozenset[str]:
+        # entity_type is a fixed internal literal ("project"/"business"), never user input. The
+        # literal `has isArchived true` keeps this a valid READ query (no None params).
+        filtered = [id_value for id_value in ids if id_value]
+        if not filtered:
+            return frozenset()
+        query = f"""
+            match
+                $entity isa {entity_type}, has id $id, has isArchived true;
+                $id like ~id_pattern;
+            fetch {{ 'id': $id }};
+        """
+        rows = Db.read_transact(query, {"id_pattern": self._id_pattern(filtered)}, sort_fields=False)
+        return frozenset(self._one(row.get("id")) for row in rows)
 
     def _id_pattern(self, ids: list[str]) -> str:
         for id_value in ids:

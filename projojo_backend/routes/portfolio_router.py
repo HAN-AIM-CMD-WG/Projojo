@@ -121,6 +121,7 @@ async def set_portfolio_item_authenticated_public_retraction(
                                     "is_world_visible": False,
                                 },
                                 "archived_source": {"task": False, "project": False, "business": False},
+                                "source_navigation": {"state": "enabled", "reason": "De bron is beschikbaar."},
                                 "visibility": {"viewer_can_see": True, "reason": "visible_to_authenticated_viewer"},
                                 "reviews": [],
                             }

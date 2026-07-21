@@ -54,7 +54,7 @@ insert
         has imagePath "default.svg";
 
     $other_supervisor isa supervisor,
-        has id "20000000-0000-4000-8000-000000000006",
+        has id "20000000-0000-4000-8000-000000000009",
         has email "other.supervisor.e2e@projojo.local",
         has fullName "Otto Anderebegeleider",
         has imagePath "default.svg";
@@ -90,7 +90,7 @@ insert
         has website "https://example.invalid/projojo-e2e";
 
     $other_business isa business,
-        has id "30000000-0000-4000-8000-000000000004",
+        has id "30000000-0000-4000-8000-000000000009",
         has name "E2E Cross-Business Organization",
         has description "Tweede organisatie voor autorisatieproeven rond projecteigenaarschap.",
         has imagePath "default.svg",

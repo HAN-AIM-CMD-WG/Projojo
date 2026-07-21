@@ -232,8 +232,8 @@ export default function PortfolioList({
                             )}
                             {counts.snapshot > 0 && (
                                 <p className="mt-1">
-                                    <strong>{counts.snapshot}</strong> {counts.snapshot === 1 ? 'item is' : 'items zijn'} opgeslagen als archief 
-                                    - het originele project is verwijderd maar je voltooide werk is bewaard.
+                                    <strong>{counts.snapshot}</strong> {counts.snapshot === 1 ? 'item heeft' : 'items hebben'} een gearchiveerde bron 
+                                    - de bron is niet meer actief maar je voltooide werk blijft zichtbaar.
                                 </p>
                             )}
                         </div>

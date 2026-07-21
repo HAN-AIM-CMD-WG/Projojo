@@ -48,6 +48,15 @@ class PortfolioArchivedSource(BaseModel):
     business: bool = False
 
 
+class PortfolioSourceNavigation(BaseModel):
+    # state is one of "enabled", "disabled", or "restricted". Under the current archiving model
+    # only "enabled" (live source project) and "disabled" (archived source project) are emitted;
+    # "restricted" is reserved for a future viewer-scoped availability rule. reason is user-facing
+    # Dutch copy suitable for direct UI display.
+    state: str
+    reason: str
+
+
 class PortfolioVisibility(BaseModel):
     viewer_can_see: bool
     reason: str
@@ -99,6 +108,7 @@ class PortfolioItemResponse(BaseModel):
     timeline_end_date: str | None = None
     curation: PortfolioCuration
     archived_source: PortfolioArchivedSource
+    source_navigation: PortfolioSourceNavigation
     visibility: PortfolioVisibility
     reviews: list[PortfolioReviewResponse] = Field(default_factory=list)
 
