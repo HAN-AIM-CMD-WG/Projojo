@@ -38,11 +38,12 @@ export default function ThemeEditModal({ theme, isOpen, onClose, onUpdated }) {
     const [form, setForm] = useState(EMPTY_FORM);
     const [error, setError] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
-    // Which theme the modal is currently editing. A save started for one theme can
-    // resolve after the teacher switched to another (the modal stays mounted, so the
-    // in-flight closure outlives the switch); comparing against this ref lets a stale
-    // completion skip closing/erroring the newer modal.
-    const activeThemeIdRef = useRef(null);
+    // A monotonic token bumped on every open. A save started in one editing session can
+    // resolve after the teacher closed and reopened the modal (it stays mounted, so the
+    // in-flight closure outlives the switch); comparing against this token lets a stale
+    // completion skip closing/erroring the newer session. A plain theme-id check can't
+    // tell two sessions of the *same* theme apart, so a per-open token is used instead.
+    const editSessionRef = useRef(0);
 
     // Re-seed before paint each time a theme is opened, so the fields are pre-filled
     // with no empty flash and a reopened modal shows the original (not a prior edit).
@@ -51,7 +52,7 @@ export default function ThemeEditModal({ theme, isOpen, onClose, onUpdated }) {
             setForm(themeToForm(theme));
             setError(null);
             setIsSaving(false);
-            activeThemeIdRef.current = theme.id;
+            editSessionRef.current += 1;
         }
     }, [isOpen, theme]);
 
@@ -83,26 +84,27 @@ export default function ThemeEditModal({ theme, isOpen, onClose, onUpdated }) {
 
         setIsSaving(true);
         setError(null);
-        // Remember which theme this save belongs to; if the teacher switches themes
-        // before it resolves, its completion must not touch the newer modal.
-        const savedThemeId = theme.id;
+        // Remember which editing session this save belongs to; if the teacher closes,
+        // reopens, or switches themes before it resolves, its completion must not touch
+        // the newer session's modal.
+        const saveSession = editSessionRef.current;
         const savedThemeName = name;
         try {
             const updated = await updateTheme(theme.id, payload);
             onUpdated?.(updated);
-            if (activeThemeIdRef.current === savedThemeId) onClose();
+            if (editSessionRef.current === saveSession) onClose();
         } catch (err) {
             const message = err?.message || "Er is iets misgegaan bij het bijwerken van het thema.";
-            if (activeThemeIdRef.current === savedThemeId) {
-                // Still on this theme: show the error inline in the form.
+            if (editSessionRef.current === saveSession) {
+                // Still in the same session: show the error inline in the form.
                 setError(message);
             } else {
-                // The teacher already moved on to another theme; surface the failure as
-                // a toast so a stale save can't fail silently and leave data unsaved.
+                // The teacher already moved on (closed/reopened/switched); surface the
+                // failure as a toast so a stale save can't fail silently and leave data unsaved.
                 notification.error(`Thema "${savedThemeName}" kon niet worden bijgewerkt. ${message}`);
             }
         } finally {
-            if (activeThemeIdRef.current === savedThemeId) setIsSaving(false);
+            if (editSessionRef.current === saveSession) setIsSaving(false);
         }
     };
 
