@@ -3,6 +3,8 @@ import { getThemes } from "../services";
 import Alert from "./Alert";
 import Loading from "./Loading";
 import ThemeCreateModal from "./ThemeCreateModal";
+import ThemeDeleteModal from "./ThemeDeleteModal";
+import ThemeEditModal from "./ThemeEditModal";
 import { notification } from "./notifications/NotifySystem";
 
 const DESCRIPTION_TRUNCATE_LENGTH = 100;
@@ -23,15 +25,17 @@ function sortThemes(list) {
 /**
  * Teacher-facing overview of the theme catalog (TS-task-010, read/display only).
  *
- * Creating a theme is handled by the "Nieuw thema" button (TS-task-011). The
- * per-row "Bewerken" and "Verwijderen" actions are still inert here: editing
- * and deleting are handled by TS-task-012 and TS-task-013 respectively.
+ * Creating a theme is handled by the "Nieuw thema" button (TS-task-011), editing
+ * by the per-row "Bewerken" action (TS-task-012) and deleting by the per-row
+ * "Verwijderen" action, which always confirms first (TS-task-013).
  */
 export default function ThemeManagement() {
     const [themes, setThemes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [editingTheme, setEditingTheme] = useState(null);
+    const [deletingTheme, setDeletingTheme] = useState(null);
 
     useEffect(() => {
         let ignore = false;
@@ -134,11 +138,11 @@ export default function ThemeManagement() {
                                     </td>
                                     <td className="px-4 md:px-6 py-4">
                                         <div className="flex items-center gap-2">
-                                            <button type="button" aria-label={`Bewerken: ${theme.name}`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
+                                            <button type="button" aria-label={`Bewerken: ${theme.name}`} onClick={() => setEditingTheme(theme)} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5">
                                                 <span className="material-symbols-outlined text-base" aria-hidden="true">edit</span>
                                                 Bewerken
                                             </button>
-                                            <button type="button" aria-label={`Verwijderen: ${theme.name}`} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 !text-red-600 hover:!bg-red-50">
+                                            <button type="button" aria-label={`Verwijderen: ${theme.name}`} onClick={() => setDeletingTheme(theme)} className="neu-btn !py-2 !px-3 text-sm flex items-center gap-1.5 !text-red-600 hover:!bg-red-50">
                                                 <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
                                                 Verwijderen
                                             </button>
@@ -158,6 +162,28 @@ export default function ThemeManagement() {
                     setError(null);
                     setThemes(prev => sortThemes([...prev, theme]));
                     notification.success("Thema aangemaakt");
+                }}
+            />
+
+            <ThemeEditModal
+                theme={editingTheme}
+                isOpen={!!editingTheme}
+                onClose={() => setEditingTheme(null)}
+                onUpdated={updated => {
+                    setError(null);
+                    setThemes(prev => sortThemes(prev.map(t => (t.id === updated.id ? updated : t))));
+                    notification.success("Thema bijgewerkt");
+                }}
+            />
+
+            <ThemeDeleteModal
+                theme={deletingTheme}
+                isOpen={!!deletingTheme}
+                onClose={() => setDeletingTheme(null)}
+                onDeleted={(deleted, message = "Thema verwijderd") => {
+                    setError(null);
+                    setThemes(prev => prev.filter(t => t.id !== deleted.id));
+                    notification.success(message);
                 }}
             />
         </section>

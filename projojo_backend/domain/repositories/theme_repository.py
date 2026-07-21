@@ -31,7 +31,7 @@ class ThemeRepository(BaseRepository[Theme]):
         results = Db.read_transact(query, {"id": id})
         if not results:
             raise ItemRetrievalException(Theme, f"Theme with ID {id} not found.")
-        return self._map_to_model(results[0])
+        return self._with_project_counts([self._map_to_model(results[0])])[0]
 
     def get_all(self) -> list[Theme]:
         query = """
@@ -50,10 +50,37 @@ class ThemeRepository(BaseRepository[Theme]):
             };
         """
         results = Db.read_transact(query)
-        themes = [self._map_to_model(result) for result in results]
+        themes = self._with_project_counts([self._map_to_model(result) for result in results])
         # Sort by display_order, then name. Treat only a missing display_order as
         # last (a real 0 sorts first), matching the frontend's `?? 999` semantics.
         return sorted(themes, key=lambda t: (999 if t.display_order is None else t.display_order, t.name))
+
+    @staticmethod
+    def _with_project_counts(themes: list[Theme]) -> list[Theme]:
+        """
+        Fill in how many projects each theme is linked to, so the teacher's delete
+        confirmation can state the impact before anything is removed (TS-task-013).
+
+        One query returns a row per hasTheme relation and the counting happens here:
+        the catalog is small, and a single read serves a whole list of themes.
+        """
+        query = """
+            match
+                $hasTheme isa hasTheme(theme: $theme);
+                $theme has id $theme_id;
+            fetch {
+                'theme_id': $theme_id
+            };
+        """
+        counts: dict[str, int] = {}
+        for row in Db.read_transact(query):
+            theme_id = row.get("theme_id")
+            if theme_id:
+                counts[theme_id] = counts.get(theme_id, 0) + 1
+
+        for theme in themes:
+            theme.project_count = counts.get(theme.id, 0)
+        return themes
 
     @staticmethod
     def _find_by_name_case_insensitive(themes: list[Theme], name: str) -> Theme | None:
@@ -157,6 +184,10 @@ class ThemeRepository(BaseRepository[Theme]):
     def update(self, theme_id: str, theme: ThemeUpdate) -> Theme:
         update_clauses = []
         params = {"theme_id": theme_id}
+        # Clears and field updates run together in one all-or-nothing
+        # transaction (below), so a caller never receives a successful or
+        # partially applied update: either every change commits or none do.
+        operations: list[tuple[str, dict[str, Any] | None]] = []
 
         if theme.name is not None:
             duplicate = self.get_by_name_case_insensitive(theme.name)
@@ -165,18 +196,26 @@ class ThemeRepository(BaseRepository[Theme]):
 
             update_clauses.append("$theme has name ~name;")
             params["name"] = theme.name
-        if theme.sdg_code is not None:
-            update_clauses.append("$theme has sdgCode ~sdg_code;")
-            params["sdg_code"] = theme.sdg_code
-        if theme.icon is not None:
-            update_clauses.append("$theme has icon ~icon;")
-            params["icon"] = theme.icon
-        if theme.description is not None:
-            update_clauses.append("$theme has themeDescription ~description;")
-            params["description"] = theme.description
-        if theme.color is not None:
-            update_clauses.append("$theme has color ~color;")
-            params["color"] = theme.color
+
+        # Optional string attributes: None leaves the field unchanged, an empty
+        # value clears it (delete the optional attribute), any other value sets it.
+        # Clearing is a separate delete because an `update` stage can only set;
+        # storing "" would otherwise make later reads return "" instead of None.
+        optional_values = {
+            "sdgCode": theme.sdg_code,
+            "icon": theme.icon,
+            "themeDescription": theme.description,
+            "color": theme.color,
+        }
+        for attr, value in optional_values.items():
+            if value is None:
+                continue
+            if value == "":
+                operations.append(self._clear_attribute_query(theme_id, attr))
+            else:
+                update_clauses.append(f"$theme has {attr} ~{attr};")
+                params[attr] = value
+
         if theme.display_order is not None:
             update_clauses.append("$theme has displayOrder ~display_order;")
             params["display_order"] = theme.display_order
@@ -188,12 +227,37 @@ class ThemeRepository(BaseRepository[Theme]):
                 update
                     {' '.join(update_clauses)}
             """
-            Db.write_transact(query, params)
+            operations.append((query, params))
+
+        if operations:
+            Db.write_transact_many(operations)
 
         return self.get_by_id(theme_id)
 
+    @staticmethod
+    def _clear_attribute_query(theme_id: str, attribute: str) -> tuple[str, dict[str, Any]]:
+        """
+        Build the (query, params) that removes an optional attribute from a theme
+        if it is present, for inclusion in the update transaction.
+
+        Mirrors set_impact_summary's delete-then-set approach: matching on
+        `has {attribute} $val` yields nothing when the attribute is absent, so
+        clearing an already-empty field is a harmless no-op. `attribute` is an
+        internal TypeDB attribute name (never user input), so it is safe to
+        interpolate directly.
+        """
+        query = f"""
+            match
+                $theme isa theme, has id ~theme_id, has {attribute} $val;
+            delete
+                has $val of $theme;
+        """
+        return query, {"theme_id": theme_id}
+
     def delete(self, theme_id: str) -> None:
-        # First remove all hasTheme relations for this theme
+        # Remove all hasTheme relations and the theme itself in one
+        # all-or-nothing transaction so we never leave a theme without
+        # its links (or vice versa) if one write fails.
         delete_relations = """
             match
                 $theme isa theme, has id ~theme_id;
@@ -201,19 +265,16 @@ class ThemeRepository(BaseRepository[Theme]):
             delete
                 $hasTheme;
         """
-        try:
-            Db.write_transact(delete_relations, {"theme_id": theme_id})
-        except Exception:
-            pass
-
-        # Then delete the theme itself
         delete_theme = """
             match
                 $theme isa theme, has id ~theme_id;
             delete
                 $theme;
         """
-        Db.write_transact(delete_theme, {"theme_id": theme_id})
+        Db.write_transact_many([
+            (delete_relations, {"theme_id": theme_id}),
+            (delete_theme, {"theme_id": theme_id}),
+        ])
 
     def get_themes_by_project(self, project_id: str) -> list[Theme]:
         query = """
@@ -231,6 +292,9 @@ class ThemeRepository(BaseRepository[Theme]):
                 'display_order': [$theme.displayOrder]
             };
         """
+        # No project counts here: nothing renders them for a project's own themes,
+        # and this endpoint is called once per project by the overview page, where
+        # a catalog-wide relation scan per call is real cost for an unread field.
         results = Db.read_transact(query, {"project_id": project_id})
         return [self._map_to_model(result) for result in results]
 

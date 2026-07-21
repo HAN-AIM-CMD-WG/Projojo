@@ -10,6 +10,10 @@ class Theme(BaseModel):
     description: str | None = None
     color: str | None = None  # Color code e.g. "#4CAF50"
     display_order: int | None = None
+    # Projects linked via hasTheme; drives the delete impact warning. Only the
+    # catalog reads (get_all / get_by_id) count them, so None means "not counted
+    # here" rather than "no linked projects".
+    project_count: int | None = None
 
     class Config:
         from_attributes = True

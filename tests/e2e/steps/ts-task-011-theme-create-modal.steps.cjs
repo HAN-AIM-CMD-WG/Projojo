@@ -4,11 +4,11 @@ const { Given, Then, When } = require('@qavajs/core');
 
 const { E2E_TEACHER_ID } = require('../support/test-data.cjs');
 const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
+const { setNativeColor } = require('../support/color-input.cjs');
 const {
   THEME_SEED_BASELINE,
   BASELINE_DUPLICATE_NAME,
   resetThemeCatalog,
-  getThemeByName,
   waitForThemeByName,
 } = require('../support/theme-catalog.cjs');
 
@@ -111,16 +111,7 @@ When('I open the icon dropdown', async function () {
 });
 
 When('I pick the color {string}', async function (hex) {
-  // <input type="color"> is not fillable, and a controlled React input ignores a
-  // direct value assignment. Use the native value setter so React's change
-  // tracker fires onChange, mirroring a user picking a swatch.
-  const input = createModal(this).getByTestId('theme-color-input');
-  await input.evaluate((element, value) => {
-    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-    setter.call(element, value);
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-    element.dispatchEvent(new Event('change', { bubbles: true }));
-  }, hex);
+  await setNativeColor(createModal(this).getByTestId('theme-color-input'), hex);
 });
 
 Then('the theme create modal should be visible', async function () {
@@ -227,18 +218,6 @@ Then('the theme create modal should be closed', async function () {
   assert.equal(await createModal(this).count(), 0, 'Expected the theme create modal to be closed');
 });
 
-Then('a {string} success message should be shown', async function (message) {
-  const toast = page(this).getByRole('alert').filter({ hasText: message });
-  await toast.waitFor({ state: 'visible', timeout: 10_000 });
-  assert.equal(await toast.isVisible(), true, `Expected a success message '${message}'`);
-});
-
-Then('a theme row named {string} should be listed', async function (name) {
-  const row = page(this).getByTestId('theme-row').filter({ hasText: name });
-  await row.waitFor({ state: 'visible', timeout: 10_000 });
-  assert.equal(await row.count(), 1, `Expected exactly one theme row named '${name}'`);
-});
-
 Then('the theme create modal should stay open', async function () {
   // Ordered after the inline-error assertion, which waits for the failed response
   // to render. The save has therefore already resolved, so a still-visible modal
@@ -250,12 +229,6 @@ Then('the inline create error {string} should be shown', async function (message
   const error = createModal(this).getByTestId('theme-form-error');
   await error.waitFor({ state: 'visible', timeout: 10_000 });
   assert.equal((await error.innerText()).trim(), message, `Expected the inline error to read '${message}'`);
-});
-
-Then('no theme named {string} should exist', async function (name) {
-  // Give any (unwanted) in-flight create a chance to land before asserting absence.
-  await page(this).waitForTimeout(500);
-  assert.equal(await getThemeByName(name), null, `Expected no theme named '${name}' to have been created`);
 });
 
 Then('the created theme sdg_code should equal {string}', async function (expected) {
