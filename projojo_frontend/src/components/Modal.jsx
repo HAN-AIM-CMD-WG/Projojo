@@ -42,7 +42,6 @@ export default function Modal({
     const modalRef = useRef(null);
     const closeButtonRef = useRef(null);
     const previousActiveElement = useRef(null);
-    const hasFocusedOnOpen = useRef(false);
     const modalInstanceId = useId();
     const titleId = useId();
     const [stackIndex, setStackIndex] = useState(0);
@@ -107,32 +106,39 @@ export default function Modal({
         };
     }, [forceModalStackRender, modalInstanceId]);
 
+    // Focus lifecycle, keyed on isModalOpen alone. handleKeyDown is a fresh
+    // function on every render, so keeping focus restoration out of the stack
+    // effect below (which depends on it) is deliberate: focus is captured once
+    // when the modal opens and restored exactly once when it closes or unmounts.
+    // It is never re-grabbed on an unrelated re-render of the modal's parent.
+    useEffect(() => {
+        if (!isModalOpen) {
+            return;
+        }
+
+        // Remember what was focused so it can be restored on close, then move
+        // focus onto the close button once the modal has painted.
+        previousActiveElement.current = document.activeElement;
+        const focusTimer = setTimeout(() => {
+            closeButtonRef.current?.focus();
+        }, 0);
+
+        return () => {
+            clearTimeout(focusTimer);
+            previousActiveElement.current?.focus();
+        };
+    }, [isModalOpen]);
+
+    // Stack membership and the keydown listener. This re-runs on every render
+    // (handleKeyDown changes each time), which is harmless: joining the stack and
+    // (re)binding the listener are idempotent and carry no focus side effect.
     useEffect(() => {
         if (isModalOpen) {
             setStackIndex(addModalToStack(modalInstanceId));
-
-            if (!hasFocusedOnOpen.current) {
-                // Store currently focused element to restore later
-                previousActiveElement.current = document.activeElement;
-
-                // Focus the close button after a short delay to ensure modal is rendered
-                setTimeout(() => {
-                    closeButtonRef.current?.focus();
-                }, 0);
-                hasFocusedOnOpen.current = true;
-            }
-
-            // Add keyboard listener
             document.addEventListener('keydown', handleKeyDown);
         } else {
-            hasFocusedOnOpen.current = false;
             removeModalFromStack(modalInstanceId);
             document.removeEventListener('keydown', handleKeyDown);
-
-            // Restore focus to previously focused element
-            if (previousActiveElement.current) {
-                previousActiveElement.current.focus();
-            }
         }
 
         return () => {
