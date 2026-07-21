@@ -42,7 +42,6 @@ export default function Modal({
     const modalRef = useRef(null);
     const closeButtonRef = useRef(null);
     const previousActiveElement = useRef(null);
-    const hasFocusedOnOpen = useRef(false);
     const modalInstanceId = useId();
     const titleId = useId();
     const [stackIndex, setStackIndex] = useState(0);
@@ -107,32 +106,46 @@ export default function Modal({
         };
     }, [forceModalStackRender, modalInstanceId]);
 
+    // Focus lifecycle, keyed on isModalOpen alone. Keeping focus restoration out
+    // of the stack effect below (which also depends on handleKeyDown) is
+    // deliberate: focus is captured once when the modal opens and restored
+    // exactly once when it closes or unmounts. Isolating it here means a re-run
+    // of the stack effect can never re-grab focus on an unrelated re-render.
+    // Note: unlike the old single-effect version (which only restored focus on an
+    // explicit true -> false transition), this cleanup also runs when the modal
+    // unmounts while still open (e.g. parent navigates away). This is intentional
+    // for accessibility - focus always returns to the trigger - not a regression.
+    useEffect(() => {
+        if (!isModalOpen) {
+            return;
+        }
+
+        // Remember what was focused so it can be restored on close, then move
+        // focus onto the close button once the modal has painted.
+        previousActiveElement.current = document.activeElement;
+        const focusTimer = setTimeout(() => {
+            closeButtonRef.current?.focus();
+        }, 0);
+
+        return () => {
+            clearTimeout(focusTimer);
+            previousActiveElement.current?.focus();
+        };
+    }, [isModalOpen]);
+
+    // Stack membership and the keydown listener. handleKeyDown is stable by
+    // default (its useCallback deps isTopModal and setIsModalOpen are both
+    // stable), so this normally only re-runs when isModalOpen changes. Even if a
+    // caller passed an unstable setIsModalOpen, extra re-runs would be harmless:
+    // joining the stack and (re)binding the listener are idempotent, the cleanup
+    // removes the old listener first, and there is no focus side effect here.
     useEffect(() => {
         if (isModalOpen) {
             setStackIndex(addModalToStack(modalInstanceId));
-
-            if (!hasFocusedOnOpen.current) {
-                // Store currently focused element to restore later
-                previousActiveElement.current = document.activeElement;
-
-                // Focus the close button after a short delay to ensure modal is rendered
-                setTimeout(() => {
-                    closeButtonRef.current?.focus();
-                }, 0);
-                hasFocusedOnOpen.current = true;
-            }
-
-            // Add keyboard listener
             document.addEventListener('keydown', handleKeyDown);
         } else {
-            hasFocusedOnOpen.current = false;
             removeModalFromStack(modalInstanceId);
             document.removeEventListener('keydown', handleKeyDown);
-
-            // Restore focus to previously focused element
-            if (previousActiveElement.current) {
-                previousActiveElement.current.focus();
-            }
         }
 
         return () => {
