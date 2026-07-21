@@ -14,7 +14,8 @@ Feature: TS-task-009 themes in the authenticated complete business overview
     When I request the complete business overview
     Then the complete business overview response status should be 200
     And the "E2E proof project" in the complete business overview should have themes "Duurzaamheid,Innovatie & Technologie"
-    And every theme of the E2E proof project in the complete business overview should expose a non-empty id, name, icon and color
+    And every theme of the E2E proof project in the complete business overview should expose a populated id and name and a nullable icon and color
+    And the nested themes "Duurzaamheid,Innovatie & Technologie" of the E2E proof project should have a populated icon and color
 
   @api @theme @TS-task-009
   Scenario: A project without theme links exposes an empty themes array
@@ -29,7 +30,16 @@ Feature: TS-task-009 themes in the authenticated complete business overview
     Given the E2E proof project is linked to themes "Duurzaamheid,Klimaat & Milieu"
     And I am authenticated as the E2E supervisor for the business API
     When I request the complete business overview
-    Then the nested themes of the E2E proof project should equal GET /themes/project on id, name, icon and color
+    Then the nested themes of the E2E proof project should equal GET /themes/project on id, name, icon and color, with every field populated
+
+  @api @theme @TS-task-009 @ts009-nullable-theme
+  Scenario: A theme without an icon or color is nested as null rather than omitted
+    Given a theme "TS009 Thema Zonder Iconen" exists without an icon or color
+    And the E2E proof project is linked to themes "TS009 Thema Zonder Iconen"
+    And I am authenticated as the E2E supervisor for the business API
+    When I request the complete business overview
+    Then the nested theme "TS009 Thema Zonder Iconen" of the E2E proof project should have a null icon and color
+    And the nested theme "TS009 Thema Zonder Iconen" of the E2E proof project should equal its GET /themes/project entry
 
   @api @theme @TS-task-009
   Scenario: Exactly three linked themes are nested once each
