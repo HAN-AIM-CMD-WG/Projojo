@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException, Request, status
 
 from auth.permissions import auth
-from domain.models.portfolio import PortfolioResponse, PortfolioReviewCreateRequest
+from domain.models.portfolio import (
+    PortfolioItemResponse,
+    PortfolioItemRetractionUpdate,
+    PortfolioResponse,
+    PortfolioReviewCreateRequest,
+)
 from domain.repositories.portfolio_repository import PortfolioRepository
 from service.portfolio_policy import can_read_authenticated_student_portfolio
 
@@ -36,6 +41,38 @@ async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateReq
         raise HTTPException(status_code=403, detail=str(error))
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.patch(
+    "/portfolios/me/items/{item_id}",
+    response_model=PortfolioItemResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio-item niet gevonden"}}}},
+    },
+)
+@auth(role="student")
+async def set_portfolio_item_authenticated_public_retraction(
+    item_id: str, update: PortfolioItemRetractionUpdate, request: Request
+):
+    # Owner-only curation: @auth(role="student") already blocks teachers, supervisors, and
+    # unauthenticated callers; ownership is enforced here so a student may only mutate their own
+    # item, and a non-owned or unknown item is reported as not found without disclosing existence.
+    owner_id = request.state.user_id
+    if portfolio_repo.get_owned_item(item_id, owner_id) is None:
+        raise HTTPException(status_code=404, detail="Portfolio-item niet gevonden")
+
+    portfolio_repo.set_authenticated_public_retraction(item_id, owner_id, update.is_authenticated_public_retraction)
+
+    # The returned item is owner-scoped: the owner can always see their own item, so
+    # visibility.reason is always the authenticated-viewer reason here and does not reflect the
+    # supervisor-facing effect of the flag. That effect is conveyed by
+    # curation.is_authenticated_public_retraction. Reviews are the owner's full review set for the
+    # item, so the response matches the shape the owner sees in their portfolio read model.
+    item = portfolio_repo.get_owned_item(item_id, owner_id)
+    reviews = portfolio_repo.get_reviews_for_items([item_id])
+    return portfolio_repo.attach_reviews([item], reviews)[0]
 
 
 @router.get(

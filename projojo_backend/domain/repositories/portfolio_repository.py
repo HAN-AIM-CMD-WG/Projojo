@@ -6,6 +6,56 @@ from db.initDatabase import Db
 from service.uuid_service import generate_uuid
 
 
+# Shared fetch projection for a single portfolioItem row. Both the list read
+# (get_visible_items) and the ownership-scoped single read (get_owned_item) return the
+# identical item shape; only their match clauses differ (visibility filters vs. ownership
+# scope), so the projection is defined once here. It dot-projects off $item and $student,
+# which are bound by both callers' match clauses (each binds $owner_student_name and
+# $owner_student_image_path on $student). No ~params appear here, so it is safe to concatenate.
+_PORTFOLIO_ITEM_FETCH_PROJECTION = """
+    fetch {
+        'id': $item.id,
+        'created_at': $item.createdAt,
+        'completed_at': $item.completedAt,
+        'owner_student_id': $student.id,
+        'owner_student_name': $owner_student_name,
+        'owner_student_image_path': $owner_student_image_path,
+        'source_student_id': [ $item.sourceStudentId ],
+        'source_registration_id': $item.sourceRegistrationId,
+        'source_task_id': $item.sourceTaskId,
+        'source_project_id': $item.sourceProjectId,
+        'source_business_id': $item.sourceBusinessId,
+        'student_name': [ $item.studentName ],
+        'student_image_path': [ $item.studentImagePath ],
+        'task_name': $item.taskName,
+        'task_description': [ $item.taskDescription ],
+        'project_name': $item.projectName,
+        'project_description': [ $item.projectDescription ],
+        'business_name': $item.businessName,
+        'business_location': [ $item.businessLocation ],
+        'skills': [
+            match
+                $item has skillName $skill_name;
+            fetch { 'name': $skill_name };
+        ],
+        'timeline_start_date': [ $item.timelineStartDate ],
+        'timeline_end_date': [ $item.timelineEndDate ],
+        'is_retired': $item.isRetired,
+        'retired_at': [ $item.retiredAt ],
+        'is_hidden': $item.isHidden,
+        'hidden_at': [ $item.hiddenAt ],
+        'hidden_by_role': [ $item.hiddenByRole ],
+        'hidden_by_user_id': [ $item.hiddenByUserId ],
+        'display_order': [ $item.displayOrder ],
+        'is_authenticated_public_retraction': $item.isAuthenticatedPublicRetraction,
+        'is_world_visible': $item.isWorldVisible,
+        'source_task_archived': [ $item.sourceTaskArchived ],
+        'source_project_archived': [ $item.sourceProjectArchived ],
+        'source_business_archived': [ $item.sourceBusinessArchived ]
+    };
+"""
+
+
 class PortfolioRepository:
     _ROLE_TYPE_TOKENS: dict[str, str] = {
         "teacher": "teacher",
@@ -178,64 +228,18 @@ class PortfolioRepository:
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
 
     def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
-        query = """
+        # Visibility-filtered list read: retired and hidden items are excluded in the match. The
+        # shared projection still requires every canonical attribute to exist, so the returned
+        # shape is identical to get_owned_item.
+        query = (
+            """
             match
                 $student isa student, has id ~student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
-                $item isa portfolioItem,
-                    has id $id,
-                    has createdAt $created_at,
-                    has completedAt $completed_at,
-                    has sourceRegistrationId $source_registration_id,
-                    has sourceTaskId $source_task_id,
-                    has sourceProjectId $source_project_id,
-                    has sourceBusinessId $source_business_id,
-                    has taskName $task_name,
-                    has projectName $project_name,
-                    has businessName $business_name,
-                    has isRetired false,
-                    has isHidden false,
-                    has isAuthenticatedPublicRetraction $is_authenticated_public_retraction,
-                    has isWorldVisible $is_world_visible;
+                $item isa portfolioItem, has isRetired false, has isHidden false;
                 $ownership isa hasPortfolio(student: $student, item: $item);
-            fetch {
-                'id': $id,
-                'created_at': $created_at,
-                'completed_at': $completed_at,
-                'owner_student_id': $student.id,
-                'owner_student_name': $owner_student_name,
-                'owner_student_image_path': $owner_student_image_path,
-                'source_student_id': [$item.sourceStudentId],
-                'source_registration_id': $source_registration_id,
-                'source_task_id': $source_task_id,
-                'source_project_id': $source_project_id,
-                'source_business_id': $source_business_id,
-                'student_name': [$item.studentName],
-                'student_image_path': [$item.studentImagePath],
-                'task_name': $task_name,
-                'task_description': [ $item.taskDescription ],
-                'project_name': $project_name,
-                'project_description': [ $item.projectDescription ],
-                'business_name': $business_name,
-                'business_location': [ $item.businessLocation ],
-                'skills': [
-                    match
-                        $item has skillName $skill_name;
-                    fetch { 'name': $skill_name };
-                ],
-                'timeline_start_date': [ $item.timelineStartDate ],
-                'timeline_end_date': [ $item.timelineEndDate ],
-                'retired_at': [ $item.retiredAt ],
-                'hidden_at': [ $item.hiddenAt ],
-                'hidden_by_role': [ $item.hiddenByRole ],
-                'hidden_by_user_id': [ $item.hiddenByUserId ],
-                'display_order': [ $item.displayOrder ],
-                'is_authenticated_public_retraction': $is_authenticated_public_retraction,
-                'is_world_visible': $is_world_visible,
-                'source_task_archived': [$item.sourceTaskArchived],
-                'source_project_archived': [$item.sourceProjectArchived],
-                'source_business_archived': [$item.sourceBusinessArchived]
-            };
-        """
+            """
+            + _PORTFOLIO_ITEM_FETCH_PROJECTION
+        )
         rows = Db.read_transact(query, {"student_id": student_id})
         items = [self._map_item(row, viewer_role) for row in rows]
         return sorted(
@@ -249,6 +253,40 @@ class PortfolioRepository:
 
     def get_world_public_items(self, student_id: str) -> list[dict[str, Any]]:
         return [item for item in self.get_visible_items(student_id, "public") if item["curation"]["is_world_visible"]]
+
+    def get_owned_item(self, item_id: str, owner_student_id: str) -> dict[str, Any] | None:
+        # Ownership-scoped single-item read for the student's own curation endpoint. Unlike
+        # get_visible_items it does not filter retired/hidden items, so the owner always gets the
+        # canonical post-mutation state back. Returns None when the item does not belong to the caller.
+        query = (
+            """
+            match
+                $student isa student, has id ~owner_student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+            """
+            + _PORTFOLIO_ITEM_FETCH_PROJECTION
+        )
+        rows = Db.read_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id})
+        if not rows:
+            return None
+        return self._map_item(rows[0], "student")
+
+    def set_authenticated_public_retraction(self, item_id: str, owner_student_id: str, retracted: bool) -> None:
+        # Owner-scoped write (defense in depth): the match requires the caller to own the item via
+        # hasPortfolio, so the flag can never be flipped on an item the student does not own even if
+        # the route-level ownership guard were ever bypassed. Only the authenticated-public retraction
+        # flag is touched; world-public selection and every other curation attribute are left
+        # untouched (PF-task-007c is independent from world-public).
+        query = """
+            match
+                $student isa student, has id ~owner_student_id;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+            update
+                $item has isAuthenticatedPublicRetraction ~retracted;
+        """
+        Db.write_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id, "retracted": retracted})
 
     def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
         if not item_ids:

@@ -65,6 +65,10 @@ class PortfolioReviewCreateRequest(BaseModel):
     public_review_notice_accepted: bool = False
 
 
+class PortfolioItemRetractionUpdate(BaseModel):
+    is_authenticated_public_retraction: bool
+
+
 class PortfolioReviewResponse(BaseModel):
     id: str
     item_id: str
