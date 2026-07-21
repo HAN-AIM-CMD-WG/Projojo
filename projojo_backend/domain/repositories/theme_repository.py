@@ -1,5 +1,6 @@
 from typing import Any
-from db.initDatabase import Db
+from typedb.common.exception import TypeDBDriverException
+from db.initDatabase import Db, build_query
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Theme, ThemeCreate, ThemeUpdate
@@ -30,7 +31,7 @@ class ThemeRepository(BaseRepository[Theme]):
         results = Db.read_transact(query, {"id": id})
         if not results:
             raise ItemRetrievalException(Theme, f"Theme with ID {id} not found.")
-        return self._map_to_model(results[0])
+        return self._with_project_counts([self._map_to_model(results[0])])[0]
 
     def get_all(self) -> list[Theme]:
         query = """
@@ -49,9 +50,48 @@ class ThemeRepository(BaseRepository[Theme]):
             };
         """
         results = Db.read_transact(query)
-        themes = [self._map_to_model(result) for result in results]
-        # Sort by display_order, then name
-        return sorted(themes, key=lambda t: (t.display_order or 999, t.name))
+        themes = self._with_project_counts([self._map_to_model(result) for result in results])
+        # Sort by display_order, then name. Treat only a missing display_order as
+        # last (a real 0 sorts first), matching the frontend's `?? 999` semantics.
+        return sorted(themes, key=lambda t: (999 if t.display_order is None else t.display_order, t.name))
+
+    @staticmethod
+    def _with_project_counts(themes: list[Theme]) -> list[Theme]:
+        """
+        Fill in how many projects each theme is linked to, so the teacher's delete
+        confirmation can state the impact before anything is removed (TS-task-013).
+
+        One query returns a row per hasTheme relation and the counting happens here:
+        the catalog is small, and a single read serves a whole list of themes.
+        """
+        query = """
+            match
+                $hasTheme isa hasTheme(theme: $theme);
+                $theme has id $theme_id;
+            fetch {
+                'theme_id': $theme_id
+            };
+        """
+        counts: dict[str, int] = {}
+        for row in Db.read_transact(query):
+            theme_id = row.get("theme_id")
+            if theme_id:
+                counts[theme_id] = counts.get(theme_id, 0) + 1
+
+        for theme in themes:
+            theme.project_count = counts.get(theme.id, 0)
+        return themes
+
+    @staticmethod
+    def _find_by_name_case_insensitive(themes: list[Theme], name: str) -> Theme | None:
+        # Compare in Python instead of a TypeQL `like` regex: names may contain
+        # characters (spaces, '&', ...) that TypeDB's regex literal parser rejects
+        # when escaped via re.escape, and the theme catalog is small.
+        target = name.casefold()
+        return next((theme for theme in themes if theme.name.casefold() == target), None)
+
+    def get_by_name_case_insensitive(self, name: str) -> Theme | None:
+        return self._find_by_name_case_insensitive(self.get_all(), name)
 
     def _map_to_model(self, result: dict[str, Any]) -> Theme:
         sdg_code_list = result.get("sdg_code", [])
@@ -70,9 +110,34 @@ class ThemeRepository(BaseRepository[Theme]):
             display_order=display_order_list[0] if display_order_list else None
         )
 
+    @staticmethod
+    def _next_display_order(themes: list[Theme]) -> int:
+        """
+        The display_order a new theme gets when the caller does not supply one:
+        max(existing display_order) + 1.
+
+        `default=0` keeps an empty catalog valid (max() of an empty sequence
+        raises), so the first theme in an empty catalog becomes 1.
+        """
+        orders = [theme.display_order for theme in themes if theme.display_order is not None]
+        return max(orders, default=0) + 1
+
     def create(self, theme: ThemeCreate) -> Theme:
+        # One read of the catalog serves both the duplicate check and the
+        # display_order assignment, so they also decide against the same snapshot.
+        existing = self.get_all()
+
+        if self._find_by_name_case_insensitive(existing, theme.name):
+            raise ValueError("Er bestaat al een thema met deze naam")
+
+        # The teacher never picks a sort order (TS-task-011 AC-3). When the caller
+        # omits display_order the server assigns it here, from the authoritative
+        # catalog, instead of trusting a client that may hold a stale or empty
+        # list. An explicit display_order (including 0) is always honoured.
+        display_order = theme.display_order if theme.display_order is not None else self._next_display_order(existing)
+
         id = generate_uuid()
-        
+
         query = """
             insert
                 $theme isa theme,
@@ -84,15 +149,27 @@ class ThemeRepository(BaseRepository[Theme]):
                 has color ~color,
                 has displayOrder ~display_order;
         """
-        Db.write_transact(query, {
-            "id": id,
-            "name": theme.name,
-            "sdg_code": theme.sdg_code,
-            "icon": theme.icon,
-            "description": theme.description,
-            "color": theme.color,
-            "display_order": theme.display_order
-        })
+        try:
+            Db.write_transact(query, {
+                "id": id,
+                "name": theme.name,
+                "sdg_code": theme.sdg_code,
+                "icon": theme.icon,
+                "description": theme.description,
+                "color": theme.color,
+                "display_order": display_order
+            })
+        except TypeDBDriverException:
+            # TOCTOU backstop: the duplicate check above runs against a snapshot,
+            # so two concurrent creates with the same name can both pass it; the
+            # schema's `@unique` on name then rejects the losing insert at commit.
+            # Re-checking (rather than matching the driver's error text) keeps this
+            # robust to server message changes and avoids masking unrelated write
+            # failures as a name conflict. If the name now exists, surface the same
+            # ValueError the pre-check raises (clean 4xx); otherwise re-raise.
+            if self._find_by_name_case_insensitive(self.get_all(), theme.name):
+                raise ValueError("Er bestaat al een thema met deze naam") from None
+            raise
 
         return Theme(
             id=id,
@@ -101,28 +178,44 @@ class ThemeRepository(BaseRepository[Theme]):
             icon=theme.icon,
             description=theme.description,
             color=theme.color,
-            display_order=theme.display_order
+            display_order=display_order
         )
 
     def update(self, theme_id: str, theme: ThemeUpdate) -> Theme:
         update_clauses = []
         params = {"theme_id": theme_id}
+        # Clears and field updates run together in one all-or-nothing
+        # transaction (below), so a caller never receives a successful or
+        # partially applied update: either every change commits or none do.
+        operations: list[tuple[str, dict[str, Any] | None]] = []
 
         if theme.name is not None:
+            duplicate = self.get_by_name_case_insensitive(theme.name)
+            if duplicate and duplicate.id != theme_id:
+                raise ValueError("Er bestaat al een thema met deze naam")
+
             update_clauses.append("$theme has name ~name;")
             params["name"] = theme.name
-        if theme.sdg_code is not None:
-            update_clauses.append("$theme has sdgCode ~sdg_code;")
-            params["sdg_code"] = theme.sdg_code
-        if theme.icon is not None:
-            update_clauses.append("$theme has icon ~icon;")
-            params["icon"] = theme.icon
-        if theme.description is not None:
-            update_clauses.append("$theme has themeDescription ~description;")
-            params["description"] = theme.description
-        if theme.color is not None:
-            update_clauses.append("$theme has color ~color;")
-            params["color"] = theme.color
+
+        # Optional string attributes: None leaves the field unchanged, an empty
+        # value clears it (delete the optional attribute), any other value sets it.
+        # Clearing is a separate delete because an `update` stage can only set;
+        # storing "" would otherwise make later reads return "" instead of None.
+        optional_values = {
+            "sdgCode": theme.sdg_code,
+            "icon": theme.icon,
+            "themeDescription": theme.description,
+            "color": theme.color,
+        }
+        for attr, value in optional_values.items():
+            if value is None:
+                continue
+            if value == "":
+                operations.append(self._clear_attribute_query(theme_id, attr))
+            else:
+                update_clauses.append(f"$theme has {attr} ~{attr};")
+                params[attr] = value
+
         if theme.display_order is not None:
             update_clauses.append("$theme has displayOrder ~display_order;")
             params["display_order"] = theme.display_order
@@ -134,32 +227,54 @@ class ThemeRepository(BaseRepository[Theme]):
                 update
                     {' '.join(update_clauses)}
             """
-            Db.write_transact(query, params)
+            operations.append((query, params))
+
+        if operations:
+            Db.write_transact_many(operations)
 
         return self.get_by_id(theme_id)
 
+    @staticmethod
+    def _clear_attribute_query(theme_id: str, attribute: str) -> tuple[str, dict[str, Any]]:
+        """
+        Build the (query, params) that removes an optional attribute from a theme
+        if it is present, for inclusion in the update transaction.
+
+        Mirrors set_impact_summary's delete-then-set approach: matching on
+        `has {attribute} $val` yields nothing when the attribute is absent, so
+        clearing an already-empty field is a harmless no-op. `attribute` is an
+        internal TypeDB attribute name (never user input), so it is safe to
+        interpolate directly.
+        """
+        query = f"""
+            match
+                $theme isa theme, has id ~theme_id, has {attribute} $val;
+            delete
+                has $val of $theme;
+        """
+        return query, {"theme_id": theme_id}
+
     def delete(self, theme_id: str) -> None:
-        # First remove all hasTheme relations for this theme
+        # Remove all hasTheme relations and the theme itself in one
+        # all-or-nothing transaction so we never leave a theme without
+        # its links (or vice versa) if one write fails.
         delete_relations = """
             match
                 $theme isa theme, has id ~theme_id;
                 $hasTheme isa hasTheme(theme: $theme);
             delete
-                $hasTheme isa hasTheme;
+                $hasTheme;
         """
-        try:
-            Db.write_transact(delete_relations, {"theme_id": theme_id})
-        except Exception:
-            pass
-
-        # Then delete the theme itself
         delete_theme = """
             match
                 $theme isa theme, has id ~theme_id;
             delete
-                $theme isa theme;
+                $theme;
         """
-        Db.write_transact(delete_theme, {"theme_id": theme_id})
+        Db.write_transact_many([
+            (delete_relations, {"theme_id": theme_id}),
+            (delete_theme, {"theme_id": theme_id}),
+        ])
 
     def get_themes_by_project(self, project_id: str) -> list[Theme]:
         query = """
@@ -177,34 +292,48 @@ class ThemeRepository(BaseRepository[Theme]):
                 'display_order': [$theme.displayOrder]
             };
         """
+        # No project counts here: nothing renders them for a project's own themes,
+        # and this endpoint is called once per project by the overview page, where
+        # a catalog-wide relation scan per call is real cost for an unread field.
         results = Db.read_transact(query, {"project_id": project_id})
         return [self._map_to_model(result) for result in results]
 
-    def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> None:
-        """Link a project to multiple themes (replaces existing links)"""
-        # First remove existing theme links
-        delete_query = """
+    def link_project_to_themes(self, project_id: str, theme_ids: list[str]) -> int:
+        """Atomically replace a project's theme links: all changes succeed or none are applied.
+
+        Duplicate theme ids are ignored. Returns the number of links created.
+        """
+        theme_ids = list(dict.fromkeys(theme_ids))
+        project_query = build_query("""
+            match
+                $project isa project, has id ~project_id;
+        """, {"project_id": project_id})
+        delete_query = build_query("""
             match
                 $project isa project, has id ~project_id;
                 $hasTheme isa hasTheme(project: $project);
             delete
-                $hasTheme isa hasTheme;
+                $hasTheme;
+        """, {"project_id": project_id})
+        insert_template = """
+            match
+                $project isa project, has id ~project_id;
+                $theme isa theme, has id ~theme_id;
+            insert
+                $hasTheme isa hasTheme($project, $theme);
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass
 
-        # Then add new theme links
-        for theme_id in theme_ids:
-            insert_query = """
-                match
-                    $project isa project, has id ~project_id;
-                    $theme isa theme, has id ~theme_id;
-                insert
-                    $hasTheme isa hasTheme($project, $theme);
-            """
-            Db.write_transact(insert_query, {
-                "project_id": project_id,
-                "theme_id": theme_id
-            })
+        insert_queries = [
+            build_query(insert_template, {"project_id": project_id, "theme_id": theme_id})
+            for theme_id in theme_ids
+        ]
+
+        def validate(results: list[list]) -> None:
+            if not results[0]:
+                raise ValueError(f"Project met ID '{project_id}' niet gevonden.")
+            invalid = [theme_id for theme_id, rows in zip(theme_ids, results[2:]) if not rows]
+            if invalid:
+                raise ValueError(f"Thema's niet gevonden: {', '.join(invalid)}")
+
+        Db.write_transact_atomic([project_query, delete_query, *insert_queries], validate=validate)
+        return len(theme_ids)

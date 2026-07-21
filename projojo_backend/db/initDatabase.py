@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
 import re
@@ -178,15 +178,38 @@ class Db:
             tx.commit()
 
     @staticmethod
-    def write_transact_many(queries: list[tuple[str, dict[str, Any] | None]]):
-        """Execute multiple write queries in one transaction."""
+    def write_transact_atomic(queries: list[str], validate: Callable[[list[list[Any]]], None] | None = None) -> list[list[Any]]:
+        """
+        Execute multiple write queries in a single transaction (all-or-nothing).
+
+        Args:
+            queries: Fully-built TypeQL query strings (already parameterized via build_query).
+            validate: Optional callback receiving all resolved rows before commit;
+                      raising from it rolls back the whole transaction.
+
+        Returns:
+            The resolved rows for each query, in order.
+        """
         Db.ensure_connection()
-        built_queries = [build_query(query, params, allow_none=True) if params else query for query, params in queries]
         assert Db.driver is not None
         with Db.driver.transaction(Db.name, TransactionType.WRITE) as tx:
-            for query in built_queries:
-                tx.query(query).resolve()
+            results = [list(tx.query(query).resolve()) for query in queries]
+            if validate is not None:
+                validate(results)
             tx.commit()
+        return results
+
+    @staticmethod
+    def write_transact_many(queries: list[tuple[str, dict[str, Any] | None]]):
+        """
+        Execute multiple parameterized write queries in one transaction (all-or-nothing).
+
+        Convenience wrapper around write_transact_atomic that builds each query
+        from a (template, params) tuple, mirroring write_transact semantics
+        (allow_none=True: None params drop the containing clause).
+        """
+        built_queries = [build_query(query, params, allow_none=True) if params else query for query, params in queries]
+        Db.write_transact_atomic(built_queries)
 
     @staticmethod
     def close():

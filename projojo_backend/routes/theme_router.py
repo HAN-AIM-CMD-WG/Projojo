@@ -1,11 +1,41 @@
 from fastapi import APIRouter, Path, HTTPException, Depends, Body
-from auth.permissions import auth
+from pydantic import ValidationError
+from auth.permissions import auth, check_supervisor_ownership
 from auth.jwt_utils import get_token_payload
 
-from domain.repositories import ThemeRepository
+from domain.repositories import ProjectRepository, ThemeRepository
 from domain.models import Theme, ThemeCreate, ThemeUpdate
+from service.validation_service import (
+    THEME_DISPLAY_ORDER_VALIDATION_ERROR,
+    THEME_NAME_VALIDATION_ERROR,
+    validate_theme,
+)
+from exceptions import ItemRetrievalException
 
 theme_repo = ThemeRepository()
+project_repo = ProjectRepository()
+
+
+def parse_theme_payload(model, payload: dict):
+    try:
+        return model(**payload)
+    except ValidationError as e:
+        for error in e.errors():
+            field = error.get("loc", [None])[0]
+            if field == "name":
+                raise HTTPException(status_code=400, detail=THEME_NAME_VALIDATION_ERROR)
+            if field == "display_order":
+                raise HTTPException(status_code=400, detail=THEME_DISPLAY_ORDER_VALIDATION_ERROR)
+        raise HTTPException(status_code=422, detail=e.errors())
+
+
+def parse_theme_create_payload(payload: dict) -> ThemeCreate:
+    return parse_theme_payload(ThemeCreate, payload)
+
+
+def parse_theme_update_payload(payload: dict) -> ThemeUpdate:
+    return parse_theme_payload(ThemeUpdate, payload)
+
 
 router = APIRouter(prefix="/themes", tags=["Theme Endpoints"])
 
@@ -30,34 +60,43 @@ async def get_theme(theme_id: str = Path(..., description="Theme ID")):
     try:
         theme = theme_repo.get_by_id(theme_id)
         return theme
-    except Exception as e:
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
 
 # Admin endpoints - teacher only
 @router.post("/", response_model=Theme, status_code=201)
 @auth(role="teacher")
-async def create_theme(theme: ThemeCreate):
+async def create_theme(payload: dict = Body(...)):
     """
     Create a new theme (teacher only).
     """
-    created_theme = theme_repo.create(theme)
-    return created_theme
+    theme = parse_theme_create_payload(payload)
+    try:
+        validate_theme(theme, require_name=True)
+        created_theme = theme_repo.create(theme)
+        return created_theme
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/{theme_id}", response_model=Theme)
 @auth(role="teacher")
 async def update_theme(
     theme_id: str = Path(..., description="Theme ID"),
-    theme: ThemeUpdate = Body(...)
+    payload: dict = Body(...)
 ):
     """
     Update a theme (teacher only).
     """
+    theme = parse_theme_update_payload(payload)
     try:
+        validate_theme(theme)
         updated_theme = theme_repo.update(theme_id, theme)
         return updated_theme
-    except Exception as e:
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
 
@@ -68,9 +107,10 @@ async def delete_theme(theme_id: str = Path(..., description="Theme ID")):
     Delete a theme (teacher only).
     """
     try:
+        theme_repo.get_by_id(theme_id)  # raises ItemRetrievalException if not found
         theme_repo.delete(theme_id)
         return {"message": "Theme succesvol verwijderd"}
-    except Exception as e:
+    except ItemRetrievalException:
         raise HTTPException(status_code=404, detail="Theme niet gevonden")
 
 
@@ -95,17 +135,33 @@ async def link_project_themes(
     Only supervisors who own the project or teachers can do this.
     """
     role = payload.get("role")
-    
+
+    # Existence is checked before role/ownership so every authenticated caller gets a
+    # consistent 404 for a nonexistent project (clear feedback when e.g. a project was
+    # deleted mid-edit). This discloses project existence before authorization; that is
+    # acceptable here because project existence is public via the discovery page and ids
+    # are random UUIDs. Revisit if projects ever become private.
+    try:
+        project_repo.get_by_id(project_id)
+    except ItemRetrievalException:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+
     if role == "student":
         raise HTTPException(status_code=403, detail="Studenten kunnen geen thema's koppelen")
-    
-    # Note: For full authorization, we'd need to check project ownership
-    # For now, allow all supervisors and teachers
-    if role not in ["supervisor", "teacher"]:
+
+    if role == "supervisor":
+        is_owner = await check_supervisor_ownership(
+            supervisor_company_id=payload.get("businessId"),
+            resource_key="project_id",
+            resource_id=project_id,
+        )
+        if not is_owner:
+            raise HTTPException(status_code=403, detail="Onvoldoende rechten")
+    elif role != "teacher":
         raise HTTPException(status_code=403, detail="Onvoldoende rechten")
-    
+
     try:
-        theme_repo.link_project_to_themes(project_id, theme_ids)
-        return {"message": f"Project gekoppeld aan {len(theme_ids)} thema's"}
-    except Exception as e:
+        linked_count = theme_repo.link_project_to_themes(project_id, theme_ids)
+        return {"message": f"Project gekoppeld aan {linked_count} thema's"}
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

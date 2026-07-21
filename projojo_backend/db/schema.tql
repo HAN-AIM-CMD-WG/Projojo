@@ -64,7 +64,7 @@ entity project,
 # Thema's voor publieke discovery (gebaseerd op SDG's of eigen thema's)
 entity theme,
     owns id @key,
-    owns name @card(1),
+    owns name @card(1) @unique,
     owns sdgCode @card(0..1),      # Optionele SDG koppeling (bijv. "SDG3", "SDG13")
     owns icon @card(0..1),          # Material icon name
     owns themeDescription @card(0..1),
