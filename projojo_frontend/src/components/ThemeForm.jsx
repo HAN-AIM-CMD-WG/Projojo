@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useId, useRef } from "react";
 
 export const DESCRIPTION_MAX_LENGTH = 500;
 export const DEFAULT_COLOR = "#4caf50";
@@ -73,6 +73,13 @@ export function parseSdgCodes(sdgCode) {
 export default function ThemeForm({ testId, form, onChange, error, isSaving, onSubmit, onCancel }) {
     const iconDetailsRef = useRef(null);
 
+    // Unique per form instance so the create and edit modals never share control
+    // IDs (both are mounted together), keeping label/control associations correct.
+    const fieldId = useId();
+    const nameId = `${fieldId}-name`;
+    const descriptionId = `${fieldId}-description`;
+    const colorId = `${fieldId}-color`;
+
     const toggleSdg = (code) => {
         onChange({ sdgCodes: form.sdgCodes.includes(code) ? form.sdgCodes.filter(c => c !== code) : [...form.sdgCodes, code] });
     };
@@ -90,11 +97,11 @@ export default function ThemeForm({ testId, form, onChange, error, isSaving, onS
         <form data-testid={testId} className="flex flex-col gap-4" onSubmit={e => { e.preventDefault(); onSubmit(); }}>
             {/* Naam */}
             <div>
-                <label htmlFor="theme-name" className="text-sm font-bold leading-6 text-text-primary block mb-1">
+                <label htmlFor={nameId} className="text-sm font-bold leading-6 text-text-primary block mb-1">
                     Naam <span className="text-primary">*</span>
                 </label>
                 <input
-                    id="theme-name"
+                    id={nameId}
                     data-testid="theme-name-input"
                     type="text"
                     required
@@ -109,13 +116,13 @@ export default function ThemeForm({ testId, form, onChange, error, isSaving, onS
             {/* Beschrijving */}
             <div>
                 <div className="flex items-center justify-between mb-1">
-                    <label htmlFor="theme-description" className="text-sm font-bold leading-6 text-text-primary">Beschrijving</label>
+                    <label htmlFor={descriptionId} className="text-sm font-bold leading-6 text-text-primary">Beschrijving</label>
                     <span data-testid="theme-description-counter" className="text-xs text-[var(--text-muted)]">
                         {form.description.length}/{DESCRIPTION_MAX_LENGTH}
                     </span>
                 </div>
                 <textarea
-                    id="theme-description"
+                    id={descriptionId}
                     data-testid="theme-description-input"
                     rows={3}
                     maxLength={DESCRIPTION_MAX_LENGTH}
@@ -190,10 +197,10 @@ export default function ThemeForm({ testId, form, onChange, error, isSaving, onS
 
             {/* Kleur */}
             <div>
-                <label htmlFor="theme-color" className="text-sm font-bold leading-6 text-text-primary block mb-1">Kleur</label>
+                <label htmlFor={colorId} className="text-sm font-bold leading-6 text-text-primary block mb-1">Kleur</label>
                 <div className="flex items-center gap-3">
                     <input
-                        id="theme-color"
+                        id={colorId}
                         data-testid="theme-color-input"
                         type="color"
                         className="w-12 h-10 rounded-lg neu-pressed cursor-pointer"
