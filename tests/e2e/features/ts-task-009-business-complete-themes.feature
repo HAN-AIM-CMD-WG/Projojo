@@ -32,7 +32,7 @@ Feature: TS-task-009 themes in the authenticated complete business overview
     When I request the complete business overview
     Then the nested themes of the E2E proof project should equal GET /themes/project on id, name, icon and color, with every field populated
 
-  @api @theme @TS-task-009 @ts009-nullable-theme
+  @api @theme @TS-task-009
   Scenario: A theme without an icon or color is nested as null rather than omitted
     Given a theme "TS009 Thema Zonder Iconen" exists without an icon or color
     And the E2E proof project is linked to themes "TS009 Thema Zonder Iconen"

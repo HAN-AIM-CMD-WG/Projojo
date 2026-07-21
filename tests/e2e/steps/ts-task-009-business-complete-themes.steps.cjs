@@ -7,7 +7,7 @@
 
 const assert = require('node:assert/strict');
 
-const { After, Before, Given, Then, When } = require('@qavajs/core');
+const { Before, Given, Then, When } = require('@qavajs/core');
 
 const {
   CROSS_BUSINESS_PROJECT_ID,
@@ -41,9 +41,6 @@ const PRE_EXISTING_TASK_FIELDS = [
   'total_registered', 'total_started',
 ];
 
-// The theme the nullable scenario creates and then cleans up after itself.
-const NULLABLE_THEME_NAME = 'TS009 Thema Zonder Iconen';
-
 const SEEDED_PROOF_TASK_NAME = 'Infrastructure Proof Task';
 const SEEDED_PROOF_SKILL_NAME = 'Deterministisch Testen';
 
@@ -63,24 +60,6 @@ function state(world) {
 
 Before(function () {
   this.businessComplete = createState();
-});
-
-// The nullable-theme scenario is the only one here that adds a permanent row to the
-// shared theme catalog, so it removes its own. Deliberately a targeted delete rather
-// than resetThemeCatalog(): that wipes every theme in the live catalog, and since
-// DELETE /themes/{id} removes a theme's hasTheme links first, it would also unlink
-// every project's themes as a side effect. 404 is tolerated so a scenario that failed
-// before creating the theme cleans up quietly instead of masking the real failure.
-After({ tags: '@ts009-nullable-theme' }, async function () {
-  const theme = await getThemeByName(NULLABLE_THEME_NAME);
-  if (!theme?.id) return;
-
-  const token = await loginToken(PROOF_TEACHER_USER_ID);
-  const deleted = await themeApi(`/themes/${theme.id}`, token, { method: 'DELETE' });
-  assert.ok(
-    deleted.status === 200 || deleted.status === 404,
-    `Expected cleanup of '${NULLABLE_THEME_NAME}' to return 200 or 404, received ${deleted.status}`,
-  );
 });
 
 function sortedNames(themes) {
