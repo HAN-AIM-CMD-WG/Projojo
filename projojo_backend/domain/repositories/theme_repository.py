@@ -192,18 +192,26 @@ class ThemeRepository(BaseRepository[Theme]):
 
             update_clauses.append("$theme has name ~name;")
             params["name"] = theme.name
-        if theme.sdg_code is not None:
-            update_clauses.append("$theme has sdgCode ~sdg_code;")
-            params["sdg_code"] = theme.sdg_code
-        if theme.icon is not None:
-            update_clauses.append("$theme has icon ~icon;")
-            params["icon"] = theme.icon
-        if theme.description is not None:
-            update_clauses.append("$theme has themeDescription ~description;")
-            params["description"] = theme.description
-        if theme.color is not None:
-            update_clauses.append("$theme has color ~color;")
-            params["color"] = theme.color
+
+        # Optional string attributes: None leaves the field unchanged, an empty
+        # value clears it (delete the optional attribute), any other value sets it.
+        # Clearing is a separate delete because an `update` stage can only set;
+        # storing "" would otherwise make later reads return "" instead of None.
+        optional_values = {
+            "sdgCode": theme.sdg_code,
+            "icon": theme.icon,
+            "themeDescription": theme.description,
+            "color": theme.color,
+        }
+        for attr, value in optional_values.items():
+            if value is None:
+                continue
+            if value == "":
+                self._clear_attribute(theme_id, attr)
+            else:
+                update_clauses.append(f"$theme has {attr} ~{attr};")
+                params[attr] = value
+
         if theme.display_order is not None:
             update_clauses.append("$theme has displayOrder ~display_order;")
             params["display_order"] = theme.display_order
@@ -218,6 +226,28 @@ class ThemeRepository(BaseRepository[Theme]):
             Db.write_transact(query, params)
 
         return self.get_by_id(theme_id)
+
+    @staticmethod
+    def _clear_attribute(theme_id: str, attribute: str) -> None:
+        """
+        Remove an optional attribute from a theme if it is present.
+
+        Mirrors set_impact_summary's delete-then-set approach: matching on
+        `has {attribute} $val` yields nothing when the attribute is absent, so
+        clearing an already-empty field is a harmless no-op. `attribute` is an
+        internal TypeDB attribute name (never user input), so it is safe to
+        interpolate directly.
+        """
+        query = f"""
+            match
+                $theme isa theme, has id ~theme_id, has {attribute} $val;
+            delete
+                has $val of $theme;
+        """
+        try:
+            Db.write_transact(query, {"theme_id": theme_id})
+        except Exception:
+            pass
 
     def delete(self, theme_id: str) -> None:
         # Remove all hasTheme relations and the theme itself in one
