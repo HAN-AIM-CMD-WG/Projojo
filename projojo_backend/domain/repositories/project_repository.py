@@ -417,6 +417,11 @@ class ProjectRepository(BaseRepository[Project]):
         start_date = getattr(project, "start_date", None)
         end_date = getattr(project, "end_date", None)
 
+        # createdAt is deliberately the last clause: build_query removes a None
+        # clause together with its trailing "," or ";", so whichever clause ends
+        # the insert statement must be one that is always present. With an
+        # optional clause last (it used to be endDate), omitting it took the ";"
+        # with it and the query no longer parsed.
         query = """
             match
                 $business isa business,
@@ -428,9 +433,9 @@ class ProjectRepository(BaseRepository[Project]):
                 has description ~description,
                 has imagePath ~image_path,
                 has location ~location,
-                has createdAt ~created_at,
                 has startDate ~start_date,
-                has endDate ~end_date;
+                has endDate ~end_date,
+                has createdAt ~created_at;
                 $hasProjects isa hasProjects($business, $project);
         """
         Db.write_transact(query, {
