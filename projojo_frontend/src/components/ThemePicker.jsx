@@ -13,6 +13,15 @@ import { getThemes } from '../services';
  * consumer that supplies it from an async fetch) until the user first interacts,
  * after which the internal selection wins so in-progress edits are never lost.
  *
+ * Two consequences for consumers:
+ * - "Interacted" is sticky for the lifetime of the mount, so pushing an older
+ *   `initialSelected` back will NOT revert a selection the user has touched. To
+ *   implement a Cancel/reset that reverts in place, remount the picker with a
+ *   changed `key` instead.
+ * - Re-syncing does not call `onChange` (the parent already owns the value it
+ *   just supplied). Seed any save state from your own `initialSelected`, not
+ *   from the first `onChange`, or a pre-fill the user never touched is lost.
+ *
  * @param {object} props
  * @param {string[]} [props.initialSelected] - theme ids selected initially
  * @param {(selectedIds: string[]) => void} [props.onChange] - called on each toggle
@@ -23,11 +32,6 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
     const [isLoading, setIsLoading] = useState(true);
     const [selected, setSelected] = useState(() => initialSelected);
 
-    // Mirror the selection in a ref so a burst of clicks chains off the latest
-    // value instead of a stale render closure, and so onChange fires exactly once
-    // per toggle (an effect would double-fire under StrictMode / on mount).
-    const selectedRef = useRef(selected);
-    selectedRef.current = selected;
     const interactedRef = useRef(false);
 
     useEffect(() => {
@@ -44,14 +48,13 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
     useEffect(() => {
         if (interactedRef.current) return;
         setSelected(initialSelected);
-        selectedRef.current = initialSelected;
     }, [initialKey]);
 
+    // onChange is called here rather than from an effect so it fires exactly once
+    // per toggle (an effect would also fire on mount and double-fire in StrictMode).
     function toggle(id) {
         interactedRef.current = true;
-        const prev = selectedRef.current;
-        const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-        selectedRef.current = next;
+        const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
         setSelected(next);
         onChange?.(next);
     }

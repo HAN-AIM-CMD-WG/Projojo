@@ -142,6 +142,18 @@ When('I open the read-only theme picker demo with delayed selection of {string} 
   await openHarness(this, { readonly: true, selectedNames: [first, second], delayed: true });
 });
 
+When('I open the theme picker demo with delayed selection of {string} and {string}', async function (first, second) {
+  await openHarness(this, { selectedNames: [first, second], delayed: true });
+});
+
+When('the delayed selection arrives', async function () {
+  await page(this).getByTestId('apply-delayed').click();
+  // The harness renders this marker in the same commit that pushes the new
+  // initialSelected, so the assertions that follow cannot run before the
+  // component has been handed the late value.
+  await page(this).getByTestId('delayed-applied').waitFor({ state: 'attached' });
+});
+
 // --- When: interactions ---------------------------------------------------------
 
 When('I click the {string} theme pill', async function (name) {
@@ -355,6 +367,10 @@ Then('the empty state message {string} is shown', async function (message) {
 });
 
 Then('no theme pills are shown', async function () {
+  // Wait out the loading branch first: skeletons carry a different testid, so a
+  // picker that simply has not finished fetching would satisfy this assertion
+  // for the wrong reason.
+  await picker(this).getByTestId('theme-picker-loading').waitFor({ state: 'detached' });
   assert.equal(await picker(this).getByTestId('theme-pill').count(), 0, 'Expected no theme pills');
 });
 

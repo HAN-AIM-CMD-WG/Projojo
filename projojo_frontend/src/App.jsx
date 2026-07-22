@@ -213,7 +213,7 @@ export default function App() {
   }, [location.pathname]);
 
   // Pages without navbar/footer (landing, login, auth callback, design demo, public discovery)
-  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname === "/dev/theme-picker" || location.pathname.startsWith("/publiek") || location.pathname.startsWith("/invite/");
+  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname.startsWith("/publiek") || location.pathname.startsWith("/invite/");
 
   return (
     <ThemeProvider>
