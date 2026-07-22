@@ -82,4 +82,54 @@ async function stubThemeDeleteEndpoint(page, { status = 500, detail = 'Verwijder
   });
 }
 
-module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, THEMES_ROUTE };
+// The project theme link resource: `/themes/project/{id}`, and deliberately NOT
+// the `/themes/` collection or a single `/themes/{id}` theme.
+const PROJECT_THEME_LINK_ROUTE = /\/themes\/project\/[^/?]+$/;
+
+/**
+ * Control PUT /themes/project/{id} for a page, leaving every other request alone.
+ *
+ * Two states a healthy backend will not produce on demand:
+ * - `status` set: fail the link call with that status, so the UI's partial-failure
+ *   branch (project created, themes not linked) can be driven.
+ * - `delayMs` only: hold the call back and then pass it through to the real
+ *   backend, so the window between "project created" and "themes linked" lasts
+ *   long enough to observe. The link still really happens.
+ *
+ * `onIntercept` fires the moment the PUT is intercepted - before any delay - so a
+ * caller can assert on that window without guessing when it opened.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ status?: number, detail?: string, delayMs?: number, onIntercept?: () => void }} [options]
+ */
+async function stubProjectThemeLink(page, { status, detail = "Koppelen is mislukt", delayMs = 0, onIntercept } = {}) {
+  await page.unroute(PROJECT_THEME_LINK_ROUTE).catch(() => {});
+  await page.route(PROJECT_THEME_LINK_ROUTE, async (route) => {
+    const method = route.request().method();
+    // The frontend (:10121) calls the backend (:10122) cross-origin, so a PUT
+    // carrying an Authorization header is preflighted. Answer that preflight here;
+    // otherwise the browser blocks the request and the UI shows a generic network
+    // failure instead of the staged state.
+    if (method === 'OPTIONS') {
+      return route.fulfill({ status: 204, headers: CORS_HEADERS });
+    }
+    if (method !== 'PUT') {
+      return route.fallback();
+    }
+    onIntercept?.();
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    if (status === undefined) {
+      return route.continue();
+    }
+    await route.fulfill({
+      status,
+      contentType: 'application/json',
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ detail }),
+    });
+  });
+}
+
+module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, stubProjectThemeLink, THEMES_ROUTE };
