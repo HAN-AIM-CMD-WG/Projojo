@@ -43,8 +43,7 @@ Feature: TS-task-014 reusable ThemePicker component
     And the "Innovatie" pill text stays legible against its background
 
   # Coverage guard for AC-3: legibility must hold for the component's whole
-  # catalog, not the two comfortable colors above. Includes a mid-luminance color
-  # (#E91E63) that plain white/dark text cannot carry at AA 4.5:1.
+  # catalog, not the two comfortable colors above.
   @ui @theme @TS-task-014
   Scenario: AC-3 every theme keeps AA-legible text when selected
     Given the theme picker demo has 6 themes available

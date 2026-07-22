@@ -8,10 +8,10 @@ const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
 
 // Deterministic stub catalog for the ThemePicker harness. Fixed ids/names/colors
 // so the rendering, selection and contrast assertions key off known values.
-// Colors span the legibility range on purpose: '#E91E63' (Onderwijs) is a
-// mid-luminance color that no plain white/dark text can carry at AA 4.5:1, so it
-// forces the component's darken-to-legible fallback, while '#9C27B0' (Gezondheid)
-// exercises the white-text branch and '#FFEB3B' (Innovatie) the dark-text branch.
+// Colors span the legibility range on purpose: '#9C27B0' (Gezondheid) exercises
+// the white-text branch and '#FFEB3B' (Innovatie) the black-text branch, while
+// '#E91E63' (Onderwijs) pins the tight end - it clears AA only against pure
+// black (4.83:1).
 const STUB_THEMES = Object.freeze([
   Object.freeze({ id: 'tp-duurzaamheid', name: 'Duurzaamheid', color: '#4CAF50' }),
   Object.freeze({ id: 'tp-klimaat', name: 'Klimaat & Milieu', color: '#2196F3' }),

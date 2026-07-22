@@ -139,27 +139,28 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
     );
 }
 
-const DARK_TEXT = '#1A1512';
+const DARK_TEXT = '#000000';
 const WHITE_TEXT = '#FFFFFF';
-const AA_CONTRAST = 4.5;
 
 /**
- * Choose a legible { backgroundColor, color } for a selected pill: keep the theme
- * color and use whichever of white/dark text has the higher contrast. If neither
- * reaches WCAG AA (4.5:1) - e.g. a mid-luminance brand color like #E91E63 -
- * darken the fill until white text is legible, so no selected pill ships below AA.
+ * Choose a legible { backgroundColor, color } for a selected pill: use whichever of white
+ * or black text has the higher contrast.
+ *
+ * Pure black and pure white bracket the whole sRGB cube: white clears WCAG AA
+ * (4.5:1) against every background with relative luminance <= 0.1833 and black
+ * against every one >= 0.175, so the two ranges overlap and the better of the
+ * pair is always at least 4.58:1 (worst case around #CF0DCC). The fill itself
+ * therefore never has to be altered to stay legible.
+ *
+ * This only holds for PURE black - the #1A1512 dark-surface token leaves a gap
+ * around luminance 0.197 (worst case 4.26:1, ~5.7% of sRGB) where neither
+ * option reaches AA, which is why that token is deliberately not used here.
  */
 function legibleFill(hex) {
-    let [r, g, b] = toRgb(hex);
-    const white = contrast(luminance(r, g, b), 1);
-    const dark = contrast(luminance(r, g, b), luminance(...toRgb(DARK_TEXT)));
-    if (Math.max(white, dark) >= AA_CONTRAST) {
-        return { backgroundColor: hex, color: white >= dark ? WHITE_TEXT : DARK_TEXT };
-    }
-    for (let i = 0; i < 20 && contrast(luminance(r, g, b), 1) < AA_CONTRAST; i += 1) {
-        [r, g, b] = [r, g, b].map((c) => Math.round(c * 0.9));
-    }
-    return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: WHITE_TEXT };
+    const bgLum = luminance(...toRgb(hex));
+    const white = contrast(bgLum, luminance(...toRgb(WHITE_TEXT)));
+    const dark = contrast(bgLum, luminance(...toRgb(DARK_TEXT)));
+    return { backgroundColor: hex, color: white >= dark ? WHITE_TEXT : DARK_TEXT };
 }
 
 function contrast(lumA, lumB) {
