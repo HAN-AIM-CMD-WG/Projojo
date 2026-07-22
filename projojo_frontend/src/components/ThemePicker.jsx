@@ -7,11 +7,14 @@ import { getThemes } from '../services';
  * Renders the available themes (from GET /themes/) as colored pills. In edit
  * mode every theme is a toggle button; in read-only mode only the selected
  * themes are shown as non-interactive pills. Selection state is managed
- * internally, seeded once from `initialSelected`, and reported through
- * `onChange` on every user toggle.
+ * internally and reported through `onChange` on every user toggle.
+ *
+ * `initialSelected` seeds the selection and is re-synced if it changes (e.g. a
+ * consumer that supplies it from an async fetch) until the user first interacts,
+ * after which the internal selection wins so in-progress edits are never lost.
  *
  * @param {object} props
- * @param {string[]} [props.initialSelected] - theme ids selected on first render
+ * @param {string[]} [props.initialSelected] - theme ids selected initially
  * @param {(selectedIds: string[]) => void} [props.onChange] - called on each toggle
  * @param {boolean} [props.readOnly] - show selected themes without interaction
  */
@@ -25,6 +28,7 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
     // per toggle (an effect would double-fire under StrictMode / on mount).
     const selectedRef = useRef(selected);
     selectedRef.current = selected;
+    const interactedRef = useRef(false);
 
     useEffect(() => {
         let active = true;
@@ -34,7 +38,17 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
         return () => { active = false; };
     }, []);
 
+    // Re-sync when `initialSelected` changes (async-fed consumers) but never once
+    // the user has started editing. Keyed on the value, not array identity.
+    const initialKey = initialSelected.join(',');
+    useEffect(() => {
+        if (interactedRef.current) return;
+        setSelected(initialSelected);
+        selectedRef.current = initialSelected;
+    }, [initialKey]);
+
     function toggle(id) {
+        interactedRef.current = true;
         const prev = selectedRef.current;
         const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
         selectedRef.current = next;
@@ -75,7 +89,7 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
             {visible.map((theme) => {
                 const isSelected = selected.includes(theme.id);
                 const color = theme.color || '#FF7F50';
-                const fillStyle = { backgroundColor: color, color: readableTextColor(color) };
+                const fillStyle = legibleFill(color);
 
                 if (readOnly) {
                     return (
@@ -100,7 +114,7 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
                         data-theme-id={theme.id}
                         aria-pressed={isSelected}
                         onClick={() => toggle(theme.id)}
-                        className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer hover:-translate-y-0.5 focus:outline-none focus:shadow-[0_0_0_3px_var(--color-primary)] ${isSelected
+                        className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full transition-all duration-200 cursor-pointer hover:-translate-y-0.5 focus:outline-none focus:shadow-[0_0_0_3px_var(--primary-color)] ${isSelected
                             ? 'border border-transparent'
                             : 'bg-white/50 border border-gray-300 text-[var(--text-secondary)]'
                             }`}
@@ -122,21 +136,42 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
     );
 }
 
+const DARK_TEXT = '#1A1512';
+const WHITE_TEXT = '#FFFFFF';
+const AA_CONTRAST = 4.5;
+
 /**
- * Pick white or near-black text for a hex background, whichever has the higher
- * WCAG contrast ratio, so a selected pill's label stays legible on any color.
+ * Choose a legible { backgroundColor, color } for a selected pill: keep the theme
+ * color and use whichever of white/dark text has the higher contrast. If neither
+ * reaches WCAG AA (4.5:1) - e.g. a mid-luminance brand color like #E91E63 -
+ * darken the fill until white text is legible, so no selected pill ships below AA.
  */
-function readableTextColor(hex) {
-    const white = 1.05 / (relativeLuminance(hex) + 0.05);
-    const dark = (relativeLuminance(hex) + 0.05) / 0.05;
-    return white >= dark ? '#FFFFFF' : '#1A1512';
+function legibleFill(hex) {
+    let [r, g, b] = toRgb(hex);
+    const white = contrast(luminance(r, g, b), 1);
+    const dark = contrast(luminance(r, g, b), luminance(...toRgb(DARK_TEXT)));
+    if (Math.max(white, dark) >= AA_CONTRAST) {
+        return { backgroundColor: hex, color: white >= dark ? WHITE_TEXT : DARK_TEXT };
+    }
+    for (let i = 0; i < 20 && contrast(luminance(r, g, b), 1) < AA_CONTRAST; i += 1) {
+        [r, g, b] = [r, g, b].map((c) => Math.round(c * 0.9));
+    }
+    return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: WHITE_TEXT };
 }
 
-function relativeLuminance(hex) {
+function contrast(lumA, lumB) {
+    return (Math.max(lumA, lumB) + 0.05) / (Math.min(lumA, lumB) + 0.05);
+}
+
+function toRgb(hex) {
     const value = hex.replace('#', '');
+    return [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)].map((c) => parseInt(c, 16));
+}
+
+function luminance(r, g, b) {
     const toLinear = (channel) => {
-        const c = parseInt(channel, 16) / 255;
+        const c = channel / 255;
         return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
     };
-    return 0.2126 * toLinear(value.slice(0, 2)) + 0.7152 * toLinear(value.slice(2, 4)) + 0.0722 * toLinear(value.slice(4, 6));
+    return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }

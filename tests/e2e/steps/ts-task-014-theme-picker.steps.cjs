@@ -8,9 +8,10 @@ const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
 
 // Deterministic stub catalog for the ThemePicker harness. Fixed ids/names/colors
 // so the rendering, selection and contrast assertions key off known values.
-// Colors are chosen to exercise both contrast branches of AC-3: '#FFEB3B'
-// (Innovatie) is light enough to demand dark text, while the others are dark
-// enough to demand white text.
+// Colors span the legibility range on purpose: '#E91E63' (Onderwijs) is a
+// mid-luminance color that no plain white/dark text can carry at AA 4.5:1, so it
+// forces the component's darken-to-legible fallback, while '#9C27B0' (Gezondheid)
+// exercises the white-text branch and '#FFEB3B' (Innovatie) the dark-text branch.
 const STUB_THEMES = Object.freeze([
   Object.freeze({ id: 'tp-duurzaamheid', name: 'Duurzaamheid', color: '#4CAF50' }),
   Object.freeze({ id: 'tp-klimaat', name: 'Klimaat & Milieu', color: '#2196F3' }),
@@ -99,9 +100,10 @@ async function settledBackgroundColor(pill, expectedRgb) {
   }), expectedRgb);
 }
 
-async function openHarness(world, { readonly = false, selectedNames = [] } = {}) {
+async function openHarness(world, { readonly = false, selectedNames = [], delayed = false } = {}) {
   const params = new URLSearchParams();
   if (readonly) params.set('readonly', '1');
+  if (delayed) params.set('delayed', '1');
   if (selectedNames.length > 0) params.set('selected', selectedNames.map(idForName).join(','));
   const query = params.toString();
   await page(world).goto(`${FRONTEND_URL}${HARNESS_PATH}${query ? `?${query}` : ''}`);
@@ -134,6 +136,10 @@ When('I open the theme picker demo with {string} and {string} pre-selected', asy
 
 When('I open the read-only theme picker demo showing {string} and {string}', async function (first, second) {
   await openHarness(this, { readonly: true, selectedNames: [first, second] });
+});
+
+When('I open the read-only theme picker demo with delayed selection of {string} and {string}', async function (first, second) {
+  await openHarness(this, { readonly: true, selectedNames: [first, second], delayed: true });
 });
 
 // --- When: interactions ---------------------------------------------------------
@@ -235,6 +241,21 @@ Then('the {string} pill text stays legible against its background', async functi
   assert.ok(ratio >= 4.5, `Expected legible text on '${name}' (WCAG AA >= 4.5:1), got ${ratio.toFixed(2)}:1 (text ${color} on ${background})`);
 });
 
+Then('every selected pill keeps legible text against its background', async function () {
+  const pills = await picker(this).getByTestId('theme-pill').all();
+  assert.ok(pills.length > 0, 'Expected at least one selected pill to check');
+  // Let the fill/text transition (200ms) settle before sampling colours.
+  await page(this).waitForTimeout(400);
+  for (const pill of pills) {
+    const { id, color, background } = await pill.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { id: el.getAttribute('data-theme-id'), color: style.color, background: style.backgroundColor };
+    });
+    const ratio = contrastRatio(color, background);
+    assert.ok(ratio >= 4.5, `Expected AA-legible text on selected pill '${id}' (>= 4.5:1), got ${ratio.toFixed(2)}:1 (text ${color} on ${background})`);
+  }
+});
+
 // --- Then: no limit (AC-5) ------------------------------------------------------
 
 Then('all {int} theme pills are selected', async function (count) {
@@ -270,6 +291,14 @@ Then('the {string} pill does not use a pointer cursor', async function (name) {
 
 Then('the {string} pill is still shown', async function (name) {
   assert.equal(await pillByName(this, name).count(), 1, `Expected '${name}' to still be shown after the click`);
+});
+
+Then('the {string} and {string} pills appear once the selection loads', async function (first, second) {
+  const pills = picker(this).getByTestId('theme-pill');
+  await pills.first().waitFor({ state: 'visible' });
+  assert.equal(await pills.count(), 2, 'Expected the delayed selection to render exactly its two pills once loaded');
+  assert.equal(await pillByName(this, first).count(), 1, `Expected '${first}' to appear once loaded`);
+  assert.equal(await pillByName(this, second).count(), 1, `Expected '${second}' to appear once loaded`);
 });
 
 // --- Then: onChange callback (AC-8) ---------------------------------------------
@@ -346,18 +375,21 @@ Then('the {string} pill is keyboard focusable', async function (name) {
 Then('the focused pill shows a 3px primary color focus ring', async function () {
   // The focus ring is a box-shadow under `transition-all`, so poll until it has
   // settled at full width/opacity rather than reading a mid-transition frame.
-  const indicator = await page(this).evaluate(() => new Promise((resolve) => {
+  const { boxShadow, outline } = await page(this).evaluate(() => new Promise((resolve) => {
     const el = document.activeElement;
     const start = Date.now();
     const read = () => {
       const style = getComputedStyle(el);
-      const combined = `${style.boxShadow} | ${style.outlineWidth} ${style.outlineStyle} ${style.outlineColor}`;
       const settled = /rgb\(255, 127, 80\)/.test(style.boxShadow) && style.boxShadow.includes('3px');
-      if (settled || Date.now() - start > 3000) return resolve(combined);
+      if (settled || Date.now() - start > 3000) {
+        return resolve({ boxShadow: style.boxShadow, outline: `${style.outlineWidth} ${style.outlineStyle} ${style.outlineColor}` });
+      }
       requestAnimationFrame(read);
     };
     read();
   }));
-  assert.ok(indicator.includes(PRIMARY_RGB), `Expected a primary-color focus ring, got '${indicator}'`);
-  assert.ok(indicator.includes('3px'), `Expected a 3px focus ring, got '${indicator}'`);
+  // Assert on the box-shadow itself so colour and width must come from the same
+  // declaration, not merely co-occur somewhere in a concatenated string.
+  assert.ok(boxShadow.includes(PRIMARY_RGB), `Expected a primary-color focus ring, got boxShadow '${boxShadow}' (outline '${outline}')`);
+  assert.ok(boxShadow.includes('3px'), `Expected a 3px focus ring, got boxShadow '${boxShadow}' (outline '${outline}')`);
 });

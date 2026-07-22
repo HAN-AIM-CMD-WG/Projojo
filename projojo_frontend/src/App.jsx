@@ -266,7 +266,7 @@ export default function App() {
                 </Route>
                 <Route path="/teacher" element={<TeacherPage />} />
                 <Route path="/design-demo" element={<DesignDemoPage />} />
-                <Route path="/dev/theme-picker" element={<ThemePickerHarness />} />
+                {import.meta.env.DEV && <Route path="/dev/theme-picker" element={<ThemePickerHarness />} />}
                 <Route path="/publiek" element={<PublicDiscoveryPage />} />
                 <Route path="/publiek/:projectId" element={<PublicDiscoveryPage />} />
                 <Route path="*" element={<NotFound />} />

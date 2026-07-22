@@ -42,6 +42,16 @@ Feature: TS-task-014 reusable ThemePicker component
     And the "Innovatie" pill is filled with its theme color
     And the "Innovatie" pill text stays legible against its background
 
+  # Coverage guard for AC-3: legibility must hold for the component's whole
+  # catalog, not the two comfortable colors above. Includes a mid-luminance color
+  # (#E91E63) that plain white/dark text cannot carry at AA 4.5:1.
+  @ui @theme @TS-task-014
+  Scenario: AC-3 every theme keeps AA-legible text when selected
+    Given the theme picker demo has 6 themes available
+    When I open the theme picker demo
+    And I select every theme pill
+    Then every selected pill keeps legible text against its background
+
   @ui @theme @TS-task-014
   Scenario: AC-4 clicking a pill toggles it selected then unselected
     Given the theme picker demo has 6 themes available
@@ -77,6 +87,16 @@ Feature: TS-task-014 reusable ThemePicker component
     When I try to click the read-only "Duurzaamheid" pill
     Then the "Duurzaamheid" pill is still shown
     And the selection change callback reports no selection
+
+  # Reusable-contract guard: consumers (project edit, inline detail edit, student
+  # interests) feed initialSelected from an async fetch, so a selection that
+  # arrives after mount must still be reflected.
+  @ui @theme @TS-task-014
+  Scenario: Read-only selection arriving after mount is reflected once it loads
+    Given the theme picker demo has 6 themes available
+    When I open the read-only theme picker demo with delayed selection of "Duurzaamheid" and "Onderwijs"
+    Then no theme pills are shown
+    And the "Duurzaamheid" and "Onderwijs" pills appear once the selection loads
 
   @ui @theme @TS-task-014
   Scenario: AC-8 toggling reports the current selected ids through onChange
