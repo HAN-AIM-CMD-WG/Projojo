@@ -6,6 +6,7 @@ from domain.models.portfolio import (
     PortfolioItemRetractionUpdate,
     PortfolioResponse,
     PortfolioReviewCreateRequest,
+    PortfolioReviewUpdateRequest,
 )
 from domain.repositories.portfolio_repository import PortfolioRepository
 from service.portfolio_policy import can_read_authenticated_student_portfolio
@@ -213,6 +214,38 @@ async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateReq
         return {"id": review_id}
     except PermissionError as error:
         raise HTTPException(status_code=403, detail=str(error))
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error))
+
+
+@router.patch("/portfolio-reviews/{review_id}", status_code=status.HTTP_200_OK)
+@auth(role="supervisor")
+async def update_portfolio_review(review_id: str, update: PortfolioReviewUpdateRequest, request: Request):
+    # Author-or-teacher review editing (Portfolio spec 3.5, 4.4). @auth(role="supervisor") admits
+    # supervisors and teachers and blocks students/unauthenticated; the repository then enforces
+    # that a supervisor may only edit their own review while any teacher may edit any review.
+    # Only fields present in the request body are applied; an explicit null rating removes it.
+    fields = update.model_fields_set
+    review_text = None
+    if "review_text" in fields:
+        review_text = (update.review_text or "").strip()
+        if not review_text:
+            raise HTTPException(status_code=400, detail="Reviewtekst is verplicht.")
+
+    try:
+        portfolio_repo.update_review(
+            review_id=review_id,
+            editor_id=request.state.user_id,
+            editor_role=request.state.user_role,
+            review_text=review_text,
+            set_rating="rating" in fields,
+            rating=update.rating,
+        )
+        return {"id": review_id}
+    except PermissionError as error:
+        raise HTTPException(status_code=403, detail=str(error))
+    except LookupError as error:
+        raise HTTPException(status_code=404, detail=str(error))
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error))
 

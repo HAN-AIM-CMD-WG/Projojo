@@ -123,6 +123,72 @@ class PortfolioRepository:
             raise ValueError("Portfolio-item niet gevonden of niet meer reviewbaar.")
         return review_id
 
+    def update_review(
+        self,
+        review_id: str,
+        editor_id: str,
+        editor_role: str,
+        review_text: str | None = None,
+        set_rating: bool = False,
+        rating: int | None = None,
+    ) -> None:
+        # Edit permission (Portfolio spec 3.5): the review author may edit their own review, and
+        # any teacher may edit any review. The route-level @auth(role="supervisor") gate already
+        # blocks students and unauthenticated callers; this is the author/teacher ownership check.
+        # A missing review is a distinct not-found signal (LookupError -> 404), kept separate from
+        # ValueError (-> 400) so the route's status mapping cannot misclassify a future validation
+        # error in this method as a 404.
+        author_id = self._get_review_author_id(review_id)
+        if author_id is None:
+            raise LookupError("Portfolio-review niet gevonden.")
+        if editor_role != "teacher" and editor_id != author_id:
+            raise PermissionError("Je hebt hier geen rechten voor.")
+
+        # updatedAt always changes on an edit. reviewText is only rewritten when provided.
+        # rating is left untouched unless the caller is changing it: a new value replaces or adds
+        # it (the `update` stage upserts the @card(0..1) attribute), a null value removes it. The
+        # persisted rating feeds the authenticated-public rating gate at read time, so lowering,
+        # raising, or removing it recalculates supervisor visibility on the next read (spec 3.6.2).
+        now = datetime.now()
+        update_clauses = ["$review has updatedAt ~updated_at;"]
+        params: dict[str, Any] = {"review_id": review_id, "updated_at": now}
+        if review_text is not None:
+            update_clauses.append("$review has reviewText ~review_text;")
+            params["review_text"] = review_text
+        if set_rating and rating is not None:
+            update_clauses.append("$review has rating ~rating;")
+            params["rating"] = rating
+
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+        if set_rating and rating is None:
+            queries.append(
+                (
+                    "match $review isa portfolioReview, has id ~review_id, has rating $current; "
+                    "delete has $current of $review;",
+                    {"review_id": review_id},
+                )
+            )
+        queries.append(
+            (f"match $review isa portfolioReview, has id ~review_id; update {' '.join(update_clauses)}", params)
+        )
+        Db.write_transact_many(queries)
+
+    def _get_review_author_id(self, review_id: str) -> str | None:
+        rows = Db.read_transact(
+            """
+            match
+                $review isa portfolioReview, has id ~review_id;
+                $author_link isa portfolioReviewAuthor (review: $review, author: $author);
+                $author has id $author_id;
+            fetch { 'author_id': $author_id };
+        """,
+            {"review_id": review_id},
+            sort_fields=False,
+        )
+        if not rows:
+            return None
+        return self._one(rows[0].get("author_id"))
+
     def _review_exists(self, review_id: str) -> bool:
         rows = Db.read_transact(
             """

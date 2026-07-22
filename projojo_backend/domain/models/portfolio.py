@@ -74,6 +74,14 @@ class PortfolioReviewCreateRequest(BaseModel):
     public_review_notice_accepted: bool = False
 
 
+class PortfolioReviewUpdateRequest(BaseModel):
+    # Both fields are optional so an edit may change the text, the rating, or both. Only fields
+    # present in the request body are applied (see model_fields_set in the route); an explicit
+    # null rating removes the rating. rating bounds still apply to any provided integer value.
+    review_text: str | None = Field(default=None, max_length=2000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+
+
 class PortfolioItemRetractionUpdate(BaseModel):
     is_authenticated_public_retraction: bool
 
