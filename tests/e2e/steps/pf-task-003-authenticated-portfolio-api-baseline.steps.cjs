@@ -247,7 +247,9 @@ Then('the PF-task-003 OpenAPI contract should document authenticated portfolio e
   const responses = payload.paths?.['/portfolios/students/{student_id}']?.get?.responses;
   assert.ok(responses, 'Expected authenticated portfolio OpenAPI responses');
 
-  const successExample = responses['200']?.content?.['application/json']?.example;
+  const successExamples = responses['200']?.content?.['application/json']?.examples;
+  assert.ok(successExamples, 'Expected authenticated portfolio success examples map');
+  const successExample = successExamples.teacher?.value;
   assert.equal(successExample?.viewer_role, 'teacher', 'Expected authenticated portfolio success example viewer_role');
   assert.equal(typeof successExample?.student?.id, 'string', 'Expected student identity in success example');
   assert.ok(Array.isArray(successExample?.items), 'Expected success example items collection');
