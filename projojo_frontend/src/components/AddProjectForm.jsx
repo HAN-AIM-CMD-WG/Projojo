@@ -68,8 +68,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
             end_date: endDate
         };
 
-        // Themes are linked in a second call, after the project exists and has an id
-        onSubmit(projectData, themeIds);
+        // Themes are linked in a second call, after the project exists and has an id.
+        Promise.resolve(onSubmit(projectData, themeIds)).finally(() => setIsSubmitting(false));
     }
 
     return (

@@ -29,7 +29,7 @@ export default function ProjectsAddPage() {
 
     const onSubmit = (data, themeIds) => {
         // Submit project data with image in a single call
-        createProject(data)
+        return createProject(data)
             .then(newProject =>
                 linkThemes(newProject.id, themeIds)
                     .then(() => navigate(`/projects/${newProject.id}`))
