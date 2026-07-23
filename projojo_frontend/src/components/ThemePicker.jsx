@@ -35,9 +35,7 @@ export default function ThemePicker({ selected = [], onChange, readOnly = false 
     // Report the next selection and let the parent own/apply it. Called directly
     // (not from an effect) so it fires exactly once per user toggle.
     function toggle(id) {
-        interactedRef.current = true;
         const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];
-        setSelected(next);
         onChange?.(next);
     }
 
