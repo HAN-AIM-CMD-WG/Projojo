@@ -44,12 +44,16 @@ const PNG_1X1 = Buffer.from(
 
 // The global toast titles (components/notifications/Notification.jsx). Used to
 // tell the app's alert surfaces apart: anything visible with role="alert" that is
-// not one of these is either an error toast or an inline <Alert>.
+// not one of these is either an error toast (titled "Fout") or an inline <Alert>.
+// Both entries are load-bearing, so do not "simplify" them away: the toast is
+// always mounted and renders the literal "Info" until it has fired (Notification
+// falls back to the info variant when type is undefined), and Playwright counts
+// that opacity:0 element as visible.
 const SUCCESS_TITLE = 'Gelukt!';
 const INFO_TITLE = 'Info';
 
 function createState() {
-  return { requests: [], responses: [], linkStartedAt: null, projectNames: new Map(), projectIds: new Map() };
+  return { requests: [], responses: [], linkStartedAt: null, projectIds: new Map() };
 }
 
 Before(function () {
@@ -79,8 +83,11 @@ async function projectsNamed(name) {
   return result.body.filter((project) => project?.name === name);
 }
 
+// Budgets are kept under the 20s qavajs step timeout even when two waits chain
+// inside one step (project lookup + navigation, or project lookup + theme poll),
+// so a failure reports the descriptive assertion rather than a generic timeout.
 /** Poll until a project with `name` is persisted, so assertions do not race the create request. */
-async function waitForProjectNamed(name, timeoutMs = 15_000) {
+async function waitForProjectNamed(name, timeoutMs = 8_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const [project] = await projectsNamed(name);
@@ -91,16 +98,14 @@ async function waitForProjectNamed(name, timeoutMs = 15_000) {
 }
 
 /** The run's actual project name for a feature label, e.g. "TS015 Project Met Thema mabc123". */
-function projectNameFor(world, label) {
-  const names = state(world).projectNames;
-  if (!names.has(label)) names.set(label, `${label} ${RUN_ID}`);
-  return names.get(label);
+function projectNameFor(label) {
+  return `${label} ${RUN_ID}`;
 }
 
 async function projectIdFor(world, label) {
   const known = state(world).projectIds.get(label);
   if (known) return known;
-  const project = await waitForProjectNamed(projectNameFor(world, label));
+  const project = await waitForProjectNamed(projectNameFor(label));
   state(world).projectIds.set(label, project.id);
   return project.id;
 }
@@ -221,7 +226,7 @@ async function fillCreateForm(world, name) {
 }
 
 When('I fill in the create form for a new project {string}', async function (label) {
-  await fillCreateForm(this, projectNameFor(this, label));
+  await fillCreateForm(this, projectNameFor(label));
 });
 
 When('I fill in the create form with the existing project name {string}', async function (name) {
@@ -360,7 +365,7 @@ Then('the project {string} is linked to exactly the themes {string}', async func
 
   // The link call can still be in flight when the project itself is already
   // persisted, so poll - but only for this exact set, never for "anything".
-  const deadline = Date.now() + 15_000;
+  const deadline = Date.now() + 10_000;
   let linked = [];
   while (Date.now() < deadline) {
     linked = await linkedThemeNames(projectId);
