@@ -545,6 +545,18 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
             {canManageProject && !isLoading && (
                 <div className="px-4 sm:px-5 pb-4 border-t border-[var(--neu-border)] pt-3 mt-2">
                     <div className="flex flex-wrap items-center gap-2">
+                        {/* Edit project */}
+                        <Link
+                            to={`/projects/${project.id}/update`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                bg-primary/10 border border-primary/30 text-primary
+                                hover:bg-primary/20 transition-all duration-200"
+                            title="Pas de gegevens en thema's van dit project aan"
+                        >
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
+                            Project aanpassen
+                        </Link>
+
                         {/* Visibility toggle - action-oriented button */}
                         <button
                             onClick={handleTogglePublic}
