@@ -171,7 +171,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                         Thema&apos;s
                         <span className="text-sm font-normal text-[var(--text-muted)] ml-2">(optioneel)</span>
                     </h2>
-                    <ThemePicker onChange={setThemeIds} />
+                    <ThemePicker selected={themeIds} onChange={setThemeIds} />
                     <p className="text-xs text-[var(--text-muted)] mt-3">
                         Thema&apos;s helpen studenten om je project te vinden op onderwerp.
                     </p>

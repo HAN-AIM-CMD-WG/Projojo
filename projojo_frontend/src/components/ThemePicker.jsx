@@ -1,38 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getThemes } from '../services';
 
 /**
- * ThemePicker - reusable visual theme selector.
+ * ThemePicker - reusable visual theme selector (controlled).
  *
  * Renders the available themes (from GET /themes/) as colored pills. In edit
  * mode every theme is a toggle button; in read-only mode only the selected
- * themes are shown as non-interactive pills. Selection state is managed
- * internally and reported through `onChange` on every user toggle.
+ * themes are shown as non-interactive pills.
  *
- * `initialSelected` seeds the selection and is re-synced if it changes (e.g. a
- * consumer that supplies it from an async fetch) until the user first interacts,
- * after which the internal selection wins so in-progress edits are never lost.
- *
- * Two consequences for consumers:
- * - "Interacted" is sticky for the lifetime of the mount, so pushing an older
- *   `initialSelected` back will NOT revert a selection the user has touched. To
- *   implement a Cancel/reset that reverts in place, remount the picker with a
- *   changed `key` instead.
- * - Re-syncing does not call `onChange` (the parent already owns the value it
- *   just supplied). Seed any save state from your own `initialSelected`, not
- *   from the first `onChange`, or a pre-fill the user never touched is lost.
+ * Selection is fully controlled by the parent: `selected` is the array of theme
+ * ids the component renders, and every user toggle is reported through `onChange`
+ * with the next array - the parent must apply it (typically to its own state)
+ * for the change to take effect. The component keeps no selection state of its
+ * own, so pre-selection, reset and cancel are the parent's to own: a Cancel that
+ * reverts is just setting `selected` back to its previous value, with no remount.
  *
  * @param {object} props
- * @param {string[]} [props.initialSelected] - theme ids selected initially
- * @param {(selectedIds: string[]) => void} [props.onChange] - called on each toggle
+ * @param {string[]} [props.selected] - currently selected theme ids
+ * @param {(selectedIds: string[]) => void} [props.onChange] - called on each toggle with the next ids
  * @param {boolean} [props.readOnly] - show selected themes without interaction
  */
-export default function ThemePicker({ initialSelected = [], onChange, readOnly = false }) {
+export default function ThemePicker({ selected = [], onChange, readOnly = false }) {
     const [themes, setThemes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [selected, setSelected] = useState(() => initialSelected);
-
-    const interactedRef = useRef(false);
 
     useEffect(() => {
         let active = true;
@@ -42,16 +32,8 @@ export default function ThemePicker({ initialSelected = [], onChange, readOnly =
         return () => { active = false; };
     }, []);
 
-    // Re-sync when `initialSelected` changes (async-fed consumers) but never once
-    // the user has started editing. Keyed on the value, not array identity.
-    const initialKey = initialSelected.join(',');
-    useEffect(() => {
-        if (interactedRef.current) return;
-        setSelected(initialSelected);
-    }, [initialKey]);
-
-    // onChange is called here rather than from an effect so it fires exactly once
-    // per toggle (an effect would also fire on mount and double-fire in StrictMode).
+    // Report the next selection and let the parent own/apply it. Called directly
+    // (not from an effect) so it fires exactly once per user toggle.
     function toggle(id) {
         interactedRef.current = true;
         const next = selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id];

@@ -142,14 +142,10 @@ When('I open the read-only theme picker demo with delayed selection of {string} 
   await openHarness(this, { readonly: true, selectedNames: [first, second], delayed: true });
 });
 
-When('I open the theme picker demo with delayed selection of {string} and {string}', async function (first, second) {
-  await openHarness(this, { selectedNames: [first, second], delayed: true });
-});
-
 When('the delayed selection arrives', async function () {
   await page(this).getByTestId('apply-delayed').click();
   // The harness renders this marker in the same commit that pushes the new
-  // initialSelected, so the assertions that follow cannot run before the
+  // `selected` value, so the assertions that follow cannot run before the
   // component has been handed the late value.
   await page(this).getByTestId('delayed-applied').waitFor({ state: 'attached' });
 });

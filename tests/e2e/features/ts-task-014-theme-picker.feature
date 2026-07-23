@@ -87,9 +87,11 @@ Feature: TS-task-014 reusable ThemePicker component
     Then the "Duurzaamheid" pill is still shown
     And the selection change callback reports no selection
 
-  # Reusable-contract guard: consumers (project edit, inline detail edit, student
-  # interests) feed initialSelected from an async fetch, so a selection that
-  # arrives after mount must still be reflected.
+  # Controlled-contract guard: the picker renders the current `selected` prop, so
+  # a selection the parent supplies after mount (e.g. from an async fetch) is
+  # reflected rather than cached from mount time. Read-only here, so there is no
+  # in-progress edit to reconcile - once selection is the parent's to own, the
+  # "don't overwrite my edits" case is the parent's decision, not the picker's.
   @ui @theme @TS-task-014
   Scenario: Read-only selection arriving after mount is reflected once it loads
     Given the theme picker demo has 6 themes available
@@ -97,22 +99,6 @@ Feature: TS-task-014 reusable ThemePicker component
     Then no theme pills are shown
     When the delayed selection arrives
     Then the "Duurzaamheid" and "Onderwijs" pills appear once the selection loads
-
-  # The other half of the re-sync contract, and the half consumers get wrong:
-  # re-syncing must stop once the user starts editing, so a late-arriving fetch
-  # can never wipe an in-progress selection. The scenario above proves the same
-  # trigger does re-sync when the user has not interacted, so this one failing to
-  # change anything is the guard working, not the trigger silently doing nothing.
-  @ui @theme @TS-task-014
-  Scenario: A selection arriving after the user started editing does not overwrite it
-    Given the theme picker demo has 6 themes available
-    When I open the theme picker demo with delayed selection of "Duurzaamheid" and "Onderwijs"
-    And I click the "Water" theme pill
-    And the delayed selection arrives
-    Then the "Water" pill is selected
-    And the "Duurzaamheid" pill is not selected
-    And the "Onderwijs" pill is not selected
-    And the selection change callback reports "Water"
 
   @ui @theme @TS-task-014
   Scenario: AC-8 toggling reports the current selected ids through onChange

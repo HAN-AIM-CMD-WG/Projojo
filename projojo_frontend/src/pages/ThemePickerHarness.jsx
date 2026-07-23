@@ -8,19 +8,20 @@ import ThemePicker from '../components/ThemePicker';
  * detail edit, student interests) are separate tasks, so no production page
  * mounts the component yet. Registered only in dev builds (see App.jsx).
  *
- * Configured entirely through the URL so the E2E suite can drive every prop:
+ * The ThemePicker is controlled, so this harness owns the selection array and
+ * applies every onChange back to it. Configured entirely through the URL so the
+ * E2E suite can drive every prop:
  *   ?readonly=1            -> read-only mode
  *   ?selected=id1,id2      -> initially selected theme ids
- *   ?delayed=1             -> start empty and apply `selected` only when the
- *                             "apply-delayed" button is pressed, simulating an
- *                             async fetch that resolves after mount
+ *   ?delayed=1             -> start empty and push `selected` only when the
+ *                             "apply-delayed" button is pressed, simulating a
+ *                             parent that supplies the selection after mount
  * The latest onChange payload is rendered as JSON for assertion.
  *
  * The delayed selection is test-triggered rather than timer-based so the suite
- * controls the ordering exactly: it can assert the empty state, or let the user
- * toggle a pill first, and know which happened before the late value arrives.
- * `delayed-applied` marks the commit that pushed the new value, so assertions
- * never run before the component has seen it.
+ * controls the ordering exactly: it can assert the empty state before letting
+ * the late value arrive. `delayed-applied` marks the commit that pushed the new
+ * value, so assertions never run before the component has seen it.
  */
 export default function ThemePickerHarness() {
     const [params] = useSearchParams();
@@ -29,21 +30,28 @@ export default function ThemePickerHarness() {
     const selectedParam = params.get('selected');
     const wanted = selectedParam ? selectedParam.split(',').filter(Boolean) : [];
 
-    const [initialSelected, setInitialSelected] = useState(delayed ? [] : wanted);
+    const [selected, setSelected] = useState(delayed ? [] : wanted);
     const [applied, setApplied] = useState(false);
     const [lastChange, setLastChange] = useState(null);
+
+    // Controlled parent: apply every toggle to `selected` so the pill updates,
+    // and mirror it to the read-out the E2E suite asserts on.
+    function handleChange(ids) {
+        setSelected(ids);
+        setLastChange(ids);
+    }
 
     return (
         <div className="min-h-screen bg-[var(--neu-bg)] p-8">
             <div className="max-w-3xl mx-auto neu-flat p-6 space-y-4">
                 <h1 className="text-lg font-bold text-[var(--text-primary)]">ThemePicker harness</h1>
-                <ThemePicker initialSelected={initialSelected} readOnly={readOnly} onChange={setLastChange} />
+                <ThemePicker selected={selected} readOnly={readOnly} onChange={handleChange} />
                 {delayed && (
                     <button
                         type="button"
                         data-testid="apply-delayed"
                         className="text-xs underline text-[var(--text-muted)]"
-                        onClick={() => { setInitialSelected(wanted); setApplied(true); }}
+                        onClick={() => { setSelected(wanted); setApplied(true); }}
                     >
                         Apply delayed selection
                     </button>

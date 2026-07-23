@@ -28,9 +28,6 @@ export default function UpdateProjectPage() {
     const [selectedThemeIds, setSelectedThemeIds] = useState(null);
     // The form data of a save that is held back by the empty-themes confirmation.
     const [pendingSave, setPendingSave] = useState(null);
-    // Bumped to remount the picker, which is the only way to revert a selection
-    // the supervisor already touched (see the ThemePicker docs).
-    const [pickerKey, setPickerKey] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
     const navigation = useNavigate();
 
@@ -147,11 +144,14 @@ export default function UpdateProjectPage() {
         save(formData);
     }
 
-    /** Dismissing the confirmation cancels the entire save and restores the themes. */
+    /**
+     * Dismissing the confirmation cancels the entire save and restores the themes.
+     * Resetting to null makes `themeIds` fall back to the saved selection, which
+     * the controlled picker re-renders in place - no remount, no themes refetch.
+     */
     function cancelThemeRemoval() {
         setPendingSave(null);
         setSelectedThemeIds(null);
-        setPickerKey((key) => key + 1);
     }
 
     return (
@@ -201,7 +201,7 @@ export default function UpdateProjectPage() {
                 />
                 <div data-testid="project-theme-section" role="group" aria-labelledby="project-theme-label">
                     <h3 id="project-theme-label" className="block text-sm font-bold leading-6 text-text-primary mb-1">Thema&apos;s</h3>
-                    <ThemePicker key={pickerKey} initialSelected={savedThemeIds} onChange={setSelectedThemeIds} />
+                    <ThemePicker selected={themeIds} onChange={setSelectedThemeIds} />
                 </div>
                 <div className='grid grid-cols-2 gap-2'>
                     <button className="btn-secondary flex-grow" type="button" onClick={() => navigation(-1)}>Annuleren</button>
