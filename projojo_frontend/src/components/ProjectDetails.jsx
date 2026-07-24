@@ -552,9 +552,7 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                         {/* Edit project */}
                         <Link
                             to={`/projects/${project.id}/update`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                                bg-primary/10 border border-primary/30 text-primary
-                                hover:bg-primary/20 transition-all duration-200"
+                            className="neu-btn !py-1.5 !px-3 text-xs flex items-center gap-1.5"
                             title="Pas de gegevens en thema's van dit project aan"
                         >
                             <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
