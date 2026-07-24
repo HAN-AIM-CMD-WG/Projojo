@@ -13,6 +13,7 @@ import SkillBadge from "./SkillBadge";
 import { filterVisibleSkillsForUser } from "../utils/skills";
 import Alert from "./Alert";
 import ProjectActionModal from "./ProjectActionModal";
+import ProjectThemeSection from "./ProjectThemeSection";
 import { getCountdownText, calculateProgress, formatDate } from "../utils/dates";
 
 export default function ProjectDetails({ project, tasks, businessId, refreshData }) {
@@ -504,6 +505,11 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 </span>
                             )}
                         </div>
+                    )}
+
+                    {/* Linked themes - read-only display near the project metadata */}
+                    {!isLoading && project.id && (
+                        <ProjectThemeSection projectId={project.id} />
                     )}
                 </div>
             </div>
