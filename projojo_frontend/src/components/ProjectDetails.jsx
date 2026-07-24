@@ -314,16 +314,6 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 </div>
                             )}
                         </div>
-
-                        {/* Add task button */}
-                        {isOwner && (
-                            <button className="neu-btn-primary !py-2 !px-3 text-sm flex-shrink-0" onClick={handleOpenModal}>
-                                <span className="flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-base">add</span>
-                                    <span className="hidden sm:inline">Taak toevoegen</span>
-                                </span>
-                            </button>
-                        )}
                     </div>
 
                     {/* Timeline - compact inline */}
@@ -545,6 +535,18 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
             {canManageProject && !isLoading && (
                 <div className="px-4 sm:px-5 pb-4 border-t border-[var(--neu-border)] pt-3 mt-2">
                     <div className="flex flex-wrap items-center gap-2">
+                        {/* Add task */}
+                        {isOwner && (
+                            <button
+                                onClick={handleOpenModal}
+                                className="neu-btn-primary !py-1.5 !px-3 text-xs flex items-center gap-1.5"
+                                title="Voeg een nieuwe taak toe aan dit project"
+                            >
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">add</span>
+                                Taak toevoegen
+                            </button>
+                        )}
+
                         {/* Edit project */}
                         <Link
                             to={`/projects/${project.id}/update`}
