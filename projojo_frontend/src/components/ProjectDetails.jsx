@@ -257,6 +257,45 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             <div className="absolute inset-0 bg-black/30" />
                         )}
                     </div>
+
+                    {/* Bookmark & Share actions - tucked under the image, for all authenticated users */}
+                    {!isLoading && project.id && (
+                        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                            <button
+                                onClick={() => toggleBookmark(project.id)}
+                                className={`
+                                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    whitespace-nowrap shrink-0
+                                    transition-all duration-200 border
+                                    ${isBookmarked(project.id)
+                                        ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
+                                        : 'bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30'
+                                    }
+                                `}
+                                title={isBookmarked(project.id) ? 'Verwijder uit opgeslagen' : 'Project opslaan'}
+                                aria-label={isBookmarked(project.id) ? 'Verwijder uit opgeslagen projecten' : 'Sla dit project op'}
+                            >
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                                    {isBookmarked(project.id) ? 'bookmark' : 'bookmark_border'}
+                                </span>
+                                {isBookmarked(project.id) ? 'Opgeslagen' : 'Opslaan'}
+                            </button>
+                            <button
+                                onClick={handleShareLink}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    whitespace-nowrap shrink-0
+                                    transition-all duration-200 border
+                                    bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30"
+                                title="Kopieer project link"
+                                aria-label="Kopieer een link naar dit project"
+                            >
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                                    {shareCopied ? 'check' : 'share'}
+                                </span>
+                                {shareCopied ? 'Link gekopieerd!' : 'Deel project'}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Info - Right side */}
@@ -493,43 +532,6 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                     />
                 )}
             </div>
-
-            {/* Bookmark & Share actions - visible for all authenticated users */}
-            {!isLoading && project.id && (
-                <div className="px-4 sm:px-5 pb-2 flex items-center gap-2">
-                    <button
-                        onClick={() => toggleBookmark(project.id)}
-                        className={`
-                            inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                            transition-all duration-200 border
-                            ${isBookmarked(project.id)
-                                ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
-                                : 'bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30'
-                            }
-                        `}
-                        title={isBookmarked(project.id) ? 'Verwijder uit opgeslagen' : 'Project opslaan'}
-                        aria-label={isBookmarked(project.id) ? 'Verwijder uit opgeslagen projecten' : 'Sla dit project op'}
-                    >
-                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                            {isBookmarked(project.id) ? 'bookmark' : 'bookmark_border'}
-                        </span>
-                        {isBookmarked(project.id) ? 'Opgeslagen' : 'Opslaan'}
-                    </button>
-                    <button
-                        onClick={handleShareLink}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                            transition-all duration-200 border
-                            bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30"
-                        title="Kopieer project link"
-                        aria-label="Kopieer een link naar dit project"
-                    >
-                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                            {shareCopied ? 'check' : 'share'}
-                        </span>
-                        {shareCopied ? 'Link gekopieerd!' : 'Deel project'}
-                    </button>
-                </div>
-            )}
 
             {/* Project management - clean action bar */}
             {canManageProject && !isLoading && (
