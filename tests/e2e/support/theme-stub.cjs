@@ -132,4 +132,43 @@ async function stubProjectThemeLink(page, { status, detail = "Koppelen is misluk
   });
 }
 
-module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, stubProjectThemeLink, THEMES_ROUTE };
+/**
+ * Control GET /themes/project/{id} for a page, leaving every other request alone.
+ *
+ * Two states a healthy backend will not produce on demand for the read-only theme
+ * display (TS-task-019):
+ * - `delayMs` only: hold the read back and then pass it through to the real
+ *   backend, so the loading state lasts long enough to observe. The themes still
+ *   really load.
+ * - `status` set: fail the read with that status, so the section's graceful
+ *   degradation branch can be driven.
+ *
+ * Only GET is intercepted; the PUT link call on the same URL is left to
+ * `stubProjectThemeLink`, so a scenario can slow the read without touching writes.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ status?: number, body?: unknown, detail?: string, delayMs?: number }} [options]
+ */
+async function stubProjectThemesFetch(page, { status, body, detail = 'Kon thema\'s niet laden', delayMs = 0 } = {}) {
+  await page.unroute(PROJECT_THEME_LINK_ROUTE).catch(() => {});
+  await page.route(PROJECT_THEME_LINK_ROUTE, async (route) => {
+    const method = route.request().method();
+    if (method !== 'GET') {
+      return route.fallback();
+    }
+    if (delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+    if (status === undefined) {
+      return route.continue();
+    }
+    await route.fulfill({
+      status,
+      contentType: 'application/json',
+      headers: CORS_HEADERS,
+      body: JSON.stringify(body ?? { detail }),
+    });
+  });
+}
+
+module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, stubProjectThemeLink, stubProjectThemesFetch, THEMES_ROUTE };
