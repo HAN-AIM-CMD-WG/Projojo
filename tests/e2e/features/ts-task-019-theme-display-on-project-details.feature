@@ -17,9 +17,12 @@ Feature: TS-task-019 theme display on ProjectDetailsPage
   # AC-2 example asserts on (Duurzaamheid -> icon "eco", color #4CAF50), so those
   # values are proven against the real catalog rather than a copy.
   #
-  # The page is read-only for every role by design; inline editing is a separate
-  # task (TS-task-017), so the owning supervisor scenario asserts the pills stay
-  # read-only and expose no edit control here.
+  # The display is read-only for every role by design. Inline editing is a separate
+  # task (TS-task-017) which since its implementation adds an edit control to this
+  # section for the project's supervisor and for teachers; that control, and what it
+  # opens, belong to that suite. What this suite still owns for every role is that
+  # the displayed pills themselves are never interactive, and that a user who may
+  # not edit is offered no editing control at all.
 
   Background:
     Given the theme catalog is reset to the shared baseline themes
@@ -87,21 +90,23 @@ Feature: TS-task-019 theme display on ProjectDetailsPage
     And I am authenticated in the browser as a student
     When I open the project details page
     Then the theme pills are not interactive controls
+    And the theme section offers no theme editing control
     And the theme pills do not use a pointer cursor
     When I click the project theme pill "Duurzaamheid"
     Then I stay on the project details page
     And exactly the theme pills "Duurzaamheid, Klimaat & Milieu" are shown
 
-  # The other half of AC-7: read-only holds for the owner too. Inline editing is
-  # TS-task-017, so the theme section must offer no edit control here even for the
-  # supervisor who owns the project.
+  # The other half of AC-7: the pills themselves are read-only for the owner too.
+  # The section does carry an edit control for them since TS-task-017, but nothing
+  # is editable until that control is used - the display this task owns stays
+  # read-only. Who is offered that control, and what it opens, is TS-task-017's.
   @ui @theme @TS-task-019
-  Scenario: AC-7 the owning supervisor also sees read-only pills with no edit control
+  Scenario: AC-7 the owning supervisor also sees read-only pills until they start editing
     Given the project's linked themes are "Duurzaamheid"
     And I am authenticated in the browser as the project's supervisor
     When I open the project details page
     Then the theme pills are not interactive controls
-    And the theme section offers no theme editing control
+    And the theme pills do not use a pointer cursor
 
   # Not spelled out in the issue but a real state: the per-project fetch can fail.
   # A project that HAS themes must not silently look empty on a backend hiccup, so

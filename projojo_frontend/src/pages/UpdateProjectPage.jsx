@@ -5,10 +5,11 @@ import { useAuth } from '../auth/AuthProvider';
 import Card from '../components/Card';
 import DragDrop from '../components/DragDrop';
 import FormInput from '../components/FormInput';
-import Modal from '../components/Modal';
 import RichTextEditor from '../components/RichTextEditor';
 import ThemePicker from '../components/ThemePicker';
+import ThemeRemovalConfirm from '../components/ThemeRemovalConfirm';
 import { getProject, getProjectThemes, IMAGE_BASE_URL, linkProjectThemes, updateProject } from '../services';
+import { sameIds } from '../utils/themeSelection';
 import useFetch from '../useFetch';
 import Loading from '../components/Loading';
 
@@ -209,47 +210,12 @@ export default function UpdateProjectPage() {
                 </div>
             </Card>
 
-            <Modal
-                isModalOpen={pendingSave !== null}
-                setIsModalOpen={cancelThemeRemoval}
-                modalHeader="Thema's verwijderen"
-                modalSubtitle={projectData.name}
-                modalIcon="category"
-                maxWidth="max-w-lg"
-            >
-                <div data-testid="theme-removal-modal" className="flex flex-col gap-4">
-                    <div className="rounded-xl p-4 border bg-red-500/10 border-red-500/30 text-red-700 dark:text-red-400">
-                        <div className="flex items-start gap-3">
-                            <span className="material-symbols-outlined text-xl mt-0.5" aria-hidden="true">warning</span>
-                            <p data-testid="theme-removal-message" className="text-sm">
-                                {"Alle thema's worden verwijderd van dit project. Weet je het zeker?"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-3 pt-1">
-                        <button
-                            type="button"
-                            onClick={cancelThemeRemoval}
-                            className="neu-btn flex-1 justify-center"
-                        >
-                            Annuleren
-                        </button>
-                        <button
-                            type="button"
-                            onClick={confirmThemeRemoval}
-                            className="flex-1 py-2.5 rounded-xl font-medium transition-all bg-red-500 hover:bg-red-600 text-white"
-                        >
-                            Ja, verwijderen
-                        </button>
-                    </div>
-                </div>
-            </Modal>
+            <ThemeRemovalConfirm
+                isOpen={pendingSave !== null}
+                onCancel={cancelThemeRemoval}
+                onConfirm={confirmThemeRemoval}
+                projectName={projectData.name}
+            />
         </form>
     );
-}
-
-/** Set equality for two arrays of unique theme ids. */
-function sameIds(a, b) {
-    return a.length === b.length && a.every((id) => b.includes(id));
 }

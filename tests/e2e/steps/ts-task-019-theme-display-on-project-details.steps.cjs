@@ -37,10 +37,14 @@ const PROJECT_PATH = `/projects/${PROOF_PROJECT_ID}`;
 // enough not to dominate the suite's runtime.
 const LOADING_DELAY_MS = 2_500;
 
-// Every shape that would make an element interactive or focusable. The read-only
-// theme section must contain none of these - not just the <button>/<a> it happens
-// to avoid today, but also the <select>/<input>/[contenteditable]/focusable pill an
-// inline editor (TS-task-017) would introduce on top of this section.
+// Every shape that would make an element interactive or focusable. A read-only
+// theme pill must be none of these and contain none of these - not just the
+// <button>/<a> it happens to avoid today, but also the
+// <select>/<input>/[contenteditable]/focusable pill an interactive rewrite would
+// introduce. Used section-wide only where no user may edit at all: since
+// TS-task-017 the section legitimately carries an edit control for the project's
+// supervisor and for teachers, so "the section holds nothing interactive" is a
+// statement about those users, not about the pills.
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [contenteditable="true"], [role="button"], [tabindex]';
 
 // --- backend staging (mirrors the self-contained pattern of the 015/016 suites) --
@@ -299,12 +303,12 @@ Then('the theme pills are not interactive controls', async function () {
     // rewrite introduces) would report 0.
     assert.equal(tabIndex, -1, 'Expected a read-only pill not to be keyboard-focusable');
     assert.equal(await pill.getAttribute('aria-pressed'), null, 'Expected a read-only pill to expose no toggle state');
+    assert.equal(
+      await pill.locator(INTERACTIVE_SELECTOR).count(),
+      0,
+      'Expected a read-only pill to contain no interactive or focusable control',
+    );
   }
-  assert.equal(
-    await section(this).locator(INTERACTIVE_SELECTOR).count(),
-    0,
-    'Expected the theme section to contain no interactive or focusable controls',
-  );
 });
 
 Then('the theme pills do not use a pointer cursor', async function () {
@@ -321,9 +325,13 @@ Then('I stay on the project details page', async function () {
 
 Then('the theme section offers no theme editing control', async function () {
   await section(this).waitFor({ state: 'visible', timeout: 10_000 });
+  // Settle first. The section renders its skeleton before it knows anything, and an
+  // edit control (TS-task-017) only appears once the current themes are loaded, so
+  // counting controls on the loading state would pass without proving anything.
+  await section(this).getByTestId('project-themes-loading').waitFor({ state: 'detached', timeout: 15_000 });
   // No editing affordance of any shape - a button, link, select, input, editable
-  // region or role="button" would all count as an edit control the owner must not
-  // see here (inline editing is TS-task-017).
+  // region or role="button" would all count as an edit control a user who may not
+  // edit this project's themes must never be offered.
   assert.equal(
     await section(this).locator(INTERACTIVE_SELECTOR).count(),
     0,

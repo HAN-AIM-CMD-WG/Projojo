@@ -507,9 +507,14 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                         </div>
                     )}
 
-                    {/* Linked themes - read-only display near the project metadata */}
+                    {/* Linked themes near the project metadata - editable inline by the
+                        people who may manage the project, read-only for everyone else */}
                     {!isLoading && project.id && (
-                        <ProjectThemeSection projectId={project.id} />
+                        <ProjectThemeSection
+                            projectId={project.id}
+                            projectName={project.name}
+                            canEdit={canManageProject}
+                        />
                     )}
                 </div>
             </div>
