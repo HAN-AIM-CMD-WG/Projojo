@@ -83,92 +83,63 @@ async function stubThemeDeleteEndpoint(page, { status = 500, detail = 'Verwijder
 }
 
 // The project theme link resource: `/themes/project/{id}`, and deliberately NOT
-// the `/themes/` collection or a single `/themes/{id}` theme.
+// the `/themes/` collection or a single `/themes/{id}` theme. A single route owns
+// this URL so a read stub and a write stub can share one page - two separate
+// page.route registrations on this same pattern would clobber each other.
 const PROJECT_THEME_LINK_ROUTE = /\/themes\/project\/[^/?]+$/;
 
 /**
- * Control PUT /themes/project/{id} for a page, leaving every other request alone.
+ * Control GET (read) and/or PUT (write) on /themes/project/{id} for a page through
+ * one route registration, leaving every other request alone. Pass only the
+ * method(s) a scenario needs; an unstaged method is passed straight through to the
+ * real backend, so a read stub never blocks writes (and vice-versa) on one page -
+ * which is what a read + write flow (TS-task-017) needs.
  *
- * Two states a healthy backend will not produce on demand:
- * - `status` set: fail the link call with that status, so the UI's partial-failure
- *   branch (project created, themes not linked) can be driven.
- * - `delayMs` only: hold the call back and then pass it through to the real
- *   backend, so the window between "project created" and "themes linked" lasts
- *   long enough to observe. The link still really happens.
- *
- * `onIntercept` fires the moment the PUT is intercepted - before any delay - so a
- * caller can assert on that window without guessing when it opened.
+ * Each of `get` / `put` stages a state a healthy backend will not produce on demand:
+ * - `status` set: fulfil that method with the status (and `body`, or `{ detail }`),
+ *   driving its failure branch (e.g. project created but themes not linked).
+ * - `delayMs` only: hold the call back, then pass it through to the real backend so
+ *   the in-flight window lasts long enough to observe. The call still really happens.
+ * - `onIntercept`: fires the moment the call is intercepted, before any delay, so a
+ *   caller can assert on that window without guessing when it opened.
  *
  * @param {import('playwright').Page} page
- * @param {{ status?: number, detail?: string, delayMs?: number, onIntercept?: () => void }} [options]
+ * @param {{ get?: ProjectThemeStub, put?: ProjectThemeStub }} [options]
+ *   ProjectThemeStub = { status?: number, body?: unknown, detail?: string, delayMs?: number, onIntercept?: () => void }
  */
-async function stubProjectThemeLink(page, { status, detail = "Koppelen is mislukt", delayMs = 0, onIntercept } = {}) {
+async function stubProjectThemeEndpoint(page, { get, put } = {}) {
+  const byMethod = {
+    GET: get && { detail: "Kon thema's niet laden", ...get },
+    PUT: put && { detail: 'Koppelen is mislukt', ...put },
+  };
   await page.unroute(PROJECT_THEME_LINK_ROUTE).catch(() => {});
   await page.route(PROJECT_THEME_LINK_ROUTE, async (route) => {
     const method = route.request().method();
-    // The frontend (:10121) calls the backend (:10122) cross-origin, so a PUT
+    // The frontend (:10121) calls the backend (:10122) cross-origin, so a call
     // carrying an Authorization header is preflighted. Answer that preflight here;
     // otherwise the browser blocks the request and the UI shows a generic network
     // failure instead of the staged state.
     if (method === 'OPTIONS') {
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
-    if (method !== 'PUT') {
-      return route.fallback();
+    const stub = byMethod[method];
+    if (!stub) {
+      return route.continue();
     }
-    onIntercept?.();
-    if (delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    stub.onIntercept?.();
+    if (stub.delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, stub.delayMs));
     }
-    if (status === undefined) {
+    if (stub.status === undefined) {
       return route.continue();
     }
     await route.fulfill({
-      status,
+      status: stub.status,
       contentType: 'application/json',
       headers: CORS_HEADERS,
-      body: JSON.stringify({ detail }),
+      body: JSON.stringify(stub.body ?? { detail: stub.detail }),
     });
   });
 }
 
-/**
- * Control GET /themes/project/{id} for a page, leaving every other request alone.
- *
- * Two states a healthy backend will not produce on demand for the read-only theme
- * display (TS-task-019):
- * - `delayMs` only: hold the read back and then pass it through to the real
- *   backend, so the loading state lasts long enough to observe. The themes still
- *   really load.
- * - `status` set: fail the read with that status, so the section's graceful
- *   degradation branch can be driven.
- *
- * Only GET is intercepted; the PUT link call on the same URL is left to
- * `stubProjectThemeLink`, so a scenario can slow the read without touching writes.
- *
- * @param {import('playwright').Page} page
- * @param {{ status?: number, body?: unknown, detail?: string, delayMs?: number }} [options]
- */
-async function stubProjectThemesFetch(page, { status, body, detail = 'Kon thema\'s niet laden', delayMs = 0 } = {}) {
-  await page.unroute(PROJECT_THEME_LINK_ROUTE).catch(() => {});
-  await page.route(PROJECT_THEME_LINK_ROUTE, async (route) => {
-    const method = route.request().method();
-    if (method !== 'GET') {
-      return route.fallback();
-    }
-    if (delayMs > 0) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-    if (status === undefined) {
-      return route.continue();
-    }
-    await route.fulfill({
-      status,
-      contentType: 'application/json',
-      headers: CORS_HEADERS,
-      body: JSON.stringify(body ?? { detail }),
-    });
-  });
-}
-
-module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, stubProjectThemeLink, stubProjectThemesFetch, THEMES_ROUTE };
+module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, stubProjectThemeEndpoint, THEMES_ROUTE };

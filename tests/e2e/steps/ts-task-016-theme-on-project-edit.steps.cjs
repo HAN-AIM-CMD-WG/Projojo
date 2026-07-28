@@ -27,7 +27,7 @@ const {
 } = require('../support/test-data.cjs');
 const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
 const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
-const { stubProjectThemeLink } = require('../support/theme-stub.cjs');
+const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
 
 const EDIT_PATH = `/projects/${PROOF_PROJECT_ID}/update`;
 const PROJECT_PATH = `/projects/${PROOF_PROJECT_ID}`;
@@ -209,14 +209,16 @@ Given('the project is linked to no themes', async function () {
 });
 
 Given('the theme link request fails while saving', async function () {
-  await stubProjectThemeLink(page(this), { status: 500 });
+  await stubProjectThemeEndpoint(page(this), { put: { status: 500 } });
 });
 
 Given('the theme link request is slow while saving', async function () {
   const current = state(this);
-  await stubProjectThemeLink(page(this), {
-    delayMs: LINK_DELAY_MS,
-    onIntercept: () => { current.linkStartedAt ??= Date.now(); },
+  await stubProjectThemeEndpoint(page(this), {
+    put: {
+      delayMs: LINK_DELAY_MS,
+      onIntercept: () => { current.linkStartedAt ??= Date.now(); },
+    },
   });
 });
 

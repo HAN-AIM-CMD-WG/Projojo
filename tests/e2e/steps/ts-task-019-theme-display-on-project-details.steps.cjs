@@ -29,7 +29,7 @@ const {
 } = require('../support/test-data.cjs');
 const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
 const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
-const { stubProjectThemesFetch } = require('../support/theme-stub.cjs');
+const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
 
 const PROJECT_PATH = `/projects/${PROOF_PROJECT_ID}`;
 
@@ -161,11 +161,11 @@ Given("I am authenticated in the browser as the project's supervisor", async fun
 });
 
 Given('the project theme fetch is slow', async function () {
-  await stubProjectThemesFetch(page(this), { delayMs: LOADING_DELAY_MS });
+  await stubProjectThemeEndpoint(page(this), { get: { delayMs: LOADING_DELAY_MS } });
 });
 
 Given('the project theme fetch fails', async function () {
-  await stubProjectThemesFetch(page(this), { status: 500 });
+  await stubProjectThemeEndpoint(page(this), { get: { status: 500 } });
 });
 
 // --- When -----------------------------------------------------------------------

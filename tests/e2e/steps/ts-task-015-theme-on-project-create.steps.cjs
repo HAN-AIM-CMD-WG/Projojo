@@ -20,7 +20,7 @@ const {
 } = require('../support/test-data.cjs');
 const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
 const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
-const { stubProjectThemeLink } = require('../support/theme-stub.cjs');
+const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
 
 const CREATE_PATH = '/projects/add';
 
@@ -179,14 +179,16 @@ Given('I am authenticated in the browser as the TS-task-015 supervisor', async f
 });
 
 Given('the project theme link request fails', async function () {
-  await stubProjectThemeLink(page(this), { status: 500 });
+  await stubProjectThemeEndpoint(page(this), { put: { status: 500 } });
 });
 
 Given('the project theme link request is slow', async function () {
   const current = state(this);
-  await stubProjectThemeLink(page(this), {
-    delayMs: LINK_DELAY_MS,
-    onIntercept: () => { current.linkStartedAt ??= Date.now(); },
+  await stubProjectThemeEndpoint(page(this), {
+    put: {
+      delayMs: LINK_DELAY_MS,
+      onIntercept: () => { current.linkStartedAt ??= Date.now(); },
+    },
   });
 });
 
