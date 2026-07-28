@@ -37,6 +37,12 @@ const PROJECT_PATH = `/projects/${PROOF_PROJECT_ID}`;
 // enough not to dominate the suite's runtime.
 const LOADING_DELAY_MS = 2_500;
 
+// Every shape that would make an element interactive or focusable. The read-only
+// theme section must contain none of these - not just the <button>/<a> it happens
+// to avoid today, but also the <select>/<input>/[contenteditable]/focusable pill an
+// inline editor (TS-task-017) would introduce on top of this section.
+const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [contenteditable="true"], [role="button"], [tabindex]';
+
 // --- backend staging (mirrors the self-contained pattern of the 015/016 suites) --
 
 let cachedTeacherToken = null;
@@ -196,8 +202,13 @@ Then('exactly the theme pills {string} are shown', async function (names) {
 // --- Then: a single pill's icon, name and color (AC-2) --------------------------
 
 Then('the {string} theme pill shows the Material Symbols icon {string}', async function (name, icon) {
-  const iconEl = (await pillByName(this, name)).getByTestId('project-theme-icon');
-  await iconEl.waitFor({ state: 'attached', timeout: 10_000 });
+  const pill = await pillByName(this, name);
+  await pill.waitFor({ state: 'visible', timeout: 10_000 });
+  const iconEl = pill.getByTestId('project-theme-icon');
+  // "shows" means visibly rendered, not merely present in the DOM: innerText on a
+  // display:none element falls back to textContent, so a hidden icon would still
+  // read "eco". Assert visibility explicitly so this step verifies its promise.
+  assert.ok(await iconEl.isVisible(), `Expected the '${name}' pill to visibly show its Material Symbols icon`);
   const classes = await iconEl.getAttribute('class');
   assert.ok(
     (classes ?? '').includes('material-symbols'),
@@ -281,12 +292,19 @@ Then('the theme pills are not interactive controls', async function () {
   const all = await pills(this).all();
   assert.ok(all.length > 0, 'Expected theme pills to inspect');
   for (const pill of all) {
-    const tag = await pill.evaluate((el) => el.tagName);
+    const { tag, tabIndex } = await pill.evaluate((el) => ({ tag: el.tagName, tabIndex: el.tabIndex }));
     assert.equal(tag, 'SPAN', `Expected a read-only pill to be a <span>, got <${tag.toLowerCase()}>`);
+    // A read-only pill must not be reachable by keyboard: a plain <span> reports
+    // tabIndex -1, whereas an added tabIndex={0} (the first thing an interactive
+    // rewrite introduces) would report 0.
+    assert.equal(tabIndex, -1, 'Expected a read-only pill not to be keyboard-focusable');
     assert.equal(await pill.getAttribute('aria-pressed'), null, 'Expected a read-only pill to expose no toggle state');
   }
-  assert.equal(await section(this).getByRole('button').count(), 0, 'Expected no buttons inside the theme section');
-  assert.equal(await section(this).locator('a').count(), 0, 'Expected no links inside the theme section');
+  assert.equal(
+    await section(this).locator(INTERACTIVE_SELECTOR).count(),
+    0,
+    'Expected the theme section to contain no interactive or focusable controls',
+  );
 });
 
 Then('the theme pills do not use a pointer cursor', async function () {
@@ -303,8 +321,14 @@ Then('I stay on the project details page', async function () {
 
 Then('the theme section offers no theme editing control', async function () {
   await section(this).waitFor({ state: 'visible', timeout: 10_000 });
-  assert.equal(await section(this).getByRole('button').count(), 0, 'Expected the theme section to offer no edit button');
-  assert.equal(await section(this).locator('a').count(), 0, 'Expected the theme section to offer no edit link');
+  // No editing affordance of any shape - a button, link, select, input, editable
+  // region or role="button" would all count as an edit control the owner must not
+  // see here (inline editing is TS-task-017).
+  assert.equal(
+    await section(this).locator(INTERACTIVE_SELECTOR).count(),
+    0,
+    'Expected the theme section to offer no editing control of any kind',
+  );
 });
 
 // --- Then: graceful degradation --------------------------------------------------

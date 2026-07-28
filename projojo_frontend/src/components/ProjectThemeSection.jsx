@@ -32,14 +32,25 @@ export default function ProjectThemeSection({ projectId }) {
                 setThemes(Array.isArray(data) ? data : []);
                 setStatus('ready');
             })
-            .catch(() => { if (active) setStatus('error'); });
+            .catch((error) => {
+                if (!active) return;
+                console.error('Failed to load project themes', error);
+                setStatus('error');
+            });
         return () => { active = false; };
     }, [projectId]);
 
     // One flat flex-wrap row so the "Thema's:" label shares the first line with the
     // first pills and any overflow wraps beneath them - exactly like the Skills row.
+    // role="status" makes the region a polite live region so a screen reader is told
+    // when the themes finish loading, come back empty, or fail - the content swaps in
+    // after first paint (matches SkeletonList / ThemeManagement loading regions).
     return (
-        <div data-testid="project-themes" className="mt-3 flex flex-wrap items-center gap-1.5">
+        <div
+            data-testid="project-themes"
+            role="status"
+            className="mt-3 flex flex-wrap items-center gap-1.5"
+        >
             <span className="text-xs font-semibold text-[var(--text-muted)] mr-1">{"Thema's:"}</span>
 
             {status === 'loading' ? (
