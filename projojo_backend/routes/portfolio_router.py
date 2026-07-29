@@ -4,8 +4,8 @@ import re
 
 from auth.permissions import auth
 from domain.models.portfolio import (
+    PortfolioItemCurationUpdate,
     PortfolioItemResponse,
-    PortfolioItemRetractionUpdate,
     PortfolioResponse,
     PortfolioReviewCreateRequest,
     PortfolioReviewMutationResponse,
@@ -68,6 +68,7 @@ def _curation(**overrides) -> dict:
         "hidden_at": None,
         "hidden_by_role": None,
         "hidden_by_user_id": None,
+        "is_student_hidden": False,
         "display_order": 1,
         "is_authenticated_public_retraction": False,
         "is_world_visible": False,
@@ -282,23 +283,25 @@ async def update_portfolio_review(review_id: str, update: PortfolioReviewUpdateR
     },
 )
 @auth(role="student")
-async def set_portfolio_item_authenticated_public_retraction(
-    item_id: str, update: PortfolioItemRetractionUpdate, request: Request
-):
-    # Owner-only curation: @auth(role="student") already blocks teachers, supervisors, and
-    # unauthenticated callers; ownership is enforced here so a student may only mutate their own
-    # item, and a non-owned or unknown item is reported as not found without disclosing existence.
+async def set_portfolio_item_curation(item_id: str, update: PortfolioItemCurationUpdate, request: Request):
+    # Owner-only item curation (PF-task-011a display order / student hide-show / world-visible
+    # selection, plus the PF-task-007c authenticated-public retraction). @auth(role="student")
+    # already blocks teachers, supervisors, and unauthenticated callers; ownership is enforced here
+    # so a student may only mutate their own item, and a non-owned or unknown item is reported as
+    # not found without disclosing existence. Only fields present in the request body are applied.
     owner_id = request.state.user_id
     if portfolio_repo.get_owned_item(item_id, owner_id) is None:
         raise HTTPException(status_code=404, detail="Portfolio-item niet gevonden")
 
-    portfolio_repo.set_authenticated_public_retraction(item_id, owner_id, update.is_authenticated_public_retraction)
+    # model_fields_set only ever contains declared fields (Pydantic ignores unknown body keys), so
+    # it needs no further filtering: it is exactly the set of curation fields the caller sent.
+    updates = {name: getattr(update, name) for name in update.model_fields_set}
+    if updates:
+        portfolio_repo.set_item_curation(item_id, owner_id, updates)
 
-    # The returned item is owner-scoped: the owner can always see their own item, so
-    # visibility.reason is always the authenticated-viewer reason here and does not reflect the
-    # supervisor-facing effect of the flag. That effect is conveyed by
-    # curation.is_authenticated_public_retraction. Reviews are the owner's full review set for the
-    # item, so the response matches the shape the owner sees in their portfolio read model.
+    # The returned item is owner-scoped: the owner always sees their own item (including when it is
+    # teacher-hidden), so the response reflects the full post-mutation curation state. Reviews are
+    # the owner's full review set for the item, matching the shape the owner sees in their read model.
     item = portfolio_repo.get_owned_item(item_id, owner_id)
     reviews = portfolio_repo.get_reviews_for_items([item_id])
     return portfolio_repo.attach_reviews([item], reviews)[0]

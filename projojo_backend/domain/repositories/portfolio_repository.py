@@ -46,6 +46,7 @@ _PORTFOLIO_ITEM_FETCH_PROJECTION = """
         'hidden_at': [ $item.hiddenAt ],
         'hidden_by_role': [ $item.hiddenByRole ],
         'hidden_by_user_id': [ $item.hiddenByUserId ],
+        'is_student_hidden': [ $item.studentHidden ],
         'display_order': [ $item.displayOrder ],
         'is_authenticated_public_retraction': $item.isAuthenticatedPublicRetraction,
         'is_world_visible': $item.isWorldVisible
@@ -75,6 +76,11 @@ class PortfolioRepository:
         if public_review_notice_accepted is not True:
             raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
 
+        # Reviewability gates on retirement and the teacher moderation hide (isHidden) only. A
+        # student's own hide (studentHidden, PF-task-011a) is intentionally NOT a review gate: it
+        # is presentation curation, not moderation, so a student cannot use it to block a teacher or
+        # supervisor from reviewing their work. Student-hidden items are still dropped from the
+        # normal portfolio reads (get_visible_items), so reviewers reach them only by direct item id.
         item_state = self._get_reviewable_item_state(item_id)
         if item_state is None:
             raise ValueError("Portfolio-item niet gevonden.")
@@ -391,14 +397,17 @@ class PortfolioRepository:
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
 
     def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
-        # Visibility-filtered list read: retired and hidden items are excluded in the match. The
-        # shared projection still requires every canonical attribute to exist, so the returned
+        # Visibility-filtered list read: retired items, teacher-hidden items (isHidden), and
+        # student-hidden items (studentHidden) are excluded. studentHidden is optional and absent
+        # on most items, so it is filtered with a negation pattern rather than an equality match.
+        # The shared projection still requires every canonical attribute to exist, so the returned
         # shape is identical to get_owned_item.
         query = (
             """
             match
                 $student isa student, has id ~student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
                 $item isa portfolioItem, has isRetired false, has isHidden false;
+                not { $item has studentHidden true; };
                 $ownership isa hasPortfolio(student: $student, item: $item);
             """
             + _PORTFOLIO_ITEM_FETCH_PROJECTION
@@ -439,21 +448,64 @@ class PortfolioRepository:
         archived_projects, archived_businesses, existing_projects = self._source_state_sets(rows)
         return self._map_item(rows[0], "student", archived_projects, archived_businesses, existing_projects)
 
-    def set_authenticated_public_retraction(self, item_id: str, owner_student_id: str, retracted: bool) -> None:
-        # Owner-scoped write (defense in depth): the match requires the caller to own the item via
-        # hasPortfolio, so the flag can never be flipped on an item the student does not own even if
-        # the route-level ownership guard were ever bypassed. Only the authenticated-public retraction
-        # flag is touched; world-public selection and every other curation attribute are left
-        # untouched (PF-task-007c is independent from world-public).
-        query = """
-            match
-                $student isa student, has id ~owner_student_id;
-                $item isa portfolioItem, has id ~item_id;
-                $ownership isa hasPortfolio(student: $student, item: $item);
-            update
-                $item has isAuthenticatedPublicRetraction ~retracted;
-        """
-        Db.write_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id, "retracted": retracted})
+    def set_item_curation(self, item_id: str, owner_student_id: str, updates: dict[str, Any]) -> None:
+        # Owner-scoped student curation write (PF-task-011a). The match requires the caller to own
+        # the item via hasPortfolio, so no field can be changed on an item the student does not own
+        # even if a route-level guard were bypassed. Only the fields the caller actually sent are
+        # touched (the caller passes exactly the provided keys), and every touched field is written
+        # in a single all-or-nothing transaction so a multi-field PATCH can never half-apply.
+        #
+        # Student hide/show is a student-owned flag (studentHidden) that is independent from the
+        # teacher moderation channel (isHidden/hiddenByRole): clearing it never touches a teacher
+        # hide, so a teacher-hidden item stays hidden and the student's choice persists across
+        # teacher toggling. Setting isWorldVisible is unguarded here on purpose: get_world_public_items
+        # only returns non-hidden, non-retired items, so a hidden or retired item never leaks
+        # publicly regardless of the flag (PF-task-011a AC-4 default).
+        owner_match = (
+            "match "
+            "$student isa student, has id ~owner_student_id; "
+            "$item isa portfolioItem, has id ~item_id; "
+            "$ownership isa hasPortfolio(student: $student, item: $item); "
+        )
+        ids = {"item_id": item_id, "owner_student_id": owner_student_id}
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+
+        # @card(1) booleans upsert cleanly through a single update stage.
+        upserts: list[str] = []
+        upsert_params = dict(ids)
+        if "is_world_visible" in updates:
+            upserts.append("$item has isWorldVisible ~is_world_visible;")
+            upsert_params["is_world_visible"] = updates["is_world_visible"]
+        if "is_authenticated_public_retraction" in updates:
+            upserts.append("$item has isAuthenticatedPublicRetraction ~retraction;")
+            upsert_params["retraction"] = updates["is_authenticated_public_retraction"]
+        if upserts:
+            queries.append((owner_match + "update " + " ".join(upserts), upsert_params))
+
+        # @card(0..1) attributes use the idempotent delete-then-insert pattern, since they may be
+        # absent (e.g. items created without a display order).
+        if "display_order" in updates:
+            queries += self._optional_item_attribute_queries(owner_match, ids, "displayOrder", updates["display_order"])
+        if "is_student_hidden" in updates:
+            queries += self._optional_item_attribute_queries(owner_match, ids, "studentHidden", updates["is_student_hidden"])
+
+        if queries:
+            Db.write_transact_many(queries)
+
+    def _optional_item_attribute_queries(
+        self, owner_match: str, ids: dict[str, Any], attribute: str, value: Any
+    ) -> list[tuple[str, dict[str, Any] | None]]:
+        # attribute is a fixed internal literal (displayOrder/studentHidden), never user input, so
+        # it is safe to interpolate directly; the value always flows through a ~param. Delete-first
+        # keeps re-setting the @card(0..1) attribute idempotent, and an item without the attribute
+        # matches nothing so the delete is a harmless no-op. Both queries are owner-scoped and run
+        # together in one all-or-nothing transaction via the caller's Db.write_transact_many.
+        queries: list[tuple[str, dict[str, Any] | None]] = [
+            (owner_match + f"$item has {attribute} $current; delete has $current of $item;", dict(ids))
+        ]
+        if value is not None:
+            queries.append((owner_match + f"insert $item has {attribute} ~value;", {**ids, "value": value}))
+        return queries
 
     def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
         if not item_ids:
@@ -601,6 +653,7 @@ class PortfolioRepository:
                 "hidden_at": self._date(row.get("hidden_at")),
                 "hidden_by_role": self._one(row.get("hidden_by_role")),
                 "hidden_by_user_id": self._one(row.get("hidden_by_user_id")),
+                "is_student_hidden": bool(self._one(row.get("is_student_hidden"), False)),
                 "display_order": self._one(row.get("display_order")),
                 "is_authenticated_public_retraction": retracted,
                 "is_world_visible": bool(self._one(row.get("is_world_visible"), False)),

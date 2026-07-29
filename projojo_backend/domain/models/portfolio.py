@@ -37,6 +37,7 @@ class PortfolioCuration(BaseModel):
     hidden_at: str | None = None
     hidden_by_role: str | None = None
     hidden_by_user_id: str | None = None
+    is_student_hidden: bool = False
     display_order: int | None = None
     is_authenticated_public_retraction: bool
     is_world_visible: bool
@@ -82,8 +83,16 @@ class PortfolioReviewUpdateRequest(BaseModel):
     rating: int | None = Field(default=None, ge=1, le=5)
 
 
-class PortfolioItemRetractionUpdate(BaseModel):
-    is_authenticated_public_retraction: bool
+class PortfolioItemCurationUpdate(BaseModel):
+    # Student item curation (PF-task-011a). Every field is optional; only fields present in the
+    # request body are applied (tracked via model_fields_set in the route). display_order sets the
+    # owner's explicit ordering, is_student_hidden is the student's own hide flag (independent from
+    # a teacher hide), is_world_visible selects the item for world-public output, and
+    # is_authenticated_public_retraction remains the PF-task-007c supervisor-facing retraction.
+    display_order: int | None = None
+    is_student_hidden: bool | None = None
+    is_world_visible: bool | None = None
+    is_authenticated_public_retraction: bool | None = None
 
 
 class PortfolioSettingsResponse(BaseModel):
