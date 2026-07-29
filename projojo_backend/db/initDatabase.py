@@ -3,7 +3,7 @@ from typedb.driver import TypeDB, TransactionType, Credentials, DriverOptions
 import os
 import re
 import pprint
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import time
 from uuid import UUID
 from config.settings import (
@@ -277,6 +277,11 @@ def format_value(value: Any) -> str:
         return str(value)
 
     if isinstance(value, datetime):
+        # datetime-tz columns are stored in UTC. An aware datetime is normalized to UTC so the
+        # hardcoded +0000 suffix is truthful regardless of the source zone; a naive datetime is
+        # assumed to already be UTC (see the datetime.now(timezone.utc) convention at write sites).
+        if value.tzinfo is not None:
+            value = value.astimezone(timezone.utc)
         return value.strftime('%Y-%m-%dT%H:%M:%S.%f+0000')
 
     if isinstance(value, date):

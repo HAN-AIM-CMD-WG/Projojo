@@ -5,7 +5,7 @@ from auth.jwt_utils import get_token_payload
 from exceptions import ItemRetrievalException
 from domain.models.task import RegistrationCompletionRequest, RegistrationCreate, RegistrationUpdate, Task, TaskCreate
 from service.validation_service import is_valid_length
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 
@@ -320,7 +320,7 @@ async def create_task(project_id: str = Path(..., description="Project ID"), tas
             description=task_create.description,
             total_needed=task_create.total_needed,
             project_id=project_id,
-            created_at=datetime.now(),
+            created_at=datetime.now(timezone.utc),
             start_date=start_date,
             end_date=end_date,
         )

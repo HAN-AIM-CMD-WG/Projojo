@@ -2,7 +2,7 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Task
-from datetime import datetime
+from datetime import datetime, timezone
 from service.uuid_service import generate_uuid
 
 
@@ -186,7 +186,7 @@ class TaskRepository(BaseRepository[Task]):
 
         id = generate_uuid()
         # Generate a creation timestamp
-        created_at = datetime.now()
+        created_at = datetime.now(timezone.utc)
 
         validation_query = """
             match
@@ -386,7 +386,7 @@ class TaskRepository(BaseRepository[Task]):
         Sets both createdAt and requestedAt to track the full timeline.
         """
         registration_id = generate_uuid()
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         query = """
             match
@@ -423,7 +423,7 @@ class TaskRepository(BaseRepository[Task]):
         if state["started_at"] is not None or state["completed_at"] is not None:
             raise ValueError("Gestarte of voltooide registraties kunnen niet opnieuw beoordeeld worden")
 
-        accepted_at = datetime.now() if accepted else None
+        accepted_at = datetime.now(timezone.utc) if accepted else None
 
         # Base query for updating isAccepted and response
         query = """
@@ -579,7 +579,7 @@ class TaskRepository(BaseRepository[Task]):
         if state["completed_at"] is not None:
             raise ValueError("Voltooide registraties kunnen niet opnieuw gestart worden")
 
-        started_at = datetime.now()
+        started_at = datetime.now(timezone.utc)
 
         query = """
             match
@@ -619,7 +619,7 @@ class TaskRepository(BaseRepository[Task]):
         if state["completed_at"] is not None:
             raise ValueError("Registratie is al voltooid")
 
-        completed_at = datetime.now()
+        completed_at = datetime.now(timezone.utc)
 
         if reviewer_role == "supervisor" and not review_text:
             raise ValueError("Reviewtekst is verplicht wanneer een begeleider een registratie afrondt.")
@@ -696,7 +696,7 @@ class TaskRepository(BaseRepository[Task]):
         context = context_rows[0]
         item_id = generate_uuid()
         review_id = generate_uuid()
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         skill_lines = []
         params = {
             "student_id_for_item": student_id,
@@ -944,7 +944,7 @@ class TaskRepository(BaseRepository[Task]):
             [
                 (delete_completion_query, params),
                 (clear_active_item_flag_query, retire_params),
-                (retire_active_item_query, {**retire_params, "retired_at": datetime.now()}),
+                (retire_active_item_query, {**retire_params, "retired_at": datetime.now(timezone.utc)}),
             ]
         )
 

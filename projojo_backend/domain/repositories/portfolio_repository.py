@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import re
 from typing import Any
 
@@ -93,7 +93,7 @@ class PortfolioRepository:
             raise PermissionError("Je hebt hier geen rechten voor.")
 
         review_id = generate_uuid()
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         query = f"""
             match
                 $item isa portfolioItem,
@@ -158,7 +158,7 @@ class PortfolioRepository:
         # it (the `update` stage upserts the @card(0..1) attribute), a null value removes it. The
         # persisted rating feeds the authenticated-public rating gate at read time, so lowering,
         # raising, or removing it recalculates supervisor visibility on the next read (spec 3.6.2).
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         update_clauses = ["$review has updatedAt ~updated_at;"]
         params: dict[str, Any] = {"review_id": review_id, "updated_at": now}
         if review_text is not None:
@@ -492,14 +492,41 @@ class PortfolioRepository:
         if queries:
             Db.write_transact_many(queries)
 
+    def set_teacher_hidden(self, item_id: str, student_id: str, teacher_id: str) -> None:
+        # Teacher moderation soft-hide (PF-task-011b). The match is scoped to the item owned by
+        # student_id via hasPortfolio, so a teacher hide can only ever target an item that truly
+        # belongs to the named student (the route pre-checks the same ownership for a clean 404).
+        # isHidden is a @card(1) boolean that upserts through a single update stage; the moderation
+        # metadata (hiddenAt/hiddenByRole/hiddenByUserId) are @card(0..1) and reuse the idempotent
+        # delete-then-insert helper so a repeat hide overwrites stale metadata cleanly. Every write
+        # runs in one all-or-nothing transaction, and the item is only ever updated, never deleted,
+        # so completed-work evidence stays stored (AC-5). This is the teacher-owned counterpart to
+        # the student-owned studentHidden channel: it never touches studentHidden, and the student
+        # curation write never touches these fields, so neither role can lift the other's hide.
+        owner_match = (
+            "match "
+            "$student isa student, has id ~student_id; "
+            "$item isa portfolioItem, has id ~item_id; "
+            "$ownership isa hasPortfolio(student: $student, item: $item); "
+        )
+        ids = {"item_id": item_id, "student_id": student_id}
+        queries: list[tuple[str, dict[str, Any] | None]] = [
+            (owner_match + "update $item has isHidden true;", dict(ids)),
+        ]
+        queries += self._optional_item_attribute_queries(owner_match, ids, "hiddenAt", datetime.now(timezone.utc))
+        queries += self._optional_item_attribute_queries(owner_match, ids, "hiddenByRole", "teacher")
+        queries += self._optional_item_attribute_queries(owner_match, ids, "hiddenByUserId", teacher_id)
+        Db.write_transact_many(queries)
+
     def _optional_item_attribute_queries(
         self, owner_match: str, ids: dict[str, Any], attribute: str, value: Any
     ) -> list[tuple[str, dict[str, Any] | None]]:
-        # attribute is a fixed internal literal (displayOrder/studentHidden), never user input, so
-        # it is safe to interpolate directly; the value always flows through a ~param. Delete-first
-        # keeps re-setting the @card(0..1) attribute idempotent, and an item without the attribute
-        # matches nothing so the delete is a harmless no-op. Both queries are owner-scoped and run
-        # together in one all-or-nothing transaction via the caller's Db.write_transact_many.
+        # attribute is a fixed internal literal (displayOrder/studentHidden/hiddenAt/hiddenByRole/
+        # hiddenByUserId), never user input, so it is safe to interpolate directly; the value always
+        # flows through a ~param. Delete-first keeps re-setting the @card(0..1) attribute idempotent,
+        # and an item without the attribute matches nothing so the delete is a harmless no-op. Both
+        # queries are owner-scoped and run together in one all-or-nothing transaction via the
+        # caller's Db.write_transact_many.
         queries: list[tuple[str, dict[str, Any] | None]] = [
             (owner_match + f"$item has {attribute} $current; delete has $current of $item;", dict(ids))
         ]
@@ -587,11 +614,24 @@ class PortfolioRepository:
         existing_projects: frozenset[str],
     ) -> dict[str, Any]:
         retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
-        visibility_reason = "visible_to_authenticated_viewer"
-        if viewer_role == "public":
+        is_hidden = bool(self._one(row.get("is_hidden"), False))
+        is_retired = bool(self._one(row.get("is_retired"), False))
+        # viewer_can_see reflects whether the item appears in the viewer's NORMAL portfolio view.
+        # get_visible_items/get_world_public_items already drop retired and teacher-hidden items, so
+        # the two curation-moderation branches below only ever apply to the owner-scoped single read
+        # (get_owned_item), which intentionally returns such items for management; there the flag
+        # honestly reports that the item is excluded from normal views rather than claiming it is
+        # visible. Precedence: retirement, then teacher moderation, then viewer-role visibility.
+        if is_retired:
+            visibility_reason = "hidden_by_retirement"
+        elif is_hidden:
+            visibility_reason = "hidden_by_teacher_moderation"
+        elif viewer_role == "public":
             visibility_reason = "visible_to_world_public"
-        if viewer_role == "supervisor" and retracted:
+        elif viewer_role == "supervisor" and retracted:
             visibility_reason = "hidden_by_authenticated_public_retraction"
+        else:
+            visibility_reason = "visible_to_authenticated_viewer"
 
         source_project_id = self._one(row.get("source_project_id"))
         source_business_id = self._one(row.get("source_business_id"))
@@ -647,9 +687,9 @@ class PortfolioRepository:
             "timeline_start_date": self._date(row.get("timeline_start_date")),
             "timeline_end_date": self._date(row.get("timeline_end_date")),
             "curation": {
-                "is_retired": bool(self._one(row.get("is_retired"), False)),
+                "is_retired": is_retired,
                 "retired_at": self._date(row.get("retired_at")),
-                "is_hidden": bool(self._one(row.get("is_hidden"), False)),
+                "is_hidden": is_hidden,
                 "hidden_at": self._date(row.get("hidden_at")),
                 "hidden_by_role": self._one(row.get("hidden_by_role")),
                 "hidden_by_user_id": self._one(row.get("hidden_by_user_id")),

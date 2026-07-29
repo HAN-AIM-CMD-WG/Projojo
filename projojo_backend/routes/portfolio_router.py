@@ -307,6 +307,35 @@ async def set_portfolio_item_curation(item_id: str, update: PortfolioItemCuratio
     return portfolio_repo.attach_reviews([item], reviews)[0]
 
 
+@router.patch(
+    "/portfolios/students/{student_id}/items/{item_id}/hide",
+    response_model=PortfolioItemResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een leraar bent."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio-item niet gevonden"}}}},
+    },
+)
+@auth(role="teacher")
+async def teacher_hide_portfolio_item(student_id: str, item_id: str, request: Request):
+    # Teacher moderation soft-hide (PF-task-011b). @auth(role="teacher") admits only teachers, so a
+    # student, supervisor, or unauthenticated caller is rejected before any state change (AC-4). The
+    # item must belong to the named student; a non-owned or unknown item is reported as not found
+    # without disclosing existence (404). The hide is a soft-hide that records who/when moderation
+    # metadata and leaves the item stored (AC-5): get_visible_items already drops isHidden items from
+    # every normal view (AC-2), and the student curation endpoint only ever clears studentHidden, so
+    # a student can never lift this teacher hide (AC-3). The response is the persisted post-hide item
+    # (owner-scoped read shape), so callers can confirm the recorded moderation state.
+    if portfolio_repo.get_owned_item(item_id, student_id) is None:
+        raise HTTPException(status_code=404, detail="Portfolio-item niet gevonden")
+
+    portfolio_repo.set_teacher_hidden(item_id, student_id, request.state.user_id)
+
+    item = portfolio_repo.get_owned_item(item_id, student_id)
+    reviews = portfolio_repo.get_reviews_for_items([item_id])
+    return portfolio_repo.attach_reviews([item], reviews)[0]
+
+
 @router.get(
     "/portfolios/me",
     response_model=PortfolioSettingsResponse,
