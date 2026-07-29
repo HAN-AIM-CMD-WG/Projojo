@@ -1,3 +1,4 @@
+@portfolio-visibility @authenticated-public-filtering
 Feature: PF-task-007b supervisor authenticated-public item filtering
 
   Once the PF-task-007a relationship gate authorises a supervisor at portfolio

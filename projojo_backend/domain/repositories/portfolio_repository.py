@@ -80,6 +80,8 @@ class PortfolioRepository:
             raise ValueError("Portfolio-item niet gevonden.")
         if item_state["is_retired"]:
             raise ValueError("Reviews kunnen niet worden toegevoegd aan ingetrokken portfolio-evidence.")
+        if item_state["is_hidden"]:
+            raise ValueError("Reviews kunnen niet worden toegevoegd aan verborgen portfolio-evidence.")
         item_business_id = item_state["business_id"]
         if author_role == "supervisor" and item_business_id != business_id:
             raise PermissionError("Je hebt hier geen rechten voor.")
@@ -91,7 +93,8 @@ class PortfolioRepository:
                 $item isa portfolioItem,
                     has id ~item_id,
                     has sourceBusinessId ~item_business_id,
-                    has isRetired false;
+                    has isRetired false,
+                    has isHidden false;
                 $author isa {author_type_token}, has id ~author_id;
             insert
                 $review isa portfolioReview,
@@ -205,8 +208,8 @@ class PortfolioRepository:
         rows = Db.read_transact(
             """
             match
-                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired;
-            fetch { 'business_id': $business_id, 'is_retired': $is_retired };
+                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired, has isHidden $is_hidden;
+            fetch { 'business_id': $business_id, 'is_retired': $is_retired, 'is_hidden': $is_hidden };
         """,
             {"item_id": item_id},
             sort_fields=False,
@@ -216,6 +219,7 @@ class PortfolioRepository:
         return {
             "business_id": self._one(rows[0].get("business_id")),
             "is_retired": bool(self._one(rows[0].get("is_retired"), False)),
+            "is_hidden": bool(self._one(rows[0].get("is_hidden"), False)),
         }
 
     def get_student_identity(self, student_id: str) -> dict[str, Any] | None:

@@ -1,3 +1,4 @@
+@portfolio-visibility @authenticated-public-retraction
 Feature: PF-task-007c student authenticated-public retraction API
 
   A student owner controls whether otherwise-eligible completed work is shown to

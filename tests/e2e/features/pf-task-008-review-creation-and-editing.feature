@@ -1,3 +1,4 @@
+@reviews @review-management
 Feature: PF-task-008 additional review creation and review editing
 
   # Additional reviews and review edits follow author, teacher, and same-business

@@ -1,3 +1,4 @@
+@portfolio-visibility @portfolio-response-contract
 Feature: PF-task-007d authenticated portfolio response contract examples
 
   The authenticated portfolio endpoint must publish an explicit response

@@ -86,6 +86,11 @@ class PortfolioItemRetractionUpdate(BaseModel):
     is_authenticated_public_retraction: bool
 
 
+class PortfolioReviewMutationResponse(BaseModel):
+    # Explicit contract for the review create/edit endpoints: both return the affected review id.
+    id: str
+
+
 class PortfolioReviewResponse(BaseModel):
     id: str
     item_id: str

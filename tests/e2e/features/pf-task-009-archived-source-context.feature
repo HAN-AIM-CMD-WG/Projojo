@@ -1,3 +1,4 @@
+@archiving-integration @archived-source-context
 Feature: PF-task-009 archived-source portfolio context and disabled navigation
 
   When a portfolio item's source project, task, or business is archived, the

@@ -1,3 +1,4 @@
+@portfolio-visibility @portfolio-access-matrix
 Feature: PF-task-007a authenticated portfolio read access matrix
 
   The authenticated portfolio endpoint must enforce an explicit role and

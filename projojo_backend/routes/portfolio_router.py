@@ -6,6 +6,7 @@ from domain.models.portfolio import (
     PortfolioItemRetractionUpdate,
     PortfolioResponse,
     PortfolioReviewCreateRequest,
+    PortfolioReviewMutationResponse,
     PortfolioReviewUpdateRequest,
 )
 from domain.repositories.portfolio_repository import PortfolioRepository
@@ -190,7 +191,11 @@ _AUTHENTICATED_PORTFOLIO_EXAMPLES = {
 }
 
 
-@router.post("/portfolio-items/{item_id}/reviews", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/portfolio-items/{item_id}/reviews",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PortfolioReviewMutationResponse,
+)
 @auth(role="supervisor")
 async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateRequest, request: Request):
     review_text = review.review_text.strip()
@@ -218,7 +223,11 @@ async def create_portfolio_review(item_id: str, review: PortfolioReviewCreateReq
         raise HTTPException(status_code=400, detail=str(error))
 
 
-@router.patch("/portfolio-reviews/{review_id}", status_code=status.HTTP_200_OK)
+@router.patch(
+    "/portfolio-reviews/{review_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=PortfolioReviewMutationResponse,
+)
 @auth(role="supervisor")
 async def update_portfolio_review(review_id: str, update: PortfolioReviewUpdateRequest, request: Request):
     # Author-or-teacher review editing (Portfolio spec 3.5, 4.4). @auth(role="supervisor") admits
