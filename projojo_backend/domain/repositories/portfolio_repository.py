@@ -6,6 +6,53 @@ from db.initDatabase import Db
 from service.uuid_service import generate_uuid
 
 
+# Shared fetch projection for a single portfolioItem row. Both the list read
+# (get_visible_items) and the ownership-scoped single read (get_owned_item) return the
+# identical item shape; only their match clauses differ (visibility filters vs. ownership
+# scope), so the projection is defined once here. It dot-projects off $item and $student,
+# which are bound by both callers' match clauses (each binds $owner_student_name and
+# $owner_student_image_path on $student). No ~params appear here, so it is safe to concatenate.
+_PORTFOLIO_ITEM_FETCH_PROJECTION = """
+    fetch {
+        'id': $item.id,
+        'created_at': $item.createdAt,
+        'completed_at': $item.completedAt,
+        'owner_student_id': $student.id,
+        'owner_student_name': $owner_student_name,
+        'owner_student_image_path': $owner_student_image_path,
+        'source_student_id': [ $item.sourceStudentId ],
+        'source_registration_id': $item.sourceRegistrationId,
+        'source_task_id': $item.sourceTaskId,
+        'source_project_id': $item.sourceProjectId,
+        'source_business_id': $item.sourceBusinessId,
+        'student_name': [ $item.studentName ],
+        'student_image_path': [ $item.studentImagePath ],
+        'task_name': $item.taskName,
+        'task_description': [ $item.taskDescription ],
+        'project_name': $item.projectName,
+        'project_description': [ $item.projectDescription ],
+        'business_name': $item.businessName,
+        'business_location': [ $item.businessLocation ],
+        'skills': [
+            match
+                $item has skillName $skill_name;
+            fetch { 'name': $skill_name };
+        ],
+        'timeline_start_date': [ $item.timelineStartDate ],
+        'timeline_end_date': [ $item.timelineEndDate ],
+        'is_retired': $item.isRetired,
+        'retired_at': [ $item.retiredAt ],
+        'is_hidden': $item.isHidden,
+        'hidden_at': [ $item.hiddenAt ],
+        'hidden_by_role': [ $item.hiddenByRole ],
+        'hidden_by_user_id': [ $item.hiddenByUserId ],
+        'display_order': [ $item.displayOrder ],
+        'is_authenticated_public_retraction': $item.isAuthenticatedPublicRetraction,
+        'is_world_visible': $item.isWorldVisible
+    };
+"""
+
+
 class PortfolioRepository:
     _ROLE_TYPE_TOKENS: dict[str, str] = {
         "teacher": "teacher",
@@ -33,6 +80,8 @@ class PortfolioRepository:
             raise ValueError("Portfolio-item niet gevonden.")
         if item_state["is_retired"]:
             raise ValueError("Reviews kunnen niet worden toegevoegd aan ingetrokken portfolio-evidence.")
+        if item_state["is_hidden"]:
+            raise ValueError("Reviews kunnen niet worden toegevoegd aan verborgen portfolio-evidence.")
         item_business_id = item_state["business_id"]
         if author_role == "supervisor" and item_business_id != business_id:
             raise PermissionError("Je hebt hier geen rechten voor.")
@@ -44,7 +93,8 @@ class PortfolioRepository:
                 $item isa portfolioItem,
                     has id ~item_id,
                     has sourceBusinessId ~item_business_id,
-                    has isRetired false;
+                    has isRetired false,
+                    has isHidden false;
                 $author isa {author_type_token}, has id ~author_id;
             insert
                 $review isa portfolioReview,
@@ -76,6 +126,72 @@ class PortfolioRepository:
             raise ValueError("Portfolio-item niet gevonden of niet meer reviewbaar.")
         return review_id
 
+    def update_review(
+        self,
+        review_id: str,
+        editor_id: str,
+        editor_role: str,
+        review_text: str | None = None,
+        set_rating: bool = False,
+        rating: int | None = None,
+    ) -> None:
+        # Edit permission (Portfolio spec 3.5): the review author may edit their own review, and
+        # any teacher may edit any review. The route-level @auth(role="supervisor") gate already
+        # blocks students and unauthenticated callers; this is the author/teacher ownership check.
+        # A missing review is a distinct not-found signal (LookupError -> 404), kept separate from
+        # ValueError (-> 400) so the route's status mapping cannot misclassify a future validation
+        # error in this method as a 404.
+        author_id = self._get_review_author_id(review_id)
+        if author_id is None:
+            raise LookupError("Portfolio-review niet gevonden.")
+        if editor_role != "teacher" and editor_id != author_id:
+            raise PermissionError("Je hebt hier geen rechten voor.")
+
+        # updatedAt always changes on an edit. reviewText is only rewritten when provided.
+        # rating is left untouched unless the caller is changing it: a new value replaces or adds
+        # it (the `update` stage upserts the @card(0..1) attribute), a null value removes it. The
+        # persisted rating feeds the authenticated-public rating gate at read time, so lowering,
+        # raising, or removing it recalculates supervisor visibility on the next read (spec 3.6.2).
+        now = datetime.now()
+        update_clauses = ["$review has updatedAt ~updated_at;"]
+        params: dict[str, Any] = {"review_id": review_id, "updated_at": now}
+        if review_text is not None:
+            update_clauses.append("$review has reviewText ~review_text;")
+            params["review_text"] = review_text
+        if set_rating and rating is not None:
+            update_clauses.append("$review has rating ~rating;")
+            params["rating"] = rating
+
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+        if set_rating and rating is None:
+            queries.append(
+                (
+                    "match $review isa portfolioReview, has id ~review_id, has rating $current; "
+                    "delete has $current of $review;",
+                    {"review_id": review_id},
+                )
+            )
+        queries.append(
+            (f"match $review isa portfolioReview, has id ~review_id; update {' '.join(update_clauses)}", params)
+        )
+        Db.write_transact_many(queries)
+
+    def _get_review_author_id(self, review_id: str) -> str | None:
+        rows = Db.read_transact(
+            """
+            match
+                $review isa portfolioReview, has id ~review_id;
+                $author_link isa portfolioReviewAuthor (review: $review, author: $author);
+                $author has id $author_id;
+            fetch { 'author_id': $author_id };
+        """,
+            {"review_id": review_id},
+            sort_fields=False,
+        )
+        if not rows:
+            return None
+        return self._one(rows[0].get("author_id"))
+
     def _review_exists(self, review_id: str) -> bool:
         rows = Db.read_transact(
             """
@@ -92,8 +208,8 @@ class PortfolioRepository:
         rows = Db.read_transact(
             """
             match
-                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired;
-            fetch { 'business_id': $business_id, 'is_retired': $is_retired };
+                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired, has isHidden $is_hidden;
+            fetch { 'business_id': $business_id, 'is_retired': $is_retired, 'is_hidden': $is_hidden };
         """,
             {"item_id": item_id},
             sort_fields=False,
@@ -103,6 +219,7 @@ class PortfolioRepository:
         return {
             "business_id": self._one(rows[0].get("business_id")),
             "is_retired": bool(self._one(rows[0].get("is_retired"), False)),
+            "is_hidden": bool(self._one(rows[0].get("is_hidden"), False)),
         }
 
     def get_student_identity(self, student_id: str) -> dict[str, Any] | None:
@@ -160,6 +277,9 @@ class PortfolioRepository:
         }
 
     def has_supervisor_relationship(self, student_id: str, business_id: str) -> bool:
+        # Portfolio-level gate: a supervisor's business relates to the student when the student
+        # has a currently open application (no acceptance decision yet) or has ever been accepted
+        # for a task in that business. A rejected-only application (isAccepted false) does not qualify.
         query = """
             match
                 $student isa student, has id ~student_id;
@@ -168,72 +288,30 @@ class PortfolioRepository:
                 $task isa task;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $containsTask isa containsTask(project: $project, task: $task);
-                $registration isa registersForTask(student: $student, task: $task), has isAccepted true;
+                $registration isa registersForTask(student: $student, task: $task);
+                { $registration has acceptedAt $accepted_at; } or { not { $registration has isAccepted $decision; }; };
             fetch { 'student_id': $student.id };
         """
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
 
     def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
-        query = """
+        # Visibility-filtered list read: retired and hidden items are excluded in the match. The
+        # shared projection still requires every canonical attribute to exist, so the returned
+        # shape is identical to get_owned_item.
+        query = (
+            """
             match
                 $student isa student, has id ~student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
-                $item isa portfolioItem,
-                    has id $id,
-                    has createdAt $created_at,
-                    has completedAt $completed_at,
-                    has sourceRegistrationId $source_registration_id,
-                    has sourceTaskId $source_task_id,
-                    has sourceProjectId $source_project_id,
-                    has sourceBusinessId $source_business_id,
-                    has taskName $task_name,
-                    has projectName $project_name,
-                    has businessName $business_name,
-                    has isRetired false,
-                    has isHidden false,
-                    has isAuthenticatedPublicRetraction $is_authenticated_public_retraction,
-                    has isWorldVisible $is_world_visible;
+                $item isa portfolioItem, has isRetired false, has isHidden false;
                 $ownership isa hasPortfolio(student: $student, item: $item);
-            fetch {
-                'id': $id,
-                'created_at': $created_at,
-                'completed_at': $completed_at,
-                'owner_student_id': $student.id,
-                'owner_student_name': $owner_student_name,
-                'owner_student_image_path': $owner_student_image_path,
-                'source_student_id': [$item.sourceStudentId],
-                'source_registration_id': $source_registration_id,
-                'source_task_id': $source_task_id,
-                'source_project_id': $source_project_id,
-                'source_business_id': $source_business_id,
-                'student_name': [$item.studentName],
-                'student_image_path': [$item.studentImagePath],
-                'task_name': $task_name,
-                'task_description': [ $item.taskDescription ],
-                'project_name': $project_name,
-                'project_description': [ $item.projectDescription ],
-                'business_name': $business_name,
-                'business_location': [ $item.businessLocation ],
-                'skills': [
-                    match
-                        $item has skillName $skill_name;
-                    fetch { 'name': $skill_name };
-                ],
-                'timeline_start_date': [ $item.timelineStartDate ],
-                'timeline_end_date': [ $item.timelineEndDate ],
-                'retired_at': [ $item.retiredAt ],
-                'hidden_at': [ $item.hiddenAt ],
-                'hidden_by_role': [ $item.hiddenByRole ],
-                'hidden_by_user_id': [ $item.hiddenByUserId ],
-                'display_order': [ $item.displayOrder ],
-                'is_authenticated_public_retraction': $is_authenticated_public_retraction,
-                'is_world_visible': $is_world_visible,
-                'source_task_archived': [$item.sourceTaskArchived],
-                'source_project_archived': [$item.sourceProjectArchived],
-                'source_business_archived': [$item.sourceBusinessArchived]
-            };
-        """
+            """
+            + _PORTFOLIO_ITEM_FETCH_PROJECTION
+        )
         rows = Db.read_transact(query, {"student_id": student_id})
-        items = [self._map_item(row, viewer_role) for row in rows]
+        archived_projects, archived_businesses, existing_projects = self._source_state_sets(rows)
+        items = [
+            self._map_item(row, viewer_role, archived_projects, archived_businesses, existing_projects) for row in rows
+        ]
         return sorted(
             items,
             key=lambda item: (
@@ -245,6 +323,41 @@ class PortfolioRepository:
 
     def get_world_public_items(self, student_id: str) -> list[dict[str, Any]]:
         return [item for item in self.get_visible_items(student_id, "public") if item["curation"]["is_world_visible"]]
+
+    def get_owned_item(self, item_id: str, owner_student_id: str) -> dict[str, Any] | None:
+        # Ownership-scoped single-item read for the student's own curation endpoint. Unlike
+        # get_visible_items it does not filter retired/hidden items, so the owner always gets the
+        # canonical post-mutation state back. Returns None when the item does not belong to the caller.
+        query = (
+            """
+            match
+                $student isa student, has id ~owner_student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+            """
+            + _PORTFOLIO_ITEM_FETCH_PROJECTION
+        )
+        rows = Db.read_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id})
+        if not rows:
+            return None
+        archived_projects, archived_businesses, existing_projects = self._source_state_sets(rows)
+        return self._map_item(rows[0], "student", archived_projects, archived_businesses, existing_projects)
+
+    def set_authenticated_public_retraction(self, item_id: str, owner_student_id: str, retracted: bool) -> None:
+        # Owner-scoped write (defense in depth): the match requires the caller to own the item via
+        # hasPortfolio, so the flag can never be flipped on an item the student does not own even if
+        # the route-level ownership guard were ever bypassed. Only the authenticated-public retraction
+        # flag is touched; world-public selection and every other curation attribute are left
+        # untouched (PF-task-007c is independent from world-public).
+        query = """
+            match
+                $student isa student, has id ~owner_student_id;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+            update
+                $item has isAuthenticatedPublicRetraction ~retracted;
+        """
+        Db.write_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id, "retracted": retracted})
 
     def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
         if not item_ids:
@@ -317,13 +430,45 @@ class PortfolioRepository:
             reviews_by_item.setdefault(review["item_id"], []).append(review)
         return [{**item, "reviews": reviews_by_item.get(item["id"], [])} for item in items]
 
-    def _map_item(self, row: dict[str, Any], viewer_role: str) -> dict[str, Any]:
+    def _map_item(
+        self,
+        row: dict[str, Any],
+        viewer_role: str,
+        archived_projects: frozenset[str],
+        archived_businesses: frozenset[str],
+        existing_projects: frozenset[str],
+    ) -> dict[str, Any]:
         retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
         visibility_reason = "visible_to_authenticated_viewer"
         if viewer_role == "public":
             visibility_reason = "visible_to_world_public"
         if viewer_role == "supervisor" and retracted:
             visibility_reason = "hidden_by_authenticated_public_retraction"
+
+        source_project_id = self._one(row.get("source_project_id"))
+        source_business_id = self._one(row.get("source_business_id"))
+        # Archived-source state is derived live from the current archive state of the source
+        # records, not from a stored snapshot, so it stays correct after archive and restore.
+        # Tasks have no archive state in the schema, so task is always False.
+        project_archived = source_project_id in archived_projects
+        business_archived = source_business_id in archived_businesses
+        # A hard-deleted source project is present on no archive nor existence lookup, so it must be
+        # detected separately: without this the missing project would fall through to "enabled" and
+        # clients would expose navigation to a project that no longer exists.
+        project_missing = source_project_id is not None and source_project_id not in existing_projects
+
+        # Source navigation targets the source project. An archived or deleted source project is not
+        # navigable for normal portfolio viewers; the reason is user-facing Dutch copy that states
+        # why the source is unavailable while the completed work stays visible.
+        if project_missing:
+            navigation_state = "disabled"
+            navigation_reason = "Het bronproject bestaat niet meer. Je voltooide werk blijft zichtbaar."
+        elif project_archived:
+            navigation_state = "disabled"
+            navigation_reason = "Het bronproject is gearchiveerd. Je voltooide werk blijft zichtbaar."
+        else:
+            navigation_state = "enabled"
+            navigation_reason = "De bron is beschikbaar."
 
         return {
             "id": self._one(row.get("id")),
@@ -332,8 +477,8 @@ class PortfolioRepository:
             "source_student_id": self._one(row.get("source_student_id"), self._one(row.get("owner_student_id"))),
             "source_registration_id": self._one(row.get("source_registration_id")),
             "source_task_id": self._one(row.get("source_task_id")),
-            "source_project_id": self._one(row.get("source_project_id")),
-            "source_business_id": self._one(row.get("source_business_id")),
+            "source_project_id": source_project_id,
+            "source_business_id": source_business_id,
             "student": {
                 "full_name": self._one(row.get("student_name"), self._one(row.get("owner_student_name"))),
                 "image_path": self._one(row.get("student_image_path"), self._one(row.get("owner_student_image_path"))),
@@ -365,9 +510,13 @@ class PortfolioRepository:
                 "is_world_visible": bool(self._one(row.get("is_world_visible"), False)),
             },
             "archived_source": {
-                "task": bool(self._one(row.get("source_task_archived"), False)),
-                "project": bool(self._one(row.get("source_project_archived"), False)),
-                "business": bool(self._one(row.get("source_business_archived"), False)),
+                "task": False,
+                "project": project_archived,
+                "business": business_archived,
+            },
+            "source_navigation": {
+                "state": navigation_state,
+                "reason": navigation_reason,
             },
             "visibility": {
                 "viewer_can_see": visibility_reason in {"visible_to_authenticated_viewer", "visible_to_world_public"},
@@ -411,6 +560,52 @@ class PortfolioRepository:
             for row in Db.read_transact(query, {"user_id_pattern": user_id_pattern}):
                 roles[self._one(row.get("id"))] = role
         return roles
+
+    def _source_state_sets(
+        self, rows: list[dict[str, Any]]
+    ) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
+        # Resolve, in one query per lookup, which source projects and businesses referenced by these
+        # portfolio items are currently archived, plus which source projects still exist at all.
+        # Returned as sets so _map_item can flag each item's archived-source and deleted-source state
+        # without re-querying per row.
+        project_ids = {self._one(row.get("source_project_id")) for row in rows}
+        business_ids = {self._one(row.get("source_business_id")) for row in rows}
+        return (
+            self._archived_ids("project", project_ids),
+            self._archived_ids("business", business_ids),
+            self._existing_ids("project", project_ids),
+        )
+
+    def _existing_ids(self, entity_type: str, ids: set[str]) -> frozenset[str]:
+        # entity_type is a fixed internal literal ("project"/"business"), never user input. Resolves
+        # which of the referenced ids still exist as live records; ids absent from the result have
+        # been hard-deleted.
+        filtered = [id_value for id_value in ids if id_value]
+        if not filtered:
+            return frozenset()
+        query = f"""
+            match
+                $entity isa {entity_type}, has id $id;
+                $id like ~id_pattern;
+            fetch {{ 'id': $id }};
+        """
+        rows = Db.read_transact(query, {"id_pattern": self._id_pattern(filtered)}, sort_fields=False)
+        return frozenset(self._one(row.get("id")) for row in rows)
+
+    def _archived_ids(self, entity_type: str, ids: set[str]) -> frozenset[str]:
+        # entity_type is a fixed internal literal ("project"/"business"), never user input. The
+        # literal `has isArchived true` keeps this a valid READ query (no None params).
+        filtered = [id_value for id_value in ids if id_value]
+        if not filtered:
+            return frozenset()
+        query = f"""
+            match
+                $entity isa {entity_type}, has id $id, has isArchived true;
+                $id like ~id_pattern;
+            fetch {{ 'id': $id }};
+        """
+        rows = Db.read_transact(query, {"id_pattern": self._id_pattern(filtered)}, sort_fields=False)
+        return frozenset(self._one(row.get("id")) for row in rows)
 
     def _id_pattern(self, ids: list[str]) -> str:
         for id_value in ids:

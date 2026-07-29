@@ -48,6 +48,15 @@ class PortfolioArchivedSource(BaseModel):
     business: bool = False
 
 
+class PortfolioSourceNavigation(BaseModel):
+    # state is one of "enabled", "disabled", or "restricted". Under the current archiving model
+    # only "enabled" (live source project) and "disabled" (archived source project) are emitted;
+    # "restricted" is reserved for a future viewer-scoped availability rule. reason is user-facing
+    # Dutch copy suitable for direct UI display.
+    state: str
+    reason: str
+
+
 class PortfolioVisibility(BaseModel):
     viewer_can_see: bool
     reason: str
@@ -63,6 +72,23 @@ class PortfolioReviewCreateRequest(BaseModel):
     review_text: str = Field(max_length=2000)
     rating: int | None = Field(default=None, ge=1, le=5)
     public_review_notice_accepted: bool = False
+
+
+class PortfolioReviewUpdateRequest(BaseModel):
+    # Both fields are optional so an edit may change the text, the rating, or both. Only fields
+    # present in the request body are applied (see model_fields_set in the route); an explicit
+    # null rating removes the rating. rating bounds still apply to any provided integer value.
+    review_text: str | None = Field(default=None, max_length=2000)
+    rating: int | None = Field(default=None, ge=1, le=5)
+
+
+class PortfolioItemRetractionUpdate(BaseModel):
+    is_authenticated_public_retraction: bool
+
+
+class PortfolioReviewMutationResponse(BaseModel):
+    # Explicit contract for the review create/edit endpoints: both return the affected review id.
+    id: str
 
 
 class PortfolioReviewResponse(BaseModel):
@@ -95,6 +121,7 @@ class PortfolioItemResponse(BaseModel):
     timeline_end_date: str | None = None
     curation: PortfolioCuration
     archived_source: PortfolioArchivedSource
+    source_navigation: PortfolioSourceNavigation
     visibility: PortfolioVisibility
     reviews: list[PortfolioReviewResponse] = Field(default_factory=list)
 
