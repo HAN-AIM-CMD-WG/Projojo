@@ -86,6 +86,24 @@ class PortfolioItemRetractionUpdate(BaseModel):
     is_authenticated_public_retraction: bool
 
 
+class PortfolioSettingsResponse(BaseModel):
+    # Owner-facing settings read. slug is always present: it is generated on first read when the
+    # student has none yet (see repository.get_or_create_settings), so the frontend always has a
+    # public URL key to show. is_world_public defaults to False (world-private by default).
+    summary: str | None = None
+    slug: str
+    is_world_public: bool = False
+
+
+class PortfolioSettingsUpdateRequest(BaseModel):
+    # Every field is optional; only fields present in the request body are applied (tracked via
+    # model_fields_set in the route). Validation (summary length, slug format, slug uniqueness) is
+    # performed in the route so it can return Dutch user-facing messages.
+    summary: str | None = None
+    slug: str | None = None
+    is_world_public: bool | None = None
+
+
 class PortfolioReviewMutationResponse(BaseModel):
     # Explicit contract for the review create/edit endpoints: both return the affected review id.
     id: str

@@ -1,5 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, status
 
+import re
+
 from auth.permissions import auth
 from domain.models.portfolio import (
     PortfolioItemResponse,
@@ -8,6 +10,8 @@ from domain.models.portfolio import (
     PortfolioReviewCreateRequest,
     PortfolioReviewMutationResponse,
     PortfolioReviewUpdateRequest,
+    PortfolioSettingsResponse,
+    PortfolioSettingsUpdateRequest,
 )
 from domain.repositories.portfolio_repository import PortfolioRepository
 from service.portfolio_policy import can_read_authenticated_student_portfolio
@@ -15,6 +19,15 @@ from service.portfolio_policy import can_read_authenticated_student_portfolio
 
 router = APIRouter(tags=["Portfolio Endpoints"])
 portfolio_repo = PortfolioRepository()
+
+# Slug contract (PF-task-010): lowercase a-z/0-9 with single hyphens between segments, length
+# 3-50. Input is trimmed before validation and must already be lowercase (uppercase is rejected
+# rather than silently rewritten). Summary is capped at 2000 characters, matching the review
+# text limit.
+_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_SLUG_MIN_LENGTH = 3
+_SLUG_MAX_LENGTH = 50
+_SUMMARY_MAX_LENGTH = 2000
 
 
 # --- Authenticated portfolio response contract examples (PF-task-007d) ----------------------
@@ -289,6 +302,84 @@ async def set_portfolio_item_authenticated_public_retraction(
     item = portfolio_repo.get_owned_item(item_id, owner_id)
     reviews = portfolio_repo.get_reviews_for_items([item_id])
     return portfolio_repo.attach_reviews([item], reviews)[0]
+
+
+@router.get(
+    "/portfolios/me",
+    response_model=PortfolioSettingsResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+    },
+)
+@auth(role="student")
+async def get_my_portfolio_settings(request: Request):
+    # Owner-only settings read. @auth(role="student") blocks teachers, supervisors, and
+    # unauthenticated callers. A slug is generated on this first read when the student has none yet
+    # (world-private by default: is_world_public stays false until the student enables it).
+    settings = portfolio_repo.get_or_create_settings(request.state.user_id)
+    if settings is None:
+        raise HTTPException(status_code=404, detail="Portfolio niet gevonden")
+    return settings
+
+
+@router.patch(
+    "/portfolios/me",
+    response_model=PortfolioSettingsResponse,
+    responses={
+        400: {"content": {"application/json": {"example": {"detail": "Ongeldige portfolio-slug."}}}},
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+        409: {"content": {"application/json": {"example": {"detail": "Deze portfolio-slug is al in gebruik."}}}},
+    },
+)
+@auth(role="student")
+async def update_my_portfolio_settings(update: PortfolioSettingsUpdateRequest, request: Request):
+    # Owner-only settings update. Because the resource is the caller's own portfolio (/me), a
+    # student can never change another student's settings; @auth(role="student") blocks the other
+    # roles. Only fields present in the request body are applied.
+    # Clearing semantics: an explicit null (or empty-string) summary clears the stored summary, and
+    # an explicit null is_world_public resets it to the world-private default. slug cannot be
+    # cleared: an absent/blank slug fails the length check below, and the settings response always
+    # carries a non-empty slug.
+    student_id = request.state.user_id
+    fields = update.model_fields_set
+
+    set_summary = "summary" in fields
+    summary = update.summary
+    if set_summary and summary is not None and len(summary) > _SUMMARY_MAX_LENGTH:
+        raise HTTPException(
+            status_code=400, detail=f"De samenvatting mag maximaal {_SUMMARY_MAX_LENGTH} tekens bevatten."
+        )
+
+    set_slug = "slug" in fields
+    slug = None
+    if set_slug:
+        slug = (update.slug or "").strip()
+        if not (_SLUG_MIN_LENGTH <= len(slug) <= _SLUG_MAX_LENGTH and _SLUG_PATTERN.fullmatch(slug)):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Ongeldige portfolio-slug. Gebruik {_SLUG_MIN_LENGTH} tot {_SLUG_MAX_LENGTH} tekens: "
+                    "kleine letters, cijfers en koppeltekens tussen woorden."
+                ),
+            )
+        owner = portfolio_repo.get_slug_owner(slug)
+        if owner is not None and owner != student_id:
+            raise HTTPException(status_code=409, detail="Deze portfolio-slug is al in gebruik.")
+
+    set_world_public = "is_world_public" in fields
+
+    portfolio_repo.update_settings(
+        student_id,
+        set_summary=set_summary,
+        summary=summary,
+        set_slug=set_slug,
+        slug=slug,
+        set_world_public=set_world_public,
+        world_public=update.is_world_public,
+    )
+    return portfolio_repo.get_or_create_settings(student_id)
 
 
 @router.get(

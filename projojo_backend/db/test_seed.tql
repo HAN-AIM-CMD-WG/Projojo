@@ -41,6 +41,21 @@ insert
         has portfolioSlug "portfolio-seed-private",
         has isPortfolioWorldPublic false;
 
+    # PF-task-010 fixtures: students with NO portfolio settings, so the settings API can be
+    # exercised from a clean slate (first-read slug generation, private-by-default) and mutated
+    # without disturbing the read-only fixtures above.
+    $portfolio_no_slug_student isa student,
+        has id "20000000-0000-4000-8000-000000000010",
+        has email "portfolio.no.slug.student@projojo.local",
+        has fullName "Nora Nieuwslug",
+        has imagePath "default.svg";
+
+    $portfolio_settings_student isa student,
+        has id "20000000-0000-4000-8000-000000000011",
+        has email "portfolio.settings.student@projojo.local",
+        has fullName "Sven Instellingen",
+        has imagePath "default.svg";
+
     $supervisor isa supervisor,
         has id "20000000-0000-4000-8000-000000000003",
         has email "supervisor.e2e@projojo.local",
@@ -68,6 +83,12 @@ insert
 
     $portfolio_private_student_auth isa oauthAuthentication (user: $portfolio_private_student, provider: $provider_google),
         has oauthSub "portfolio-private-student-google-sub";
+
+    $portfolio_no_slug_student_auth isa oauthAuthentication (user: $portfolio_no_slug_student, provider: $provider_google),
+        has oauthSub "portfolio-no-slug-student-google-sub";
+
+    $portfolio_settings_student_auth isa oauthAuthentication (user: $portfolio_settings_student, provider: $provider_google),
+        has oauthSub "portfolio-settings-student-google-sub";
 
     $supervisor_auth isa oauthAuthentication (user: $supervisor, provider: $provider_github),
         has oauthSub "e2e-supervisor-github-sub";

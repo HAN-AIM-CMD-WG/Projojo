@@ -276,6 +276,102 @@ class PortfolioRepository:
             "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
         }
 
+    def get_or_create_settings(self, student_id: str) -> dict[str, Any] | None:
+        # Owner settings read. Slug generation timing (PF-task-010 default): a unique slug is
+        # generated lazily on the first settings read when the student has none yet, so no student
+        # migration is needed and every student ends up with a stable public URL key on demand.
+        identity = self.get_student_identity(student_id)
+        if identity is None:
+            return None
+        slug = identity["portfolio_slug"]
+        if not slug:
+            slug = self._generate_unique_slug(identity["full_name"])
+            self._set_optional_attribute(student_id, "portfolioSlug", slug)
+        return {
+            "summary": identity["portfolio_summary"],
+            "slug": slug,
+            "is_world_public": identity["is_portfolio_world_public"],
+        }
+
+    def get_slug_owner(self, slug: str) -> str | None:
+        rows = Db.read_transact(
+            "match $student isa student, has portfolioSlug ~slug, has id $id; fetch { 'id': $id };",
+            {"slug": slug},
+            sort_fields=False,
+        )
+        return self._one(rows[0].get("id")) if rows else None
+
+    def update_settings(
+        self,
+        student_id: str,
+        *,
+        set_summary: bool = False,
+        summary: str | None = None,
+        set_slug: bool = False,
+        slug: str | None = None,
+        set_world_public: bool = False,
+        world_public: bool | None = None,
+    ) -> None:
+        # Only fields the caller sent are touched, and every touched field is written in a single
+        # all-or-nothing transaction so a multi-field PATCH can never half-apply (e.g. summary
+        # persisting while a later field's write fails). Each optional student attribute uses the
+        # delete-then-insert idempotent pattern (see _optional_attribute_queries), mirroring
+        # project_repository.set_impact_summary. Batching the delete and insert into one transaction
+        # also closes the window where a failed insert after a committed delete would leave the
+        # attribute unset. Slug uniqueness is pre-checked in the route, and the @unique constraint is
+        # the backstop, so no write here can violate it under normal single-writer use.
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+        if set_summary:
+            queries += self._optional_attribute_queries(student_id, "portfolioSummary", summary or None)
+        if set_slug:
+            queries += self._optional_attribute_queries(student_id, "portfolioSlug", slug)
+        if set_world_public:
+            queries += self._optional_attribute_queries(student_id, "isPortfolioWorldPublic", world_public)
+        if queries:
+            Db.write_transact_many(queries)
+
+    def _set_optional_attribute(self, student_id: str, attribute: str, value: Any) -> None:
+        # Single-attribute wrapper for callers that set exactly one optional attribute (e.g. lazy
+        # slug generation on first read). The delete and insert run together in one atomic
+        # transaction so the attribute is never left unset by a failure between the two writes.
+        Db.write_transact_many(self._optional_attribute_queries(student_id, attribute, value))
+
+    def _optional_attribute_queries(
+        self, student_id: str, attribute: str, value: Any
+    ) -> list[tuple[str, dict[str, Any] | None]]:
+        # attribute is a fixed internal literal (portfolioSummary/portfolioSlug/
+        # isPortfolioWorldPublic), never user input, so it is safe to interpolate directly. The
+        # value always flows through a ~param. Delete-first keeps re-setting an @card(0..1)
+        # attribute idempotent; a student without the attribute matches nothing, so the delete is a
+        # harmless no-op. Returned as (template, params) tuples so the caller runs the delete and
+        # the insert in one all-or-nothing transaction via Db.write_transact_many.
+        queries: list[tuple[str, dict[str, Any] | None]] = [
+            (
+                f"match $s isa student, has id ~student_id, has {attribute} $current; delete has $current of $s;",
+                {"student_id": student_id},
+            )
+        ]
+        if value is not None:
+            queries.append(
+                (
+                    f"match $s isa student, has id ~student_id; insert $s has {attribute} ~value;",
+                    {"student_id": student_id, "value": value},
+                )
+            )
+        return queries
+
+    def _generate_unique_slug(self, full_name: str) -> str:
+        base = self._slugify(full_name)[:40] or "student"
+        for _ in range(10):
+            candidate = f"{base}-{generate_uuid().replace('-', '')[:6]}"
+            if self.get_slug_owner(candidate) is None:
+                return candidate
+        raise ValueError("Kon geen unieke portfolio-slug genereren.")
+
+    @staticmethod
+    def _slugify(value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
     def has_supervisor_relationship(self, student_id: str, business_id: str) -> bool:
         # Portfolio-level gate: a supervisor's business relates to the student when the student
         # has a currently open application (no acceptance decision yet) or has ever been accepted
