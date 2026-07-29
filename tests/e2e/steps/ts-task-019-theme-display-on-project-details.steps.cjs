@@ -14,6 +14,12 @@
 // details") because Cucumber matches step text globally: the TS-014 picker suite
 // and the TS-015/016 create/edit suites define similarly-shaped steps, and this
 // file must not collide with them.
+//
+// That same global registry means this file has a second consumer: the TS-task-017
+// inline-edit feature reuses the catalog reset, the per-scenario link staging, the
+// logins, opening the page, the read-only pill assertions, the empty-state message
+// and the failing read from here. Nothing links the two at load time, so renaming or
+// retiring a step below changes that feature silently - check it before you do.
 
 const assert = require('node:assert/strict');
 

@@ -14,6 +14,12 @@
 // The step names are deliberately edit-specific ("on the edit form", "during the
 // save"): the TS-task-015 create suite defines its own similarly-shaped steps and
 // Cucumber matches step text globally across every loaded step file.
+//
+// That same global registry means this file has a second consumer: the TS-task-017
+// inline-edit feature reuses the removal confirmation's text, buttons, confirm and
+// cancel actions, and the two backend read-backs of what is actually linked, from
+// here. Nothing links the two at load time, so renaming or retiring a step below
+// changes that feature silently - check it before you do.
 
 const assert = require('node:assert/strict');
 
