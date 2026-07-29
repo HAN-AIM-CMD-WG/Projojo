@@ -95,6 +95,13 @@ class PortfolioItemCurationUpdate(BaseModel):
     is_authenticated_public_retraction: bool | None = None
 
 
+class PortfolioReviewWorldVisibleUpdate(BaseModel):
+    # Student review world-public selection (PF-task-012a). The endpoint's sole purpose is to
+    # select or retract a single owned review for world-public output, so is_world_visible is
+    # required: true marks it eligible, false retracts it.
+    is_world_visible: bool
+
+
 class PortfolioSettingsResponse(BaseModel):
     # Owner-facing settings read. slug is always present: it is generated on first read when the
     # student has none yet (see repository.get_or_create_settings), so the frontend always has a

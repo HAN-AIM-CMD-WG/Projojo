@@ -1715,3 +1715,224 @@ insert
     $portfolio_author_mixed_low isa portfolioReviewAuthor (review: $portfolio_review_mixed_low, author: $supervisor);
     $portfolio_author_mixed_high isa portfolioReviewAuthor (review: $portfolio_review_mixed_high, author: $teacher);
     $portfolio_author_007c_low isa portfolioReviewAuthor (review: $portfolio_review_007c_low, author: $supervisor);
+
+    # PF-task-012a dedicated, mutation-safe review world-public selection fixtures. A dedicated
+    # world-public student ("Ravi Reviewpubliek") owns its own items and reviews so marking or
+    # clearing review visibility here never disturbs the read-only world-public expectations of
+    # other suites (which assert against Tom's page). These entities are intentionally kept out of
+    # the shared alias maps in test-data.cjs, so the PF-task-002d seed probe does not enroll them.
+    $portfolio_012a_owner isa student,
+        has id "20000000-0000-4000-8000-000000000013",
+        has email "portfolio.012a.owner@projojo.local",
+        has fullName "Ravi Reviewpubliek",
+        has imagePath "default.svg",
+        has portfolioSummary "PF-task-012a world-public review selection fixtures.",
+        has portfolioSlug "portfolio-seed-012a-reviews",
+        has isPortfolioWorldPublic true;
+
+    $portfolio_012a_owner_auth isa oauthAuthentication (user: $portfolio_012a_owner, provider: $provider_google),
+        has oauthSub "portfolio-012a-owner-google-sub";
+
+    # World-public host item: carries the markable, retractable, and guard reviews for AC-1, AC-2,
+    # AC-4, and AC-5. It is world-visible, non-hidden, and non-retired so its world-visible reviews
+    # are eligible for the public page.
+    $portfolio_item_012a_host isa portfolioItem,
+        has id "pf-seed-item-012a-host",
+        has createdAt 2026-03-20T17:05:00.000+0000,
+        has completedAt 2026-03-20T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a world-public review host item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-20T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 60,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Non-world-visible item: AC-3 proves a world-visible review on it never reaches the public page.
+    $portfolio_item_012a_nonpublic isa portfolioItem,
+        has id "pf-seed-item-012a-nonpublic",
+        has createdAt 2026-03-21T17:05:00.000+0000,
+        has completedAt 2026-03-21T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a non-world-visible item (its review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-21T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 61,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Retired item: AC-3 proves a world-visible review on retired evidence never reaches the public page.
+    $portfolio_item_012a_retired isa portfolioItem,
+        has id "pf-seed-item-012a-retired",
+        has createdAt 2026-03-22T17:05:00.000+0000,
+        has completedAt 2026-03-22T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a retired item (its review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-22T17:00:00.000+0000,
+        has isRetired true,
+        has retiredAt 2026-03-23T09:00:00.000+0000,
+        has isHidden false,
+        has displayOrder 62,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Teacher-hidden item: AC-3 proves a world-visible review on teacher-hidden evidence never
+    # reaches the public page (get_visible_items drops isHidden items from every normal view). It
+    # is world-visible on purpose so only the hide keeps it (and its review) off the public page.
+    $portfolio_item_012a_hidden isa portfolioItem,
+        has id "pf-seed-item-012a-hidden",
+        has createdAt 2026-03-24T17:05:00.000+0000,
+        has completedAt 2026-03-24T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a teacher-hidden item (its review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-24T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden true,
+        has hiddenAt 2026-03-25T09:00:00.000+0000,
+        has hiddenByRole "teacher",
+        has hiddenByUserId "20000000-0000-4000-8000-000000000001",
+        has displayOrder 63,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_ownership_012a_host isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_host);
+    $portfolio_ownership_012a_nonpublic isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_nonpublic);
+    $portfolio_ownership_012a_retired isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_retired);
+    $portfolio_ownership_012a_hidden isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_hidden);
+
+    # All 012a reviews carry publicNoticeAcceptedAt (schema @card(1) makes it mandatory), so every
+    # review is created under the reviewer public-use notice contract (AC-5). They start not
+    # world-visible; the scenarios set the required starting state through the selection endpoint.
+    $portfolio_review_012a_markable isa portfolioReview,
+        has id "pf-seed-review-012a-markable",
+        has reviewText "PF-task-012a markable review: eligible for world-public selection.",
+        has rating 5,
+        has createdAt 2026-03-20T18:00:00.000+0000,
+        has updatedAt 2026-03-20T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-20T18:00:00.000+0000;
+
+    $portfolio_review_012a_retractable isa portfolioReview,
+        has id "pf-seed-review-012a-retractable",
+        has reviewText "PF-task-012a retractable review: proves world-public retraction leaves authenticated views intact.",
+        has rating 4,
+        has createdAt 2026-03-20T18:30:00.000+0000,
+        has updatedAt 2026-03-20T18:30:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-20T18:30:00.000+0000;
+
+    $portfolio_review_012a_guard isa portfolioReview,
+        has id "pf-seed-review-012a-guard",
+        has reviewText "PF-task-012a guard review: only the owner may change its world-visible flag.",
+        has rating 5,
+        has createdAt 2026-03-20T19:00:00.000+0000,
+        has updatedAt 2026-03-20T19:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-20T19:00:00.000+0000;
+
+    $portfolio_review_012a_nonpublic isa portfolioReview,
+        has id "pf-seed-review-012a-nonpublic",
+        has reviewText "PF-task-012a review on a non-world-visible item: must never reach the public page.",
+        has rating 4,
+        has createdAt 2026-03-21T18:00:00.000+0000,
+        has updatedAt 2026-03-21T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-21T18:00:00.000+0000;
+
+    $portfolio_review_012a_retired isa portfolioReview,
+        has id "pf-seed-review-012a-retired",
+        has reviewText "PF-task-012a review on retired evidence: must never reach the public page.",
+        has rating 4,
+        has createdAt 2026-03-22T18:00:00.000+0000,
+        has updatedAt 2026-03-22T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-22T18:00:00.000+0000;
+
+    $portfolio_review_012a_hidden isa portfolioReview,
+        has id "pf-seed-review-012a-hidden",
+        has reviewText "PF-task-012a review on teacher-hidden evidence: must never reach the public page.",
+        has rating 4,
+        has createdAt 2026-03-24T18:00:00.000+0000,
+        has updatedAt 2026-03-24T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-24T18:00:00.000+0000;
+
+    $portfolio_review_link_012a_markable isa hasPortfolioReview (item: $portfolio_item_012a_host, review: $portfolio_review_012a_markable);
+    $portfolio_review_link_012a_retractable isa hasPortfolioReview (item: $portfolio_item_012a_host, review: $portfolio_review_012a_retractable);
+    $portfolio_review_link_012a_guard isa hasPortfolioReview (item: $portfolio_item_012a_host, review: $portfolio_review_012a_guard);
+    $portfolio_review_link_012a_nonpublic isa hasPortfolioReview (item: $portfolio_item_012a_nonpublic, review: $portfolio_review_012a_nonpublic);
+    $portfolio_review_link_012a_retired isa hasPortfolioReview (item: $portfolio_item_012a_retired, review: $portfolio_review_012a_retired);
+    $portfolio_review_link_012a_hidden isa hasPortfolioReview (item: $portfolio_item_012a_hidden, review: $portfolio_review_012a_hidden);
+
+    $portfolio_author_012a_markable isa portfolioReviewAuthor (review: $portfolio_review_012a_markable, author: $teacher);
+    $portfolio_author_012a_retractable isa portfolioReviewAuthor (review: $portfolio_review_012a_retractable, author: $supervisor);
+    $portfolio_author_012a_guard isa portfolioReviewAuthor (review: $portfolio_review_012a_guard, author: $teacher);
+    $portfolio_author_012a_nonpublic isa portfolioReviewAuthor (review: $portfolio_review_012a_nonpublic, author: $supervisor);
+    $portfolio_author_012a_retired isa portfolioReviewAuthor (review: $portfolio_review_012a_retired, author: $teacher);
+    $portfolio_author_012a_hidden isa portfolioReviewAuthor (review: $portfolio_review_012a_hidden, author: $teacher);

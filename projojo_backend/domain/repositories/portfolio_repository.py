@@ -572,6 +572,84 @@ class PortfolioRepository:
             [self._map_review(row, author_roles) for row in rows], key=lambda review: (review["item_id"], review["id"])
         )
 
+    def get_owned_review(self, item_id: str, review_id: str, owner_student_id: str) -> dict[str, Any] | None:
+        # Owner-scoped single-review read for the student's own review selection endpoint
+        # (PF-task-012a). The match requires the review to be linked to an item the caller owns via
+        # hasPortfolio + hasPortfolioReview, so a review on an item the student does not own, or a
+        # review not attached to the named item, resolves to None (reported as 404 by the route,
+        # without disclosing existence). Retirement/hidden state is not filtered here: the owner
+        # manages selection on their own reviews regardless, and the world-public OUTPUT is what
+        # actually gates public exposure on item state.
+        query = """
+            match
+                $student isa student, has id ~owner_student_id;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+                $review isa portfolioReview,
+                    has id $id,
+                    has reviewText $review_text,
+                    has createdAt $created_at,
+                    has updatedAt $updated_at,
+                    has isWorldVisible $is_world_visible,
+                    has publicNoticeAcceptedAt $public_notice_accepted_at;
+                $review has id ~review_id;
+                $review_link isa hasPortfolioReview(item: $item, review: $review);
+                $author isa user, has id $author_id, has fullName $author_full_name;
+                $author_link isa portfolioReviewAuthor(review: $review, author: $author);
+            fetch {
+                'id': $id,
+                'item_id': $item.id,
+                'review_text': $review_text,
+                'rating': [ $review.rating ],
+                'created_at': $created_at,
+                'updated_at': $updated_at,
+                'is_world_visible': $is_world_visible,
+                'public_notice_accepted_at': $public_notice_accepted_at,
+                'author_id': $author_id,
+                'author_full_name': $author_full_name
+            };
+        """
+        rows = Db.read_transact(
+            query,
+            {"item_id": item_id, "review_id": review_id, "owner_student_id": owner_student_id},
+            sort_fields=False,
+        )
+        if not rows:
+            return None
+        author_roles = self._get_author_roles([self._one(rows[0].get("author_id"))])
+        return self._map_review(rows[0], author_roles)
+
+    def set_review_world_visible(
+        self, item_id: str, review_id: str, owner_student_id: str, is_world_visible: bool
+    ) -> dict[str, Any] | None:
+        # Owner-scoped review world-public selection write (PF-task-012a). The update match itself is
+        # owner-scoped (it requires the review to be attached, via hasPortfolioReview, to an item the
+        # caller owns via hasPortfolio), so for a non-owned or unknown review it binds nothing and the
+        # update is a harmless no-op; the single read-back below then returns None (route -> 404) and
+        # no unauthorized caller can ever change the flag (AC-4). isWorldVisible is a @card(1) boolean
+        # that upserts cleanly through a single update stage. Public exposure stays gated by the
+        # world-public OUTPUT (get_world_public_items excludes hidden/retired/non-world-visible
+        # items), so a world-visible review on a non-public item never leaks (AC-3). Every review
+        # carries publicNoticeAcceptedAt (schema @card(1)), so any exposed review is always under
+        # the reviewer notice contract (AC-5). Returns the persisted post-write review, or None when
+        # the review is not owned by the caller.
+        Db.write_transact(
+            "match "
+            "$student isa student, has id ~owner_student_id; "
+            "$item isa portfolioItem, has id ~item_id; "
+            "$ownership isa hasPortfolio(student: $student, item: $item); "
+            "$review isa portfolioReview, has id ~review_id; "
+            "$review_link isa hasPortfolioReview(item: $item, review: $review); "
+            "update $review has isWorldVisible ~is_world_visible;",
+            {
+                "item_id": item_id,
+                "review_id": review_id,
+                "owner_student_id": owner_student_id,
+                "is_world_visible": is_world_visible,
+            },
+        )
+        return self.get_owned_review(item_id, review_id, owner_student_id)
+
     def filter_items_for_viewer(
         self,
         items: list[dict[str, Any]],

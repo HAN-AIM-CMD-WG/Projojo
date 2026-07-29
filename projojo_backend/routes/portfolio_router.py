@@ -9,7 +9,9 @@ from domain.models.portfolio import (
     PortfolioResponse,
     PortfolioReviewCreateRequest,
     PortfolioReviewMutationResponse,
+    PortfolioReviewResponse,
     PortfolioReviewUpdateRequest,
+    PortfolioReviewWorldVisibleUpdate,
     PortfolioSettingsResponse,
     PortfolioSettingsUpdateRequest,
 )
@@ -305,6 +307,35 @@ async def set_portfolio_item_curation(item_id: str, update: PortfolioItemCuratio
     item = portfolio_repo.get_owned_item(item_id, owner_id)
     reviews = portfolio_repo.get_reviews_for_items([item_id])
     return portfolio_repo.attach_reviews([item], reviews)[0]
+
+
+@router.patch(
+    "/portfolios/me/items/{item_id}/reviews/{review_id}",
+    response_model=PortfolioReviewResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio-review niet gevonden"}}}},
+    },
+)
+@auth(role="student")
+async def set_portfolio_review_world_visible(
+    item_id: str, review_id: str, update: PortfolioReviewWorldVisibleUpdate, request: Request
+):
+    # Owner-only review world-public selection (PF-task-012a). @auth(role="student") already blocks
+    # teachers, supervisors, and unauthenticated callers; ownership (the review must belong to an
+    # item the caller owns) is enforced in the repository, so a non-owned or unknown review is
+    # reported as not found without disclosing existence (AC-4). Marking a review world-visible only
+    # makes it eligible: it is exposed publicly only when its associated item and the portfolio page
+    # are world-public, which the world-public read (get_world_public_items) gates (AC-1, AC-3).
+    # Clearing the flag retracts it from world-public output without touching authenticated views,
+    # which never filter on this flag (AC-2). Every review carries a persisted public-use notice
+    # acceptance (schema @card(1)), so an exposed review is always under the reviewer notice
+    # contract (AC-5). The response is the persisted post-write review.
+    review = portfolio_repo.set_review_world_visible(item_id, review_id, request.state.user_id, update.is_world_visible)
+    if review is None:
+        raise HTTPException(status_code=404, detail="Portfolio-review niet gevonden")
+    return review
 
 
 @router.patch(
