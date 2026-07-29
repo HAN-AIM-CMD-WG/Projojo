@@ -135,6 +135,15 @@ Given('the inline theme save fails', async function () {
   await stubProjectThemeEndpoint(page(this), { put: { status: 500 } });
 });
 
+Given('the project theme fetch starts failing', async function () {
+  // Installed part-way through a scenario, once the section has already loaded its
+  // themes: only the read-back that follows a save hits this. The write is left
+  // unstaged, so it still reaches the real backend and really links the themes -
+  // which is what makes "the write succeeded but the read after it did not" a state
+  // this suite can actually observe.
+  await stubProjectThemeEndpoint(page(this), { get: { status: 500 } });
+});
+
 Given('the inline theme save is slow', async function () {
   const current = state(this);
   // Delayed and then passed through to the real backend, so the themes still end
@@ -362,6 +371,18 @@ Then('an error message is shown in the theme section', async function () {
     await section(this).getByTestId('project-themes-error').count(),
     0,
     'Expected a failed save to show its own error, not the load-error state',
+  );
+});
+
+Then('no save error is shown in the theme section', async function () {
+  // Deliberately only about the save error: a section that could not read its themes
+  // back may legitimately show the load-error at the same time, and conflating the
+  // two is exactly the confusion this asserts against.
+  await page(this).waitForTimeout(500);
+  assert.equal(
+    await section(this).getByTestId('project-theme-error').count(),
+    0,
+    'Expected no failed-save error to be shown',
   );
 });
 

@@ -260,6 +260,27 @@ Feature: TS-task-017 inline theme editing on ProjectDetailsPage
     And no success message is shown in the theme section
     And the project is linked to exactly the themes "Duurzaamheid"
 
+  # The mirror of AC-8. A save is two calls: the link write, and the read-back that
+  # refreshes the pills afterwards (the submitted ids carry no name, colour or icon).
+  # Only the write decides whether the save succeeded, so a read-back that fails
+  # after it must never be reported as "not saved" - that would send the supervisor
+  # back to redo a change that is already persisted. Staged by making the read fail
+  # only once the editor is already open, so the write still reaches the real backend.
+  # The load-error can only render outside edit mode, so it also shows the editor closed.
+  @ui @theme @TS-task-017
+  Scenario: A read-back that fails after a successful save is not reported as a failed save
+    Given the project's linked themes are "Duurzaamheid"
+    And I am authenticated in the browser as the project's supervisor
+    When I open the project details page
+    And I start editing the themes
+    And I toggle the theme "Water" in the theme section
+    And the project theme fetch starts failing
+    And I save the inline theme edit
+    Then a success message is shown in the theme section
+    And the theme section shows a load-error distinct from the empty state
+    And no save error is shown in the theme section
+    And the project is linked to exactly the themes "Duurzaamheid, Water"
+
   # --- Beyond the issue: states the acceptance criteria do not name -----------------
 
   # Confirmed with the issue owner: the link call replaces every link, so a save that

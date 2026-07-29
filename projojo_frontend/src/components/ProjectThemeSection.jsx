@@ -25,7 +25,9 @@ import ThemeRemovalConfirm from './ThemeRemovalConfirm';
  * ThemePicker, pre-selected with what is linked today. Saving replaces every link
  * in one call and is therefore skipped entirely when the selection is unchanged;
  * emptying a non-empty selection is confirmed first, through the same dialog the
- * project edit form uses.
+ * project edit form uses. That one call decides whether the save succeeded: the read
+ * that refreshes the pills afterwards can fail without a persisted change being
+ * reported as a failure.
  *
  * @param {object} props
  * @param {string} props.projectId - the project whose themes to show
@@ -113,16 +115,26 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
         setSaveError('');
         try {
             await linkProjectThemes(projectId, selectedIds);
-            // Read back what is now linked rather than trusting the submitted ids,
-            // so the pills show what was actually persisted.
-            setThemes(await loadThemes());
-            setSelectedIds(null);
-            setHasSaved(true);
         } catch {
             // Keep the editor open with the selection intact so it can be retried.
             setSaveError("De thema's konden niet worden opgeslagen. Probeer het opnieuw.");
-        } finally {
             setIsSaving(false);
+            return;
+        }
+        setIsSaving(false);
+        setSelectedIds(null);
+        setHasSaved(true);
+
+        // The pills need each theme's name, colour and icon, which the submitted ids
+        // do not carry, so the new links have to be read back. The write has already
+        // gone through by this point: a read that fails after it means "saved, but no
+        // longer able to show what is linked" - never "not saved". Reporting the
+        // latter would send someone back to redo a change that is already persisted.
+        try {
+            setThemes(await loadThemes());
+        } catch (error) {
+            console.error('Failed to reload project themes after saving', error);
+            setStatus('error');
         }
     }
 
