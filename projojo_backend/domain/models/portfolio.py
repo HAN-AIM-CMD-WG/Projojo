@@ -91,8 +91,8 @@ class PortfolioItemCurationUpdate(BaseModel):
     # is_authenticated_public_retraction remains the PF-task-007c supervisor-facing retraction.
     display_order: int | None = None
     is_student_hidden: bool | None = None
-    is_world_visible: bool | None = None
-    is_authenticated_public_retraction: bool | None = None
+    is_world_visible: bool = False
+    is_authenticated_public_retraction: bool = False
 
 
 class PortfolioReviewWorldVisibleUpdate(BaseModel):
