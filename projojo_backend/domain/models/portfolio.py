@@ -165,3 +165,54 @@ class PortfolioResponse(BaseModel):
     student: PortfolioStudentIdentity
     items: list[PortfolioItemResponse] = Field(default_factory=list)
     reviews: list[PortfolioReviewResponse] = Field(default_factory=list)
+
+
+# --- World-public (unauthenticated) response contract (PF-task-013) --------------------------
+# The public GET /portfolio/{slug} response is a reduced, student-safe projection of the
+# authenticated shapes above. It is a separate model set (rather than the full PortfolioResponse)
+# so FastAPI's response_model strips every authenticated-only field before serialization: internal
+# ids, item source_* ids, all curation moderation fields, source_navigation, archived_source, and
+# the reviewer author id. Only fields the public page may show remain.
+
+
+class PublicPortfolioReviewAuthor(BaseModel):
+    # Reviewer identity is limited to the role and display name; the internal author id is dropped.
+    role: str
+    full_name: str
+
+
+class PublicPortfolioReview(BaseModel):
+    id: str
+    item_id: str
+    review_text: str
+    rating: int | None = None
+    created_at: str
+    # The reviewer public-use notice acceptance is a public-facing consent artifact, so it is kept.
+    public_notice_accepted_at: str
+    author: PublicPortfolioReviewAuthor
+
+
+class PublicPortfolioItem(BaseModel):
+    id: str
+    completed_at: str
+    task: PortfolioTaskDisplay
+    project: PortfolioProjectDisplay
+    business: PortfolioBusinessDisplay
+    skills: list[str] = Field(default_factory=list)
+    timeline_start_date: str | None = None
+    timeline_end_date: str | None = None
+    visibility: PortfolioVisibility
+    reviews: list[PublicPortfolioReview] = Field(default_factory=list)
+
+
+class PublicPortfolioStudent(BaseModel):
+    full_name: str
+    image_path: str
+    portfolio_summary: str | None = None
+    portfolio_slug: str | None = None
+
+
+class PublicPortfolioResponse(BaseModel):
+    student: PublicPortfolioStudent
+    items: list[PublicPortfolioItem] = Field(default_factory=list)
+    reviews: list[PublicPortfolioReview] = Field(default_factory=list)

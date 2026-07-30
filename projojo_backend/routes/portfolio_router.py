@@ -14,6 +14,7 @@ from domain.models.portfolio import (
     PortfolioReviewWorldVisibleUpdate,
     PortfolioSettingsResponse,
     PortfolioSettingsUpdateRequest,
+    PublicPortfolioResponse,
 )
 from domain.repositories.portfolio_repository import PortfolioRepository
 from service.portfolio_policy import can_read_authenticated_student_portfolio
@@ -496,12 +497,99 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
     }
 
 
+# --- Public portfolio response contract examples (PF-task-013) -----------------------------
+# GET /portfolio/{slug} is the unauthenticated world-public read. It returns a deliberately
+# reduced, student-safe shape: compared with the authenticated PortfolioResponse it omits every
+# authenticated-only field. Dropped fields are the top-level viewer_role; the student id and
+# is_portfolio_world_public flag; per item the source_* ids, the curation/moderation block,
+# source_navigation, archived_source and the denormalized student; and per review the author id
+# plus the is_world_visible/updated_at fields. Only world-visible, non-hidden, non-retired items
+# and their world-visible reviews are ever returned. These examples mirror that reduced shape
+# against the deterministic E2E content seed (slug "portfolio-seed-013-content").
+_PUBLIC_REVIEW_EXAMPLE = {
+    "id": "pf-seed-review-013-included",
+    "item_id": "pf-seed-item-013-included",
+    "review_text": "PF-task-013 world-visible review on the selected item (low rating, still public).",
+    "rating": 2,
+    "created_at": "2026-04-01T18:00:00+00:00",
+    "public_notice_accepted_at": "2026-04-01T18:00:00+00:00",
+    "author": {"role": "teacher", "full_name": "Tessa Testdocent"},
+}
+_PUBLIC_ITEM_EXAMPLE = {
+    "id": "pf-seed-item-013-included",
+    "completed_at": "2026-04-01T17:00:00+00:00",
+    "task": {"name": "Infrastructure Proof Task", "description": "PF-task-013 world-public selected item (retracted, low-rated, still public)."},
+    "project": {"name": "E2E Infrastructure Proof Project", "description": "Portfolio seed project display copy."},
+    "business": {"name": "E2E Infrastructure Business", "location": "Arnhem"},
+    "skills": ["Deterministisch Testen"],
+    "timeline_start_date": "2026-01-20T09:00:00+00:00",
+    "timeline_end_date": "2026-04-01T17:00:00+00:00",
+    "visibility": {"viewer_can_see": True, "reason": "visible_to_world_public"},
+    "reviews": [_PUBLIC_REVIEW_EXAMPLE],
+}
+_PUBLIC_CONTENT_STUDENT = {
+    "full_name": "Cato Contentpubliek",
+    "image_path": "default.svg",
+    "portfolio_summary": "PF-task-013 world-public read contract fixtures.",
+    "portfolio_slug": "portfolio-seed-013-content",
+}
+_PUBLIC_SUMMARY_ONLY_STUDENT = {
+    "full_name": "Sami Samenvatting",
+    "image_path": "default.svg",
+    "portfolio_summary": "PF-task-013 summary-only world-public portfolio.",
+    "portfolio_slug": "portfolio-seed-013-summary-only",
+}
+
+_PUBLIC_PORTFOLIO_EXAMPLES = {
+    "summary_only": {
+        "summary": "World-public student with no completed items",
+        "description": (
+            "A world-public portfolio whose owner has published a summary but has no world-visible "
+            "completed items yet. The reduced student block still carries the summary and slug; the "
+            "items and reviews arrays are empty."
+        ),
+        "value": {"student": _PUBLIC_SUMMARY_ONLY_STUDENT, "items": [], "reviews": []},
+    },
+    "selected_items": {
+        "summary": "World-public student with a selected item",
+        "description": (
+            "The reduced per-item field shape returned for a world-visible, non-hidden, non-retired "
+            "item. No authenticated-only field (source_* ids, curation, source_navigation, "
+            "archived_source, the denormalized student) appears, and the review author id is omitted."
+        ),
+        "value": {"student": _PUBLIC_CONTENT_STUDENT, "items": [_PUBLIC_ITEM_EXAMPLE], "reviews": [_PUBLIC_REVIEW_EXAMPLE]},
+    },
+    "selected_reviews": {
+        "summary": "World-visible reviews mirrored at the top level",
+        "description": (
+            "World-visible reviews of returned items appear both nested under their item and in the "
+            "flat top-level reviews array. A review whose item is not world-visible is never "
+            "returned, even when its own world-visible flag is set."
+        ),
+        "value": {"student": _PUBLIC_CONTENT_STUDENT, "items": [_PUBLIC_ITEM_EXAMPLE], "reviews": [_PUBLIC_REVIEW_EXAMPLE]},
+    },
+}
+
+
 @router.get(
     "/portfolio/{slug}",
-    response_model=PortfolioResponse,
-    responses={404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}}},
+    response_model=PublicPortfolioResponse,
+    responses={
+        200: {"content": {"application/json": {"examples": _PUBLIC_PORTFOLIO_EXAMPLES}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}},
+    },
 )
 async def get_public_portfolio(slug: str):
+    """Read a world-public student portfolio without authentication.
+
+    This is the public read model at `GET /portfolio/{slug}`. It returns a reduced, student-safe
+    shape (PublicPortfolioResponse) that strips every authenticated-only field from the
+    authenticated PortfolioResponse: the top-level viewer_role; the student id and
+    is_portfolio_world_public flag; each item's source_* ids, curation moderation block,
+    source_navigation, archived_source and denormalized student; and each review author id plus
+    its is_world_visible/updated_at fields. Only world-visible, non-hidden, non-retired items and
+    their world-visible reviews are returned; a non-world-public or unknown slug yields a 404.
+    """
     student = portfolio_repo.get_world_public_student_identity_by_slug(slug)
     if not student:
         raise HTTPException(status_code=404, detail="Portfolio niet publiek")
