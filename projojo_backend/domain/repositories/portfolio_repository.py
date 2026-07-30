@@ -2,7 +2,10 @@ from datetime import date, datetime, timezone
 import re
 from typing import Any
 
+from typedb.common.exception import TypeDBDriverException
+
 from db.initDatabase import Db
+from exceptions import ConflictException
 from service.uuid_service import generate_uuid
 
 
@@ -329,8 +332,12 @@ class PortfolioRepository:
         # delete-then-insert idempotent pattern (see _optional_attribute_queries), mirroring
         # project_repository.set_impact_summary. Batching the delete and insert into one transaction
         # also closes the window where a failed insert after a committed delete would leave the
-        # attribute unset. Slug uniqueness is pre-checked in the route, and the @unique constraint is
-        # the backstop, so no write here can violate it under normal single-writer use.
+        # attribute unset. Slug uniqueness is pre-checked in the route as a fast, friendly path, but
+        # that read and this write are separate transactions, so two students can pass the same
+        # pre-check concurrently; the @unique constraint is the real backstop and is validated at
+        # commit. To avoid that commit-time violation escaping as a 500, the write is wrapped below:
+        # a driver error is re-classified as a slug conflict only after re-reading confirms the slug
+        # is now owned by another student, otherwise the original error is re-raised unchanged.
         queries: list[tuple[str, dict[str, Any] | None]] = []
         if set_summary:
             queries += self._optional_attribute_queries(student_id, "portfolioSummary", summary or None)
@@ -338,8 +345,16 @@ class PortfolioRepository:
             queries += self._optional_attribute_queries(student_id, "portfolioSlug", slug)
         if set_world_public:
             queries += self._optional_attribute_queries(student_id, "isPortfolioWorldPublic", world_public)
-        if queries:
+        if not queries:
+            return
+        try:
             Db.write_transact_many(queries)
+        except TypeDBDriverException:
+            if set_slug and slug is not None:
+                owner = self.get_slug_owner(slug)
+                if owner is not None and owner != student_id:
+                    raise ConflictException("Deze portfolio-slug is al in gebruik.")
+            raise
 
     def _optional_attribute_queries(
         self, student_id: str, attribute: str, value: Any

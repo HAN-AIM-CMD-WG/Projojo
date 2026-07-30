@@ -17,6 +17,7 @@ from domain.models.portfolio import (
     PublicPortfolioResponse,
 )
 from domain.repositories.portfolio_repository import PortfolioRepository
+from exceptions import ConflictException
 from service.portfolio_policy import can_read_authenticated_student_portfolio
 
 
@@ -436,15 +437,21 @@ async def update_my_portfolio_settings(update: PortfolioSettingsUpdateRequest, r
 
     set_world_public = "is_world_public" in fields
 
-    portfolio_repo.update_settings(
-        student_id,
-        set_summary=set_summary,
-        summary=summary,
-        set_slug=set_slug,
-        slug=slug,
-        set_world_public=set_world_public,
-        world_public=update.is_world_public,
-    )
+    try:
+        portfolio_repo.update_settings(
+            student_id,
+            set_summary=set_summary,
+            summary=summary,
+            set_slug=set_slug,
+            slug=slug,
+            set_world_public=set_world_public,
+            world_public=update.is_world_public,
+        )
+    except ConflictException as exc:
+        # A concurrent claim of the same slug can pass the pre-check above and only fail at the
+        # unique-constraint commit; the repository confirms that race and raises ConflictException,
+        # which maps to the same documented 409 as the pre-check.
+        raise HTTPException(status_code=409, detail=exc.message)
     return portfolio_repo.get_settings(student_id)
 
 
