@@ -283,16 +283,24 @@ class PortfolioRepository:
         }
 
     def get_settings(self, student_id: str) -> dict[str, Any] | None:
-        # Owner settings read (side-effect free). Slug generation timing (PF-task-010): a unique
-        # slug is assigned once, at student account creation (see UserRepository.create_user), so
-        # every student already has a stable public URL key and this read never writes. Seed
-        # students are inserted with a slug directly in the .tql seeds for the same reason.
+        # Owner settings read. Slug assignment (PF-task-010): a unique slug is normally assigned
+        # once, at student account creation (see UserRepository.create_user), and seed students
+        # carry a slug directly in the .tql seeds, so this read is side-effect free for every
+        # student created since. portfolioSlug is @card(0..1) in the schema, however, so a student
+        # created before slugs existed (no backfill migration ran) can still lack one. Because
+        # PortfolioSettingsResponse.slug is a required string, returning None would fail response
+        # validation, so such a legacy student is self-healed here: a stable unique slug is
+        # generated and persisted once, after which every subsequent read writes nothing.
         identity = self.get_student_identity(student_id)
         if identity is None:
             return None
+        slug = identity["portfolio_slug"]
+        if slug is None:
+            slug = self.generate_unique_slug(identity["full_name"] or "student")
+            self.update_settings(student_id, set_slug=True, slug=slug)
         return {
             "summary": identity["portfolio_summary"],
-            "slug": identity["portfolio_slug"],
+            "slug": slug,
             "is_world_public": identity["is_portfolio_world_public"],
         }
 

@@ -378,9 +378,11 @@ async def teacher_hide_portfolio_item(student_id: str, item_id: str, request: Re
 )
 @auth(role="student")
 async def get_my_portfolio_settings(request: Request):
-    # Owner-only settings read (side-effect free). @auth(role="student") blocks teachers,
-    # supervisors, and unauthenticated callers. The slug is assigned at account creation, so this
-    # read never generates one; is_world_public stays false until the student enables it.
+    # Owner-only settings read. @auth(role="student") blocks teachers, supervisors, and
+    # unauthenticated callers. The slug is assigned at account creation, so this read is normally
+    # side-effect free; a legacy student created before slugs existed is self-healed once by
+    # get_settings (a stable slug is generated and persisted). is_world_public stays false until
+    # the student enables it.
     settings = portfolio_repo.get_settings(request.state.user_id)
     if settings is None:
         raise HTTPException(status_code=404, detail="Portfolio niet gevonden")
