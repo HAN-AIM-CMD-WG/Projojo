@@ -334,10 +334,17 @@ class PortfolioRepository:
         # also closes the window where a failed insert after a committed delete would leave the
         # attribute unset. Slug uniqueness is pre-checked in the route as a fast, friendly path, but
         # that read and this write are separate transactions, so two students can pass the same
-        # pre-check concurrently; the @unique constraint is the real backstop and is validated at
-        # commit. To avoid that commit-time violation escaping as a 500, the write is wrapped below:
-        # a driver error is re-classified as a slug conflict only after re-reading confirms the slug
-        # is now owned by another student, otherwise the original error is re-raised unchanged.
+        # pre-check concurrently; portfolioSlug is the only @unique attribute written here and the
+        # constraint is validated at commit, so the losing writer is rejected server-side. To keep
+        # that commit-time rejection from escaping as a 500, the write is wrapped below.
+        #
+        # Classification is driven by the rejection itself (_is_slug_uniqueness_violation), not by a
+        # follow-up read: right after the loser is rejected the winner's committed slug is not
+        # guaranteed to be visible to a fresh read, so re-reading alone can still see no owner and
+        # would mask the documented conflict as a 500. An ownership re-read is kept only as an
+        # additive fallback (it can upgrade a missed match to the conflict but never turns an
+        # unrelated infrastructure error into a false conflict), so anything that is neither a
+        # uniqueness rejection nor a now-visible foreign claim is re-raised unchanged.
         queries: list[tuple[str, dict[str, Any] | None]] = []
         if set_summary:
             queries += self._optional_attribute_queries(student_id, "portfolioSummary", summary or None)
@@ -349,12 +356,24 @@ class PortfolioRepository:
             return
         try:
             Db.write_transact_many(queries)
-        except TypeDBDriverException:
-            if set_slug and slug is not None:
-                owner = self.get_slug_owner(slug)
-                if owner is not None and owner != student_id:
-                    raise ConflictException("Deze portfolio-slug is al in gebruik.")
+        except TypeDBDriverException as exc:
+            if set_slug and slug is not None and (
+                self._is_slug_uniqueness_violation(exc) or self._slug_owned_by_other(slug, student_id)
+            ):
+                raise ConflictException("Deze portfolio-slug is al in gebruik.")
             raise
+
+    @staticmethod
+    def _is_slug_uniqueness_violation(exc: TypeDBDriverException) -> bool:
+        # A violated @unique constraint reaches Python only as a formatted server-error string (no
+        # structured code survives TypeDBDriverException.of), so the reliable, timing-independent
+        # signal is the message naming the uniqueness constraint. Infrastructure failures (closed
+        # driver/transaction, dropped connection) do not mention uniqueness and stay 500s.
+        return "unique" in str(exc).lower()
+
+    def _slug_owned_by_other(self, slug: str, student_id: str) -> bool:
+        owner = self.get_slug_owner(slug)
+        return owner is not None and owner != student_id
 
     def _optional_attribute_queries(
         self, student_id: str, attribute: str, value: Any
