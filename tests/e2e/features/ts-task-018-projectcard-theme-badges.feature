@@ -121,7 +121,8 @@ Feature: TS-task-018 theme badges on the authenticated project card
 
   # Not spelled out in the issue but real: icon and color are optional on a theme
   # (TS-task-009 AC-4 nests both as null). A themed project must still get a
-  # readable badge instead of an empty or invisible one.
+  # readable badge instead of an empty or invisible one. The colourless fallback is
+  # the same coral the theme pills elsewhere in the app use.
   @ui @theme @TS-task-018
   Scenario: A theme without an icon or color still renders a readable badge
     Given a theme "TS018 Thema Zonder Iconen" exists without an icon or color
@@ -131,7 +132,43 @@ Feature: TS-task-018 theme badges on the authenticated project card
     Then the project card shows exactly one theme badge
     And the project card theme badge is labelled "TS018 Thema Zonder Iconen"
     And the project card theme badge shows no icon
-    And the project card theme badge falls back to a visible neutral background
+    And the project card theme badge falls back to the colorless theme fill
+    And the project card theme badge text is legible against its background
+
+  # The issue's technical notes require "appropriate text contrast". A light theme
+  # colour is the case that breaks a hardcoded white label: white on near-white is
+  # invisible. The text colour must follow the theme colour, not be a constant.
+  @ui @theme @TS-task-018
+  Scenario: A light theme color gets dark text instead of unreadable white
+    Given a theme "TS018 Wit Thema" exists with the color "#FFFFFF"
+    And the project's linked themes are "TS018 Wit Thema"
+    And I am authenticated in the browser as a student
+    When I open the organisation page of the project's business
+    Then the project card theme badge uses the color "#FFFFFF" as its background
+    And the project card theme badge uses dark text
+    And the project card theme badge text is legible against its background
+
+  # The counterpart, so the previous scenario cannot be satisfied by flipping the
+  # constant from white to black: a dark theme colour must still get white text.
+  @ui @theme @TS-task-018
+  Scenario: A dark theme color keeps white text
+    Given a theme "TS018 Donker Thema" exists with the color "#1B2A4A"
+    And the project's linked themes are "TS018 Donker Thema"
+    And I am authenticated in the browser as a student
+    When I open the organisation page of the project's business
+    Then the project card theme badge uses the color "#1B2A4A" as its background
+    And the project card theme badge uses white text
+    And the project card theme badge text is legible against its background
+
+  # An opaque fill is what makes the contrast choice meaningful: at partial alpha
+  # the rendered colour depends on the project photo underneath, so a WCAG-picked
+  # label colour would only be a guess.
+  @ui @theme @TS-task-018
+  Scenario: The badge fill is opaque so its contrast does not depend on the photo
+    Given the project's linked themes are "Duurzaamheid"
+    And I am authenticated in the browser as a student
+    When I open the organisation page of the project's business
+    Then the project card theme badge is fully opaque
 
   # The card already carries an "Actief" badge in its top-left corner for a student
   # who works on the project. The theme badge shares that corner, so the two must

@@ -32,12 +32,15 @@ const { themeApi } = require('../support/theme-catalog.cjs');
 const OVERVIEW_URL = `${FRONTEND_URL}/ontdek`;
 const BUSINESS_URL = `${FRONTEND_URL}/business/${PROOF_BUSINESS_ID}`;
 
-// The public card renders its badge at 80% alpha over the project image
-// (`${color}CC`). AC-4 requires the authenticated badge to use that same pattern,
-// so the expected background is the theme color at exactly that alpha - not the
-// flat hex. A theme with no color falls back to this neutral wash.
-const BADGE_ALPHA = 0.8;
-const NEUTRAL_FALLBACK_BACKGROUND = 'rgba(0, 0, 0, 0.45)';
+// The badge fills opaquely with the theme colour and picks its label colour for
+// contrast, the same way the theme pills elsewhere in the app do. A theme without
+// a colour falls back to the coral those pills use.
+const COLORLESS_THEME_FILL = '#FF7F50';
+
+// WCAG AA for normal text. The app's own helper documents that black-or-white
+// always clears at least 4.58:1 against any sRGB fill, so anything below this is
+// a real defect rather than a borderline colour choice.
+const MINIMUM_CONTRAST_RATIO = 4.5;
 
 // The badge's own declared styling. Inherited typography (line-height, letter
 // spacing) is deliberately not compared: neither card's badge declares it, so a
@@ -72,11 +75,23 @@ function state(world) {
   return world.cardThemeBadge;
 }
 
-/** Record every request the browser makes from this point on. */
-function recordRequests(world) {
+/**
+ * Navigate to `url` with every request the browser makes recorded.
+ *
+ * The listener must be attached before the goto to cover the page's own load, so
+ * the previously open page is dropped to about:blank first. Without that, the
+ * landing page the login step leaves behind keeps executing for a few
+ * milliseconds after the navigation starts, and its DiscoverySection fires
+ * GET /themes/ into this recording - traffic that has nothing to do with the page
+ * under test.
+ */
+async function gotoRecording(world, url) {
+  const current = state(world);
+  await page(world).goto('about:blank');
   page(world).on('request', (request) => {
-    state(world).requests.push({ method: request.method(), url: request.url() });
+    current.requests.push({ method: request.method(), url: request.url() });
   });
+  await page(world).goto(url);
 }
 
 // --- element helpers -------------------------------------------------------------
@@ -109,25 +124,75 @@ async function visibleBadge(world) {
 }
 
 /**
- * Capture the badge's class list, its own computed styling and its rendered size.
- * Both cards show the same theme for the same project, so an identically styled
- * badge must also measure identically.
+ * Capture the badge's class list, its own computed styling, its label and its
+ * rendered size. Both cards show the same theme for the same project, so an
+ * identically styled badge must also measure identically.
+ *
+ * The size is only comparable once the Material Symbols glyphs have arrived. Until
+ * then the icon falls back to its literal ligature text at the same 24px, which is
+ * 9px wider than the glyph while leaving the badge's height untouched - so a badge
+ * measured before the font landed and one measured after differ by exactly that,
+ * with nothing else to hint at why.
  */
 async function captureStyle(badge) {
+  await badge.page().waitForFunction(
+    () => document.fonts.check('24px "Material Symbols Outlined"', 'eco'),
+    null,
+    { timeout: 15_000 },
+  );
   return badge.evaluate((el, properties) => {
     const computed = getComputedStyle(el);
     const styles = {};
     for (const property of properties) styles[property] = computed[property];
     const { width, height } = el.getBoundingClientRect();
-    return { className: el.className, styles, size: { width: Math.round(width), height: Math.round(height) } };
+    return {
+      className: el.className,
+      styles,
+      text: el.innerText.trim(),
+      size: { width: Math.round(width), height: Math.round(height) },
+    };
   }, COMPARED_STYLE_PROPERTIES);
 }
 
-/** '#4CAF50' + alpha -> 'rgba(76, 175, 80, 0.8)', the shape getComputedStyle returns. */
-function hexToRgba(hex, alpha) {
+/** '#4CAF50' -> 'rgb(76, 175, 80)', the shape getComputedStyle returns for an opaque fill. */
+function hexToRgb(hex) {
   const value = hex.replace('#', '');
-  const [r, g, b] = [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)].map((c) => parseInt(c, 16));
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  const channels = [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)].map((c) => parseInt(c, 16));
+  return `rgb(${channels.join(', ')})`;
+}
+
+/** 'rgb(76, 175, 80)' / 'rgba(76, 175, 80, 0.8)' -> { channels: [76,175,80], alpha: 1 | 0.8 }. */
+function parseCssColor(value) {
+  const numbers = value.match(/[\d.]+/g);
+  assert.ok(numbers && numbers.length >= 3, `Expected a parsable rgb(a) colour, got '${value}'`);
+  return { channels: numbers.slice(0, 3).map(Number), alpha: numbers.length > 3 ? Number(numbers[3]) : 1 };
+}
+
+/**
+ * WCAG 2.1 relative luminance and contrast ratio, computed here from the colours
+ * the browser actually rendered. Deliberately an independent implementation: a
+ * step that imported the app's own helper would only prove the helper agrees
+ * with itself.
+ */
+function relativeLuminance([r, g, b]) {
+  const toLinear = (channel) => {
+    const c = channel / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+function contrastRatio(foreground, background) {
+  const [light, dark] = [relativeLuminance(foreground), relativeLuminance(background)].sort((a, b) => b - a);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+/** The badge's rendered label and fill colours. */
+async function badgeColors(world) {
+  return (await visibleBadge(world)).evaluate((el) => {
+    const computed = getComputedStyle(el);
+    return { color: computed.color, backgroundColor: computed.backgroundColor };
+  });
 }
 
 /** The theme names the project is really linked to, read through the real endpoint. */
@@ -139,6 +204,28 @@ async function linkedThemeNames() {
 }
 
 // --- Given ------------------------------------------------------------------------
+
+Given('a theme {string} exists with the color {string}', async function (name, hex) {
+  // Created through the real API rather than added to the shared baseline: the
+  // extreme colours these scenarios need (near-white, near-black) exist only to
+  // exercise the contrast choice and would be noise in the catalog fixtures the
+  // other suites assert on.
+  const token = await loginToken(E2E_TEACHER_ID);
+  const existing = await themeApi('/themes/', token);
+  assert.equal(existing.status, 200, `Expected GET /themes/ to return 200, received ${existing.status}`);
+  const already = existing.body.find((theme) => theme?.name === name);
+  if (already) {
+    assert.equal(already.color, hex, `Expected the existing theme '${name}' to carry the color ${hex}`);
+    return;
+  }
+
+  const created = await themeApi('/themes/', token, {
+    method: 'POST',
+    body: JSON.stringify({ name, color: hex, description: 'TS-task-018 contrast fixture' }),
+  });
+  assert.equal(created.status, 201, `Expected creating '${name}' to return 201, received ${created.status}: ${JSON.stringify(created.body)}`);
+  assert.equal(created.body?.color, hex, `Expected the created theme '${name}' to persist the color ${hex}, got ${JSON.stringify(created.body?.color)}`);
+});
 
 Given('the project is publicly visible', async function () {
   // Sibling suites edit the proof project and can leave it private, so publish it
@@ -177,8 +264,7 @@ Given('the student actively works on the project', async function () {
 // --- When -------------------------------------------------------------------------
 
 When('I open the overview page filtered to the proof project', async function () {
-  recordRequests(this);
-  await page(this).goto(OVERVIEW_URL);
+  await gotoRecording(this, OVERVIEW_URL);
   // The overview collapses a business to its first three cards, and sibling suites
   // add projects to this business, so search for the proof project by name instead
   // of hoping it lands in the visible three. The search input is debounced by 300ms;
@@ -190,8 +276,7 @@ When('I open the overview page filtered to the proof project', async function ()
 });
 
 When("I open the organisation page of the project's business", async function () {
-  recordRequests(this);
-  await page(this).goto(BUSINESS_URL);
+  await gotoRecording(this, BUSINESS_URL);
   await visibleCard(this);
 });
 
@@ -241,9 +326,8 @@ Then('the project card theme badge shows the Material Symbols icon {string}', as
 });
 
 Then('the project card theme badge uses the color {string} as its background', async function (hex) {
-  const background = await (await visibleBadge(this)).evaluate((el) => getComputedStyle(el).backgroundColor);
-  const expected = hexToRgba(hex, BADGE_ALPHA);
-  assert.equal(background, expected, `Expected the theme badge background to be ${hex} at ${BADGE_ALPHA} alpha (${expected}), got '${background}'`);
+  const { backgroundColor } = await badgeColors(this);
+  assert.equal(backgroundColor, hexToRgb(hex), `Expected the theme badge background to be ${hex} (${hexToRgb(hex)}), got '${backgroundColor}'`);
 });
 
 // --- Then: the overflow count (AC-2, AC-3) ----------------------------------------
@@ -306,13 +390,27 @@ Then('the public project card theme badge is styled identically to the recorded 
 
   assert.equal(observed.className, recorded.className, 'Expected the public and authenticated theme badges to carry the same classes');
   assert.deepEqual(observed.styles, recorded.styles, 'Expected the public and authenticated theme badges to compute to the same styling');
+  // Before the size: two badges of different width are only comparable if they
+  // carry the same label, so a content difference is named rather than surfacing
+  // as an unexplained pixel count.
+  assert.equal(observed.text, recorded.text, 'Expected both cards to show the same theme badge label');
   assert.deepEqual(observed.size, recorded.size, 'Expected the public and authenticated theme badges to render at the same size');
 });
 
 // --- Then: no extra theme traffic (AC-5) ------------------------------------------
 
 Then('no theme endpoint was requested while the page loaded', async function () {
-  const themeRequests = state(this).requests.filter((request) => new URL(request.url).pathname.startsWith('/themes'));
+  const { requests } = state(this);
+  // Guard against a vacuous pass: if the recording window somehow missed the page's
+  // own data loading, "no theme requests" would be true for the wrong reason. The
+  // organisation page's project read must be in the window for the absence of theme
+  // traffic to mean anything.
+  assert.ok(
+    requests.some((request) => new URL(request.url).pathname === `/businesses/${PROOF_BUSINESS_ID}/projects`),
+    `Expected the recording to cover the page's own project read, saw ${requests.length} requests`,
+  );
+
+  const themeRequests = requests.filter((request) => new URL(request.url).pathname.startsWith('/themes'));
   assert.deepEqual(
     themeRequests,
     [],
@@ -330,18 +428,50 @@ Then('the project card theme badge shows no icon', async function () {
   );
 });
 
-Then('the project card theme badge falls back to a visible neutral background', async function () {
-  const badge = await visibleBadge(this);
-  const background = await badge.evaluate((el) => getComputedStyle(el).backgroundColor);
+Then('the project card theme badge falls back to the colorless theme fill', async function () {
+  const { backgroundColor } = await badgeColors(this);
   assert.equal(
-    background,
-    NEUTRAL_FALLBACK_BACKGROUND,
-    `Expected a colorless theme to fall back to the public card's neutral wash, got '${background}'`,
+    backgroundColor,
+    hexToRgb(COLORLESS_THEME_FILL),
+    `Expected a colorless theme to fall back to ${COLORLESS_THEME_FILL}, the fill the theme pills elsewhere use, got '${backgroundColor}'`,
   );
-  // The point of the fallback is legibility over the project image: a transparent
-  // badge would leave white text on an arbitrary photo.
-  const name = badge.getByTestId('project-theme-badge-name');
+  const name = (await visibleBadge(this)).getByTestId('project-theme-badge-name');
   assert.ok(await name.isVisible(), 'Expected the theme name to stay visible on the fallback background');
+});
+
+// --- Then: text contrast ----------------------------------------------------------
+
+Then('the project card theme badge uses dark text', async function () {
+  const { color } = await badgeColors(this);
+  assert.deepEqual(parseCssColor(color).channels, [0, 0, 0], `Expected a light theme colour to get black text, got '${color}'`);
+});
+
+Then('the project card theme badge uses white text', async function () {
+  const { color } = await badgeColors(this);
+  assert.deepEqual(parseCssColor(color).channels, [255, 255, 255], `Expected a dark theme colour to get white text, got '${color}'`);
+});
+
+Then('the project card theme badge text is legible against its background', async function () {
+  const { color, backgroundColor } = await badgeColors(this);
+  const foreground = parseCssColor(color);
+  const background = parseCssColor(backgroundColor);
+  // A translucent fill would make this ratio depend on the project photo behind
+  // it, so the measurement is only meaningful on an opaque badge.
+  assert.equal(background.alpha, 1, `Expected an opaque badge fill to measure contrast against, got '${backgroundColor}'`);
+  const ratio = contrastRatio(foreground.channels, background.channels);
+  assert.ok(
+    ratio >= MINIMUM_CONTRAST_RATIO,
+    `Expected the badge label '${color}' on '${backgroundColor}' to reach WCAG AA ${MINIMUM_CONTRAST_RATIO}:1, got ${ratio.toFixed(2)}:1`,
+  );
+});
+
+Then('the project card theme badge is fully opaque', async function () {
+  const { backgroundColor } = await badgeColors(this);
+  assert.equal(
+    parseCssColor(backgroundColor).alpha,
+    1,
+    `Expected the badge fill to be opaque so its contrast does not depend on the project image, got '${backgroundColor}'`,
+  );
 });
 
 // --- Then: co-existence with the active-work badge --------------------------------
