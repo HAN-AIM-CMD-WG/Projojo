@@ -203,6 +203,26 @@ export function getPublicProject(projectId) {
 }
 
 /**
+ * Get a world-public student portfolio by slug (no authentication required).
+ * Returns the reduced, student-safe public shape. Throws an HttpError carrying `statusCode`
+ * (404 when the slug is unknown or the portfolio is not world-public) so the public page can
+ * render its own not-found state instead of surfacing a global toast.
+ * @param {string} slug
+ * @returns {Promise<{student: object, items: object[], reviews: object[]}>}
+ */
+export function getPublicPortfolio(slug) {
+    return fetch(`${API_BASE_URL}portfolio/${encodeURIComponent(slug)}`, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new HttpError("Portfolio niet gevonden", response.status);
+        }
+        return response.json();
+    });
+}
+
+/**
  * Set project visibility (public/private)
  * @param {string} projectId
  * @param {boolean} isPublic

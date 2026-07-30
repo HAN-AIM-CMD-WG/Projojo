@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Path, File, UploadFile, Form, HTTPException, Depends, Query
 from typing import Annotated
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel
 from auth.permissions import auth
 
@@ -151,7 +151,7 @@ async def create_project(
         name=name,
         description=description,
         image_path=unique_filename,  # Use the unique filename
-        created_at=datetime.now(),
+        created_at=datetime.now(timezone.utc),
         business_id=business_id,
         location=location,
         supervisor_id=supervisor_id,

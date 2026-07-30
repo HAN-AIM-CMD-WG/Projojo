@@ -26,7 +26,12 @@ const PORTFOLIO_SEED_ALIASES = Object.freeze({
   actors: Object.freeze({
     student: Object.freeze({ alias: 'portfolio-owner-student', id: E2E_STUDENT_ID, fullName: 'Tom Teststudent' }),
     privateStudent: Object.freeze({ alias: 'portfolio-private-student', id: '20000000-0000-4000-8000-000000000005', fullName: 'Priya Priveportfolio' }),
+    // Historical name: this fixture now carries a seeded slug (slugs are assigned at account
+    // creation); it is the "clean slate" student used to read settings from a world-private default.
+    noSlugStudent: Object.freeze({ alias: 'portfolio-no-slug-student', id: '20000000-0000-4000-8000-000000000010', fullName: 'Nora Nieuwslug' }),
+    settingsStudent: Object.freeze({ alias: 'portfolio-settings-student', id: '20000000-0000-4000-8000-000000000011', fullName: 'Sven Instellingen' }),
     teacher: Object.freeze({ alias: 'portfolio-teacher', id: E2E_TEACHER_ID, fullName: 'Tessa Testdocent' }),
+    secondTeacher: Object.freeze({ alias: 'portfolio-second-teacher', id: '20000000-0000-4000-8000-000000000012', fullName: 'Twan Tweededocent' }),
     relatedSupervisor: Object.freeze({ alias: 'portfolio-related-supervisor', id: '20000000-0000-4000-8000-000000000003', fullName: 'Sanne Testbegeleider' }),
     unrelatedSupervisor: Object.freeze({ alias: 'portfolio-unrelated-supervisor', id: '20000000-0000-4000-8000-000000000004', fullName: 'Umar Onverwant' }),
     everAcceptedSupervisor: Object.freeze({ alias: 'portfolio-ever-accepted-supervisor', id: '20000000-0000-4000-8000-000000000008', fullName: 'Evi Eerdergeaccepteerd' }),

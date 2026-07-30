@@ -3,7 +3,7 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Project, ProjectCreation
-from datetime import datetime
+from datetime import datetime, timezone
 from service.uuid_service import generate_uuid
 
 
@@ -325,7 +325,7 @@ class ProjectRepository(BaseRepository[Project]):
 
         # Convert createdAt string to datetime
         created_at = (
-            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now(timezone.utc)
         )
 
         # Map tasks if present (simplified Task objects with just id and name)
@@ -395,7 +395,7 @@ class ProjectRepository(BaseRepository[Project]):
         supervisor_id = result.get("id", "")
         created_at_str = result.get("createdAt", "")
         created_at = (
-            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now(timezone.utc)
         )
 
         return ProjectCreation(
@@ -404,7 +404,7 @@ class ProjectRepository(BaseRepository[Project]):
 
     def create(self, project: ProjectCreation) -> ProjectCreation:
         id = generate_uuid()
-        created_at = datetime.now()
+        created_at = datetime.now(timezone.utc)
         # Optional location: None removes clause via build_query
         location_value = project.location.strip() if getattr(project, "location", None) else None
         start_date = getattr(project, "start_date", None)

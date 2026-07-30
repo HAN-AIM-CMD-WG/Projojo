@@ -15,3 +15,7 @@ class ItemRetrievalException(GenericException):
         class_name = item_class.__name__
         full_message = f"{class_name} retrieval failed: {message}"
         super().__init__(message=full_message, status_code=404)
+
+class ConflictException(GenericException):
+    def __init__(self, message="Conflict"):
+        super().__init__(message=message, status_code=409)

@@ -1,7 +1,7 @@
 import pytest
 from db.initDatabase import sanitize_string, format_value, build_query
 from uuid import UUID
-from datetime import datetime, date
+from datetime import datetime, date, timezone, timedelta
 
 
 class TestSanitizeString:
@@ -42,6 +42,35 @@ class TestFormatValue:
     def test_datetime(self):
         dt = datetime(2024, 1, 15, 10, 30, 0)
         assert format_value(dt) == '2024-01-15T10:30:00.000000+0000'
+
+    def test_datetime_naive_assumed_utc(self):
+        # A naive datetime is emitted as-is with a +0000 suffix (write sites use
+        # datetime.now(timezone.utc), so naive values are treated as already-UTC).
+        dt = datetime(2024, 1, 15, 10, 30, 0)
+        assert dt.tzinfo is None
+        assert format_value(dt) == '2024-01-15T10:30:00.000000+0000'
+
+    def test_datetime_aware_utc_unchanged(self):
+        # A UTC-aware datetime keeps its wall-clock time; the truthful +0000 suffix stays.
+        dt = datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+        assert format_value(dt) == '2024-01-15T10:30:00.000000+0000'
+
+    def test_datetime_aware_positive_offset_normalized_to_utc(self):
+        # An aware datetime in a +02:00 zone is converted to UTC (two hours earlier) so the
+        # hardcoded +0000 suffix is truthful. datetime-tz columns are stored in UTC.
+        dt = datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone(timedelta(hours=2)))
+        assert format_value(dt) == '2024-01-15T08:30:00.000000+0000'
+
+    def test_datetime_aware_negative_offset_normalized_to_utc(self):
+        # An aware datetime in a -05:00 zone is converted to UTC (five hours later), which also
+        # rolls the calendar date forward, proving the value is genuinely re-based to UTC.
+        dt = datetime(2024, 1, 15, 23, 30, 0, tzinfo=timezone(timedelta(hours=-5)))
+        assert format_value(dt) == '2024-01-16T04:30:00.000000+0000'
+
+    def test_datetime_aware_normalization_preserves_microseconds(self):
+        # Normalization only shifts the offset; sub-second precision is preserved through astimezone.
+        dt = datetime(2024, 6, 30, 12, 0, 0, 123456, tzinfo=timezone(timedelta(hours=5, minutes=30)))
+        assert format_value(dt) == '2024-06-30T06:30:00.123456+0000'
 
     def test_date(self):
         d = date(2024, 1, 15)

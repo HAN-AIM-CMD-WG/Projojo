@@ -1,5 +1,5 @@
 from db.initDatabase import Db
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import secrets
 import string
 
@@ -18,7 +18,7 @@ class InviteRepository:
         alphabet = string.ascii_letters + string.digits
         key = ''.join(secrets.choice(alphabet) for _ in range(32))
 
-        created_at = datetime.now()
+        created_at = datetime.now(timezone.utc)
         expires_at = created_at + timedelta(weeks=1)
 
         query = """
@@ -82,9 +82,13 @@ class InviteRepository:
                 print(f"Error parsing expiresAt: {expires_at}")
                 return None
 
-        # Check expiration
-        if expires_at and expires_at.replace(tzinfo=None) < datetime.now():
-            return None
+        # Check expiration. Compare in UTC: expiresAt read back from a datetime-tz column is aware,
+        # and a naive value (older data) is treated as UTC to match the write-time convention.
+        if expires_at:
+            if expires_at.tzinfo is None:
+                expires_at = expires_at.replace(tzinfo=timezone.utc)
+            if expires_at < datetime.now(timezone.utc):
+                return None
 
         return {
             "valid": True,
@@ -108,7 +112,7 @@ class InviteRepository:
         try:
             Db.write_transact(query, {
                 "key": key,
-                "used_at": datetime.now()
+                "used_at": datetime.now(timezone.utc)
             })
             return True
         except Exception as e:

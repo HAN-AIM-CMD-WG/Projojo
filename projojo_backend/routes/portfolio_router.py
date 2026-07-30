@@ -1,20 +1,37 @@
 from fastapi import APIRouter, HTTPException, Request, status
 
+import re
+
 from auth.permissions import auth
 from domain.models.portfolio import (
+    PortfolioItemCurationUpdate,
     PortfolioItemResponse,
-    PortfolioItemRetractionUpdate,
     PortfolioResponse,
     PortfolioReviewCreateRequest,
     PortfolioReviewMutationResponse,
+    PortfolioReviewResponse,
     PortfolioReviewUpdateRequest,
+    PortfolioReviewWorldVisibleUpdate,
+    PortfolioSettingsResponse,
+    PortfolioSettingsUpdateRequest,
+    PublicPortfolioResponse,
 )
 from domain.repositories.portfolio_repository import PortfolioRepository
+from exceptions import ConflictException
 from service.portfolio_policy import can_read_authenticated_student_portfolio
 
 
 router = APIRouter(tags=["Portfolio Endpoints"])
 portfolio_repo = PortfolioRepository()
+
+# Slug contract (PF-task-010): lowercase a-z/0-9 with single hyphens between segments, length
+# 3-50. Input is trimmed before validation and must already be lowercase (uppercase is rejected
+# rather than silently rewritten). Summary is capped at 2000 characters, matching the review
+# text limit.
+_SLUG_PATTERN = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_SLUG_MIN_LENGTH = 3
+_SLUG_MAX_LENGTH = 50
+_SUMMARY_MAX_LENGTH = 2000
 
 
 # --- Authenticated portfolio response contract examples (PF-task-007d) ----------------------
@@ -55,6 +72,7 @@ def _curation(**overrides) -> dict:
         "hidden_at": None,
         "hidden_by_role": None,
         "hidden_by_user_id": None,
+        "is_student_hidden": False,
         "display_order": 1,
         "is_authenticated_public_retraction": False,
         "is_world_visible": False,
@@ -269,26 +287,172 @@ async def update_portfolio_review(review_id: str, update: PortfolioReviewUpdateR
     },
 )
 @auth(role="student")
-async def set_portfolio_item_authenticated_public_retraction(
-    item_id: str, update: PortfolioItemRetractionUpdate, request: Request
-):
-    # Owner-only curation: @auth(role="student") already blocks teachers, supervisors, and
-    # unauthenticated callers; ownership is enforced here so a student may only mutate their own
-    # item, and a non-owned or unknown item is reported as not found without disclosing existence.
+async def set_portfolio_item_curation(item_id: str, update: PortfolioItemCurationUpdate, request: Request):
+    # Owner-only item curation (PF-task-011a display order / student hide-show / world-visible
+    # selection, plus the PF-task-007c authenticated-public retraction). @auth(role="student")
+    # already blocks teachers, supervisors, and unauthenticated callers; ownership is enforced here
+    # so a student may only mutate their own item, and a non-owned or unknown item is reported as
+    # not found without disclosing existence. Only fields present in the request body are applied.
     owner_id = request.state.user_id
     if portfolio_repo.get_owned_item(item_id, owner_id) is None:
         raise HTTPException(status_code=404, detail="Portfolio-item niet gevonden")
 
-    portfolio_repo.set_authenticated_public_retraction(item_id, owner_id, update.is_authenticated_public_retraction)
+    # model_fields_set only ever contains declared fields (Pydantic ignores unknown body keys), so
+    # it needs no further filtering: it is exactly the set of curation fields the caller sent.
+    updates = {name: getattr(update, name) for name in update.model_fields_set}
+    if updates:
+        portfolio_repo.set_item_curation(item_id, owner_id, updates)
 
-    # The returned item is owner-scoped: the owner can always see their own item, so
-    # visibility.reason is always the authenticated-viewer reason here and does not reflect the
-    # supervisor-facing effect of the flag. That effect is conveyed by
-    # curation.is_authenticated_public_retraction. Reviews are the owner's full review set for the
-    # item, so the response matches the shape the owner sees in their portfolio read model.
+    # The returned item is owner-scoped: the owner always sees their own item (including when it is
+    # teacher-hidden), so the response reflects the full post-mutation curation state. Reviews are
+    # the owner's full review set for the item, matching the shape the owner sees in their read model.
     item = portfolio_repo.get_owned_item(item_id, owner_id)
     reviews = portfolio_repo.get_reviews_for_items([item_id])
     return portfolio_repo.attach_reviews([item], reviews)[0]
+
+
+@router.patch(
+    "/portfolios/me/items/{item_id}/reviews/{review_id}",
+    response_model=PortfolioReviewResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio-review niet gevonden"}}}},
+    },
+)
+@auth(role="student")
+async def set_portfolio_review_world_visible(
+    item_id: str, review_id: str, update: PortfolioReviewWorldVisibleUpdate, request: Request
+):
+    # Owner-only review world-public selection (PF-task-012a). @auth(role="student") already blocks
+    # teachers, supervisors, and unauthenticated callers; ownership (the review must belong to an
+    # item the caller owns) is enforced in the repository, so a non-owned or unknown review is
+    # reported as not found without disclosing existence (AC-4). Marking a review world-visible only
+    # makes it eligible: it is exposed publicly only when its associated item and the portfolio page
+    # are world-public, which the world-public read (get_world_public_items) gates (AC-1, AC-3).
+    # Clearing the flag retracts it from world-public output without touching authenticated views,
+    # which never filter on this flag (AC-2). Every review carries a persisted public-use notice
+    # acceptance (schema @card(1)), so an exposed review is always under the reviewer notice
+    # contract (AC-5). The response is the persisted post-write review.
+    review = portfolio_repo.set_review_world_visible(item_id, review_id, request.state.user_id, update.is_world_visible)
+    if review is None:
+        raise HTTPException(status_code=404, detail="Portfolio-review niet gevonden")
+    return review
+
+
+@router.patch(
+    "/portfolios/students/{student_id}/items/{item_id}/hide",
+    response_model=PortfolioItemResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een leraar bent."}}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio-item niet gevonden"}}}},
+    },
+)
+@auth(role="teacher")
+async def teacher_hide_portfolio_item(student_id: str, item_id: str, request: Request):
+    # Teacher moderation soft-hide (PF-task-011b). @auth(role="teacher") admits only teachers, so a
+    # student, supervisor, or unauthenticated caller is rejected before any state change (AC-4). The
+    # item must belong to the named student; a non-owned or unknown item is reported as not found
+    # without disclosing existence (404). The hide is a soft-hide that records who/when moderation
+    # metadata and leaves the item stored (AC-5): get_visible_items already drops isHidden items from
+    # every normal view (AC-2), and the student curation endpoint only ever clears studentHidden, so
+    # a student can never lift this teacher hide (AC-3). The response is the persisted post-hide item
+    # (owner-scoped read shape), so callers can confirm the recorded moderation state.
+    if portfolio_repo.get_owned_item(item_id, student_id) is None:
+        raise HTTPException(status_code=404, detail="Portfolio-item niet gevonden")
+
+    portfolio_repo.set_teacher_hidden(item_id, student_id, request.state.user_id)
+
+    item = portfolio_repo.get_owned_item(item_id, student_id)
+    reviews = portfolio_repo.get_reviews_for_items([item_id])
+    return portfolio_repo.attach_reviews([item], reviews)[0]
+
+
+@router.get(
+    "/portfolios/me",
+    response_model=PortfolioSettingsResponse,
+    responses={
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+    },
+)
+@auth(role="student")
+async def get_my_portfolio_settings(request: Request):
+    # Owner-only settings read. @auth(role="student") blocks teachers, supervisors, and
+    # unauthenticated callers. The slug is assigned at account creation, so this read is normally
+    # side-effect free; a legacy student created before slugs existed is self-healed once by
+    # get_settings (a stable slug is generated and persisted). is_world_public stays false until
+    # the student enables it.
+    settings = portfolio_repo.get_settings(request.state.user_id)
+    if settings is None:
+        raise HTTPException(status_code=404, detail="Portfolio niet gevonden")
+    return settings
+
+
+@router.patch(
+    "/portfolios/me",
+    response_model=PortfolioSettingsResponse,
+    responses={
+        400: {"content": {"application/json": {"example": {"detail": "Ongeldige portfolio-slug."}}}},
+        401: {"content": {"application/json": {"example": {"detail": "Not authenticated"}}}},
+        403: {"content": {"application/json": {"example": {"detail": "Deze actie kan je alleen uitvoeren als je een student bent."}}}},
+        409: {"content": {"application/json": {"example": {"detail": "Deze portfolio-slug is al in gebruik."}}}},
+    },
+)
+@auth(role="student")
+async def update_my_portfolio_settings(update: PortfolioSettingsUpdateRequest, request: Request):
+    # Owner-only settings update. Because the resource is the caller's own portfolio (/me), a
+    # student can never change another student's settings; @auth(role="student") blocks the other
+    # roles. Only fields present in the request body are applied.
+    # Clearing semantics: an explicit null (or empty-string) summary clears the stored summary, and
+    # an explicit null is_world_public resets it to the world-private default. slug cannot be
+    # cleared: an absent/blank slug fails the length check below, and the settings response always
+    # carries a non-empty slug.
+    student_id = request.state.user_id
+    fields = update.model_fields_set
+
+    set_summary = "summary" in fields
+    summary = update.summary
+    if set_summary and summary is not None and len(summary) > _SUMMARY_MAX_LENGTH:
+        raise HTTPException(
+            status_code=400, detail=f"De samenvatting mag maximaal {_SUMMARY_MAX_LENGTH} tekens bevatten."
+        )
+
+    set_slug = "slug" in fields
+    slug = None
+    if set_slug:
+        slug = (update.slug or "").strip()
+        if not (_SLUG_MIN_LENGTH <= len(slug) <= _SLUG_MAX_LENGTH and _SLUG_PATTERN.fullmatch(slug)):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Ongeldige portfolio-slug. Gebruik {_SLUG_MIN_LENGTH} tot {_SLUG_MAX_LENGTH} tekens: "
+                    "kleine letters, cijfers en koppeltekens tussen woorden."
+                ),
+            )
+        owner = portfolio_repo.get_slug_owner(slug)
+        if owner is not None and owner != student_id:
+            raise HTTPException(status_code=409, detail="Deze portfolio-slug is al in gebruik.")
+
+    set_world_public = "is_world_public" in fields
+
+    try:
+        portfolio_repo.update_settings(
+            student_id,
+            set_summary=set_summary,
+            summary=summary,
+            set_slug=set_slug,
+            slug=slug,
+            set_world_public=set_world_public,
+            world_public=update.is_world_public,
+        )
+    except ConflictException as exc:
+        # A concurrent claim of the same slug can pass the pre-check above and only fail at the
+        # unique-constraint commit; the repository confirms that race and raises ConflictException,
+        # which maps to the same documented 409 as the pre-check.
+        raise HTTPException(status_code=409, detail=exc.message)
+    return portfolio_repo.get_settings(student_id)
 
 
 @router.get(
@@ -342,12 +506,99 @@ async def get_authenticated_student_portfolio(student_id: str, request: Request)
     }
 
 
+# --- Public portfolio response contract examples (PF-task-013) -----------------------------
+# GET /portfolio/{slug} is the unauthenticated world-public read. It returns a deliberately
+# reduced, student-safe shape: compared with the authenticated PortfolioResponse it omits every
+# authenticated-only field. Dropped fields are the top-level viewer_role; the student id and
+# is_portfolio_world_public flag; per item the source_* ids, the curation/moderation block,
+# source_navigation, archived_source and the denormalized student; and per review the author id
+# plus the is_world_visible/updated_at fields. Only world-visible, non-hidden, non-retired items
+# and their world-visible reviews are ever returned. These examples mirror that reduced shape
+# against the deterministic E2E content seed (slug "portfolio-seed-013-content").
+_PUBLIC_REVIEW_EXAMPLE = {
+    "id": "pf-seed-review-013-included",
+    "item_id": "pf-seed-item-013-included",
+    "review_text": "PF-task-013 world-visible review on the selected item (low rating, still public).",
+    "rating": 2,
+    "created_at": "2026-04-01T18:00:00+00:00",
+    "public_notice_accepted_at": "2026-04-01T18:00:00+00:00",
+    "author": {"role": "teacher", "full_name": "Tessa Testdocent"},
+}
+_PUBLIC_ITEM_EXAMPLE = {
+    "id": "pf-seed-item-013-included",
+    "completed_at": "2026-04-01T17:00:00+00:00",
+    "task": {"name": "Infrastructure Proof Task", "description": "PF-task-013 world-public selected item (retracted, low-rated, still public)."},
+    "project": {"name": "E2E Infrastructure Proof Project", "description": "Portfolio seed project display copy."},
+    "business": {"name": "E2E Infrastructure Business", "location": "Arnhem"},
+    "skills": ["Deterministisch Testen"],
+    "timeline_start_date": "2026-01-20T09:00:00+00:00",
+    "timeline_end_date": "2026-04-01T17:00:00+00:00",
+    "visibility": {"viewer_can_see": True, "reason": "visible_to_world_public"},
+    "reviews": [_PUBLIC_REVIEW_EXAMPLE],
+}
+_PUBLIC_CONTENT_STUDENT = {
+    "full_name": "Cato Contentpubliek",
+    "image_path": "default.svg",
+    "portfolio_summary": "PF-task-013 world-public read contract fixtures.",
+    "portfolio_slug": "portfolio-seed-013-content",
+}
+_PUBLIC_SUMMARY_ONLY_STUDENT = {
+    "full_name": "Sami Samenvatting",
+    "image_path": "default.svg",
+    "portfolio_summary": "PF-task-013 summary-only world-public portfolio.",
+    "portfolio_slug": "portfolio-seed-013-summary-only",
+}
+
+_PUBLIC_PORTFOLIO_EXAMPLES = {
+    "summary_only": {
+        "summary": "World-public student with no completed items",
+        "description": (
+            "A world-public portfolio whose owner has published a summary but has no world-visible "
+            "completed items yet. The reduced student block still carries the summary and slug; the "
+            "items and reviews arrays are empty."
+        ),
+        "value": {"student": _PUBLIC_SUMMARY_ONLY_STUDENT, "items": [], "reviews": []},
+    },
+    "selected_items": {
+        "summary": "World-public student with a selected item",
+        "description": (
+            "The reduced per-item field shape returned for a world-visible, non-hidden, non-retired "
+            "item. No authenticated-only field (source_* ids, curation, source_navigation, "
+            "archived_source, the denormalized student) appears, and the review author id is omitted."
+        ),
+        "value": {"student": _PUBLIC_CONTENT_STUDENT, "items": [_PUBLIC_ITEM_EXAMPLE], "reviews": [_PUBLIC_REVIEW_EXAMPLE]},
+    },
+    "selected_reviews": {
+        "summary": "World-visible reviews mirrored at the top level",
+        "description": (
+            "World-visible reviews of returned items appear both nested under their item and in the "
+            "flat top-level reviews array. A review whose item is not world-visible is never "
+            "returned, even when its own world-visible flag is set."
+        ),
+        "value": {"student": _PUBLIC_CONTENT_STUDENT, "items": [_PUBLIC_ITEM_EXAMPLE], "reviews": [_PUBLIC_REVIEW_EXAMPLE]},
+    },
+}
+
+
 @router.get(
     "/portfolio/{slug}",
-    response_model=PortfolioResponse,
-    responses={404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}}},
+    response_model=PublicPortfolioResponse,
+    responses={
+        200: {"content": {"application/json": {"examples": _PUBLIC_PORTFOLIO_EXAMPLES}}},
+        404: {"content": {"application/json": {"example": {"detail": "Portfolio niet publiek"}}}},
+    },
 )
 async def get_public_portfolio(slug: str):
+    """Read a world-public student portfolio without authentication.
+
+    This is the public read model at `GET /portfolio/{slug}`. It returns a reduced, student-safe
+    shape (PublicPortfolioResponse) that strips every authenticated-only field from the
+    authenticated PortfolioResponse: the top-level viewer_role; the student id and
+    is_portfolio_world_public flag; each item's source_* ids, curation moderation block,
+    source_navigation, archived_source and denormalized student; and each review author id plus
+    its is_world_visible/updated_at fields. Only world-visible, non-hidden, non-retired items and
+    their world-visible reviews are returned; a non-world-public or unknown slug yields a 404.
+    """
     student = portfolio_repo.get_world_public_student_identity_by_slug(slug)
     if not student:
         raise HTTPException(status_code=404, detail="Portfolio niet publiek")
