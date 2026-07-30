@@ -267,6 +267,17 @@ class ProjectRepository(BaseRepository[Project]):
                 'business': $business_id,
                 'start_date': [$project.startDate],
                 'end_date': [$project.endDate],
+                'themes': [
+                    match
+                        $hasTheme isa hasTheme(project: $project, theme: $theme);
+                        $theme has id $theme_id, has name $theme_name;
+                    fetch {
+                        'id': $theme_id,
+                        'name': $theme_name,
+                        'icon': [$theme.icon],
+                        'color': [$theme.color]
+                    };
+                ],
                 'tasks': [
                     match
                         $containsTask isa containsTask (project: $project, task: $task);
@@ -351,6 +362,23 @@ class ProjectRepository(BaseRepository[Project]):
                 for t in tasks_data
             ]
 
+        # Map themes if the query fetched them. TypeDB returns optional attributes
+        # as lists, so icon and color are flattened the same way the nested themes
+        # of get_all_with_full_nesting() and get_public_projects() are.
+        themes_data = result.get("themes")
+        themes = None
+        if themes_data is not None:
+            from domain.models import Theme
+            themes = [
+                Theme(
+                    id=t.get("id", ""),
+                    name=t.get("name", ""),
+                    icon=(t.get("icon") or [None])[0],
+                    color=(t.get("color") or [None])[0],
+                )
+                for t in themes_data
+            ]
+
         return Project(
             id=id,
             name=name,
@@ -364,6 +392,7 @@ class ProjectRepository(BaseRepository[Project]):
             end_date=end_date,
             is_public=is_public,
             impact_summary=impact_summary,
+            themes=themes,
         )
 
     def check_project_exists(self, project_name: str, business_id: str) -> bool:

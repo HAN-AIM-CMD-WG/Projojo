@@ -3,6 +3,7 @@ from typing import Annotated
 from datetime import datetime
 
 from .task import Task
+from .theme import Theme
 
 
 class Project(BaseModel):
@@ -20,6 +21,9 @@ class Project(BaseModel):
     end_date: datetime | None = None
     is_public: bool | None = None
     impact_summary: str | None = None
+    # Themes linked via hasTheme. Only the queries that fetch them populate this,
+    # so None means "not fetched here" rather than "no themes".
+    themes: list[Theme] | None = None
 
     class Config:
         from_attributes = True
