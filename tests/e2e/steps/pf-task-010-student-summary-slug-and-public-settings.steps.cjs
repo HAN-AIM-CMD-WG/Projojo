@@ -112,7 +112,6 @@ When('the PF-task-010 no-slug student reads their portfolio settings', async fun
   remember(this, result);
   if (result.status === 200) state(this).firstReadSlug = result.payload?.slug;
 });
-
 When('an unauthenticated visitor requests the PF-task-010 world-private public slug', async function () {
   remember(this, await getPublic(publicSlugs.private.slug));
 });
@@ -166,7 +165,7 @@ Then('the PF-task-010 settings world-public flag should be false', function () {
   assert.equal(
     state(this).lastPayload?.is_world_public,
     false,
-    `Expected world-public flag false on first read, received ${JSON.stringify(state(this).lastPayload)}`,
+    `Expected world-public flag false by default, received ${JSON.stringify(state(this).lastPayload)}`,
   );
 });
 
@@ -179,13 +178,13 @@ Then('the PF-task-010 settings slug should be a valid non-empty slug', function 
 
 Then('reading the PF-task-010 no-slug student settings again should return the same slug', async function () {
   const first = state(this).firstReadSlug;
-  assert.ok(first, 'Expected a slug to have been generated on the first read');
+  assert.ok(first, 'Expected the first settings read to return a slug');
   const result = await getSettings(actors.noSlugStudent);
   assert.equal(result.status, 200, `Expected the second settings read to return 200, received ${result.status}`);
   assert.equal(
     result.payload?.slug,
     first,
-    `Expected the generated slug to be stable across reads, first='${first}' second='${result.payload?.slug}'`,
+    `Expected the slug to be stable across reads, first='${first}' second='${result.payload?.slug}'`,
   );
 });
 

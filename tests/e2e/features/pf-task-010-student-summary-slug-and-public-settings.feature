@@ -6,15 +6,17 @@ Feature: PF-task-010 student portfolio summary, slug, and world-public page sett
   # Slug rules defined for this task: lowercase a-z/0-9 with single hyphens between
   # segments, length 3-50 (^[a-z0-9]+(?:-[a-z0-9]+)*$). Input is trimmed before validation and
   # must already be lowercase (uppercase is rejected, not silently rewritten). Summary limit:
-  # 2000 characters. Default slug generation happens on the first settings read
-  # (GET /portfolios/me), per the issue's documented default.
+  # 2000 characters. A unique slug is assigned once, at student account creation, so every
+  # student already has a stable public URL key and the settings read is side-effect free. The
+  # "no-slug student" fixture name below is historical: it starts world-private with only a
+  # seeded slug and no summary, so the settings read can be exercised from a clean slate.
   #
   # Read-only fixtures used by other suites (portfolio-owner-student, portfolio-private-student)
   # are never mutated here. Mutating scenarios use dedicated PF-task-010 fixture students and
   # re-establish a known baseline first, so they stay order-independent under serial execution.
 
   @api @portfolio @pf-task-010
-  Scenario: AC-1/AC-2 first settings read defaults to world-private and generates a unique slug
+  Scenario: AC-1/AC-2 the settings read exposes the world-private default and a stable slug
     When the PF-task-010 no-slug student reads their portfolio settings
     Then the latest PF-task-010 API response status should be 200
     And the PF-task-010 settings world-public flag should be false

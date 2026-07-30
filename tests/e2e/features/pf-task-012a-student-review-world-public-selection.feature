@@ -83,3 +83,13 @@ Feature: PF-task-012a student review world-public selection
     When PF-task-012a the world-public page is read
     Then PF-task-012a every returned world-public review should carry a persisted public notice acceptance timestamp
     And PF-task-012a the world-public page should include the "markable" review
+
+  # The invariant above only proves a timestamp is present (the schema's @card(1) already
+  # guarantees that). This scenario proves the exposed value is the *persisted* reviewer
+  # acceptance tied to that specific review, so a regression that fabricated the timestamp
+  # (e.g. datetime.now()), exposed the wrong field, or dropped it on the public path would fail.
+  @api @portfolio @pf-task-012a
+  Scenario: AC-5 The world-public notice acceptance is the persisted reviewer acceptance, not a placeholder
+    Given PF-task-012a the owner sets the "markable" review world-visible state to "on"
+    When PF-task-012a the world-public page is read
+    Then PF-task-012a the "markable" world-public review public notice acceptance should equal the persisted "2026-03-20T18:00:00.000Z"

@@ -103,9 +103,9 @@ class PortfolioReviewWorldVisibleUpdate(BaseModel):
 
 
 class PortfolioSettingsResponse(BaseModel):
-    # Owner-facing settings read. slug is always present: it is generated on first read when the
-    # student has none yet (see repository.get_or_create_settings), so the frontend always has a
-    # public URL key to show. is_world_public defaults to False (world-private by default).
+    # Owner-facing settings read. slug is always present: it is assigned at student account
+    # creation (see UserRepository.create_user), so the frontend always has a public URL key to
+    # show. is_world_public defaults to False (world-private by default).
     summary: str | None = None
     slug: str
     is_world_public: bool = False

@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
+from .portfolio_repository import PortfolioRepository
 from domain.models import User, Supervisor, Student, Teacher
 from domain.models.authentication import OAuthProvider
 from service.image_service import save_image_from_url
@@ -647,6 +648,10 @@ class UserRepository(BaseRepository[User]):
             return self.get_supervisor_by_id(id)
 
         elif role == "student":
+            # Assign a stable portfolio slug up front so the owner settings read stays side-effect
+            # free and no first-read/concurrent-read slug generation is ever needed (PF-task-010).
+            portfolio_slug = PortfolioRepository().generate_unique_slug(user.full_name)
+
             # Default to student
             create_user_query = """
                 match
@@ -656,7 +661,8 @@ class UserRepository(BaseRepository[User]):
                     has id ~id,
                     has email ~email,
                     has fullName ~full_name,
-                    has imagePath ~image_path;
+                    has imagePath ~image_path,
+                    has portfolioSlug ~portfolio_slug;
                     $auth isa oauthAuthentication($student, $provider),
                     has oauthSub ~oauth_sub;
             """
@@ -667,7 +673,8 @@ class UserRepository(BaseRepository[User]):
                 "email": user.email,
                 "full_name": user.full_name,
                 "image_path": downloaded_image_name,
-                "oauth_sub": oauth_provider.oauth_sub
+                "oauth_sub": oauth_provider.oauth_sub,
+                "portfolio_slug": portfolio_slug
             })
 
             # if user is a student, it returns a dict which needs to be mapped to Student model

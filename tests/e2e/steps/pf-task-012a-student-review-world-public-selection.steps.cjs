@@ -246,6 +246,33 @@ Then('PF-task-012a every returned world-public review should carry a persisted p
   }
 });
 
+// Stronger than the presence check above: the exposed acceptance timestamp for a known review must
+// equal the exact instant persisted in the seed, proving AC-5's "only ever exposed under the
+// persisted reviewer public-use notice contract" rather than a fabricated or wrong-field value.
+// Instant equality (via Date.parse) is used so the assertion is robust to serialization format
+// differences (e.g. "+00:00" vs "Z", trailing microseconds) while still catching a wrong value.
+Then('PF-task-012a the {string} world-public review public notice acceptance should equal the persisted {string}', function (token, expectedIso) {
+  const review = resolveReview(token);
+  const { publicPage } = state(this);
+  assert.ok(publicPage, 'Expected the world-public page to have been read first');
+  assert.equal(publicPage.status, 200, `Expected the world-public page to return 200, received ${publicPage.status}: ${JSON.stringify(publicPage.payload)}`);
+  const found = (publicPage.payload?.reviews ?? []).find((candidate) => candidate.id === review.reviewId);
+  assert.ok(found, `Expected the world-public page to include review '${token}' (${review.reviewId})`);
+  assert.ok(
+    typeof found.public_notice_accepted_at === 'string' && found.public_notice_accepted_at.length > 0,
+    `Expected review '${token}' to carry a persisted public_notice_accepted_at, received ${JSON.stringify(found)}`,
+  );
+  const actualMs = Date.parse(found.public_notice_accepted_at);
+  const expectedMs = Date.parse(expectedIso);
+  assert.ok(!Number.isNaN(actualMs), `Could not parse exposed public_notice_accepted_at '${found.public_notice_accepted_at}'`);
+  assert.ok(!Number.isNaN(expectedMs), `Could not parse expected timestamp '${expectedIso}'`);
+  assert.equal(
+    actualMs,
+    expectedMs,
+    `Expected review '${token}' public_notice_accepted_at to equal the persisted acceptance ${expectedIso}, received ${found.public_notice_accepted_at}`,
+  );
+});
+
 // --- Authenticated read-model assertions (owner view is unaffected by world-public retraction). ---
 
 Then('PF-task-012a the owner authenticated view should include the {string} review', async function (token) {

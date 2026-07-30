@@ -282,20 +282,17 @@ class PortfolioRepository:
             "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
         }
 
-    def get_or_create_settings(self, student_id: str) -> dict[str, Any] | None:
-        # Owner settings read. Slug generation timing (PF-task-010 default): a unique slug is
-        # generated lazily on the first settings read when the student has none yet, so no student
-        # migration is needed and every student ends up with a stable public URL key on demand.
+    def get_settings(self, student_id: str) -> dict[str, Any] | None:
+        # Owner settings read (side-effect free). Slug generation timing (PF-task-010): a unique
+        # slug is assigned once, at student account creation (see UserRepository.create_user), so
+        # every student already has a stable public URL key and this read never writes. Seed
+        # students are inserted with a slug directly in the .tql seeds for the same reason.
         identity = self.get_student_identity(student_id)
         if identity is None:
             return None
-        slug = identity["portfolio_slug"]
-        if not slug:
-            slug = self._generate_unique_slug(identity["full_name"])
-            self._set_optional_attribute(student_id, "portfolioSlug", slug)
         return {
             "summary": identity["portfolio_summary"],
-            "slug": slug,
+            "slug": identity["portfolio_slug"],
             "is_world_public": identity["is_portfolio_world_public"],
         }
 
@@ -336,12 +333,6 @@ class PortfolioRepository:
         if queries:
             Db.write_transact_many(queries)
 
-    def _set_optional_attribute(self, student_id: str, attribute: str, value: Any) -> None:
-        # Single-attribute wrapper for callers that set exactly one optional attribute (e.g. lazy
-        # slug generation on first read). The delete and insert run together in one atomic
-        # transaction so the attribute is never left unset by a failure between the two writes.
-        Db.write_transact_many(self._optional_attribute_queries(student_id, attribute, value))
-
     def _optional_attribute_queries(
         self, student_id: str, attribute: str, value: Any
     ) -> list[tuple[str, dict[str, Any] | None]]:
@@ -366,7 +357,11 @@ class PortfolioRepository:
             )
         return queries
 
-    def _generate_unique_slug(self, full_name: str) -> str:
+    def generate_unique_slug(self, full_name: str) -> str:
+        # Public: called at student account creation (UserRepository.create_user) to assign a
+        # stable portfolio slug up front, so no read path ever has to generate one. Derives a
+        # human-readable base from the name and appends a short random suffix, retrying on the
+        # (astronomically unlikely) @unique collision.
         base = self._slugify(full_name)[:40] or "student"
         for _ in range(10):
             candidate = f"{base}-{generate_uuid().replace('-', '')[:6]}"
