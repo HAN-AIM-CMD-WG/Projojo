@@ -366,10 +366,10 @@ Then('the theme badge and the active work badge do not overlap', async function 
   assert.ok(separated, `Expected the two badges not to overlap, got theme ${JSON.stringify(themeBox)} and work ${JSON.stringify(workBox)}`);
 });
 
-Then('the theme badge sits above the active work badge', async function () {
+Then('the active work badge sits above the theme badge', async function () {
   const element = await visibleCard(this);
   const themeBox = await badgeIn(element).boundingBox();
   const workBox = await element.getByTestId('project-card-work-badge').boundingBox();
   assert.ok(themeBox && workBox, 'Expected both badges to have a layout box');
-  assert.ok(themeBox.y < workBox.y, `Expected the theme badge (y=${themeBox.y}) to sit above the work badge (y=${workBox.y})`);
+  assert.ok(workBox.y < themeBox.y, `Expected the work badge (y=${workBox.y}) to sit above the theme badge (y=${themeBox.y})`);
 });

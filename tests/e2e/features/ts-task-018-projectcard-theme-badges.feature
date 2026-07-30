@@ -134,8 +134,9 @@ Feature: TS-task-018 theme badges on the authenticated project card
     And the project card theme badge falls back to a visible neutral background
 
   # The card already carries an "Actief" badge in its top-left corner for a student
-  # who works on the project. The theme badge takes the top-left slot, so the two
-  # must stack instead of covering each other.
+  # who works on the project. The theme badge shares that corner, so the two must
+  # stack instead of covering each other, with the student's own work status kept
+  # in the more prominent top position.
   @ui @theme @TS-task-018
   Scenario: The theme badge and the active-work badge are both readable
     Given the project's linked themes are "Duurzaamheid"
@@ -144,4 +145,4 @@ Feature: TS-task-018 theme badges on the authenticated project card
     When I open the organisation page of the project's business
     Then the project card shows the active work badge
     And the theme badge and the active work badge do not overlap
-    And the theme badge sits above the active work badge
+    And the active work badge sits above the theme badge
