@@ -12,11 +12,21 @@ Feature: TS-task-018 theme badges on the authenticated project card
   # (Duurzaamheid -> icon "eco", color #4CAF50).
   #
   # The authenticated card (ProjectCard) is rendered on two surfaces AC-1 names:
-  # the overview page (/ontdek, data from GET /businesses/complete) and the
-  # organisation page (/business/{id}, data from GET /businesses/{id}/projects).
-  # Both are covered; the organisation page carries most scenarios because it
-  # renders every project of the business, while the overview page collapses a
-  # business to its first three cards until expanded.
+  # the overview page (/ontdek) and the organisation page (/business/{id}). Both
+  # are covered, but they do not prove the same thing:
+  #
+  # - The organisation page reads GET /businesses/{id}/projects, whose themes come
+  #   from the enriched project query, so its scenarios prove the badge is fed by
+  #   the project object. They carry the AC-5 and styling work for that reason.
+  # - The overview page discards the themes of GET /businesses/complete and
+  #   overwrites project.themes with a per-project GET /themes/project/{id} loop
+  #   (OverviewPage.jsx). Its scenarios therefore prove only that the card renders
+  #   the badge on /ontdek, not where that page sources its theme data. Moving
+  #   /ontdek onto the enriched query is TS-task-020.
+  #
+  # The organisation page also carries most scenarios because it renders every
+  # project of the business, while the overview page collapses a business to its
+  # first three cards until expanded.
   #
   # AC-1 and AC-2 speak of "the first theme". The backend does not guarantee an
   # order for a project's themes, so the single-theme scenarios assert the exact
@@ -111,6 +121,10 @@ Feature: TS-task-018 theme badges on the authenticated project card
   # organisation page proves it, because nothing in that page's tree reads a theme
   # endpoint - so a badge on screen and zero theme requests together mean the data
   # came from the project object.
+  #
+  # This holds for the card on every surface, but only the organisation page can
+  # show it: /ontdek still fires a per-project theme request of its own, from the
+  # page rather than from the card, until TS-task-020 removes it.
   @ui @theme @TS-task-018
   Scenario: AC-5 the badge is rendered without any extra theme request
     Given the project's linked themes are "Duurzaamheid"
