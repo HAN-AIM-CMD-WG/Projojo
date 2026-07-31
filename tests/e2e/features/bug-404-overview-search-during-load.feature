@@ -50,6 +50,7 @@ Feature: BUG-404 the overview page filter survives the initial load
       When I reopen the overview page with no projects loaded yet
       And I search for the proof project while no projects are shown
       And the search debounce elapses while no projects are shown
+      And the overview page has not called the still-loading list empty
       And the held back data is released
       Then the overview page shows the proof project
       And the overview page does not show the cross-business project
@@ -63,16 +64,21 @@ Feature: BUG-404 the overview page filter survives the initial load
     # those are the last thing /ontdek awaits before publishing the list: releasing
     # them puts the data on screen within one local round trip, comfortably inside
     # the 300ms debounce, which holding the list itself would not reliably do.
-    # TS-task-020 (#303) removes that theme read from this page - when it lands,
-    # this scenario has to be repointed at whatever /ontdek then awaits last. It
-    # will say so rather than quietly pass: the step that opens the page fails if
-    # nothing was held back.
+    #
+    # The ordering is asserted, not assumed. On a slow enough runner - or a seed with
+    # enough projects, since each one is a held request that only starts its round
+    # trip on release - the release stops beating the debounce, and without the guard
+    # this scenario would silently become a second copy of the one above and stop
+    # testing the half of the defect the issue actually measured. TS-task-020 (#303)
+    # removes the theme read this leans on; when it lands, repoint the scenario at
+    # whatever /ontdek then awaits last.
     @ui @overview @BUG-404
     Scenario: AC-1 a search typed just before the projects arrive is not wiped by the debounce
       Given the overview page's project themes are held back
       When I reopen the overview page with no projects loaded yet
       And I search for the proof project while no projects are shown
       And the held back data is released
+      And the projects arrive before the debounce fires
       And the search debounce elapses
       Then the overview page shows the proof project
       And the overview page does not show the cross-business project
@@ -122,6 +128,45 @@ Feature: BUG-404 the overview page filter survives the initial load
     # two apart: it matches the proof organisation's name and no part of the
     # cross-business organisation or its project, so an undebounced filter would drop
     # that card during the same tick the keystroke was handled.
+    # AC-3 names seven filters. The search covers the debounced path; these two cover
+    # the other two shapes the filter chain is built from - a whole-organisation drop
+    # (status) and a per-project narrowing that then drops emptied organisations
+    # (theme). Sector, location and company size are the same shape as one of these
+    # two and are left uncovered on purpose: the seed gives every organisation the
+    # same sector and size, so those scenarios could only assert that nothing
+    # changed, and their controls live behind the map panel.
+    #
+    # Both seeded projects run to 2030, so "Archief" must empty the list. If the
+    # status branch stopped narrowing, both cards would simply stay on screen.
+    @ui @overview @BUG-404
+    Scenario: AC-3 the status filter still narrows the list after loading
+      When I filter on archived projects
+      Then the overview page shows no projects
+      And the overview page reports no results mentioning "status: completed"
+
+    # The theme filter reads project.themes, and TS-task-020 (#303) changes where
+    # /ontdek sources exactly that. This is the branch that change can break silently.
+    @ui @overview @BUG-404
+    Scenario: AC-3 the theme filter still narrows the list after loading
+      Given the theme catalog is reset to the shared baseline themes
+      And the project's linked themes are "Duurzaamheid"
+      When I reopen the overview page with its projects loaded
+      And I filter on the theme "Duurzaamheid"
+      Then the overview page shows the proof project
+      And the overview page does not show the cross-business project
+
+    # Not an acceptance criterion but a deliberate change made by this fix: filtering
+    # used to clear the page error first, so a user who typed after a failed load was
+    # told "Geen resultaten gevonden voor …" and never learned the projects had not
+    # loaded at all.
+    @ui @overview @BUG-404
+    Scenario: A failed project load keeps saying so when the user searches
+      Given the overview page's project list fails to load
+      When I open the overview page and it reports the load failure
+      And I search for the proof project
+      And the search debounce elapses
+      Then the overview page still reports the same load failure
+
     @ui @overview @BUG-404
     Scenario: AC-3 the search is still debounced
       When I search for "E2E I"

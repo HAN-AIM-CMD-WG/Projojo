@@ -81,6 +81,29 @@ async function holdResponses(world, pattern) {
   return { release: () => release(), held: () => held };
 }
 
+// The detail a staged failure carries. Chosen here rather than guessed, because
+// services.js surfaces a 500's `detail` verbatim as the page's error message - so
+// the scenario knows the exact text the alert must keep showing.
+const STAGED_LOAD_FAILURE = 'E2E gesimuleerde storing bij het laden van projecten';
+
+/**
+ * Make the project list fail for this page. The one state a healthy backend will
+ * not produce on demand, and the only way to reach the page's load-error branch.
+ */
+async function failProjectList(world) {
+  await page(world).route(PROJECT_LIST_ROUTE, (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      // The frontend calls the backend cross-origin, so a fulfilled response has to
+      // expose CORS or the browser rejects it and the page reports a generic network
+      // failure instead of the staged one.
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: JSON.stringify({ detail: STAGED_LOAD_FAILURE }),
+    }),
+  );
+}
+
 async function waitUntil(predicate, message, timeout = 10_000) {
   const deadline = Date.now() + timeout;
   for (;;) {
@@ -113,6 +136,20 @@ async function openOverview(world) {
   await searchBox(world).waitFor({ state: 'visible', timeout: 20_000 });
 }
 
+async function loadOverviewWithBothProjects(world) {
+  await openOverview(world);
+  // Both cards, not just one: the scenarios below prove a filtered list by the
+  // absence of the cross-business project, which would be a vacuous assertion if
+  // that project were not on the unfiltered page to begin with.
+  await projectCard(world, PROOF_PROJECT_ID).waitFor({ state: 'visible', timeout: 20_000 });
+  await projectCard(world, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'visible', timeout: 20_000 });
+}
+
+/** The page's alerts, as text. Several components on /ontdek render role="alert". */
+function alertTexts(world) {
+  return page(world).getByRole('alert').allInnerTexts();
+}
+
 async function assertNoProjectsShown(world, context) {
   const shown = await projectCards(world).evaluateAll((cards) => cards.map((card) => card.id));
   assert.deepEqual(shown, [], `Expected no project cards ${context}, saw ${JSON.stringify(shown)}`);
@@ -133,12 +170,11 @@ async function settleDebounce(world) {
 // --- Given ---------------------------------------------------------------------------
 
 Given('the overview page has loaded showing both seeded projects', async function () {
-  await openOverview(this);
-  // Both cards, not just one: the scenarios below prove a filtered list by the
-  // absence of the cross-business project, which would be a vacuous assertion if
-  // that project were not on the unfiltered page to begin with.
-  await projectCard(this, PROOF_PROJECT_ID).waitFor({ state: 'visible', timeout: 20_000 });
-  await projectCard(this, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'visible', timeout: 20_000 });
+  await loadOverviewWithBothProjects(this);
+});
+
+Given("the overview page's project list fails to load", async function () {
+  await failProjectList(this);
 });
 
 Given("the overview page's project list is held back", async function () {
@@ -183,8 +219,48 @@ When('I filter on my own work while no projects are shown', async function () {
   await myWork.click();
 });
 
+When('I reopen the overview page with its projects loaded', async function () {
+  await loadOverviewWithBothProjects(this);
+});
+
+When('I open the overview page and it reports the load failure', async function () {
+  await openOverview(this);
+  await waitUntil(
+    async () => (await alertTexts(this)).some((text) => text.includes(STAGED_LOAD_FAILURE)),
+    `Expected the overview page to report the staged load failure '${STAGED_LOAD_FAILURE}' within 10s`,
+  );
+});
+
+When('the projects arrive before the debounce fires', async function () {
+  // The unfiltered list reaching the screen IS the ordering: it can only be there if
+  // the data landed while the debounced filter had not run yet. Had the debounce won
+  // the race, the filter would already have been active when the data arrived and
+  // this card would never have rendered at all - so this is the ordering itself,
+  // observed, rather than a stopwatch reading that drifts with machine speed.
+  try {
+    await projectCard(this, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'visible', timeout: 10_000 });
+  } catch {
+    throw new Error(
+      'Could not stage the "projects first" ordering: the unfiltered list never reached the screen, so the ' +
+      `${SEARCH_DEBOUNCE_MS}ms debounce won the race and filtered the data before it rendered. Once the debounce ` +
+      'has fired, that card can no longer appear however long this waits. This scenario cannot prove what it ' +
+      'claims - restage it rather than reading this as the defect.',
+    );
+  }
+});
+
 When('I search for the proof project', async function () {
   await search(this, PROOF_PROJECT_NAME);
+});
+
+When('I filter on archived projects', async function () {
+  await page(this).getByRole('button', { name: 'Archief', exact: true }).click();
+});
+
+When('I filter on the theme {string}', async function (name) {
+  // Anchored: once selected, the theme also appears as a "Verwijder filter: <name>"
+  // chip, and that button must not be the one this step clicks.
+  await page(this).getByRole('button', { name: new RegExp(`^${name}`) }).click();
 });
 
 When('I search for {string}', async function (term) {
@@ -204,6 +280,17 @@ When('the search debounce elapses while no projects are shown', async function (
   // The point of the wait: the debounced filter has now run, and it ran against a
   // page that still had nothing to filter. That is the state the defect starts from.
   await assertNoProjectsShown(this, 'after the debounce fired on the still-loading page');
+});
+
+When('the overview page has not called the still-loading list empty', async function () {
+  // The filter has run against no data at this point. "Nothing to find yet" is not
+  // "nothing found", so the page must not have announced an empty result.
+  const announced = (await alertTexts(this)).filter((text) => text.includes('Geen resultaten gevonden'));
+  assert.deepEqual(
+    announced,
+    [],
+    `Expected no empty-result message while the projects are still loading, saw ${JSON.stringify(announced)}`,
+  );
 });
 
 When('the held back data is released', async function () {
@@ -262,8 +349,14 @@ Then('the overview page reports no results for {string}', async function (term) 
 });
 
 Then('the overview page still shows the cross-business project right after typing', async function () {
-  const shown = await projectCards(this).evaluateAll((cards) => cards.map((card) => card.id));
-  const elapsed = Date.now() - state(this).typedAt;
+  // Timestamped in the page, alongside the read itself: taking it back in Node would
+  // charge the round trip to the debounce budget and could report a window as missed
+  // when the page was in fact still inside it. Same machine, so the same wall clock.
+  const { shown, readAt } = await projectCards(this).evaluateAll((cards) => ({
+    shown: cards.map((card) => card.id),
+    readAt: Date.now(),
+  }));
+  const elapsed = readAt - state(this).typedAt;
   // Guard first: past the debounce window a correctly debounced page has already
   // dropped the card, so a failure would say nothing about the debounce. Better to
   // report that the window was missed than to report a defect that is not there.
@@ -274,6 +367,31 @@ Then('the overview page still shows the cross-business project right after typin
   assert.ok(
     shown.includes(`project-${CROSS_BUSINESS_PROJECT_ID}`),
     `Expected the list to be untouched ${elapsed}ms after typing, within the ${SEARCH_DEBOUNCE_MS}ms debounce, saw ${JSON.stringify(shown)}`,
+  );
+});
+
+Then('the overview page reports no results mentioning {string}', async function (fragment) {
+  const message = (await alertTexts(this)).find((text) => text.includes('Geen resultaten gevonden'));
+  assert.ok(message, `Expected the overview page to report an empty result mentioning '${fragment}'`);
+  assert.ok(
+    message.includes(fragment),
+    `Expected the empty-result message to name '${fragment}', got '${message}'`,
+  );
+});
+
+Then('the overview page still reports the same load failure', async function () {
+  const texts = await alertTexts(this);
+  assert.ok(
+    texts.some((text) => text.includes(STAGED_LOAD_FAILURE)),
+    `Expected the load failure to survive the search, saw ${JSON.stringify(texts)}`,
+  );
+  // The regression this guards: filtering used to clear the page error first, so the
+  // real cause was replaced by an empty-result message about the search term.
+  const announced = texts.filter((text) => text.includes('Geen resultaten gevonden'));
+  assert.deepEqual(
+    announced,
+    [],
+    `Expected the failed load not to be reported as an empty search result, saw ${JSON.stringify(announced)}`,
   );
 });
 
