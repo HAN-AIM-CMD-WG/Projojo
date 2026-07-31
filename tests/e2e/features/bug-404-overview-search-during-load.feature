@@ -60,21 +60,19 @@ Feature: BUG-404 the overview page filter survives the initial load
     # after the keystroke and the assertion is only made once the debounce window
     # has passed, so a result that appears and is then wiped still fails.
     #
-    # It holds the per-project theme reads rather than the project list, because
-    # those are the last thing /ontdek awaits before publishing the list: releasing
-    # them puts the data on screen within one local round trip, comfortably inside
-    # the 300ms debounce, which holding the list itself would not reliably do.
+    # It holds the theme catalog rather than the project list, because /ontdek
+    # publishes its list only once both of those have settled: releasing the catalog
+    # puts the already-fetched projects on screen within one local round trip,
+    # comfortably inside the 300ms debounce, which holding the list itself would not
+    # reliably do.
     #
-    # The ordering is asserted, not assumed. On a slow enough runner - or a seed with
-    # enough projects, since each one is a held request that only starts its round
-    # trip on release - the release stops beating the debounce, and without the guard
-    # this scenario would silently become a second copy of the one above and stop
-    # testing the half of the defect the issue actually measured. TS-task-020 (#303)
-    # removes the theme read this leans on; when it lands, repoint the scenario at
-    # whatever /ontdek then awaits last.
+    # The ordering is asserted, not assumed. On a slow enough runner the release
+    # stops beating the debounce, and without the guard this scenario would silently
+    # become a second copy of the one above and stop testing the half of the defect
+    # the issue actually measured.
     @ui @overview @BUG-404
     Scenario: AC-1 a search typed just before the projects arrive is not wiped by the debounce
-      Given the overview page's project themes are held back
+      Given the overview page's theme catalog is held back
       When I reopen the overview page with no projects loaded yet
       And I search for the proof project while no projects are shown
       And the held back data is released

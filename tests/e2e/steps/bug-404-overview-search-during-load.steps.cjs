@@ -23,6 +23,7 @@ const {
   PROOF_PROJECT_NAME,
 } = require('../support/test-data.cjs');
 const { page } = require('../support/e2e-session.cjs');
+const { THEMES_ROUTE } = require('../support/theme-stub.cjs');
 
 const OVERVIEW_URL = `${FRONTEND_URL}/ontdek`;
 
@@ -35,17 +36,24 @@ const SEARCH_DEBOUNCE_MS = 300;
 const DEBOUNCE_SETTLE_MS = 1_000;
 
 // The page's own data reads. Held back one at a time to stage the two orderings the
-// defect has: the project list is what the filter is applied to, and the per-project
-// theme reads are the last thing OverviewPage awaits before it publishes that list -
-// so holding the themes back keeps the list unpublished while everything else on the
-// page is already loaded and interactive.
+// defect has: the project list is what the filter is applied to, and the theme
+// catalog is the other half of the settle OverviewPage waits on before it publishes
+// that list - so holding the catalog back keeps the list unpublished while
+// everything else on the page is already loaded and interactive.
+//
+// It used to be the per-project theme reads that served that purpose; TS-task-020
+// (#303) moved /ontdek onto the themes nested in the business query and those reads
+// no longer happen, so this is the repoint that feature file asked for. The two are
+// not interchangeable in one respect, which `projectListArrival` below exists to
+// close: those reads were issued only after the project list had come back, so
+// holding them proved the projects had already arrived, whereas the catalog is
+// requested alongside the projects and holding it proves nothing about them.
 const PROJECT_LIST_ROUTE = /\/businesses\/complete(\?.*)?$/;
-const PROJECT_THEMES_ROUTE = /\/themes\/project\/[^/?]+$/;
 
 // --- world state -----------------------------------------------------------------
 
 function state(world) {
-  if (!world.overviewSearchRace) world.overviewSearchRace = { gate: null, typedAt: 0 };
+  if (!world.overviewSearchRace) world.overviewSearchRace = { gate: null, typedAt: 0, projectListArrival: null };
   return world.overviewSearchRace;
 }
 
@@ -181,8 +189,17 @@ Given("the overview page's project list is held back", async function () {
   state(this).gate = await holdResponses(this, PROJECT_LIST_ROUTE);
 });
 
-Given("the overview page's project themes are held back", async function () {
-  state(this).gate = await holdResponses(this, PROJECT_THEMES_ROUTE);
+Given("the overview page's theme catalog is held back", async function () {
+  const current = state(this);
+  current.gate = await holdResponses(this, THEMES_ROUTE);
+  // Started here, before the page is opened, so it captures the reopened page's own
+  // project read. Waiting for it later is what leaves the held catalog as the only
+  // thing between the release and the first render - see the note on
+  // PROJECT_LIST_ROUTE.
+  current.projectListArrival = page(this).waitForResponse(
+    (response) => PROJECT_LIST_ROUTE.test(response.url()),
+    { timeout: 20_000 },
+  );
 });
 
 Given('I have searched for the proof project', async function () {
@@ -196,7 +213,7 @@ Given('I have searched for the proof project', async function () {
 // --- When ----------------------------------------------------------------------------
 
 When('I reopen the overview page with no projects loaded yet', async function () {
-  const { gate } = state(this);
+  const { gate, projectListArrival } = state(this);
   assert.ok(gate, 'Expected a held back response to have been staged before opening the page');
 
   await openOverview(this);
@@ -204,6 +221,11 @@ When('I reopen the overview page with no projects loaded yet', async function ()
     async () => gate.held() > 0,
     'Expected the overview page to have requested the held back data within 10s',
   );
+  // Only staged when it is the theme catalog being held: the projects are then
+  // already in the browser and the page is holding them back from the screen, so
+  // the later release renders them within one round trip instead of racing the
+  // 300ms debounce against a project query still in flight.
+  if (projectListArrival) await projectListArrival;
   await assertNoProjectsShown(this, 'while the page is still loading its projects');
 });
 

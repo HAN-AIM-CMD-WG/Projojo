@@ -3,7 +3,7 @@ import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
 import SkeletonOverview from '../components/SkeletonOverview';
-import { getBusinessesComplete, getThemes, getProjectThemes } from '../services';
+import { getBusinessesComplete, getThemes } from '../services';
 import { normalizeSkill } from '../utils/skills';
 import { applyFilters, NO_FILTERS } from '../utils/businessFilters';
 import { useStudentSkills } from '../context/StudentSkillsContext';
@@ -23,7 +23,7 @@ export default function OverviewPage() {
     setIsLoading(true);
 
     Promise.allSettled([getBusinessesComplete(), getThemes()])
-      .then(async ([businessesResult, themesResult]) => {
+      .then(([businessesResult, themesResult]) => {
         if (ignore) return;
 
         // Businesses are required - fail if they didn't load
@@ -36,20 +36,6 @@ export default function OverviewPage() {
         const themesData = themesResult.status === 'fulfilled' ? themesResult.value : [];
 
         setThemes(themesData || []);
-
-        // Fetch themes for ALL projects (public and non-public)
-        const allProjectIds = data.flatMap(b => (b.projects || []).map(p => p.id)).filter(Boolean);
-        const themeResults = await Promise.allSettled(
-          allProjectIds.map(id => getProjectThemes(id))
-        );
-
-        // Build project -> themes mapping from per-project results
-        const projectThemesMap = {};
-        allProjectIds.forEach((id, index) => {
-          if (themeResults[index].status === 'fulfilled') {
-            projectThemesMap[id] = themeResults[index].value;
-          }
-        });
 
         const formattedBusinesses = data.map(business => {
           // Normalize all task skills for this business
@@ -96,7 +82,6 @@ export default function OverviewPage() {
                 projectId: project.id,
                 title: project.name,
                 location: normalizedProjectLocation,
-                themes: projectThemesMap[project.id] || [],
                 tasks: project.tasks.map(task => ({
                   ...task,
                   skills: (task.skills || []).map(normalizeSkill).filter(Boolean)
