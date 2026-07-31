@@ -281,13 +281,6 @@ When('I open the overview page filtered to the proof project', async function ()
   const search = page(this).getByPlaceholder('Zoek organisatie of project...');
   await search.waitFor({ state: 'visible', timeout: 20_000 });
 
-  // Wait for the list before typing. The search box renders before the projects
-  // do, and OverviewPage's debounced filter runs against the business list as it
-  // was when the keystroke landed, then never re-applies once the data arrives -
-  // so typing into the still-loading page empties the results for good. That is an
-  // OverviewPage defect rather than a badge one; this suite only has to not race it.
-  await page(this).locator('article[id^="project-"]').first().waitFor({ state: 'visible', timeout: 20_000 });
-
   // The overview collapses a business to its first three cards, and sibling suites
   // add projects to this business, so search for the proof project by name instead
   // of hoping it lands in the visible three. The search input is debounced by 300ms;

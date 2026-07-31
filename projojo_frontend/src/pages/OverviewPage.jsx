@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Alert from '../components/Alert';
 import DashboardsOverview from "../components/DashboardsOverview";
 import Filter from "../components/Filter";
@@ -8,13 +8,194 @@ import { normalizeSkill } from '../utils/skills';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
 
+/** What Filter reports back while the user has not touched any of its controls. */
+const NO_FILTERS = {
+  searchInput: '',
+  selectedSkills: [],
+  sector: null,
+  location: null,
+  companySize: null,
+  showOnlyMyWork: false,
+  selectedTheme: null,
+  statusFilter: 'all'
+};
+
+const isSearchInString = (search, string) => string.toLowerCase().includes(search.toLowerCase());
+
+/**
+ * Apply the active filters to the businesses the page has loaded.
+ *
+ * Deliberately pure, and deliberately not a callback that writes its result to
+ * state. Filter debounces a keystroke by 300ms, so it calls back from a timer that
+ * was created in an earlier render: a callback closing over the business list would
+ * filter that list as it was when the key was pressed - empty, if the page was still
+ * loading - and nothing would re-apply the filter to the data arriving afterwards.
+ * Deriving the shown list from the current data and the current filters makes the
+ * ordering of the two irrelevant.
+ *
+ * @returns {{ businesses: Array, noResultsMessage: string | null }}
+ */
+function applyFilters(initialBusinesses, filters, workingBusinessIds, themes) {
+  const { searchInput, selectedSkills, sector, location, companySize, showOnlyMyWork, selectedTheme, statusFilter } = filters;
+  const formattedSearch = searchInput.trim().replace(/\s+/g, ' ')
+
+  // Check if any filter is active
+  const hasFilters = formattedSearch || selectedSkills.length > 0 || sector || location || companySize || showOnlyMyWork || selectedTheme || (statusFilter && statusFilter !== 'all');
+
+  if (!hasFilters) {
+    return { businesses: initialBusinesses, noResultsMessage: null };
+  }
+
+  let filteredData = initialBusinesses;
+
+  // "My work" filter - show only businesses where student is working
+  if (showOnlyMyWork) {
+    filteredData = filteredData.filter(b =>
+      workingBusinessIds.has(b.business?.businessId || b.id)
+    );
+  }
+
+  // Sector filter
+  if (sector) {
+    filteredData = filteredData.filter(b =>
+      b.business.sector?.toLowerCase() === sector.toLowerCase()
+    );
+  }
+
+  // Location (city) filter - searches in the location string
+  if (location) {
+    filteredData = filteredData.filter(b =>
+      b.business.location?.toLowerCase().includes(location.toLowerCase())
+    );
+  }
+
+  // Company size filter
+  if (companySize) {
+    filteredData = filteredData.filter(b =>
+      b.business.companySize?.toLowerCase() === companySize.toLowerCase()
+    );
+  }
+
+  // Theme filter - filter businesses that have at least one project with the selected theme
+  if (selectedTheme) {
+    filteredData = filteredData.map(business => {
+      const filteredProjects = business.projects.filter(project =>
+        project.themes?.some(t => t.id === selectedTheme)
+      );
+      if (filteredProjects.length > 0) {
+        return { ...business, projects: filteredProjects };
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Status filter - filter projects by their end_date
+  if (statusFilter && statusFilter !== 'all') {
+    const now = new Date();
+    filteredData = filteredData.map(business => {
+      const filteredProjects = business.projects.filter(project => {
+        if (statusFilter === 'active') {
+          // Active: no end_date or end_date in the future
+          return !project.end_date || new Date(project.end_date) >= now;
+        } else if (statusFilter === 'completed') {
+          // Completed: end_date in the past
+          return project.end_date && new Date(project.end_date) < now;
+        }
+        return true;
+      });
+      if (filteredProjects.length > 0) {
+        return { ...business, projects: filteredProjects };
+      }
+      return null;
+    }).filter(Boolean);
+  }
+
+  // Search filter
+  if (formattedSearch) {
+    filteredData = filteredData.map(business => {
+      const businessNameMatch = isSearchInString(formattedSearch, business.business.name);
+      const businessLocationMatch = isSearchInString(formattedSearch, business.business.location || "");
+      const filteredProjects = business.projects.filter(project =>
+        isSearchInString(formattedSearch, project.title) ||
+        isSearchInString(formattedSearch, project.location || "")
+      );
+
+      if (businessNameMatch || businessLocationMatch || filteredProjects.length > 0) {
+        return {
+          ...business,
+          projects: (businessNameMatch || businessLocationMatch) ? business.projects : filteredProjects
+        };
+      }
+      return null;
+    })
+      .filter(data => data !== null)
+      .sort((a, b) => a.business.name.localeCompare(b.business.name));
+  }
+
+  // Skills filter
+  if (selectedSkills.length > 0) {
+    // Prepare a set of selected ids (fallback to name) for stable comparisons
+    const selectedIds = new Set((selectedSkills || []).map(s => String(s.skillId ?? s.name)));
+
+    filteredData = filteredData.map(business => {
+      const filteredProjects = business.projects.map(project => {
+        const filteredTasks = project.tasks.filter(task => {
+          // Build a set of task skill ids for quicker lookup (fallback to name)
+          const taskSkillIds = new Set((task.skills || []).map(ts => String(ts.skillId ?? ts.name)));
+          // Use the precomputed selectedIds set for membership checks
+          return [...selectedIds].every(id => taskSkillIds.has(id));
+        });
+
+        if (filteredTasks.length > 0) {
+          return {
+            ...project,
+            tasks: filteredTasks
+          };
+        }
+        return null;
+      })
+        .filter(project => project !== null);
+
+      if (filteredProjects.length > 0) {
+        return {
+          ...business,
+          projects: filteredProjects
+        };
+      }
+      return null;
+    })
+      .filter(business => business !== null);
+  }
+
+  let noResultsMessage = null;
+
+  if (filteredData.length === 0) {
+    const activeFilters = [];
+    if (showOnlyMyWork) activeFilters.push('mijn werk');
+    if (formattedSearch) activeFilters.push(`"${formattedSearch}"`);
+    if (selectedSkills.length > 0) activeFilters.push(selectedSkills.map(s => s.name).join(', '));
+    if (sector) activeFilters.push(`sector: ${sector}`);
+    if (location) activeFilters.push(`stad: ${location}`);
+    if (companySize) activeFilters.push(`grootte: ${companySize}`);
+    if (selectedTheme) {
+      const theme = themes.find(t => t.id === selectedTheme);
+      activeFilters.push(`thema: ${theme?.name || selectedTheme}`);
+    }
+    if (statusFilter && statusFilter !== 'all') activeFilters.push(`status: ${statusFilter}`);
+
+    noResultsMessage = `Geen resultaten gevonden voor ${activeFilters.join(' + ')}.`;
+  }
+
+  return { businesses: filteredData, noResultsMessage };
+}
+
 export default function OverviewPage() {
   const { studentSkills } = useStudentSkills();
   const { workingBusinessIds } = useStudentWork();
   const [initialBusinesses, setInitialBusinesses] = useState([]);
-  const [shownBusinesses, setShownBusinesses] = useState([]);
+  const [filters, setFilters] = useState(NO_FILTERS);
   const [themes, setThemes] = useState([]);
-  const [error, setError] = useState(null);
+  const [loadError, setLoadError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -107,11 +288,10 @@ export default function OverviewPage() {
         });
 
         setInitialBusinesses(formattedBusinesses);
-        setShownBusinesses(formattedBusinesses);
       })
       .catch(err => {
         if (ignore) return;
-        setError(err.message);
+        setLoadError(err.message);
       })
       .finally(() => {
         if (ignore) return;
@@ -124,162 +304,14 @@ export default function OverviewPage() {
     }
   }, []);
 
+  const { businesses: shownBusinesses, noResultsMessage } = useMemo(
+    () => applyFilters(initialBusinesses, filters, workingBusinessIds, themes),
+    [initialBusinesses, filters, workingBusinessIds, themes]
+  );
 
-  const isSearchInString = (search, string) => string.toLowerCase().includes(search.toLowerCase());
-
-  const handleFilter = ({ searchInput, selectedSkills, sector, location, companySize, showOnlyMyWork, selectedTheme, statusFilter }) => {
-    const formattedSearch = searchInput.trim().replace(/\s+/g, ' ')
-    setError(null);
-
-    // Check if any filter is active
-    const hasFilters = formattedSearch || selectedSkills.length > 0 || sector || location || companySize || showOnlyMyWork || selectedTheme || (statusFilter && statusFilter !== 'all');
-
-    if (!hasFilters) {
-      setShownBusinesses(initialBusinesses);
-      return;
-    }
-
-    let filteredData = initialBusinesses;
-
-    // "My work" filter - show only businesses where student is working
-    if (showOnlyMyWork) {
-      filteredData = filteredData.filter(b => 
-        workingBusinessIds.has(b.business?.businessId || b.id)
-      );
-    }
-
-    // Sector filter
-    if (sector) {
-      filteredData = filteredData.filter(b => 
-        b.business.sector?.toLowerCase() === sector.toLowerCase()
-      );
-    }
-
-    // Location (city) filter - searches in the location string
-    if (location) {
-      filteredData = filteredData.filter(b => 
-        b.business.location?.toLowerCase().includes(location.toLowerCase())
-      );
-    }
-
-    // Company size filter
-    if (companySize) {
-      filteredData = filteredData.filter(b => 
-        b.business.companySize?.toLowerCase() === companySize.toLowerCase()
-      );
-    }
-
-    // Theme filter - filter businesses that have at least one project with the selected theme
-    if (selectedTheme) {
-      filteredData = filteredData.map(business => {
-        const filteredProjects = business.projects.filter(project =>
-          project.themes?.some(t => t.id === selectedTheme)
-        );
-        if (filteredProjects.length > 0) {
-          return { ...business, projects: filteredProjects };
-        }
-        return null;
-      }).filter(Boolean);
-    }
-
-    // Status filter - filter projects by their end_date
-    if (statusFilter && statusFilter !== 'all') {
-      const now = new Date();
-      filteredData = filteredData.map(business => {
-        const filteredProjects = business.projects.filter(project => {
-          if (statusFilter === 'active') {
-            // Active: no end_date or end_date in the future
-            return !project.end_date || new Date(project.end_date) >= now;
-          } else if (statusFilter === 'completed') {
-            // Completed: end_date in the past
-            return project.end_date && new Date(project.end_date) < now;
-          }
-          return true;
-        });
-        if (filteredProjects.length > 0) {
-          return { ...business, projects: filteredProjects };
-        }
-        return null;
-      }).filter(Boolean);
-    }
-
-    // Search filter
-    if (formattedSearch) {
-      filteredData = filteredData.map(business => {
-        const businessNameMatch = isSearchInString(formattedSearch, business.business.name);
-        const businessLocationMatch = isSearchInString(formattedSearch, business.business.location || "");
-        const filteredProjects = business.projects.filter(project =>
-          isSearchInString(formattedSearch, project.title) ||
-          isSearchInString(formattedSearch, project.location || "")
-        );
-
-        if (businessNameMatch || businessLocationMatch || filteredProjects.length > 0) {
-          return {
-            ...business,
-            projects: (businessNameMatch || businessLocationMatch) ? business.projects : filteredProjects
-          };
-        }
-        return null;
-      })
-        .filter(data => data !== null)
-        .sort((a, b) => a.business.name.localeCompare(b.business.name));
-    }
-
-    // Skills filter
-    if (selectedSkills.length > 0) {
-      // Prepare a set of selected ids (fallback to name) for stable comparisons
-      const selectedIds = new Set((selectedSkills || []).map(s => String(s.skillId ?? s.name)));
-
-      filteredData = filteredData.map(business => {
-        const filteredProjects = business.projects.map(project => {
-          const filteredTasks = project.tasks.filter(task => {
-            // Build a set of task skill ids for quicker lookup (fallback to name)
-            const taskSkillIds = new Set((task.skills || []).map(ts => String(ts.skillId ?? ts.name)));
-            // Use the precomputed selectedIds set for membership checks
-            return [...selectedIds].every(id => taskSkillIds.has(id));
-          });
-
-          if (filteredTasks.length > 0) {
-            return {
-              ...project,
-              tasks: filteredTasks
-            };
-          }
-          return null;
-        })
-          .filter(project => project !== null);
-
-        if (filteredProjects.length > 0) {
-          return {
-            ...business,
-            projects: filteredProjects
-          };
-        }
-        return null;
-      })
-        .filter(business => business !== null);
-    }
-
-
-    if (filteredData.length === 0) {
-      const activeFilters = [];
-      if (showOnlyMyWork) activeFilters.push('mijn werk');
-      if (formattedSearch) activeFilters.push(`"${formattedSearch}"`);
-      if (selectedSkills.length > 0) activeFilters.push(selectedSkills.map(s => s.name).join(', '));
-      if (sector) activeFilters.push(`sector: ${sector}`);
-      if (location) activeFilters.push(`stad: ${location}`);
-      if (companySize) activeFilters.push(`grootte: ${companySize}`);
-      if (selectedTheme) {
-        const theme = themes.find(t => t.id === selectedTheme);
-        activeFilters.push(`thema: ${theme?.name || selectedTheme}`);
-      }
-      if (statusFilter && statusFilter !== 'all') activeFilters.push(`status: ${statusFilter}`);
-      
-      setError(`Geen resultaten gevonden voor ${activeFilters.join(' + ')}.`);
-    }
-
-    setShownBusinesses(filteredData);
-  };
+  // A filter set while the projects are still on their way has nothing to find yet,
+  // which is not the same as finding nothing.
+  const error = loadError ?? (isLoading ? null : noResultsMessage);
 
   // Count OPEN projects that match student skills (archived excluded)
   const studentSkillIds = new Set(studentSkills.map(s => s.skillId).filter(Boolean));
@@ -325,7 +357,7 @@ export default function OverviewPage() {
       </div>
 
       <Filter 
-        onFilter={handleFilter} 
+        onFilter={setFilters}
         themes={themes}
         businesses={shownBusinesses.map(b => ({
           id: b.business.businessId,

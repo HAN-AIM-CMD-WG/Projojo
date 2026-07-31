@@ -1,0 +1,282 @@
+// BUG-404 — the overview page's filter must survive the page's own initial load.
+//
+// UI suite against the real stack. The only unusual thing this file does is hold a
+// real backend response back: a Playwright route intercepts the response the page
+// needs, parks it until the scenario releases it, and then lets it continue to the
+// real backend. Nothing is faked - the payload the page finally renders is the one
+// the backend produced. Holding it is what turns an unobservable race into a
+// deterministic one, because on the local stack /businesses/complete answers in
+// roughly 50ms and there is no way to type into that window by hand.
+//
+// Step text is prefixed with "the overview page" wherever it could collide, because
+// Cucumber matches step text across every file in the suite. The student login and
+// the seeded fixture ids are reused from the existing suites rather than copied.
+
+const assert = require('node:assert/strict');
+
+const { After, Given, Then, When } = require('@qavajs/core');
+
+const {
+  CROSS_BUSINESS_PROJECT_ID,
+  FRONTEND_URL,
+  PROOF_PROJECT_ID,
+  PROOF_PROJECT_NAME,
+} = require('../support/test-data.cjs');
+const { page } = require('../support/e2e-session.cjs');
+
+const OVERVIEW_URL = `${FRONTEND_URL}/ontdek`;
+
+// Filter.jsx debounces a keystroke by exactly this much before it calls the page back.
+const SEARCH_DEBOUNCE_MS = 300;
+
+// How long a step waits when it needs the debounced call to have happened. Well
+// clear of the debounce itself so a busy machine cannot make a scenario assert on a
+// filter that simply had not run yet.
+const DEBOUNCE_SETTLE_MS = 1_000;
+
+// The page's own data reads. Held back one at a time to stage the two orderings the
+// defect has: the project list is what the filter is applied to, and the per-project
+// theme reads are the last thing OverviewPage awaits before it publishes that list -
+// so holding the themes back keeps the list unpublished while everything else on the
+// page is already loaded and interactive.
+const PROJECT_LIST_ROUTE = /\/businesses\/complete(\?.*)?$/;
+const PROJECT_THEMES_ROUTE = /\/themes\/project\/[^/?]+$/;
+
+// --- world state -----------------------------------------------------------------
+
+function state(world) {
+  if (!world.overviewSearchRace) world.overviewSearchRace = { gate: null, typedAt: 0 };
+  return world.overviewSearchRace;
+}
+
+// A scenario that fails before its release step would otherwise leave a request
+// parked forever, and closing the page on a parked route hangs the run.
+After(function () {
+  this.overviewSearchRace?.gate?.release();
+});
+
+// --- holding a real response back --------------------------------------------------
+
+/**
+ * Park every request matching `pattern` until the returned gate is released, then
+ * let it continue to the real backend.
+ *
+ * @returns {{ release: () => void, held: () => number }} `held` counts the requests
+ *   parked so far, so a step can wait for the page to have actually asked before it
+ *   relies on the response being held.
+ */
+async function holdResponses(world, pattern) {
+  let release;
+  const opened = new Promise((resolve) => { release = resolve; });
+  let held = 0;
+
+  await page(world).route(pattern, async (route) => {
+    held += 1;
+    await opened;
+    // The page may already be gone if a scenario failed before releasing; that is
+    // the After hook draining the gate, not a problem worth failing on.
+    await route.continue().catch(() => {});
+  });
+
+  return { release: () => release(), held: () => held };
+}
+
+async function waitUntil(predicate, message, timeout = 10_000) {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    if (await predicate()) return;
+    if (Date.now() >= deadline) throw new Error(message);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+}
+
+// --- element helpers ---------------------------------------------------------------
+
+function projectCard(world, projectId) {
+  return page(world).locator(`#project-${projectId}`);
+}
+
+/** Every project card currently rendered, on whichever organisation. */
+function projectCards(world) {
+  return page(world).locator('article[id^="project-"]');
+}
+
+function searchBox(world) {
+  return page(world).getByPlaceholder('Zoek organisatie of project...');
+}
+
+async function openOverview(world) {
+  // Dropped to about:blank first so the previously open page cannot keep firing its
+  // own reads into the routes this suite installs.
+  await page(world).goto('about:blank');
+  await page(world).goto(OVERVIEW_URL);
+  await searchBox(world).waitFor({ state: 'visible', timeout: 20_000 });
+}
+
+async function assertNoProjectsShown(world, context) {
+  const shown = await projectCards(world).evaluateAll((cards) => cards.map((card) => card.id));
+  assert.deepEqual(shown, [], `Expected no project cards ${context}, saw ${JSON.stringify(shown)}`);
+}
+
+/** Type into the search box and remember when, so the debounce can be waited out. */
+async function search(world, term) {
+  await searchBox(world).fill(term);
+  state(world).typedAt = Date.now();
+}
+
+async function settleDebounce(world) {
+  const elapsed = Date.now() - state(world).typedAt;
+  const remaining = DEBOUNCE_SETTLE_MS - elapsed;
+  if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining));
+}
+
+// --- Given ---------------------------------------------------------------------------
+
+Given('the overview page has loaded showing both seeded projects', async function () {
+  await openOverview(this);
+  // Both cards, not just one: the scenarios below prove a filtered list by the
+  // absence of the cross-business project, which would be a vacuous assertion if
+  // that project were not on the unfiltered page to begin with.
+  await projectCard(this, PROOF_PROJECT_ID).waitFor({ state: 'visible', timeout: 20_000 });
+  await projectCard(this, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'visible', timeout: 20_000 });
+});
+
+Given("the overview page's project list is held back", async function () {
+  state(this).gate = await holdResponses(this, PROJECT_LIST_ROUTE);
+});
+
+Given("the overview page's project themes are held back", async function () {
+  state(this).gate = await holdResponses(this, PROJECT_THEMES_ROUTE);
+});
+
+Given('I have searched for the proof project', async function () {
+  await search(this, PROOF_PROJECT_NAME);
+  // Verified rather than assumed: the scenario that clears this search can only
+  // prove the full list came back if the list really was filtered first.
+  await projectCard(this, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'hidden', timeout: 10_000 });
+  await projectCard(this, PROOF_PROJECT_ID).waitFor({ state: 'visible', timeout: 10_000 });
+});
+
+// --- When ----------------------------------------------------------------------------
+
+When('I reopen the overview page with no projects loaded yet', async function () {
+  const { gate } = state(this);
+  assert.ok(gate, 'Expected a held back response to have been staged before opening the page');
+
+  await openOverview(this);
+  await waitUntil(
+    async () => gate.held() > 0,
+    'Expected the overview page to have requested the held back data within 10s',
+  );
+  await assertNoProjectsShown(this, 'while the page is still loading its projects');
+});
+
+When('I search for the proof project while no projects are shown', async function () {
+  await assertNoProjectsShown(this, 'at the moment the search term is typed');
+  await search(this, PROOF_PROJECT_NAME);
+});
+
+When('I filter on my own work while no projects are shown', async function () {
+  await assertNoProjectsShown(this, 'at the moment the filter is set');
+  const myWork = page(this).getByRole('button', { name: /Mijn werk/ });
+  await myWork.waitFor({ state: 'visible', timeout: 10_000 });
+  await myWork.click();
+});
+
+When('I search for the proof project', async function () {
+  await search(this, PROOF_PROJECT_NAME);
+});
+
+When('I search for {string}', async function (term) {
+  await search(this, term);
+});
+
+When('I clear the search', async function () {
+  await page(this).getByRole('button', { name: 'Wis zoekopdracht' }).click();
+});
+
+When('the search debounce elapses', async function () {
+  await settleDebounce(this);
+});
+
+When('the search debounce elapses while no projects are shown', async function () {
+  await settleDebounce(this);
+  // The point of the wait: the debounced filter has now run, and it ran against a
+  // page that still had nothing to filter. That is the state the defect starts from.
+  await assertNoProjectsShown(this, 'after the debounce fired on the still-loading page');
+});
+
+When('the held back data is released', async function () {
+  const { gate } = state(this);
+  assert.ok(gate, 'Expected a held back response to release');
+  gate.release();
+});
+
+// --- Then ----------------------------------------------------------------------------
+
+Then('the overview page shows the proof project', async function () {
+  const card = projectCard(this, PROOF_PROJECT_ID);
+  try {
+    await card.waitFor({ state: 'visible', timeout: 12_000 });
+  } catch (error) {
+    // An empty list and a wrongly filtered one fail the same way otherwise, and the
+    // difference is the whole point of this suite.
+    const seen = await page(this).evaluate(() => ({
+      url: location.href,
+      cards: [...document.querySelectorAll('article[id^="project-"]')].map((el) => el.id),
+      search: document.querySelector('#search')?.value ?? null,
+      alert: document.querySelector('[role="alert"]')?.innerText ?? null,
+    }));
+    throw new Error(`${error.message}\nPage at that moment: ${JSON.stringify(seen)}`);
+  }
+});
+
+Then('the overview page shows the cross-business project', async function () {
+  await projectCard(this, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'visible', timeout: 12_000 });
+});
+
+Then('the overview page does not show the cross-business project', async function () {
+  // Deliberately a plain count and not a wait: by the time this runs the matching
+  // card is already on screen, so both cards were committed in the same render. A
+  // wait here would be waiting for a change that is never coming, and would turn an
+  // unfiltered list into a slow failure instead of an immediate one.
+  const shown = await projectCards(this).evaluateAll((cards) => cards.map((card) => card.id));
+  assert.ok(
+    !shown.includes(`project-${CROSS_BUSINESS_PROJECT_ID}`),
+    `Expected the filtered list to exclude the cross-business project, saw ${JSON.stringify(shown)}`,
+  );
+});
+
+Then('the overview page shows no projects', async function () {
+  await assertNoProjectsShown(this, 'for a search term that matches nothing');
+});
+
+Then('the overview page reports no results for {string}', async function (term) {
+  const alert = page(this).getByRole('alert').filter({ hasText: 'Geen resultaten gevonden' });
+  await alert.waitFor({ state: 'visible', timeout: 10_000 });
+  assert.match(
+    (await alert.innerText()).trim(),
+    new RegExp(`Geen resultaten gevonden voor "${term}"`),
+    `Expected the overview page to name '${term}' in its no-results message`,
+  );
+});
+
+Then('the overview page still shows the cross-business project right after typing', async function () {
+  const shown = await projectCards(this).evaluateAll((cards) => cards.map((card) => card.id));
+  const elapsed = Date.now() - state(this).typedAt;
+  // Guard first: past the debounce window a correctly debounced page has already
+  // dropped the card, so a failure would say nothing about the debounce. Better to
+  // report that the window was missed than to report a defect that is not there.
+  assert.ok(
+    elapsed < SEARCH_DEBOUNCE_MS,
+    `Could not observe the debounce window: reading the list took ${elapsed}ms of the ${SEARCH_DEBOUNCE_MS}ms debounce`,
+  );
+  assert.ok(
+    shown.includes(`project-${CROSS_BUSINESS_PROJECT_ID}`),
+    `Expected the list to be untouched ${elapsed}ms after typing, within the ${SEARCH_DEBOUNCE_MS}ms debounce, saw ${JSON.stringify(shown)}`,
+  );
+});
+
+Then('the overview page drops the cross-business project once the debounce elapses', async function () {
+  await projectCard(this, CROSS_BUSINESS_PROJECT_ID).waitFor({ state: 'hidden', timeout: 10_000 });
+});
