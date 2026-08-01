@@ -21,7 +21,8 @@ Feature: TS-task-020 the overview page sources project themes from the business 
   #   organisation, kept public. Two organisations rather than two projects of one:
   #   the overview collapses a business to its first three cards, and a theme filter
   #   narrowing to different organisations is the case that exercises the whole
-  #   filter chain.
+  #   filter chain. Every scenario's opening step waits for that card, so an
+  #   assertion that a filter dropped it can never pass because it was never there.
   #
   # Honest note on what turns red before the fix. Exactly one scenario does: "AC-3
   # the theme badge is rendered without any per-project theme request". By the time
@@ -186,12 +187,22 @@ Feature: TS-task-020 the overview page sources project themes from the business 
     # are not copied here. What is not covered anywhere is the skill filter that AC-6
     # names first, and the interaction between the theme filter and another filter -
     # the two things this change could plausibly disturb.
+    #
+    # What this scenario proves, and what it cannot. It proves the skill filter still
+    # runs and still narrows: the exact set leaves no room for an organisation whose
+    # projects carry no matching task to survive, and the open step above has already
+    # established that the cross-business card was on the unfiltered page. It cannot
+    # prove the matching semantics - the seed defines exactly one skill and every
+    # seeded task requires it, so "all selected skills" and "any selected skill" are
+    # the same predicate against this fixture. Telling those apart would mean adding
+    # a second skill to a seed every suite shares, for a filter this task does not
+    # touch; the limitation is recorded here rather than hidden behind a title that
+    # claims more.
     @ui @theme @overview @TS-task-020
     Scenario: AC-6 the skill filter still narrows the list
       When I open the overview page with its network traffic recorded
       And I filter on the skill "Deterministisch Testen"
-      Then the overview page shows the proof project
-      And the overview page does not show the cross-business project
+      Then the overview page shows exactly the proof project
 
     @ui @theme @overview @TS-task-020
     Scenario: AC-6 a search narrows the theme-filtered list further
@@ -205,6 +216,16 @@ Feature: TS-task-020 the overview page sources project themes from the business 
       Then the overview page shows the proof project
       And the overview page does not show the cross-business project
 
+    # Both directions, because either half alone is vacuous: a filter that quietly
+    # did nothing would leave the same page behind as a filter that was correctly
+    # cleared, so the drop is asserted before the restore.
+    #
+    # The restore is asserted on the cross-business project rather than the proof
+    # project - it is the card the filter actually removed, and the only one whose
+    # presence on an UNFILTERED page is stable. The proof project's organisation
+    # collects the projects TS-task-015 creates and cannot delete, and a business
+    # renders only its first three, so asserting that card here would eventually fail
+    # on fixture accumulation and read like a regression in this page.
     @ui @theme @overview @TS-task-020
     Scenario: AC-6 clearing the theme filter brings the other projects back
       Given the project's linked themes are "Duurzaamheid"
@@ -212,6 +233,6 @@ Feature: TS-task-020 the overview page sources project themes from the business 
       And the cross-business project's linked themes are cleared
       When I open the overview page with its network traffic recorded
       And I filter on the theme "Duurzaamheid"
-      And I clear the theme filter
-      Then the overview page shows the proof project
-      And the overview page shows the cross-business project
+      Then the overview page shows exactly the proof project
+      When I clear the theme filter "Duurzaamheid"
+      Then the overview page shows the cross-business project

@@ -64,7 +64,10 @@ Feature: BUG-404 the overview page filter survives the initial load
     # publishes its list only once both of those have settled: releasing the catalog
     # puts the already-fetched projects on screen within one local round trip,
     # comfortably inside the 300ms debounce, which holding the list itself would not
-    # reliably do.
+    # reliably do. "Already-fetched" is not free here - unlike the reads this used to
+    # hold, the catalog is requested alongside the project list rather than after it -
+    # so the reopen step waits for the project response to reach the browser before
+    # the search below is typed.
     #
     # The ordering is asserted, not assumed. On a slow enough runner the release
     # stops beating the debounce, and without the guard this scenario would silently

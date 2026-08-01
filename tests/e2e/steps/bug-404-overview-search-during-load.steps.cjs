@@ -200,6 +200,12 @@ Given("the overview page's theme catalog is held back", async function () {
     (response) => PROJECT_LIST_ROUTE.test(response.url()),
     { timeout: 20_000 },
   );
+  // Marked as handled here, not left bare. A scenario that fails between this step
+  // and the await below never takes this promise, and it then rejects on its own at
+  // page close with nobody listening - which Node turns into a process-level crash,
+  // losing the results of every scenario after it. Attaching a second handler does
+  // not swallow the one that matters: the await still throws on a real timeout.
+  current.projectListArrival.catch(() => {});
 });
 
 Given('I have searched for the proof project', async function () {
@@ -221,10 +227,12 @@ When('I reopen the overview page with no projects loaded yet', async function ()
     async () => gate.held() > 0,
     'Expected the overview page to have requested the held back data within 10s',
   );
-  // Only staged when it is the theme catalog being held: the projects are then
-  // already in the browser and the page is holding them back from the screen, so
-  // the later release renders them within one round trip instead of racing the
-  // 300ms debounce against a project query still in flight.
+  // Only staged when it is the theme catalog being held: the project response has
+  // reached the browser by then and the page is holding it back from the screen, so
+  // the later release renders it within one round trip instead of racing the 300ms
+  // debounce against a project query still in flight. This resolves on the response
+  // headers rather than a fully read body, so the parse and the page's own mapping
+  // still fall inside that budget - on a localhost JSON payload, well inside.
   if (projectListArrival) await projectListArrival;
   await assertNoProjectsShown(this, 'while the page is still loading its projects');
 });

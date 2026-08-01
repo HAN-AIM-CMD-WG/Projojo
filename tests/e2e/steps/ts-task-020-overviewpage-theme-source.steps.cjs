@@ -49,20 +49,32 @@ const PUBLIC_FEED_PATH = '/projects/public';
 // --- world state -----------------------------------------------------------------
 
 function state(world) {
-  if (!world.overviewThemeSource) world.overviewThemeSource = { requests: [], hidProofProject: false };
+  if (!world.overviewThemeSource) {
+    world.overviewThemeSource = { requests: [], hidProofProject: false, linkedArchivedProject: false };
+  }
   return world.overviewThemeSource;
 }
 
-// Hiding the proof project is the one change this suite makes that outlives its
-// scenario, and the seed's default is public. The stack-health and api-memory
-// suites read GET /projects/public without staging it - they are asserting on the
-// seeded fixture - so a scenario that left the project hidden would fail them
-// several features later, with nothing pointing back here. Restored to the seeded
-// default rather than to whatever it happened to be, because that is what those
-// suites are entitled to.
+// The two changes this suite makes that outlive their scenario, both undone here.
+//
+// Hiding the proof project is the more dangerous one: the seed's default is public,
+// and the stack-health and api-memory suites read GET /projects/public without
+// staging it - they are asserting on the seeded fixture - so a scenario that left
+// the project hidden would fail them several features later, with nothing pointing
+// back here. Restored to the seeded default rather than to whatever it happened to
+// be, because that is what those suites are entitled to.
+//
+// The archived organisation's theme link is the milder one: every theme suite
+// resets the catalog, and a reset deletes each theme's links along with it, so the
+// link cannot survive into an assertion. Cleared anyway - a fixture left linked to
+// a theme nothing in the seed explains is a trap for whoever debugs here next.
 After(async function () {
-  if (this.overviewThemeSource?.hidProofProject) {
+  const current = this.overviewThemeSource;
+  if (current?.hidProofProject) {
     await setProjectVisibility(PROOF_PROJECT_ID, true);
+  }
+  if (current?.linkedArchivedProject) {
+    await setProjectThemes(ARCHIVED_SOURCE_PROJECT_ID, []);
   }
 });
 
@@ -157,25 +169,23 @@ function escapeForRegExp(value) {
 /**
  * A theme filter pill, matched on its accessible name: the theme name followed by
  * its count. Anchored on both ends so the "Verwijder filter: <name>" chip the same
- * theme gets once selected can never be picked up instead.
+ * theme gets once selected can never be picked up instead. The Material Symbols
+ * icon drops out of that name by the browser's own rule - it is aria-hidden - so a
+ * themed pill and an icon-less one match identically.
+ *
+ * The count is matched here rather than read back from the DOM afterwards, because
+ * the accessible name is computed from what is actually rendered: a count hidden by
+ * some future responsive class would leave the name and fail this locator, where
+ * reading the element's text would still find it and pass.
  */
-function themePill(world, name) {
-  return page(world).getByRole('button', { name: new RegExp(`^${escapeForRegExp(name)}\\s+\\d+$`) });
+function themePill(world, name, count = '\\d+') {
+  return page(world).getByRole('button', { name: new RegExp(`^${escapeForRegExp(name)}\\s+${count}$`) });
 }
 
-/**
- * The pill's visible label and count, as the two pieces its accessible name is
- * built from. The Material Symbols icon is skipped by the same rule the browser
- * uses for the accessible name - it is aria-hidden - so a themed pill and an
- * icon-less one read back identically.
- */
-async function themePillParts(pill) {
-  return pill.evaluate((el) =>
-    [...el.childNodes]
-      .filter((node) => !(node.nodeType === Node.ELEMENT_NODE && node.getAttribute('aria-hidden') === 'true'))
-      .map((node) => node.textContent.trim())
-      .filter(Boolean),
-  );
+/** Assert the rendered cards are exactly `projectIds`, in any order. */
+async function assertExactCards(world, projectIds, description) {
+  const shown = await projectCards(world).evaluateAll((cards) => cards.map((card) => card.id).sort());
+  assert.deepEqual(shown, projectIds.map((id) => `project-${id}`).sort(), description);
 }
 
 async function visibleCard(world, projectId, description) {
@@ -228,6 +238,7 @@ Given('the archived organisation\'s project is linked to the theme {string}', as
   // The seeded project of the archived organisation. Its business is filtered out
   // of GET /businesses/complete, so this is a real "theme the user cannot reach"
   // rather than a theme with no links at all.
+  state(this).linkedArchivedProject = true;
   await setProjectThemes(ARCHIVED_SOURCE_PROJECT_ID, parseNames(name));
 });
 
@@ -253,7 +264,15 @@ When('I open the overview page with its network traffic recorded', async functio
   await page(this).getByPlaceholder('Zoek organisatie of project...').waitFor({ state: 'visible', timeout: 20_000 });
   // The list, not just the search box: every assertion below is about what the
   // loaded page shows, and the search box renders long before the projects do.
-  await projectCards(this).first().waitFor({ state: 'visible', timeout: 20_000 });
+  //
+  // The cross-business card specifically, rather than whichever card renders first:
+  // the scenarios below prove a filtered list by that card's ABSENCE, which proves
+  // nothing unless it was on the unfiltered page to begin with. It is also the only
+  // card that can be waited for safely here - its organisation holds exactly one
+  // project, whereas the proof project's organisation collects the projects
+  // TS-task-015 creates and cannot delete, and a business renders only its first
+  // three (ProjectDashboard), in an order TypeDB is free to choose.
+  await visibleCard(this, CROSS_BUSINESS_PROJECT_ID, 'cross-business project');
 });
 
 When('I filter on the skill {string}', async function (skillName) {
@@ -278,11 +297,12 @@ When('I filter on the skill {string}', async function (skillName) {
   await page(this).getByRole('button', { name: `Verwijder filter: ${skillName}` }).waitFor({ state: 'visible', timeout: 10_000 });
 });
 
-When('I clear the theme filter', async function () {
-  // The "Alles" pill of the theme row, which is the row's own reset. Scoped to the
-  // theme row so the identically labelled sector reset cannot be clicked instead.
-  const row = page(this).locator('div').filter({ has: themeRowLabel(this) }).last();
-  await row.getByRole('button', { name: 'Alles', exact: true }).click();
+When('I clear the theme filter {string}', async function (name) {
+  // The active filter chip, which is what a user reaches for and the only affordance
+  // here that is globally unique: the theme row's own "Alles" reset is labelled
+  // identically to the sector row's, so clicking that one means scoping to the row
+  // by its shape - which any extra wrapper element inside the row would break.
+  await page(this).getByRole('button', { name: `Verwijder filter: ${name}` }).click();
 });
 
 // --- Then: the badges (AC-1, AC-2) -----------------------------------------------------
@@ -307,40 +327,63 @@ Then('the proof project card shows no theme badge', async function () {
 Then('the overview page shows exactly the proof project and the cross-business project', async function () {
   await visibleCard(this, PROOF_PROJECT_ID, 'proof project');
   await visibleCard(this, CROSS_BUSINESS_PROJECT_ID, 'cross-business project');
-  const shown = await projectCards(this).evaluateAll((cards) => cards.map((card) => card.id).sort());
-  assert.deepEqual(
-    shown,
-    [`project-${PROOF_PROJECT_ID}`, `project-${CROSS_BUSINESS_PROJECT_ID}`].sort(),
+  await assertExactCards(
+    this,
+    [PROOF_PROJECT_ID, CROSS_BUSINESS_PROJECT_ID],
     'Expected the theme-filtered list to hold exactly the two matching projects',
+  );
+});
+
+Then('the overview page shows exactly the proof project', async function () {
+  await visibleCard(this, PROOF_PROJECT_ID, 'proof project');
+  await assertExactCards(
+    this,
+    [PROOF_PROJECT_ID],
+    'Expected the filtered list to hold exactly the proof project',
   );
 });
 
 // --- Then: where the themes came from (AC-3) -------------------------------------------
 
-Then('the overview page requested the enriched business query', async function () {
-  const { requests } = state(this);
-  // Guards every "no such request was made" assertion below against passing for the
-  // wrong reason: if the recording missed the page's load entirely, absence would be
-  // trivially true.
+/**
+ * Guards every "no such request was made" assertion against passing for the wrong
+ * reason: if the recording missed the page's load entirely, absence would be
+ * trivially true. Called by the negative steps themselves rather than left to the
+ * feature file to remember, so the vacuous version cannot be written by accident -
+ * the scenarios state it explicitly as well, because it is worth reading there.
+ */
+function assertBusinessQuerySeen(world) {
+  const { requests } = state(world);
   assert.ok(
     requests.some((request) => new URL(request.url).pathname === BUSINESS_QUERY_PATH),
     `Expected the overview page to read ${BUSINESS_QUERY_PATH}, saw ${requests.length} requests: ${JSON.stringify(requests.map((r) => new URL(r.url).pathname))}`,
   );
+}
+
+/** The recorded requests whose pathname satisfies `matches`, as "METHOD /path". */
+function recordedRequests(world, matches) {
+  return state(world)
+    .requests.filter((request) => matches(new URL(request.url).pathname))
+    .map((request) => `${request.method} ${new URL(request.url).pathname}`);
+}
+
+Then('the overview page requested the enriched business query', function () {
+  assertBusinessQuerySeen(this);
 });
 
-Then('the overview page requested no per-project theme endpoint', async function () {
-  const offenders = state(this).requests.filter((request) => new URL(request.url).pathname.startsWith(PROJECT_THEME_PATH));
+Then('the overview page requested no per-project theme endpoint', function () {
+  assertBusinessQuerySeen(this);
   assert.deepEqual(
-    offenders.map((request) => `${request.method} ${new URL(request.url).pathname}`),
+    recordedRequests(this, (pathname) => pathname.startsWith(PROJECT_THEME_PATH)),
     [],
     'Expected the overview page to take its themes from the business query rather than reading them per project',
   );
 });
 
-Then('the overview page requested no public project feed', async function () {
-  const offenders = state(this).requests.filter((request) => new URL(request.url).pathname === PUBLIC_FEED_PATH);
+Then('the overview page requested no public project feed', function () {
+  assertBusinessQuerySeen(this);
   assert.deepEqual(
-    offenders.map((request) => `${request.method} ${new URL(request.url).pathname}`),
+    recordedRequests(this, (pathname) => pathname === PUBLIC_FEED_PATH),
     [],
     'Expected the overview page not to read the public project feed, which only ever carried the public projects',
   );
@@ -349,13 +392,16 @@ Then('the overview page requested no public project feed', async function () {
 // --- Then: the theme filter pills (AC-4, AC-5) -----------------------------------------
 
 Then('the theme filter pill {string} shows the count {string}', async function (name, expected) {
-  const pill = themePill(this, name);
-  await pill.waitFor({ state: 'visible', timeout: 10_000 });
-  assert.deepEqual(
-    await themePillParts(pill),
-    [name, expected],
-    `Expected a theme filter pill labelled '${name}' showing the count '${expected}'`,
-  );
+  try {
+    await themePill(this, name, escapeForRegExp(expected)).waitFor({ state: 'visible', timeout: 10_000 });
+  } catch (error) {
+    // On its own the failure reads "locator did not become visible", which cannot
+    // tell a wrong count from a missing pill - and the count is the assertion.
+    const seen = await themePill(this, name).allInnerTexts();
+    throw new Error(
+      `Expected a theme filter pill '${name}' showing the count '${expected}'. Pills labelled '${name}' on screen: ${JSON.stringify(seen)}. ${error.message}`,
+    );
+  }
 });
 
 Then('the overview page offers no theme filter pill {string}', async function (name) {

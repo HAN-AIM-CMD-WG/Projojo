@@ -78,6 +78,9 @@ export default function OverviewPage() {
                 ? (Array.isArray(project.location) ? project.location[0] : project.location)
                 : "";
               return {
+                // `themes` rides along on this spread: GET /businesses/complete has
+                // carried each project's themes since TS-task-009, so this page no
+                // longer reads them per project.
                 ...project,
                 projectId: project.id,
                 title: project.name,
