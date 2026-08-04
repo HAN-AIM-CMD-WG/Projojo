@@ -6,16 +6,12 @@ import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
 import { IMAGE_BASE_URL } from '../services';
-import { legibleFill } from '../utils/themeColor';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 
 // At most this many theme pills fit the dashboard's compact project row; any
 // remaining themes are summarised as a "+N" count, the way the card's skill lists
 // elsewhere on this page summarise theirs.
 const MAX_THEME_PILLS = 2;
-
-// Fill for a theme that carries no colour of its own, matching the theme pills on
-// the project cards and the project details page.
-const COLORLESS_THEME_FILL = '#FF7F50';
 
 /**
  * Supervisor Dashboard - Shows business projects, pending registrations and active students

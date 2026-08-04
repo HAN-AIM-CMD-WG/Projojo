@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getProjectThemes, linkProjectThemes } from '../services';
-import { legibleFill } from '../utils/themeColor';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 import { sameIds } from '../utils/themeSelection';
 import ThemePicker from './ThemePicker';
 import ThemeRemovalConfirm from './ThemeRemovalConfirm';
@@ -191,7 +191,7 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                             data-testid="project-theme-pill"
                             data-theme-id={theme.id}
                             className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full cursor-default"
-                            style={legibleFill(theme.color || '#FF7F50')}
+                            style={legibleFill(theme.color || COLORLESS_THEME_FILL)}
                         >
                             {theme.icon && (
                                 <span

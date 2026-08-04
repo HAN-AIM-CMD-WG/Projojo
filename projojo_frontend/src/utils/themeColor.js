@@ -2,6 +2,14 @@ const DARK_TEXT = '#000000';
 const WHITE_TEXT = '#FFFFFF';
 
 /**
+ * Fill for a theme that carries no colour of its own. Colour is optional on a theme,
+ * and every surface that renders one - the card badge, the details section, the
+ * picker, the supervisor dashboard - falls back to the same coral, so a colourless
+ * theme looks like one theme rather than four different ones.
+ */
+export const COLORLESS_THEME_FILL = '#FF7F50';
+
+/**
  * Choose a legible { backgroundColor, color } for a colour-filled theme pill: use
  * whichever of white or black text has the higher contrast against `hex`.
  *

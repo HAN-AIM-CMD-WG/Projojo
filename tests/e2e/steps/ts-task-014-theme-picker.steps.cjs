@@ -5,6 +5,12 @@ const { Given, When, Then } = require('@qavajs/core');
 const { FRONTEND_URL } = require('../support/test-data.cjs');
 const { page } = require('../support/e2e-session.cjs');
 const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
+const {
+  MINIMUM_CONTRAST_RATIO,
+  hexToRgb,
+  parseCssColor,
+  contrastRatio,
+} = require('../support/theme-color.cjs');
 
 // Deterministic stub catalog for the ThemePicker harness. Fixed ids/names/colors
 // so the rendering, selection and contrast assertions key off known values.
@@ -39,37 +45,10 @@ function colorForName(name) {
   return theme.color;
 }
 
-function hexToRgb(hex) {
-  const value = hex.replace('#', '');
-  const r = parseInt(value.slice(0, 2), 16);
-  const g = parseInt(value.slice(2, 4), 16);
-  const b = parseInt(value.slice(4, 6), 16);
-  return `rgb(${r}, ${g}, ${b})`;
-}
-
-// WCAG relative-luminance contrast ratio between two "rgb(r, g, b)" strings, so
-// AC-3's "text stays legible" is proven by real contrast rather than by trusting
-// whatever colour the component happened to pick.
-function parseRgb(rgb) {
-  const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  assert.ok(match, `Expected an rgb() colour, got '${rgb}'`);
-  return [Number(match[1]), Number(match[2]), Number(match[3])];
-}
-
-function relativeLuminance([r, g, b]) {
-  const channel = (value) => {
-    const c = value / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-}
-
-function contrastRatio(rgbA, rgbB) {
-  const lumA = relativeLuminance(parseRgb(rgbA));
-  const lumB = relativeLuminance(parseRgb(rgbB));
-  const lighter = Math.max(lumA, lumB);
-  const darker = Math.min(lumA, lumB);
-  return (lighter + 0.05) / (darker + 0.05);
+// AC-3's "text stays legible" is proven by real contrast against the colours the
+// browser rendered, rather than by trusting whatever the component picked.
+function pillContrast(color, background) {
+  return contrastRatio(parseCssColor(color).channels, parseCssColor(background).channels);
 }
 
 function picker(world) {
@@ -245,8 +224,8 @@ Then('the {string} pill text stays legible against its background', async functi
     const style = getComputedStyle(el);
     return { color: style.color, background: style.backgroundColor };
   });
-  const ratio = contrastRatio(color, background);
-  assert.ok(ratio >= 4.5, `Expected legible text on '${name}' (WCAG AA >= 4.5:1), got ${ratio.toFixed(2)}:1 (text ${color} on ${background})`);
+  const ratio = pillContrast(color, background);
+  assert.ok(ratio >= MINIMUM_CONTRAST_RATIO, `Expected legible text on '${name}' (WCAG AA >= ${MINIMUM_CONTRAST_RATIO}:1), got ${ratio.toFixed(2)}:1 (text ${color} on ${background})`);
 });
 
 Then('every selected pill keeps legible text against its background', async function () {
@@ -259,8 +238,8 @@ Then('every selected pill keeps legible text against its background', async func
       const style = getComputedStyle(el);
       return { id: el.getAttribute('data-theme-id'), color: style.color, background: style.backgroundColor };
     });
-    const ratio = contrastRatio(color, background);
-    assert.ok(ratio >= 4.5, `Expected AA-legible text on selected pill '${id}' (>= 4.5:1), got ${ratio.toFixed(2)}:1 (text ${color} on ${background})`);
+    const ratio = pillContrast(color, background);
+    assert.ok(ratio >= MINIMUM_CONTRAST_RATIO, `Expected AA-legible text on selected pill '${id}' (>= ${MINIMUM_CONTRAST_RATIO}:1), got ${ratio.toFixed(2)}:1 (text ${color} on ${background})`);
   }
 });
 

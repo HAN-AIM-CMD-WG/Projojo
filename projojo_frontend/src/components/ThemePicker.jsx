@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getThemes } from '../services';
-import { legibleFill } from '../utils/themeColor';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 
 /**
  * ThemePicker - reusable visual theme selector (controlled).
@@ -72,7 +72,7 @@ export default function ThemePicker({ selected = [], onChange, readOnly = false 
         <div data-testid="theme-picker" className="flex flex-wrap gap-2">
             {visible.map((theme) => {
                 const isSelected = selected.includes(theme.id);
-                const color = theme.color || '#FF7F50';
+                const color = theme.color || COLORLESS_THEME_FILL;
                 const fillStyle = legibleFill(color);
 
                 if (readOnly) {

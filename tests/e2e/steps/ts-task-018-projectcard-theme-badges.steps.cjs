@@ -28,19 +28,16 @@ const {
 } = require('../support/test-data.cjs');
 const { page, loginToken } = require('../support/e2e-session.cjs');
 const { themeApi } = require('../support/theme-catalog.cjs');
+const {
+  COLORLESS_THEME_FILL,
+  MINIMUM_CONTRAST_RATIO,
+  hexToRgb,
+  parseCssColor,
+  contrastRatio,
+} = require('../support/theme-color.cjs');
 
 const OVERVIEW_URL = `${FRONTEND_URL}/ontdek`;
 const BUSINESS_URL = `${FRONTEND_URL}/business/${PROOF_BUSINESS_ID}`;
-
-// The badge fills opaquely with the theme colour and picks its label colour for
-// contrast, the same way the theme pills elsewhere in the app do. A theme without
-// a colour falls back to the coral those pills use.
-const COLORLESS_THEME_FILL = '#FF7F50';
-
-// WCAG AA for normal text. The app's own helper documents that black-or-white
-// always clears at least 4.58:1 against any sRGB fill, so anything below this is
-// a real defect rather than a borderline colour choice.
-const MINIMUM_CONTRAST_RATIO = 4.5;
 
 // The badge's own declared styling. Inherited typography (line-height, letter
 // spacing) is deliberately not compared: neither card's badge declares it, so a
@@ -165,39 +162,6 @@ async function captureStyle(badge) {
       size: { width: Math.round(width), height: Math.round(height) },
     };
   }, COMPARED_STYLE_PROPERTIES);
-}
-
-/** '#4CAF50' -> 'rgb(76, 175, 80)', the shape getComputedStyle returns for an opaque fill. */
-function hexToRgb(hex) {
-  const value = hex.replace('#', '');
-  const channels = [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)].map((c) => parseInt(c, 16));
-  return `rgb(${channels.join(', ')})`;
-}
-
-/** 'rgb(76, 175, 80)' / 'rgba(76, 175, 80, 0.8)' -> { channels: [76,175,80], alpha: 1 | 0.8 }. */
-function parseCssColor(value) {
-  const numbers = value.match(/[\d.]+/g);
-  assert.ok(numbers && numbers.length >= 3, `Expected a parsable rgb(a) colour, got '${value}'`);
-  return { channels: numbers.slice(0, 3).map(Number), alpha: numbers.length > 3 ? Number(numbers[3]) : 1 };
-}
-
-/**
- * WCAG 2.1 relative luminance and contrast ratio, computed here from the colours
- * the browser actually rendered. Deliberately an independent implementation: a
- * step that imported the app's own helper would only prove the helper agrees
- * with itself.
- */
-function relativeLuminance([r, g, b]) {
-  const toLinear = (channel) => {
-    const c = channel / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-}
-
-function contrastRatio(foreground, background) {
-  const [light, dark] = [relativeLuminance(foreground), relativeLuminance(background)].sort((a, b) => b - a);
-  return (light + 0.05) / (dark + 0.05);
 }
 
 /** The badge's rendered label and fill colours. */

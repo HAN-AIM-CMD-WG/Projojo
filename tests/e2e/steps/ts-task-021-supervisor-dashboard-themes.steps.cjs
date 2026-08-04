@@ -18,9 +18,9 @@
 // theme fixture (TS-task-009). Nothing links those files to this one at load time,
 // so retiring a step there breaks this feature silently - check before you do.
 //
-// The colour maths below is a deliberate re-implementation of WCAG 2.1 rather than
-// an import of the app's own legibleFill helper: a step that used the helper would
-// only prove the helper agrees with itself, never that the rendered pill is legible.
+// The colour maths comes from support/theme-color.cjs, which re-implements WCAG 2.1
+// rather than importing the app's own legibleFill helper: a step that used the helper
+// would only prove the helper agrees with itself, never that the pill is legible.
 
 const assert = require('node:assert/strict');
 
@@ -33,18 +33,17 @@ const {
 } = require('../support/test-data.cjs');
 const { page } = require('../support/e2e-session.cjs');
 const { themeApi } = require('../support/theme-catalog.cjs');
+const {
+  COLORLESS_THEME_FILL,
+  MINIMUM_CONTRAST_RATIO,
+  hexToRgb,
+  parseCssColor,
+  contrastRatio,
+} = require('../support/theme-color.cjs');
 
 // The supervisor's home dashboard. "/" is the public landing page; the role-aware
 // HomePage that renders SupervisorDashboard is mounted at /home (App.jsx).
 const DASHBOARD_URL = `${FRONTEND_URL}/home`;
-
-// The fill a theme carrying no colour of its own falls back to, matching the theme
-// pills everywhere else in the app.
-const COLORLESS_THEME_FILL = '#FF7F50';
-
-// WCAG AA for normal text. Black-or-white always clears at least 4.58:1 against any
-// sRGB fill, so anything below this is a real defect and not a borderline choice.
-const MINIMUM_CONTRAST_RATIO = 4.5;
 
 // What "matching skill badge sizing" is measured on. Colour is deliberately absent:
 // a theme pill is filled with its theme colour and a skill pill is grey, by design.
@@ -193,35 +192,6 @@ async function proofProjectSkill() {
   const [skill] = project.skills ?? [];
   assert.ok(skill, `Expected the proof project to require at least one skill, got ${JSON.stringify(project.skills)}`);
   return skill;
-}
-
-// --- colour helpers ---------------------------------------------------------------
-
-/** '#4CAF50' -> 'rgb(76, 175, 80)', the shape getComputedStyle returns for an opaque fill. */
-function hexToRgb(hex) {
-  const value = hex.replace('#', '');
-  const channels = [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)].map((c) => parseInt(c, 16));
-  return `rgb(${channels.join(', ')})`;
-}
-
-/** 'rgb(76, 175, 80)' / 'rgba(76, 175, 80, 0.8)' -> { channels: [76,175,80], alpha: 1 | 0.8 }. */
-function parseCssColor(value) {
-  const numbers = value.match(/[\d.]+/g);
-  assert.ok(numbers && numbers.length >= 3, `Expected a parsable rgb(a) colour, got '${value}'`);
-  return { channels: numbers.slice(0, 3).map(Number), alpha: numbers.length > 3 ? Number(numbers[3]) : 1 };
-}
-
-function relativeLuminance([r, g, b]) {
-  const toLinear = (channel) => {
-    const c = channel / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
-}
-
-function contrastRatio(foreground, background) {
-  const [light, dark] = [relativeLuminance(foreground), relativeLuminance(background)].sort((a, b) => b - a);
-  return (light + 0.05) / (dark + 0.05);
 }
 
 /** The sole pill's rendered label and fill colours. */

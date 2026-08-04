@@ -36,6 +36,7 @@ const {
 const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
 const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
 const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
+const { hexToRgb } = require('../support/theme-color.cjs');
 
 const PROJECT_PATH = `/projects/${PROOF_PROJECT_ID}`;
 
@@ -135,13 +136,6 @@ function currentPath(world) {
 function state(world) {
   if (!world.themeDisplay) world.themeDisplay = { requests: [] };
   return world.themeDisplay;
-}
-
-/** '#4CAF50' -> 'rgb(76, 175, 80)', the shape getComputedStyle returns. */
-function hexToRgb(hex) {
-  const value = hex.replace('#', '');
-  const [r, g, b] = [value.slice(0, 2), value.slice(2, 4), value.slice(4, 6)].map((c) => parseInt(c, 16));
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
 // --- Given ----------------------------------------------------------------------

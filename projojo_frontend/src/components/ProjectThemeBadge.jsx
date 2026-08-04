@@ -1,8 +1,4 @@
-import { legibleFill } from '../utils/themeColor';
-
-// Fill for a theme that carries no colour of its own, matching the theme pills on
-// the project details page and in the theme picker.
-const COLORLESS_THEME_FILL = '#FF7F50';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 
 /**
  * ProjectThemeBadge Component
