@@ -73,6 +73,18 @@ Feature: BUG-404 the overview page filter survives the initial load
     # stops beating the debounce, and without the guard this scenario would silently
     # become a second copy of the one above and stop testing the half of the defect
     # the issue actually measured.
+    #
+    # That guard does fire in practice, and when it does it is reporting the runner,
+    # not the page. Observed: three consecutive isolated runs tripped it while the same
+    # suite passed six consecutive times in the same session, and what tracked was the
+    # run's own duration - 51s, 53s and 42s when it fired against 29s to 32s when it
+    # did not - not anything about the stack's state. Rerun on an unloaded machine.
+    #
+    # Warming the stack does not help, and the Background is why: it renders /ontdek
+    # with both cards before every scenario, so the module graph, the business query
+    # and the theme catalog are already warm by the time this scenario stages anything.
+    # There is no first-run cost left for a preflight warm-up to lift off the measured
+    # path - that was tried, and reverted, for exactly this reason.
     @ui @overview @BUG-404
     Scenario: AC-1 a search typed just before the projects arrive is not wiped by the debounce
       Given the overview page's theme catalog is held back
