@@ -104,6 +104,11 @@ Feature: TS-task-021 theme display on the supervisor dashboard
     # left over from the truncation branch, and a "Geen thema's" placeholder copied
     # from the details page. The last step is what makes this more than an absence
     # check - the row must still carry everything it carried before.
+    #
+    # Like the image-fill scenario further down, this one passes with the feature
+    # removed entirely - three absences are trivially true on a card that has no
+    # theme code at all. It guards the empty state against a later regression; it is
+    # not evidence that the pills work.
     @ui @theme @dashboard @TS-task-021
     Scenario: AC-3 a project without themes shows no pills and no placeholder
       Given the project's linked themes are cleared
@@ -180,9 +185,15 @@ Feature: TS-task-021 theme display on the supervisor dashboard
       And the theme pills, the overflow count and the arrow sit on one line
 
     # The other half of the geometry: the thumbnail column has to run the full height
-    # of the card. The first step keeps the second honest - if the card were only as
-    # tall as its 96px thumbnail floor, a fixed-height image would satisfy "fills the
-    # card" without proving it stretches at all.
+    # of the card.
+    #
+    # A regression guard, not proof of the fix, and measured rather than assumed: with
+    # the implementation reverted this scenario still passes, because the pre-change
+    # card was 98px tall around a fixed 96px thumbnail - a 2px gap, inside the same
+    # tolerance the stretched card needs. It can only tell the two apart when a
+    # shorter card shares a grid row with a taller one, and the E2E seed gives this
+    # supervisor a single project, so that case is unreachable here. What it does
+    # catch is the thumbnail falling behind the card's own content again.
     @ui @theme @dashboard @TS-task-021
     Scenario: The project image fills the full height of the card
       Given the project's linked themes are "Duurzaamheid, Klimaat & Milieu"
@@ -253,6 +264,7 @@ Feature: TS-task-021 theme display on the supervisor dashboard
       Given the project's linked themes are "Duurzaamheid, Klimaat & Milieu"
       When I open the organisation dashboard
       Then every dashboard theme pill carries an aria-label naming its own theme
+      And every pill label reaches the card link's accessible name
       And the pill icons are hidden from assistive technology
 
   Rule: Only the project cards carry theme pills

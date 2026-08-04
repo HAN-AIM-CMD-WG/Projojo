@@ -107,6 +107,16 @@ function pillsIn(scope) {
   return scope.getByTestId('dashboard-theme-pill');
 }
 
+/**
+ * The card's "go to project" chevron, which shares the theme row.
+ *
+ * Matched on its ligature text: it is the card's only element whose whole text is
+ * `arrow_forward`, and the pill icons carry their own test id rather than this one.
+ */
+function arrowIn(scope) {
+  return scope.getByText('arrow_forward', { exact: true });
+}
+
 /** The dashboard's "Mijn Projecten" card, once it is on screen. */
 async function visibleCard(world) {
   const element = card(world);
@@ -355,6 +365,12 @@ Then('the theme pills, the overflow count and the arrow sit on one line', async 
   for (const pill of await pillsIn(element).all()) boxes.push({ what: 'pill', box: await pill.boundingBox() });
   const overflow = element.getByTestId('dashboard-theme-pill-overflow');
   if (await overflow.count()) boxes.push({ what: 'overflow', box: await overflow.boundingBox() });
+  // The arrow is what the pills were moved onto the line of, so it is the item this
+  // step most needs to check: pushed off the row it would give the card back the
+  // extra line the whole arrangement exists to avoid.
+  const arrow = arrowIn(element);
+  assert.equal(await arrow.count(), 1, 'Expected the card to show exactly one arrow indicator to place on the row');
+  boxes.push({ what: 'arrow', box: await arrow.boundingBox() });
   assert.ok(boxes.length >= 2, 'Expected at least two items on the theme row for "one line" to mean anything');
 
   // Vertically overlapping boxes are on one line; a wrapped item sits entirely below
@@ -531,6 +547,35 @@ Then('every dashboard theme pill carries an aria-label naming its own theme', as
     assert.ok(
       label.includes(name),
       `Expected the '${name}' pill's aria-label to name that theme, got '${label}'`,
+    );
+  }
+});
+
+/**
+ * The attribute above is only half the promise. `aria-label` sits on a plain span,
+ * whose implicit role is `generic` - a role ARIA does not allow the attribute on. It
+ * works because the pills live inside the card's single link, whose accessible name
+ * the labels fold into, and that is what a screen-reader user actually hears. Read
+ * the computed name back rather than trusting the attribute to be honoured.
+ */
+Then('every pill label reaches the card link\'s accessible name', async function () {
+  const element = await visibleCard(this);
+  await pillsIn(element).first().waitFor({ state: 'visible', timeout: 10_000 });
+  const labels = await Promise.all((await pillsIn(element).all()).map((pill) => pill.getAttribute('aria-label')));
+  assert.ok(labels.length > 0, 'Expected theme pills to inspect');
+  for (const label of labels) {
+    // getByRole matches the accessible name as a case-insensitive substring, which is
+    // what is wanted here: the rest of the card's text surrounds the label.
+    const named = page(this).getByRole('link', { name: label });
+    assert.equal(
+      await named.count(),
+      1,
+      `Expected exactly one link to carry '${label}' in its accessible name, found ${await named.count()}`,
+    );
+    assert.equal(
+      await named.getAttribute('href'),
+      `/projects/${PROOF_PROJECT_ID}`,
+      `Expected '${label}' to reach the accessible name of the project card's own link`,
     );
   }
 });
