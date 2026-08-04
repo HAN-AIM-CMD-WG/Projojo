@@ -11,8 +11,10 @@ import ThemeRemovalConfirm from './ThemeRemovalConfirm';
  *
  * Fetches the project's themes from GET /themes/project/{id} (its own data
  * lifecycle, independent of the project fetch) and renders them as solid,
- * colour-filled pills with their Material Symbols icon and name, matching the
- * ThemePicker's read-only pill look.
+ * colour-filled pills with their Material Symbols icon and name. The fill and
+ * its contrast-picked label colour come from the shared legibleFill helper that
+ * every theme surface uses; the spacing is this row's own, tighter than the
+ * picker's, which sits in a form rather than beside the project metadata.
  *
  * Read-only states: a brief skeleton while loading, the pills once loaded, an
  * empty-state message when the project has no themes, and a distinct load-error

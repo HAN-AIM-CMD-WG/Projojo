@@ -4,12 +4,14 @@ Feature: TS-task-014 reusable ThemePicker component
   I want a visual theme picker where I can select themes for my project
   So that I can tag projects with relevant themes in an intuitive way
 
-  # The ThemePicker is a standalone, reusable component whose real consumers
-  # (project create/edit, inline detail edit, student interests) are separate
-  # tasks, so no production page mounts it yet. It is exercised here through a
-  # dedicated harness route (/dev/theme-picker) that mounts one URL-configurable
-  # instance (readonly + pre-selected via query params) plus a visible onChange
-  # read-out. The harness is the only mount; production pages stay untouched.
+  # The ThemePicker is a standalone, reusable component. It is exercised here
+  # through a dedicated harness route (/dev/theme-picker) that mounts one
+  # URL-configurable instance (readonly + pre-selected via query params) plus a
+  # visible onChange read-out, so every prop can be driven in isolation.
+  # Its production consumers - project create (TS-task-015), project edit
+  # (TS-task-016) and the inline editor on the details page (TS-task-017) - each
+  # have their own suite and all mount it as an editable picker, so read-only
+  # mode is covered here and nowhere else.
   #
   # GET /themes/ is stubbed (support/theme-stub.cjs). The component's only backend
   # dependency is that theme list, so stubbing it deterministically drives the

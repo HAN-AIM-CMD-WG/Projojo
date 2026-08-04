@@ -4,9 +4,10 @@ import ThemePicker from '../components/ThemePicker';
 
 /**
  * ThemePickerHarness - a minimal mount point for E2E-testing the reusable
- * ThemePicker in isolation. Its real consumers (project create/edit, inline
- * detail edit, student interests) are separate tasks, so no production page
- * mounts the component yet. Registered only in dev builds (see App.jsx).
+ * ThemePicker in isolation. The production consumers (project create, project
+ * edit, inline detail edit) all mount it as an editable picker, so this harness
+ * is what drives the props they leave untouched: read-only display, and a
+ * selection supplied after mount. Registered only in dev builds (see App.jsx).
  *
  * The ThemePicker is controlled, so this harness owns the selection array and
  * applies every onChange back to it. Configured entirely through the URL so the
