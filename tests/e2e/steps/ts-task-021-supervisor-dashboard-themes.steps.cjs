@@ -33,6 +33,7 @@ const {
 } = require('../support/test-data.cjs');
 const { page } = require('../support/e2e-session.cjs');
 const { themeApi } = require('../support/theme-catalog.cjs');
+const { linkedThemeNames } = require('../support/project-themes.cjs');
 const {
   COLORLESS_THEME_FILL,
   MINIMUM_CONTRAST_RATIO,
@@ -175,14 +176,6 @@ function parseNames(names) {
   return names.split(',').map((name) => name.trim()).filter(Boolean).sort();
 }
 
-/** The theme names the project is really linked to, read through the real endpoint. */
-async function linkedThemeNames() {
-  const result = await themeApi(`/themes/project/${PROOF_PROJECT_ID}`, null);
-  assert.equal(result.status, 200, `Expected GET /themes/project/{id} to return 200, received ${result.status}`);
-  assert.ok(Array.isArray(result.body), `Expected GET /themes/project/{id} to return an array, received ${JSON.stringify(result.body)}`);
-  return result.body.map((theme) => theme?.name);
-}
-
 /** The proof project's first skill, read from the live public feed the card renders. */
 async function proofProjectSkill() {
   const result = await themeApi('/projects/public', null);
@@ -275,7 +268,7 @@ Then('the dashboard theme pill uses the color {string} as its background', async
 Then('every dashboard theme pill names one of the project\'s linked themes', async function () {
   const shown = await shownPillNames(this);
   assert.ok(shown.length > 0, 'Expected at least one theme pill to inspect');
-  const linked = await linkedThemeNames();
+  const linked = await linkedThemeNames(PROOF_PROJECT_ID);
   for (const name of shown) {
     assert.ok(
       linked.includes(name),

@@ -27,14 +27,14 @@ const { Given, Then, When } = require('@qavajs/core');
 
 const {
   E2E_STUDENT_ID,
-  E2E_TEACHER_ID,
   FRONTEND_URL,
   PROOF_PROJECT_ID,
   PROOF_PROJECT_NAME,
   PROOF_SUPERVISOR_USER_ID,
 } = require('../support/test-data.cjs');
-const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
-const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
+const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
+const { resetThemeCatalog, fetchThemes } = require('../support/theme-catalog.cjs');
+const { setProjectThemes } = require('../support/project-themes.cjs');
 const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
 const { hexToRgb } = require('../support/theme-color.cjs');
 
@@ -54,46 +54,10 @@ const LOADING_DELAY_MS = 2_500;
 // statement about those users, not about the pills.
 const INTERACTIVE_SELECTOR = 'button, a, input, select, textarea, [contenteditable="true"], [role="button"], [tabindex]';
 
-// --- backend staging (mirrors the self-contained pattern of the 015/016 suites) --
-
-let cachedTeacherToken = null;
-
-async function teacherApi(pathname, options) {
-  cachedTeacherToken ??= await loginToken(E2E_TEACHER_ID);
-  return themeApi(pathname, cachedTeacherToken, options);
-}
+// --- backend staging (support/project-themes.cjs, shared with the sibling suites) --
 
 function parseNames(names) {
   return names.split(',').map((name) => name.trim()).filter(Boolean).sort();
-}
-
-/** Resolve theme names to the ids the live baseline catalog assigned them. */
-async function themeIdsFor(names) {
-  const catalog = await fetchThemes();
-  return names.map((name) => {
-    const theme = catalog.find((candidate) => candidate?.name === name);
-    assert.ok(theme?.id, `Expected a theme named '${name}' in the catalog, got ${JSON.stringify(catalog.map((t) => t?.name))}`);
-    return theme.id;
-  });
-}
-
-/** Read back the names the project is linked to, through the real endpoint. */
-async function linkedThemeNames() {
-  const result = await themeApi(`/themes/project/${PROOF_PROJECT_ID}`, null);
-  assert.equal(result.status, 200, `Expected GET /themes/project/{id} to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
-  assert.ok(Array.isArray(result.body), `Expected GET /themes/project/{id} to return an array, received ${JSON.stringify(result.body)}`);
-  return result.body.map((theme) => theme?.name).sort();
-}
-
-/** Stage the project's theme links through the real endpoint, then verify them. */
-async function setProjectThemes(names) {
-  const themeIds = await themeIdsFor(names);
-  const result = await teacherApi(`/themes/project/${PROOF_PROJECT_ID}`, {
-    method: 'PUT',
-    body: JSON.stringify({ theme_ids: themeIds }),
-  });
-  assert.equal(result.status, 200, `Expected staging PUT /themes/project/{id} to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
-  assert.deepEqual(await linkedThemeNames(), [...names].sort(), 'Expected the staged theme links to be readable back before the scenario starts');
 }
 
 // --- page helpers ---------------------------------------------------------------
@@ -149,11 +113,11 @@ Given('the theme catalog is reset to the shared baseline themes', async function
 });
 
 Given("the project's linked themes are {string}", async function (names) {
-  await setProjectThemes(parseNames(names));
+  await setProjectThemes(PROOF_PROJECT_ID, parseNames(names));
 });
 
 Given("the project's linked themes are cleared", async function () {
-  await setProjectThemes([]);
+  await setProjectThemes(PROOF_PROJECT_ID, []);
 });
 
 Given('I am authenticated in the browser as a student', async function () {

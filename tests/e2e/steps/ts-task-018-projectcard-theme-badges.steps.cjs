@@ -28,6 +28,7 @@ const {
 } = require('../support/test-data.cjs');
 const { page, loginToken } = require('../support/e2e-session.cjs');
 const { themeApi } = require('../support/theme-catalog.cjs');
+const { linkedThemeNames } = require('../support/project-themes.cjs');
 const {
   COLORLESS_THEME_FILL,
   MINIMUM_CONTRAST_RATIO,
@@ -172,14 +173,6 @@ async function badgeColors(world) {
   });
 }
 
-/** The theme names the project is really linked to, read through the real endpoint. */
-async function linkedThemeNames() {
-  const result = await themeApi(`/themes/project/${PROOF_PROJECT_ID}`, null);
-  assert.equal(result.status, 200, `Expected GET /themes/project/{id} to return 200, received ${result.status}`);
-  assert.ok(Array.isArray(result.body), `Expected GET /themes/project/{id} to return an array, received ${JSON.stringify(result.body)}`);
-  return result.body.map((theme) => theme?.name);
-}
-
 // --- Given ------------------------------------------------------------------------
 
 Given('a theme {string} exists with the color {string}', async function (name, hex) {
@@ -286,7 +279,7 @@ Then('the project card theme badge is labelled {string}', async function (label)
 
 Then("the project card theme badge names one of the project's linked themes", async function () {
   const shown = (await (await visibleBadge(this)).getByTestId('project-theme-badge-name').innerText()).trim();
-  const linked = await linkedThemeNames();
+  const linked = await linkedThemeNames(PROOF_PROJECT_ID);
   assert.ok(
     linked.includes(shown),
     `Expected the badge to name one of the project's linked themes ${JSON.stringify(linked)}, got '${shown}'`,

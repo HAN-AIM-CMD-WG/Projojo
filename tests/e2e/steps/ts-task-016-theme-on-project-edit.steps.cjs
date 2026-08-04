@@ -26,13 +26,13 @@ const assert = require('node:assert/strict');
 const { Before, Given, Then, When } = require('@qavajs/core');
 
 const {
-  E2E_TEACHER_ID,
   FRONTEND_URL,
   PROOF_PROJECT_ID,
   PROOF_SUPERVISOR_USER_ID,
 } = require('../support/test-data.cjs');
-const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
-const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
+const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
+const { resetThemeCatalog, fetchThemes, teacherApi } = require('../support/theme-catalog.cjs');
+const { linkedThemeNames, setProjectThemes } = require('../support/project-themes.cjs');
 const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
 
 const EDIT_PATH = `/projects/${PROOF_PROJECT_ID}/update`;
@@ -73,46 +73,8 @@ function state(world) {
 
 // --- backend helpers -----------------------------------------------------------
 
-// The teacher token is reused across calls: it is only used to read back what the
-// UI saved and to stage theme links, and a fresh test login per call would put
-// pointless load on the auth endpoint.
-let cachedTeacherToken = null;
-
-async function teacherApi(pathname, options) {
-  cachedTeacherToken ??= await loginToken(E2E_TEACHER_ID);
-  return themeApi(pathname, cachedTeacherToken, options);
-}
-
 function parseNames(names) {
   return names.split(',').map((name) => name.trim()).filter(Boolean).sort();
-}
-
-/** Resolve theme names to the ids the live catalog assigned them. */
-async function themeIdsFor(names) {
-  const catalog = await fetchThemes();
-  return names.map((name) => {
-    const theme = catalog.find((candidate) => candidate?.name === name);
-    assert.ok(theme?.id, `Expected a theme named '${name}' in the catalog, got ${JSON.stringify(catalog.map((t) => t?.name))}`);
-    return theme.id;
-  });
-}
-
-async function linkedThemeNames() {
-  const result = await themeApi(`/themes/project/${PROOF_PROJECT_ID}`, null);
-  assert.equal(result.status, 200, `Expected GET /themes/project/{id} to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
-  assert.ok(Array.isArray(result.body), `Expected GET /themes/project/{id} to return an array, received ${JSON.stringify(result.body)}`);
-  return result.body.map((theme) => theme?.name).sort();
-}
-
-/** Stage the project's theme links through the real endpoint, then verify them. */
-async function setProjectThemes(names) {
-  const themeIds = await themeIdsFor(names);
-  const result = await teacherApi(`/themes/project/${PROOF_PROJECT_ID}`, {
-    method: 'PUT',
-    body: JSON.stringify({ theme_ids: themeIds }),
-  });
-  assert.equal(result.status, 200, `Expected staging PUT /themes/project/{id} to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
-  assert.deepEqual(await linkedThemeNames(), [...names].sort(), 'Expected the staged theme links to be readable back before the scenario starts');
 }
 
 async function savedDescription() {
@@ -207,11 +169,11 @@ Given('I am authenticated in the browser as the TS-task-016 supervisor', async f
 });
 
 Given('the project is linked to the themes {string}', async function (names) {
-  await setProjectThemes(parseNames(names));
+  await setProjectThemes(PROOF_PROJECT_ID, parseNames(names));
 });
 
 Given('the project is linked to no themes', async function () {
-  await setProjectThemes([]);
+  await setProjectThemes(PROOF_PROJECT_ID, []);
 });
 
 Given('the theme link request fails while saving', async function () {
@@ -394,7 +356,7 @@ Then('the project is linked to exactly the themes {string}', async function (nam
   const deadline = Date.now() + 10_000;
   let linked = [];
   while (Date.now() < deadline) {
-    linked = await linkedThemeNames();
+    linked = await linkedThemeNames(PROOF_PROJECT_ID);
     if (linked.length === expected.length && linked.every((name, index) => name === expected[index])) return;
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
@@ -405,7 +367,7 @@ Then('the project has no linked themes', async function () {
   // Deliberately a single read, not a poll: the scenarios using this have already
   // asserted the flow finished, so a poll could only turn a real failure into a
   // passing first sample.
-  const linked = await linkedThemeNames();
+  const linked = await linkedThemeNames(PROOF_PROJECT_ID);
   assert.deepEqual(linked, [], `Expected the project to have no linked themes, got ${JSON.stringify(linked)}`);
 });
 

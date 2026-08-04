@@ -28,12 +28,12 @@ const { After, Given, Then, When } = require('@qavajs/core');
 const {
   ARCHIVED_SOURCE_PROJECT_ID,
   CROSS_BUSINESS_PROJECT_ID,
-  E2E_TEACHER_ID,
   FRONTEND_URL,
   PROOF_PROJECT_ID,
 } = require('../support/test-data.cjs');
-const { page, loginToken } = require('../support/e2e-session.cjs');
-const { fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
+const { page } = require('../support/e2e-session.cjs');
+const { themeApi, teacherApi } = require('../support/theme-catalog.cjs');
+const { setProjectThemes } = require('../support/project-themes.cjs');
 const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
 
 const OVERVIEW_URL = `${FRONTEND_URL}/ontdek`;
@@ -79,46 +79,6 @@ After(async function () {
 });
 
 // --- backend staging ---------------------------------------------------------------
-
-let cachedTeacherToken = null;
-
-async function teacherApi(pathname, options) {
-  cachedTeacherToken ??= await loginToken(E2E_TEACHER_ID);
-  return themeApi(pathname, cachedTeacherToken, options);
-}
-
-/** Resolve theme names to the ids the live baseline catalog assigned them. */
-async function themeIdsFor(names) {
-  const catalog = await fetchThemes();
-  return names.map((name) => {
-    const theme = catalog.find((candidate) => candidate?.name === name);
-    assert.ok(theme?.id, `Expected a theme named '${name}' in the catalog, got ${JSON.stringify(catalog.map((t) => t?.name))}`);
-    return theme.id;
-  });
-}
-
-/** The theme names a project is really linked to, read through the real endpoint. */
-async function linkedThemeNames(projectId) {
-  const result = await themeApi(`/themes/project/${projectId}`, null);
-  assert.equal(result.status, 200, `Expected GET /themes/project/${projectId} to return 200, received ${result.status}`);
-  assert.ok(Array.isArray(result.body), `Expected GET /themes/project/${projectId} to return an array, received ${JSON.stringify(result.body)}`);
-  return result.body.map((theme) => theme?.name).sort();
-}
-
-/** Stage a project's theme links through the real endpoint, then read them back. */
-async function setProjectThemes(projectId, names) {
-  const themeIds = await themeIdsFor(names);
-  const result = await teacherApi(`/themes/project/${projectId}`, {
-    method: 'PUT',
-    body: JSON.stringify({ theme_ids: themeIds }),
-  });
-  assert.equal(result.status, 200, `Expected staging PUT /themes/project/${projectId} to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
-  assert.deepEqual(
-    await linkedThemeNames(projectId),
-    [...names].sort(),
-    `Expected the staged theme links of ${projectId} to be readable back before the scenario starts`,
-  );
-}
 
 /**
  * Flip a project's public visibility through the real endpoint and verify it

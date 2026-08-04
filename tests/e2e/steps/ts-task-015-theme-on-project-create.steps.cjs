@@ -14,12 +14,12 @@ const assert = require('node:assert/strict');
 const { Before, Given, Then, When } = require('@qavajs/core');
 
 const {
-  E2E_TEACHER_ID,
   FRONTEND_URL,
   PROOF_SUPERVISOR_USER_ID,
 } = require('../support/test-data.cjs');
-const { page, authenticateInBrowser, loginToken } = require('../support/e2e-session.cjs');
-const { resetThemeCatalog, fetchThemes, themeApi } = require('../support/theme-catalog.cjs');
+const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
+const { resetThemeCatalog, fetchThemes, teacherApi } = require('../support/theme-catalog.cjs');
+const { linkedThemeNames } = require('../support/project-themes.cjs');
 const { stubProjectThemeEndpoint } = require('../support/theme-stub.cjs');
 
 const CREATE_PATH = '/projects/add';
@@ -67,15 +67,6 @@ function state(world) {
 
 // --- backend helpers -----------------------------------------------------------
 
-// The teacher token is reused across polls: project lookup polls every 250ms and
-// a fresh test login per poll would put pointless load on the auth endpoint.
-let cachedTeacherToken = null;
-
-async function teacherApi(pathname, options) {
-  cachedTeacherToken ??= await loginToken(E2E_TEACHER_ID);
-  return themeApi(pathname, cachedTeacherToken, options);
-}
-
 async function projectsNamed(name) {
   const result = await teacherApi('/projects/');
   assert.equal(result.status, 200, `Expected GET /projects/ to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
@@ -108,13 +99,6 @@ async function projectIdFor(world, label) {
   const project = await waitForProjectNamed(projectNameFor(label));
   state(world).projectIds.set(label, project.id);
   return project.id;
-}
-
-async function linkedThemeNames(projectId) {
-  const result = await themeApi(`/themes/project/${projectId}`, null);
-  assert.equal(result.status, 200, `Expected GET /themes/project/${projectId} to return 200, received ${result.status}: ${JSON.stringify(result.body)}`);
-  assert.ok(Array.isArray(result.body), `Expected GET /themes/project/${projectId} to return an array, received ${JSON.stringify(result.body)}`);
-  return result.body.map((theme) => theme?.name).sort();
 }
 
 function parseNames(names) {
