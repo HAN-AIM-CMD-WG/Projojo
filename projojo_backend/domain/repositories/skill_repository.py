@@ -3,7 +3,7 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Skill
-from datetime import datetime
+from datetime import datetime, timezone
 from service.uuid_service import generate_uuid
 
 from ..models.skill import StudentSkill
@@ -143,7 +143,7 @@ class SkillRepository(BaseRepository[Skill]):
     def create(self, skill: Skill) -> Skill:
         id = generate_uuid()
         # Generate a creation timestamp if not provided
-        created_at = datetime.now()
+        created_at = datetime.now(timezone.utc)
 
         query = """
             insert
@@ -181,7 +181,7 @@ class SkillRepository(BaseRepository[Skill]):
 
         # Convert createdAt string to datetime
         created_at = (
-            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now(timezone.utc)
         )
 
         description = result.get("description")
@@ -226,7 +226,7 @@ class SkillRepository(BaseRepository[Skill]):
                     id=skill_id,
                     name=skill_name,
                     is_pending=is_pending_value,
-                    created_at=datetime.now(),  # Assuming created_at is not needed here
+                    created_at=datetime.now(timezone.utc),  # Assuming created_at is not needed here
                 )
             )
         return skills

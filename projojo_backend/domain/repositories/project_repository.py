@@ -3,7 +3,7 @@ from db.initDatabase import Db
 from exceptions import ItemRetrievalException
 from .base import BaseRepository
 from domain.models import Project, ProjectCreation
-from datetime import datetime
+from datetime import datetime, timezone
 from service.uuid_service import generate_uuid
 
 
@@ -192,22 +192,18 @@ class ProjectRepository(BaseRepository[Project]):
 
     def set_public(self, project_id: str, is_public: bool) -> None:
         """Set the public visibility of a project."""
-        # First check if isPublic exists and delete the ownership
-        # TypeDB 3.x syntax: has $attribute of $entity
+        # Remove any existing isPublic attribute first so re-setting stays idempotent.
+        # Uses TypeDB 3.x attribute-delete syntax (`delete has $val of $entity;`, matching
+        # archive_project and restore_project). A project without isPublic matches nothing, so
+        # the delete is a harmless no-op and needs no error swallowing.
         delete_query = """
             match
-                $project isa project, has id ~project_id;
-                $val isa isPublic;
-                $project has $val;
+                $project isa project, has id ~project_id, has isPublic $val;
             delete
                 has $val of $project;
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception as e:
-            # If no isPublic exists, that's fine - we'll insert a new one
-            print(f"Delete isPublic (might not exist): {e}")
-        
+        Db.write_transact(delete_query, {"project_id": project_id})
+
         # Insert new value
         insert_query = """
             match
@@ -219,21 +215,18 @@ class ProjectRepository(BaseRepository[Project]):
 
     def set_impact_summary(self, project_id: str, impact_summary: str | None) -> None:
         """Set the impact summary of a project (for completed projects)."""
-        # First delete existing impactSummary if any
-        # TypeDB 3.x syntax: has $attribute of $entity
+        # Remove any existing impactSummary attribute first so re-setting stays idempotent.
+        # Uses TypeDB 3.x attribute-delete syntax (`delete has $val of $entity;`). A project
+        # without impactSummary matches nothing, so the delete is a harmless no-op and needs no
+        # error swallowing.
         delete_query = """
             match
-                $project isa project, has id ~project_id;
-                $val isa impactSummary;
-                $project has $val;
+                $project isa project, has id ~project_id, has impactSummary $val;
             delete
                 has $val of $project;
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass
-        
+        Db.write_transact(delete_query, {"project_id": project_id})
+
         # Insert new value if provided
         if impact_summary:
             insert_query = """
@@ -343,7 +336,7 @@ class ProjectRepository(BaseRepository[Project]):
 
         # Convert createdAt string to datetime
         created_at = (
-            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now(timezone.utc)
         )
 
         # Map tasks if present (simplified Task objects with just id and name)
@@ -431,7 +424,7 @@ class ProjectRepository(BaseRepository[Project]):
         supervisor_id = result.get("id", "")
         created_at_str = result.get("createdAt", "")
         created_at = (
-            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now()
+            datetime.fromisoformat(created_at_str) if created_at_str else datetime.now(timezone.utc)
         )
 
         return ProjectCreation(
@@ -440,7 +433,7 @@ class ProjectRepository(BaseRepository[Project]):
 
     def create(self, project: ProjectCreation) -> ProjectCreation:
         id = generate_uuid()
-        created_at = datetime.now()
+        created_at = datetime.now(timezone.utc)
         # Optional location: None removes clause via build_query
         location_value = project.location.strip() if getattr(project, "location", None) else None
         start_date = getattr(project, "start_date", None)
@@ -597,17 +590,17 @@ class ProjectRepository(BaseRepository[Project]):
 
     def archive_project(self, project_id: str) -> None:
         """Archive a project (set isArchived to true)."""
-        # First check if isArchived already exists and delete it
+        # Remove any existing isArchived attribute first so re-archiving stays idempotent.
+        # Uses TypeDB 3.x attribute-delete syntax (`delete has $val of $entity;`, matching
+        # restore_project and business_repository). A project without isArchived matches
+        # nothing, so the delete is a harmless no-op and needs no error swallowing.
         delete_query = """
             match
                 $project isa project, has id ~project_id, has isArchived $val;
             delete
-                $project has $val;
+                has $val of $project;
         """
-        try:
-            Db.write_transact(delete_query, {"project_id": project_id})
-        except Exception:
-            pass  # No existing isArchived attribute
+        Db.write_transact(delete_query, {"project_id": project_id})
 
         # Now insert isArchived = true
         insert_query = """
@@ -624,7 +617,7 @@ class ProjectRepository(BaseRepository[Project]):
             match
                 $project isa project, has id ~project_id, has isArchived $val;
             delete
-                $project has $val;
+                has $val of $project;
         """
         Db.write_transact(delete_query, {"project_id": project_id})
 

@@ -22,6 +22,14 @@ insert
         has fullName "Tessa Testdocent",
         has imagePath "default.svg";
 
+    # PF-task-011b second teacher: lets the re-hide precedence test prove that a later teacher's
+    # hide overwrites the recorded hiddenByUserId with the acting teacher's id.
+    $portfolio_second_teacher isa teacher,
+        has id "20000000-0000-4000-8000-000000000012",
+        has email "portfolio.second.teacher@projojo.local",
+        has fullName "Twan Tweededocent",
+        has imagePath "default.svg";
+
     $student isa student,
         has id "20000000-0000-4000-8000-000000000002",
         has email "student.e2e@projojo.local",
@@ -41,6 +49,24 @@ insert
         has portfolioSlug "portfolio-seed-private",
         has isPortfolioWorldPublic false;
 
+    # PF-task-010 fixtures: students created without portfolio summary or world-public flag, so the
+    # settings API can be exercised from a clean slate (private-by-default, then mutated) without
+    # disturbing the read-only fixtures above. Each still carries a slug because real students are
+    # assigned one at account creation; the settings read is side-effect free.
+    $portfolio_no_slug_student isa student,
+        has id "20000000-0000-4000-8000-000000000010",
+        has email "portfolio.no.slug.student@projojo.local",
+        has fullName "Nora Nieuwslug",
+        has imagePath "default.svg",
+        has portfolioSlug "portfolio-seed-nora-nieuwslug";
+
+    $portfolio_settings_student isa student,
+        has id "20000000-0000-4000-8000-000000000011",
+        has email "portfolio.settings.student@projojo.local",
+        has fullName "Sven Instellingen",
+        has imagePath "default.svg",
+        has portfolioSlug "portfolio-seed-sven-instellingen";
+
     $supervisor isa supervisor,
         has id "20000000-0000-4000-8000-000000000003",
         has email "supervisor.e2e@projojo.local",
@@ -54,7 +80,7 @@ insert
         has imagePath "default.svg";
 
     $other_supervisor isa supervisor,
-        has id "20000000-0000-4000-8000-000000000006",
+        has id "20000000-0000-4000-8000-000000000009",
         has email "other.supervisor.e2e@projojo.local",
         has fullName "Otto Anderebegeleider",
         has imagePath "default.svg";
@@ -63,11 +89,20 @@ insert
     $teacher_auth isa oauthAuthentication (user: $teacher, provider: $provider_microsoft),
         has oauthSub "e2e-teacher-microsoft-sub";
 
+    $portfolio_second_teacher_auth isa oauthAuthentication (user: $portfolio_second_teacher, provider: $provider_microsoft),
+        has oauthSub "portfolio-second-teacher-microsoft-sub";
+
     $student_auth isa oauthAuthentication (user: $student, provider: $provider_google),
         has oauthSub "e2e-student-google-sub";
 
     $portfolio_private_student_auth isa oauthAuthentication (user: $portfolio_private_student, provider: $provider_google),
         has oauthSub "portfolio-private-student-google-sub";
+
+    $portfolio_no_slug_student_auth isa oauthAuthentication (user: $portfolio_no_slug_student, provider: $provider_google),
+        has oauthSub "portfolio-no-slug-student-google-sub";
+
+    $portfolio_settings_student_auth isa oauthAuthentication (user: $portfolio_settings_student, provider: $provider_google),
+        has oauthSub "portfolio-settings-student-google-sub";
 
     $supervisor_auth isa oauthAuthentication (user: $supervisor, provider: $provider_github),
         has oauthSub "e2e-supervisor-github-sub";
@@ -90,7 +125,7 @@ insert
         has website "https://example.invalid/projojo-e2e";
 
     $other_business isa business,
-        has id "30000000-0000-4000-8000-000000000004",
+        has id "30000000-0000-4000-8000-000000000009",
         has name "E2E Cross-Business Organization",
         has description "Tweede organisatie voor autorisatieproeven rond projecteigenaarschap.",
         has imagePath "default.svg",
@@ -547,6 +582,147 @@ insert
         has acceptedAt 2026-01-21T11:13:00.000+0000,
         has startedAt 2026-01-22T09:13:00.000+0000;
 
+    # PF-task-007a supervisor relationship-gate fixtures.
+    # Otis manages a business where the seeded student has ONLY a currently open (pending) application.
+    $pf_007a_open_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000006",
+        has email "portfolio.open.supervisor@projojo.local",
+        has fullName "Otis Openaanvraag",
+        has imagePath "default.svg";
+
+    $pf_007a_open_supervisor_auth isa oauthAuthentication (user: $pf_007a_open_supervisor, provider: $provider_github),
+        has oauthSub "pf-007a-open-supervisor-github-sub";
+
+    $pf_007a_open_business isa business,
+        has id "30000000-0000-4000-8000-000000000004",
+        has name "Portfolio Open Application Business",
+        has description "Organisatie waar de seed student alleen een openstaande aanvraag heeft.",
+        has imagePath "default.svg",
+        has location "Arnhem";
+
+    $pf_007a_open_project isa project,
+        has id "40000000-0000-4000-8000-000000000004",
+        has name "Portfolio Open Application Project",
+        has description "Project voor de open-aanvraag relatiepoort van PF-task-007a.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-25T09:00:00.000+0000,
+        has isPublic false;
+
+    $pf_007a_open_task isa task,
+        has id "50000000-0000-4000-8000-000000000030",
+        has name "Portfolio Open Application Task",
+        has description "Taak met een openstaande aanvraag van de seed student.",
+        has totalNeeded 1,
+        has createdAt 2026-01-25T09:15:00.000+0000;
+
+    $pf_007a_open_manages isa manages (supervisor: $pf_007a_open_supervisor, business: $pf_007a_open_business),
+        has location "Arnhem";
+
+    $pf_007a_open_has_projects isa hasProjects (business: $pf_007a_open_business, project: $pf_007a_open_project);
+
+    $pf_007a_open_contains_task isa containsTask (project: $pf_007a_open_project, task: $pf_007a_open_task);
+
+    $pf_007a_open_registration isa registersForTask (student: $student, task: $pf_007a_open_task),
+        has id "pf-007a-open-application",
+        has description "Openstaande aanvraag zonder acceptatiebeslissing voor de relatiepoort.",
+        has createdAt 2026-01-25T10:00:00.000+0000,
+        has requestedAt 2026-01-25T10:00:00.000+0000;
+
+    # Evi manages a business where the seeded student was accepted before, but is not currently accepted.
+    $pf_007a_ever_accepted_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000008",
+        has email "portfolio.ever.accepted.supervisor@projojo.local",
+        has fullName "Evi Eerdergeaccepteerd",
+        has imagePath "default.svg";
+
+    $pf_007a_ever_accepted_supervisor_auth isa oauthAuthentication (user: $pf_007a_ever_accepted_supervisor, provider: $provider_github),
+        has oauthSub "pf-007a-ever-accepted-supervisor-github-sub";
+
+    $pf_007a_ever_accepted_business isa business,
+        has id "30000000-0000-4000-8000-000000000006",
+        has name "Portfolio Ever Accepted Business",
+        has description "Organisatie waar de seed student ooit geaccepteerd is.",
+        has imagePath "default.svg",
+        has location "Arnhem";
+
+    $pf_007a_ever_accepted_project isa project,
+        has id "40000000-0000-4000-8000-000000000006",
+        has name "Portfolio Ever Accepted Project",
+        has description "Project voor de ooit-geaccepteerde relatiepoort van PF-task-007a.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-25T09:00:00.000+0000,
+        has isPublic false;
+
+    $pf_007a_ever_accepted_task isa task,
+        has id "50000000-0000-4000-8000-000000000032",
+        has name "Portfolio Ever Accepted Task",
+        has description "Taak met een eerdere acceptatie van de seed student.",
+        has totalNeeded 1,
+        has createdAt 2026-01-25T09:15:00.000+0000;
+
+    $pf_007a_ever_accepted_manages isa manages (supervisor: $pf_007a_ever_accepted_supervisor, business: $pf_007a_ever_accepted_business),
+        has location "Arnhem";
+
+    $pf_007a_ever_accepted_has_projects isa hasProjects (business: $pf_007a_ever_accepted_business, project: $pf_007a_ever_accepted_project);
+
+    $pf_007a_ever_accepted_contains_task isa containsTask (project: $pf_007a_ever_accepted_project, task: $pf_007a_ever_accepted_task);
+
+    $pf_007a_ever_accepted_registration isa registersForTask (student: $student, task: $pf_007a_ever_accepted_task),
+        has id "pf-007a-ever-accepted-application",
+        has description "Eerder geaccepteerde aanvraag met latere afwijzing voor de relatiepoort.",
+        has isAccepted false,
+        has response "Later afgewezen na eerdere acceptatie voor PF-task-007a dekking.",
+        has createdAt 2026-01-25T10:00:00.000+0000,
+        has requestedAt 2026-01-25T10:00:00.000+0000,
+        has acceptedAt 2026-01-25T11:00:00.000+0000;
+
+    # Rian manages a business where the seeded student has ONLY a rejected application (never open, never accepted).
+    $pf_007a_rejected_supervisor isa supervisor,
+        has id "20000000-0000-4000-8000-000000000007",
+        has email "portfolio.rejected.supervisor@projojo.local",
+        has fullName "Rian Afgewezen",
+        has imagePath "default.svg";
+
+    $pf_007a_rejected_supervisor_auth isa oauthAuthentication (user: $pf_007a_rejected_supervisor, provider: $provider_github),
+        has oauthSub "pf-007a-rejected-supervisor-github-sub";
+
+    $pf_007a_rejected_business isa business,
+        has id "30000000-0000-4000-8000-000000000005",
+        has name "Portfolio Rejected Application Business",
+        has description "Organisatie waar de seed student alleen een afgewezen aanvraag heeft.",
+        has imagePath "default.svg",
+        has location "Nijmegen";
+
+    $pf_007a_rejected_project isa project,
+        has id "40000000-0000-4000-8000-000000000005",
+        has name "Portfolio Rejected Application Project",
+        has description "Project voor de afgewezen-aanvraag grens van PF-task-007a.",
+        has imagePath "default.svg",
+        has createdAt 2026-01-25T09:00:00.000+0000,
+        has isPublic false;
+
+    $pf_007a_rejected_task isa task,
+        has id "50000000-0000-4000-8000-000000000031",
+        has name "Portfolio Rejected Application Task",
+        has description "Taak met een afgewezen aanvraag van de seed student.",
+        has totalNeeded 1,
+        has createdAt 2026-01-25T09:15:00.000+0000;
+
+    $pf_007a_rejected_manages isa manages (supervisor: $pf_007a_rejected_supervisor, business: $pf_007a_rejected_business),
+        has location "Nijmegen";
+
+    $pf_007a_rejected_has_projects isa hasProjects (business: $pf_007a_rejected_business, project: $pf_007a_rejected_project);
+
+    $pf_007a_rejected_contains_task isa containsTask (project: $pf_007a_rejected_project, task: $pf_007a_rejected_task);
+
+    $pf_007a_rejected_registration isa registersForTask (student: $student, task: $pf_007a_rejected_task),
+        has id "pf-007a-rejected-application",
+        has description "Afgewezen aanvraag voor de relatiepoort grens.",
+        has isAccepted false,
+        has response "Afgewezen voor PF-task-007a relatiepoort dekking.",
+        has createdAt 2026-01-25T10:00:00.000+0000,
+        has requestedAt 2026-01-25T10:00:00.000+0000;
+
     $portfolio_item_no_ratings isa portfolioItem,
         has id "pf-seed-item-no-ratings",
         has createdAt 2026-02-20T17:05:00.000+0000,
@@ -753,6 +929,631 @@ insert
         has sourceProjectArchived true,
         has sourceBusinessArchived true;
 
+    # Load-bearing for PF-task-007b: the retired-existence probe (Given step) relies on
+    # isRetired staying true so create_review rejects with the "ingetrokken" message before
+    # any insert. Flipping this to false would both fail that scenario and mutate the shared DB.
+    $portfolio_item_retired isa portfolioItem,
+        has id "pf-seed-item-retired",
+        has createdAt 2026-02-27T17:05:00.000+0000,
+        has completedAt 2026-02-27T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "Retired portfolio seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-27T17:00:00.000+0000,
+        has isRetired true,
+        has retiredAt 2026-02-28T09:00:00.000+0000,
+        has isHidden false,
+        has displayOrder 8,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Mixed-rating item: one rating below three among higher ratings. Locks the supervisor
+    # rating gate as "exclude when ANY rating < 3" (not an average): [2, 5] must be excluded.
+    $portfolio_item_mixed_ratings isa portfolioItem,
+        has id "pf-seed-item-mixed-ratings",
+        has createdAt 2026-02-28T17:05:00.000+0000,
+        has completedAt 2026-02-28T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "Mixed-rating portfolio seed item: one rating below three among higher ratings.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-02-28T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 9,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # PF-task-007c dedicated authenticated-public retraction fixtures (owned by the portfolio
+    # owner student). Deliberately kept out of the shared `items` alias map: the PF-task-007c
+    # scenarios mutate their retraction state (retract/restore), so isolating them here keeps
+    # every other read-only suite deterministic and keeps the PF-task-002d probe unaffected.
+    # Each item is otherwise supervisor-eligible (not retired, not hidden, rating rules pass)
+    # so the only variable under test is the authenticated-public retraction flag.
+    $portfolio_item_007c_guard isa portfolioItem,
+        has id "pf-seed-item-007c-guard",
+        has createdAt 2026-03-01T17:05:00.000+0000,
+        has completedAt 2026-03-01T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-007c unauthorized-guard seed item (must stay unchanged).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-01T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 10,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_007c_retractable isa portfolioItem,
+        has id "pf-seed-item-007c-retractable",
+        has createdAt 2026-03-02T17:05:00.000+0000,
+        has completedAt 2026-03-02T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-007c retractable seed item; also world-visible for independence coverage.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-02T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 11,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_007c_restorable isa portfolioItem,
+        has id "pf-seed-item-007c-restorable",
+        has createdAt 2026-03-03T17:05:00.000+0000,
+        has completedAt 2026-03-03T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-007c restorable seed item; starts retracted with rating rules passing.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-03T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 12,
+        has isAuthenticatedPublicRetraction true,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_007c_restorable_low isa portfolioItem,
+        has id "pf-seed-item-007c-restorable-low-rated",
+        has createdAt 2026-03-04T17:05:00.000+0000,
+        has completedAt 2026-03-04T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-007c restorable-but-low-rated seed item; rating gate keeps it hidden after restore.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-04T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 13,
+        has isAuthenticatedPublicRetraction true,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # PF-task-011a dedicated, mutation-safe curation items. Ordering, hide/show, and world-visible
+    # toggles run against these so they never disturb the read-only expectations of other suites.
+    # They are intentionally kept out of the shared `items` alias map (see test-data.cjs), so the
+    # PF-task-002d seed probe does not enroll them.
+    $portfolio_item_011a_order_first isa portfolioItem,
+        has id "pf-seed-item-011a-order-first",
+        has createdAt 2026-03-05T17:05:00.000+0000,
+        has completedAt 2026-03-05T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a ordering seed item (first).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-05T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 40,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_011a_order_second isa portfolioItem,
+        has id "pf-seed-item-011a-order-second",
+        has createdAt 2026-03-06T17:05:00.000+0000,
+        has completedAt 2026-03-06T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a ordering seed item (second).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-06T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 41,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_011a_hideable isa portfolioItem,
+        has id "pf-seed-item-011a-hideable",
+        has createdAt 2026-03-07T17:05:00.000+0000,
+        has completedAt 2026-03-07T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a hide/show seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-07T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 42,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Teacher-hidden via the existing teacher moderation channel (isHidden + hiddenByRole="teacher").
+    # AC-3 uses it to prove a student "show" cannot override a teacher hide.
+    $portfolio_item_011a_teacher_hidden isa portfolioItem,
+        has id "pf-seed-item-011a-teacher-hidden",
+        has createdAt 2026-03-08T17:05:00.000+0000,
+        has completedAt 2026-03-08T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a teacher-hidden seed item (student show must not override).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-08T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden true,
+        has hiddenAt 2026-03-09T09:00:00.000+0000,
+        has hiddenByRole "teacher",
+        has hiddenByUserId "20000000-0000-4000-8000-000000000001",
+        has displayOrder 43,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_011a_worldable isa portfolioItem,
+        has id "pf-seed-item-011a-worldable",
+        has createdAt 2026-03-10T17:05:00.000+0000,
+        has completedAt 2026-03-10T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a world-visible selection seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-10T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 44,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_item_011a_guard isa portfolioItem,
+        has id "pf-seed-item-011a-guard",
+        has createdAt 2026-03-11T17:05:00.000+0000,
+        has completedAt 2026-03-11T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a unauthorized-guard seed item (must stay owner-controlled).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-11T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 45,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Owned by the private-by-default student so AC-4 can prove a world-visible item stays
+    # unexposed while the portfolio page itself is not world-public.
+    $portfolio_item_011a_private_worldable isa portfolioItem,
+        has id "pf-seed-item-011a-private-worldable",
+        has createdAt 2026-03-12T17:05:00.000+0000,
+        has completedAt 2026-03-12T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000005",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Priya Priveportfolio",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011a private-page world-visible seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-12T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 1,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # PF-task-011b dedicated, mutation-safe teacher soft-hide items. The teacher hide endpoint has
+    # no un-hide counterpart in this task, so hiding one of these is irreversible within a run; each
+    # hiding scenario therefore owns its own item and never shares one with another scenario. Like
+    # the 011a items they are kept out of the shared `items` alias map (see test-data.cjs) so the
+    # PF-task-002d seed probe does not enroll them. All start not-hidden and owned by the main
+    # world-public student, except where noted.
+    $portfolio_item_011b_hide isa portfolioItem,
+        has id "pf-seed-item-011b-hide",
+        has createdAt 2026-03-20T17:05:00.000+0000,
+        has completedAt 2026-03-20T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b teacher soft-hide happy-path seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-20T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 50,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # World-visible + owned by the world-public student, so AC-2 can prove a teacher hide removes an
+    # otherwise world-page-eligible item from the owner, teacher, related-supervisor, and world views.
+    $portfolio_item_011b_excluded isa portfolioItem,
+        has id "pf-seed-item-011b-excluded",
+        has createdAt 2026-03-21T17:05:00.000+0000,
+        has completedAt 2026-03-21T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b teacher-hide exclusion seed item (world-visible before hide).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-21T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 51,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # AC-3 precedence: a teacher hides this, then the owning student's show attempt must not clear it.
+    # It starts student-hidden (studentHidden true) so the AC-3 "show" (studentHidden -> false) is a
+    # real state change on the student's own channel, proving that channel is powerless over the
+    # teacher's isHidden rather than a no-op that would pass vacuously.
+    $portfolio_item_011b_precedence isa portfolioItem,
+        has id "pf-seed-item-011b-precedence",
+        has createdAt 2026-03-22T17:05:00.000+0000,
+        has completedAt 2026-03-22T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b teacher-hide precedence seed item (student show must not override).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-22T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has studentHidden true,
+        has displayOrder 52,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # AC-5 no-hard-delete: hidden via the endpoint, then proven to still be stored (re-hide + owner read).
+    $portfolio_item_011b_persist isa portfolioItem,
+        has id "pf-seed-item-011b-persist",
+        has createdAt 2026-03-23T17:05:00.000+0000,
+        has completedAt 2026-03-23T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b teacher-hide no-hard-delete seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-23T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 53,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # AC-4 shared unauthorized guard: never successfully hidden, so it can serve every denial
+    # (student, supervisor, unauthenticated) and the student/item ownership-mismatch 404 without
+    # cross-scenario coupling. It must stay not-hidden throughout the run.
+    $portfolio_item_011b_guard isa portfolioItem,
+        has id "pf-seed-item-011b-guard",
+        has createdAt 2026-03-24T17:05:00.000+0000,
+        has completedAt 2026-03-24T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b unauthorized-guard seed item (must stay not-hidden).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-24T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 54,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # AC-1 retired evidence: a teacher must be able to soft-hide an already-retired item (retirement
+    # does not block moderation) and the completed-work evidence must stay stored, not deleted.
+    $portfolio_item_011b_retired isa portfolioItem,
+        has id "pf-seed-item-011b-retired",
+        has createdAt 2026-03-25T17:05:00.000+0000,
+        has completedAt 2026-03-25T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b teacher-hide retired-evidence seed item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-25T17:00:00.000+0000,
+        has isRetired true,
+        has retiredAt 2026-03-25T18:00:00.000+0000,
+        has isHidden false,
+        has displayOrder 55,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # AC-1 re-hide precedence: the first teacher hides this, then a second teacher hides it, proving
+    # the recorded hiddenByUserId is overwritten with the latest acting teacher's id.
+    $portfolio_item_011b_rehide isa portfolioItem,
+        has id "pf-seed-item-011b-rehide",
+        has createdAt 2026-03-26T17:05:00.000+0000,
+        has completedAt 2026-03-26T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000002",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Tom Teststudent",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-011b teacher-hide re-hide seed item (second teacher overwrites metadata).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-26T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 56,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
     $portfolio_ownership_no_ratings isa hasPortfolio (student: $student, item: $portfolio_item_no_ratings);
     $portfolio_ownership_all_ratings_good isa hasPortfolio (student: $student, item: $portfolio_item_all_ratings_good);
     $portfolio_ownership_low_rating isa hasPortfolio (student: $student, item: $portfolio_item_low_rating);
@@ -760,6 +1561,26 @@ insert
     $portfolio_ownership_retracted isa hasPortfolio (student: $student, item: $portfolio_item_retracted);
     $portfolio_ownership_world_public isa hasPortfolio (student: $student, item: $portfolio_item_world_public);
     $portfolio_ownership_archived_source isa hasPortfolio (student: $student, item: $portfolio_item_archived_source);
+    $portfolio_ownership_retired isa hasPortfolio (student: $student, item: $portfolio_item_retired);
+    $portfolio_ownership_mixed_ratings isa hasPortfolio (student: $student, item: $portfolio_item_mixed_ratings);
+    $portfolio_ownership_007c_guard isa hasPortfolio (student: $student, item: $portfolio_item_007c_guard);
+    $portfolio_ownership_007c_retractable isa hasPortfolio (student: $student, item: $portfolio_item_007c_retractable);
+    $portfolio_ownership_007c_restorable isa hasPortfolio (student: $student, item: $portfolio_item_007c_restorable);
+    $portfolio_ownership_007c_restorable_low isa hasPortfolio (student: $student, item: $portfolio_item_007c_restorable_low);
+    $portfolio_ownership_011a_order_first isa hasPortfolio (student: $student, item: $portfolio_item_011a_order_first);
+    $portfolio_ownership_011a_order_second isa hasPortfolio (student: $student, item: $portfolio_item_011a_order_second);
+    $portfolio_ownership_011a_hideable isa hasPortfolio (student: $student, item: $portfolio_item_011a_hideable);
+    $portfolio_ownership_011a_teacher_hidden isa hasPortfolio (student: $student, item: $portfolio_item_011a_teacher_hidden);
+    $portfolio_ownership_011a_worldable isa hasPortfolio (student: $student, item: $portfolio_item_011a_worldable);
+    $portfolio_ownership_011a_guard isa hasPortfolio (student: $student, item: $portfolio_item_011a_guard);
+    $portfolio_ownership_011a_private_worldable isa hasPortfolio (student: $portfolio_private_student, item: $portfolio_item_011a_private_worldable);
+    $portfolio_ownership_011b_hide isa hasPortfolio (student: $student, item: $portfolio_item_011b_hide);
+    $portfolio_ownership_011b_excluded isa hasPortfolio (student: $student, item: $portfolio_item_011b_excluded);
+    $portfolio_ownership_011b_precedence isa hasPortfolio (student: $student, item: $portfolio_item_011b_precedence);
+    $portfolio_ownership_011b_persist isa hasPortfolio (student: $student, item: $portfolio_item_011b_persist);
+    $portfolio_ownership_011b_guard isa hasPortfolio (student: $student, item: $portfolio_item_011b_guard);
+    $portfolio_ownership_011b_retired isa hasPortfolio (student: $student, item: $portfolio_item_011b_retired);
+    $portfolio_ownership_011b_rehide isa hasPortfolio (student: $student, item: $portfolio_item_011b_rehide);
 
     $portfolio_review_no_rating isa portfolioReview,
         has id "pf-seed-review-no-rating",
@@ -832,6 +1653,46 @@ insert
         has isWorldVisible false,
         has publicNoticeAcceptedAt 2026-02-26T18:00:00.000+0000;
 
+    # Attached to the retired item so PF-task-007b can prove retired-item reviews never leak
+    # into any normal view (the item is filtered out before reviews are ever fetched).
+    $portfolio_review_retired isa portfolioReview,
+        has id "pf-seed-review-retired",
+        has reviewText "Review attached to the retired deterministic portfolio item; must never surface in normal views.",
+        has rating 4,
+        has createdAt 2026-02-27T18:00:00.000+0000,
+        has updatedAt 2026-02-27T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-27T18:00:00.000+0000;
+
+    $portfolio_review_mixed_low isa portfolioReview,
+        has id "pf-seed-review-mixed-low",
+        has reviewText "Mixed-rating item review below the authenticated-public rating threshold.",
+        has rating 2,
+        has createdAt 2026-02-28T18:00:00.000+0000,
+        has updatedAt 2026-02-28T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-28T18:00:00.000+0000;
+
+    $portfolio_review_mixed_high isa portfolioReview,
+        has id "pf-seed-review-mixed-high",
+        has reviewText "Mixed-rating item review at or above the authenticated-public rating threshold.",
+        has rating 5,
+        has createdAt 2026-02-28T18:30:00.000+0000,
+        has updatedAt 2026-02-28T18:30:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-02-28T18:30:00.000+0000;
+
+    # PF-task-007c: a below-threshold review on the restorable-low-rated item proves that
+    # removing the retraction alone does not restore supervisor visibility while the rating gate fails.
+    $portfolio_review_007c_low isa portfolioReview,
+        has id "pf-seed-review-007c-low",
+        has reviewText "PF-task-007c review below the authenticated-public rating threshold on the restorable item.",
+        has rating 2,
+        has createdAt 2026-03-04T18:00:00.000+0000,
+        has updatedAt 2026-03-04T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-04T18:00:00.000+0000;
+
     $portfolio_review_link_no_rating isa hasPortfolioReview (item: $portfolio_item_no_ratings, review: $portfolio_review_no_rating);
     $portfolio_review_link_good_teacher isa hasPortfolioReview (item: $portfolio_item_all_ratings_good, review: $portfolio_review_good_teacher);
     $portfolio_review_link_good_supervisor isa hasPortfolioReview (item: $portfolio_item_all_ratings_good, review: $portfolio_review_good_supervisor);
@@ -840,6 +1701,10 @@ insert
     $portfolio_review_link_retracted isa hasPortfolioReview (item: $portfolio_item_retracted, review: $portfolio_review_retracted);
     $portfolio_review_link_world_public isa hasPortfolioReview (item: $portfolio_item_world_public, review: $portfolio_review_world_public);
     $portfolio_review_link_archived_source isa hasPortfolioReview (item: $portfolio_item_archived_source, review: $portfolio_review_archived_source);
+    $portfolio_review_link_retired isa hasPortfolioReview (item: $portfolio_item_retired, review: $portfolio_review_retired);
+    $portfolio_review_link_mixed_low isa hasPortfolioReview (item: $portfolio_item_mixed_ratings, review: $portfolio_review_mixed_low);
+    $portfolio_review_link_mixed_high isa hasPortfolioReview (item: $portfolio_item_mixed_ratings, review: $portfolio_review_mixed_high);
+    $portfolio_review_link_007c_low isa hasPortfolioReview (item: $portfolio_item_007c_restorable_low, review: $portfolio_review_007c_low);
 
     $portfolio_author_no_rating isa portfolioReviewAuthor (review: $portfolio_review_no_rating, author: $teacher);
     $portfolio_author_good_teacher isa portfolioReviewAuthor (review: $portfolio_review_good_teacher, author: $teacher);
@@ -849,3 +1714,359 @@ insert
     $portfolio_author_retracted isa portfolioReviewAuthor (review: $portfolio_review_retracted, author: $supervisor);
     $portfolio_author_world_public isa portfolioReviewAuthor (review: $portfolio_review_world_public, author: $teacher);
     $portfolio_author_archived_source isa portfolioReviewAuthor (review: $portfolio_review_archived_source, author: $supervisor);
+    $portfolio_author_retired isa portfolioReviewAuthor (review: $portfolio_review_retired, author: $teacher);
+    $portfolio_author_mixed_low isa portfolioReviewAuthor (review: $portfolio_review_mixed_low, author: $supervisor);
+    $portfolio_author_mixed_high isa portfolioReviewAuthor (review: $portfolio_review_mixed_high, author: $teacher);
+    $portfolio_author_007c_low isa portfolioReviewAuthor (review: $portfolio_review_007c_low, author: $supervisor);
+
+    # PF-task-012a dedicated, mutation-safe review world-public selection fixtures. A dedicated
+    # world-public student ("Ravi Reviewpubliek") owns its own items and reviews so marking or
+    # clearing review visibility here never disturbs the read-only world-public expectations of
+    # other suites (which assert against Tom's page). These entities are intentionally kept out of
+    # the shared alias maps in test-data.cjs, so the PF-task-002d seed probe does not enroll them.
+    $portfolio_012a_owner isa student,
+        has id "20000000-0000-4000-8000-000000000013",
+        has email "portfolio.012a.owner@projojo.local",
+        has fullName "Ravi Reviewpubliek",
+        has imagePath "default.svg",
+        has portfolioSummary "PF-task-012a world-public review selection fixtures.",
+        has portfolioSlug "portfolio-seed-012a-reviews",
+        has isPortfolioWorldPublic true;
+
+    $portfolio_012a_owner_auth isa oauthAuthentication (user: $portfolio_012a_owner, provider: $provider_google),
+        has oauthSub "portfolio-012a-owner-google-sub";
+
+    # World-public host item: carries the markable, retractable, and guard reviews for AC-1, AC-2,
+    # AC-4, and AC-5. It is world-visible, non-hidden, and non-retired so its world-visible reviews
+    # are eligible for the public page.
+    $portfolio_item_012a_host isa portfolioItem,
+        has id "pf-seed-item-012a-host",
+        has createdAt 2026-03-20T17:05:00.000+0000,
+        has completedAt 2026-03-20T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a world-public review host item.",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-20T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 60,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Non-world-visible item: AC-3 proves a world-visible review on it never reaches the public page.
+    $portfolio_item_012a_nonpublic isa portfolioItem,
+        has id "pf-seed-item-012a-nonpublic",
+        has createdAt 2026-03-21T17:05:00.000+0000,
+        has completedAt 2026-03-21T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a non-world-visible item (its review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-21T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 61,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Retired item: AC-3 proves a world-visible review on retired evidence never reaches the public page.
+    $portfolio_item_012a_retired isa portfolioItem,
+        has id "pf-seed-item-012a-retired",
+        has createdAt 2026-03-22T17:05:00.000+0000,
+        has completedAt 2026-03-22T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a retired item (its review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-22T17:00:00.000+0000,
+        has isRetired true,
+        has retiredAt 2026-03-23T09:00:00.000+0000,
+        has isHidden false,
+        has displayOrder 62,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Teacher-hidden item: AC-3 proves a world-visible review on teacher-hidden evidence never
+    # reaches the public page (get_visible_items drops isHidden items from every normal view). It
+    # is world-visible on purpose so only the hide keeps it (and its review) off the public page.
+    $portfolio_item_012a_hidden isa portfolioItem,
+        has id "pf-seed-item-012a-hidden",
+        has createdAt 2026-03-24T17:05:00.000+0000,
+        has completedAt 2026-03-24T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000013",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Ravi Reviewpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-012a teacher-hidden item (its review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-03-24T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden true,
+        has hiddenAt 2026-03-25T09:00:00.000+0000,
+        has hiddenByRole "teacher",
+        has hiddenByUserId "20000000-0000-4000-8000-000000000001",
+        has displayOrder 63,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_ownership_012a_host isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_host);
+    $portfolio_ownership_012a_nonpublic isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_nonpublic);
+    $portfolio_ownership_012a_retired isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_retired);
+    $portfolio_ownership_012a_hidden isa hasPortfolio (student: $portfolio_012a_owner, item: $portfolio_item_012a_hidden);
+
+    # All 012a reviews carry publicNoticeAcceptedAt (schema @card(1) makes it mandatory), so every
+    # review is created under the reviewer public-use notice contract (AC-5). They start not
+    # world-visible; the scenarios set the required starting state through the selection endpoint.
+    $portfolio_review_012a_markable isa portfolioReview,
+        has id "pf-seed-review-012a-markable",
+        has reviewText "PF-task-012a markable review: eligible for world-public selection.",
+        has rating 5,
+        has createdAt 2026-03-20T18:00:00.000+0000,
+        has updatedAt 2026-03-20T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-20T18:00:00.000+0000;
+
+    $portfolio_review_012a_retractable isa portfolioReview,
+        has id "pf-seed-review-012a-retractable",
+        has reviewText "PF-task-012a retractable review: proves world-public retraction leaves authenticated views intact.",
+        has rating 4,
+        has createdAt 2026-03-20T18:30:00.000+0000,
+        has updatedAt 2026-03-20T18:30:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-20T18:30:00.000+0000;
+
+    $portfolio_review_012a_guard isa portfolioReview,
+        has id "pf-seed-review-012a-guard",
+        has reviewText "PF-task-012a guard review: only the owner may change its world-visible flag.",
+        has rating 5,
+        has createdAt 2026-03-20T19:00:00.000+0000,
+        has updatedAt 2026-03-20T19:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-20T19:00:00.000+0000;
+
+    $portfolio_review_012a_nonpublic isa portfolioReview,
+        has id "pf-seed-review-012a-nonpublic",
+        has reviewText "PF-task-012a review on a non-world-visible item: must never reach the public page.",
+        has rating 4,
+        has createdAt 2026-03-21T18:00:00.000+0000,
+        has updatedAt 2026-03-21T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-21T18:00:00.000+0000;
+
+    $portfolio_review_012a_retired isa portfolioReview,
+        has id "pf-seed-review-012a-retired",
+        has reviewText "PF-task-012a review on retired evidence: must never reach the public page.",
+        has rating 4,
+        has createdAt 2026-03-22T18:00:00.000+0000,
+        has updatedAt 2026-03-22T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-22T18:00:00.000+0000;
+
+    $portfolio_review_012a_hidden isa portfolioReview,
+        has id "pf-seed-review-012a-hidden",
+        has reviewText "PF-task-012a review on teacher-hidden evidence: must never reach the public page.",
+        has rating 4,
+        has createdAt 2026-03-24T18:00:00.000+0000,
+        has updatedAt 2026-03-24T18:00:00.000+0000,
+        has isWorldVisible false,
+        has publicNoticeAcceptedAt 2026-03-24T18:00:00.000+0000;
+
+    $portfolio_review_link_012a_markable isa hasPortfolioReview (item: $portfolio_item_012a_host, review: $portfolio_review_012a_markable);
+    $portfolio_review_link_012a_retractable isa hasPortfolioReview (item: $portfolio_item_012a_host, review: $portfolio_review_012a_retractable);
+    $portfolio_review_link_012a_guard isa hasPortfolioReview (item: $portfolio_item_012a_host, review: $portfolio_review_012a_guard);
+    $portfolio_review_link_012a_nonpublic isa hasPortfolioReview (item: $portfolio_item_012a_nonpublic, review: $portfolio_review_012a_nonpublic);
+    $portfolio_review_link_012a_retired isa hasPortfolioReview (item: $portfolio_item_012a_retired, review: $portfolio_review_012a_retired);
+    $portfolio_review_link_012a_hidden isa hasPortfolioReview (item: $portfolio_item_012a_hidden, review: $portfolio_review_012a_hidden);
+
+    $portfolio_author_012a_markable isa portfolioReviewAuthor (review: $portfolio_review_012a_markable, author: $teacher);
+    $portfolio_author_012a_retractable isa portfolioReviewAuthor (review: $portfolio_review_012a_retractable, author: $supervisor);
+    $portfolio_author_012a_guard isa portfolioReviewAuthor (review: $portfolio_review_012a_guard, author: $teacher);
+    $portfolio_author_012a_nonpublic isa portfolioReviewAuthor (review: $portfolio_review_012a_nonpublic, author: $supervisor);
+    $portfolio_author_012a_retired isa portfolioReviewAuthor (review: $portfolio_review_012a_retired, author: $teacher);
+    $portfolio_author_012a_hidden isa portfolioReviewAuthor (review: $portfolio_review_012a_hidden, author: $teacher);
+
+    # PF-task-013 dedicated, read-only world-public fixtures for the world-public portfolio API
+    # contract. They are intentionally kept out of the shared alias maps in test-data.cjs (so the
+    # PF-task-002d seed probe does not enroll them) and their ids/slugs live only in the PF-task-013
+    # step file, mirroring how PF-task-011a/012a keep their ids local. Two students:
+    #   * "Sami Samenvatting" (portfolio-seed-013-summary-only): world-public, has a summary, owns no
+    #     items, so its public page proves the summary-only contract (AC-2).
+    #   * "Cato Contentpubliek" (portfolio-seed-013-content): world-public, owns exactly one included
+    #     item and one excluded item, so a single read proves the two AC clauses Tom's page cannot:
+    #     the included item is world-visible AND authenticated-public retracted with a below-threshold
+    #     (rating 2) world-visible review, proving authenticated-public rating rules do not remove
+    #     selected items or reviews from world-public output (AC-3); the excluded item is not
+    #     world-visible yet carries a world-visible-flagged review, proving a world-visible review on a
+    #     non-public item never reaches the public page even with the flag true (AC-4).
+    $portfolio_013_summary_only_student isa student,
+        has id "20000000-0000-4000-8000-000000000014",
+        has email "portfolio.013.summary@projojo.local",
+        has fullName "Sami Samenvatting",
+        has imagePath "default.svg",
+        has portfolioSummary "PF-task-013 summary-only world-public portfolio.",
+        has portfolioSlug "portfolio-seed-013-summary-only",
+        has isPortfolioWorldPublic true;
+
+    $portfolio_013_content_student isa student,
+        has id "20000000-0000-4000-8000-000000000015",
+        has email "portfolio.013.content@projojo.local",
+        has fullName "Cato Contentpubliek",
+        has imagePath "default.svg",
+        has portfolioSummary "PF-task-013 world-public read contract fixtures.",
+        has portfolioSlug "portfolio-seed-013-content",
+        has isPortfolioWorldPublic true;
+
+    # Every user must play oauthAuthentication:user (schema @card(1..10)), so both PF-task-013
+    # students carry a deterministic identity link even though they are never logged in as.
+    $portfolio_013_summary_only_auth isa oauthAuthentication (user: $portfolio_013_summary_only_student, provider: $provider_google),
+        has oauthSub "portfolio-013-summary-only-google-sub";
+
+    $portfolio_013_content_auth isa oauthAuthentication (user: $portfolio_013_content_student, provider: $provider_google),
+        has oauthSub "portfolio-013-content-google-sub";
+
+    # Included item: world-visible, non-hidden, non-retired, but authenticated-public retracted. The
+    # world-public read path does not apply the supervisor rating/retraction gate, so it stays public.
+    $portfolio_item_013_included isa portfolioItem,
+        has id "pf-seed-item-013-included",
+        has createdAt 2026-04-01T17:05:00.000+0000,
+        has completedAt 2026-04-01T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000015",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Cato Contentpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-013 world-public selected item (retracted, low-rated, still public).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-04-01T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 70,
+        has isAuthenticatedPublicRetraction true,
+        has isWorldVisible true,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    # Non-public item: not world-visible. Its world-visible-flagged review must never reach the page.
+    $portfolio_item_013_nonpublic isa portfolioItem,
+        has id "pf-seed-item-013-nonpublic",
+        has createdAt 2026-04-02T17:05:00.000+0000,
+        has completedAt 2026-04-02T17:00:00.000+0000,
+        has sourceStudentId "20000000-0000-4000-8000-000000000015",
+        has sourceRegistrationId "pf-seed-registration-completed",
+        has sourceTaskId "50000000-0000-4000-8000-000000000001",
+        has sourceProjectId "40000000-0000-4000-8000-000000000001",
+        has sourceBusinessId "30000000-0000-4000-8000-000000000001",
+        has studentName "Cato Contentpubliek",
+        has studentImagePath "default.svg",
+        has taskName "Infrastructure Proof Task",
+        has taskDescription "PF-task-013 non-world-visible item (its flagged review must stay private).",
+        has projectName "E2E Infrastructure Proof Project",
+        has projectDescription "Portfolio seed project display copy.",
+        has businessName "E2E Infrastructure Business",
+        has businessLocation "Arnhem",
+        has skillName "Deterministisch Testen",
+        has timelineStartDate 2026-01-20T09:00:00.000+0000,
+        has timelineEndDate 2026-04-02T17:00:00.000+0000,
+        has isRetired false,
+        has isHidden false,
+        has displayOrder 71,
+        has isAuthenticatedPublicRetraction false,
+        has isWorldVisible false,
+        has sourceTaskArchived false,
+        has sourceProjectArchived false,
+        has sourceBusinessArchived false;
+
+    $portfolio_ownership_013_included isa hasPortfolio (student: $portfolio_013_content_student, item: $portfolio_item_013_included);
+    $portfolio_ownership_013_nonpublic isa hasPortfolio (student: $portfolio_013_content_student, item: $portfolio_item_013_nonpublic);
+
+    # Included review: world-visible with a below-threshold rating (2). It stays public because the
+    # world-public read never applies the authenticated-public rating gate.
+    $portfolio_review_013_included isa portfolioReview,
+        has id "pf-seed-review-013-included",
+        has reviewText "PF-task-013 world-visible review on the selected item (low rating, still public).",
+        has rating 2,
+        has createdAt 2026-04-01T18:00:00.000+0000,
+        has updatedAt 2026-04-01T18:00:00.000+0000,
+        has isWorldVisible true,
+        has publicNoticeAcceptedAt 2026-04-01T18:00:00.000+0000;
+
+    # Leak review: world-visible flag set true, but its item is not world-visible, so it must never
+    # appear on the public page.
+    $portfolio_review_013_leak isa portfolioReview,
+        has id "pf-seed-review-013-leak",
+        has reviewText "PF-task-013 world-visible-flagged review on a non-public item (must stay private).",
+        has rating 5,
+        has createdAt 2026-04-02T18:00:00.000+0000,
+        has updatedAt 2026-04-02T18:00:00.000+0000,
+        has isWorldVisible true,
+        has publicNoticeAcceptedAt 2026-04-02T18:00:00.000+0000;
+
+    $portfolio_review_link_013_included isa hasPortfolioReview (item: $portfolio_item_013_included, review: $portfolio_review_013_included);
+    $portfolio_review_link_013_leak isa hasPortfolioReview (item: $portfolio_item_013_nonpublic, review: $portfolio_review_013_leak);
+
+    $portfolio_author_013_included isa portfolioReviewAuthor (review: $portfolio_review_013_included, author: $teacher);
+    $portfolio_author_013_leak isa portfolioReviewAuthor (review: $portfolio_review_013_leak, author: $supervisor);

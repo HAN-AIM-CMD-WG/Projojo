@@ -1,9 +1,60 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import re
 from typing import Any
 
+from typedb.common.exception import TypeDBDriverException
+
 from db.initDatabase import Db
+from exceptions import ConflictException
 from service.uuid_service import generate_uuid
+
+
+# Shared fetch projection for a single portfolioItem row. Both the list read
+# (get_visible_items) and the ownership-scoped single read (get_owned_item) return the
+# identical item shape; only their match clauses differ (visibility filters vs. ownership
+# scope), so the projection is defined once here. It dot-projects off $item and $student,
+# which are bound by both callers' match clauses (each binds $owner_student_name and
+# $owner_student_image_path on $student). No ~params appear here, so it is safe to concatenate.
+_PORTFOLIO_ITEM_FETCH_PROJECTION = """
+    fetch {
+        'id': $item.id,
+        'created_at': $item.createdAt,
+        'completed_at': $item.completedAt,
+        'owner_student_id': $student.id,
+        'owner_student_name': $owner_student_name,
+        'owner_student_image_path': $owner_student_image_path,
+        'source_student_id': [ $item.sourceStudentId ],
+        'source_registration_id': $item.sourceRegistrationId,
+        'source_task_id': $item.sourceTaskId,
+        'source_project_id': $item.sourceProjectId,
+        'source_business_id': $item.sourceBusinessId,
+        'student_name': [ $item.studentName ],
+        'student_image_path': [ $item.studentImagePath ],
+        'task_name': $item.taskName,
+        'task_description': [ $item.taskDescription ],
+        'project_name': $item.projectName,
+        'project_description': [ $item.projectDescription ],
+        'business_name': $item.businessName,
+        'business_location': [ $item.businessLocation ],
+        'skills': [
+            match
+                $item has skillName $skill_name;
+            fetch { 'name': $skill_name };
+        ],
+        'timeline_start_date': [ $item.timelineStartDate ],
+        'timeline_end_date': [ $item.timelineEndDate ],
+        'is_retired': $item.isRetired,
+        'retired_at': [ $item.retiredAt ],
+        'is_hidden': $item.isHidden,
+        'hidden_at': [ $item.hiddenAt ],
+        'hidden_by_role': [ $item.hiddenByRole ],
+        'hidden_by_user_id': [ $item.hiddenByUserId ],
+        'is_student_hidden': [ $item.studentHidden ],
+        'display_order': [ $item.displayOrder ],
+        'is_authenticated_public_retraction': $item.isAuthenticatedPublicRetraction,
+        'is_world_visible': $item.isWorldVisible
+    };
+"""
 
 
 class PortfolioRepository:
@@ -28,23 +79,31 @@ class PortfolioRepository:
         if public_review_notice_accepted is not True:
             raise ValueError("Je moet de publieke reviewmelding accepteren voordat je reviewtekst indient.")
 
+        # Reviewability gates on retirement and the teacher moderation hide (isHidden) only. A
+        # student's own hide (studentHidden, PF-task-011a) is intentionally NOT a review gate: it
+        # is presentation curation, not moderation, so a student cannot use it to block a teacher or
+        # supervisor from reviewing their work. Student-hidden items are still dropped from the
+        # normal portfolio reads (get_visible_items), so reviewers reach them only by direct item id.
         item_state = self._get_reviewable_item_state(item_id)
         if item_state is None:
             raise ValueError("Portfolio-item niet gevonden.")
         if item_state["is_retired"]:
             raise ValueError("Reviews kunnen niet worden toegevoegd aan ingetrokken portfolio-evidence.")
+        if item_state["is_hidden"]:
+            raise ValueError("Reviews kunnen niet worden toegevoegd aan verborgen portfolio-evidence.")
         item_business_id = item_state["business_id"]
         if author_role == "supervisor" and item_business_id != business_id:
             raise PermissionError("Je hebt hier geen rechten voor.")
 
         review_id = generate_uuid()
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         query = f"""
             match
                 $item isa portfolioItem,
                     has id ~item_id,
                     has sourceBusinessId ~item_business_id,
-                    has isRetired false;
+                    has isRetired false,
+                    has isHidden false;
                 $author isa {author_type_token}, has id ~author_id;
             insert
                 $review isa portfolioReview,
@@ -76,6 +135,72 @@ class PortfolioRepository:
             raise ValueError("Portfolio-item niet gevonden of niet meer reviewbaar.")
         return review_id
 
+    def update_review(
+        self,
+        review_id: str,
+        editor_id: str,
+        editor_role: str,
+        review_text: str | None = None,
+        set_rating: bool = False,
+        rating: int | None = None,
+    ) -> None:
+        # Edit permission (Portfolio spec 3.5): the review author may edit their own review, and
+        # any teacher may edit any review. The route-level @auth(role="supervisor") gate already
+        # blocks students and unauthenticated callers; this is the author/teacher ownership check.
+        # A missing review is a distinct not-found signal (LookupError -> 404), kept separate from
+        # ValueError (-> 400) so the route's status mapping cannot misclassify a future validation
+        # error in this method as a 404.
+        author_id = self._get_review_author_id(review_id)
+        if author_id is None:
+            raise LookupError("Portfolio-review niet gevonden.")
+        if editor_role != "teacher" and editor_id != author_id:
+            raise PermissionError("Je hebt hier geen rechten voor.")
+
+        # updatedAt always changes on an edit. reviewText is only rewritten when provided.
+        # rating is left untouched unless the caller is changing it: a new value replaces or adds
+        # it (the `update` stage upserts the @card(0..1) attribute), a null value removes it. The
+        # persisted rating feeds the authenticated-public rating gate at read time, so lowering,
+        # raising, or removing it recalculates supervisor visibility on the next read (spec 3.6.2).
+        now = datetime.now(timezone.utc)
+        update_clauses = ["$review has updatedAt ~updated_at;"]
+        params: dict[str, Any] = {"review_id": review_id, "updated_at": now}
+        if review_text is not None:
+            update_clauses.append("$review has reviewText ~review_text;")
+            params["review_text"] = review_text
+        if set_rating and rating is not None:
+            update_clauses.append("$review has rating ~rating;")
+            params["rating"] = rating
+
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+        if set_rating and rating is None:
+            queries.append(
+                (
+                    "match $review isa portfolioReview, has id ~review_id, has rating $current; "
+                    "delete has $current of $review;",
+                    {"review_id": review_id},
+                )
+            )
+        queries.append(
+            (f"match $review isa portfolioReview, has id ~review_id; update {' '.join(update_clauses)}", params)
+        )
+        Db.write_transact_many(queries)
+
+    def _get_review_author_id(self, review_id: str) -> str | None:
+        rows = Db.read_transact(
+            """
+            match
+                $review isa portfolioReview, has id ~review_id;
+                $author_link isa portfolioReviewAuthor (review: $review, author: $author);
+                $author has id $author_id;
+            fetch { 'author_id': $author_id };
+        """,
+            {"review_id": review_id},
+            sort_fields=False,
+        )
+        if not rows:
+            return None
+        return self._one(rows[0].get("author_id"))
+
     def _review_exists(self, review_id: str) -> bool:
         rows = Db.read_transact(
             """
@@ -92,8 +217,8 @@ class PortfolioRepository:
         rows = Db.read_transact(
             """
             match
-                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired;
-            fetch { 'business_id': $business_id, 'is_retired': $is_retired };
+                $item isa portfolioItem, has id ~item_id, has sourceBusinessId $business_id, has isRetired $is_retired, has isHidden $is_hidden;
+            fetch { 'business_id': $business_id, 'is_retired': $is_retired, 'is_hidden': $is_hidden };
         """,
             {"item_id": item_id},
             sort_fields=False,
@@ -103,6 +228,7 @@ class PortfolioRepository:
         return {
             "business_id": self._one(rows[0].get("business_id")),
             "is_retired": bool(self._one(rows[0].get("is_retired"), False)),
+            "is_hidden": bool(self._one(rows[0].get("is_hidden"), False)),
         }
 
     def get_student_identity(self, student_id: str) -> dict[str, Any] | None:
@@ -159,7 +285,140 @@ class PortfolioRepository:
             "is_portfolio_world_public": bool(self._one(student.get("is_portfolio_world_public"), False)),
         }
 
+    def get_settings(self, student_id: str) -> dict[str, Any] | None:
+        # Owner settings read. Slug assignment (PF-task-010): a unique slug is normally assigned
+        # once, at student account creation (see UserRepository.create_user), and seed students
+        # carry a slug directly in the .tql seeds, so this read is side-effect free for every
+        # student created since. portfolioSlug is @card(0..1) in the schema, however, so a student
+        # created before slugs existed (no backfill migration ran) can still lack one. Because
+        # PortfolioSettingsResponse.slug is a required string, returning None would fail response
+        # validation, so such a legacy student is self-healed here: a stable unique slug is
+        # generated and persisted once, after which every subsequent read writes nothing.
+        identity = self.get_student_identity(student_id)
+        if identity is None:
+            return None
+        slug = identity["portfolio_slug"]
+        if slug is None:
+            slug = self.generate_unique_slug(identity["full_name"] or "student")
+            self.update_settings(student_id, set_slug=True, slug=slug)
+        return {
+            "summary": identity["portfolio_summary"],
+            "slug": slug,
+            "is_world_public": identity["is_portfolio_world_public"],
+        }
+
+    def get_slug_owner(self, slug: str) -> str | None:
+        rows = Db.read_transact(
+            "match $student isa student, has portfolioSlug ~slug, has id $id; fetch { 'id': $id };",
+            {"slug": slug},
+            sort_fields=False,
+        )
+        return self._one(rows[0].get("id")) if rows else None
+
+    def update_settings(
+        self,
+        student_id: str,
+        *,
+        set_summary: bool = False,
+        summary: str | None = None,
+        set_slug: bool = False,
+        slug: str | None = None,
+        set_world_public: bool = False,
+        world_public: bool | None = None,
+    ) -> None:
+        # Only fields the caller sent are touched, and every touched field is written in a single
+        # all-or-nothing transaction so a multi-field PATCH can never half-apply (e.g. summary
+        # persisting while a later field's write fails). Each optional student attribute uses the
+        # delete-then-insert idempotent pattern (see _optional_attribute_queries), mirroring
+        # project_repository.set_impact_summary. Batching the delete and insert into one transaction
+        # also closes the window where a failed insert after a committed delete would leave the
+        # attribute unset. Slug uniqueness is pre-checked in the route as a fast, friendly path, but
+        # that read and this write are separate transactions, so two students can pass the same
+        # pre-check concurrently; portfolioSlug is the only @unique attribute written here and the
+        # constraint is validated at commit, so the losing writer is rejected server-side. To keep
+        # that commit-time rejection from escaping as a 500, the write is wrapped below.
+        #
+        # Classification is driven by the rejection itself (_is_slug_uniqueness_violation), not by a
+        # follow-up read: right after the loser is rejected the winner's committed slug is not
+        # guaranteed to be visible to a fresh read, so re-reading alone can still see no owner and
+        # would mask the documented conflict as a 500. An ownership re-read is kept only as an
+        # additive fallback (it can upgrade a missed match to the conflict but never turns an
+        # unrelated infrastructure error into a false conflict), so anything that is neither a
+        # uniqueness rejection nor a now-visible foreign claim is re-raised unchanged.
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+        if set_summary:
+            queries += self._optional_attribute_queries(student_id, "portfolioSummary", summary or None)
+        if set_slug:
+            queries += self._optional_attribute_queries(student_id, "portfolioSlug", slug)
+        if set_world_public:
+            queries += self._optional_attribute_queries(student_id, "isPortfolioWorldPublic", world_public)
+        if not queries:
+            return
+        try:
+            Db.write_transact_many(queries)
+        except TypeDBDriverException as exc:
+            if set_slug and slug is not None and (
+                self._is_slug_uniqueness_violation(exc) or self._slug_owned_by_other(slug, student_id)
+            ):
+                raise ConflictException("Deze portfolio-slug is al in gebruik.")
+            raise
+
+    @staticmethod
+    def _is_slug_uniqueness_violation(exc: TypeDBDriverException) -> bool:
+        # A violated @unique constraint reaches Python only as a formatted server-error string (no
+        # structured code survives TypeDBDriverException.of), so the reliable, timing-independent
+        # signal is the message naming the uniqueness constraint. Infrastructure failures (closed
+        # driver/transaction, dropped connection) do not mention uniqueness and stay 500s.
+        return "unique" in str(exc).lower()
+
+    def _slug_owned_by_other(self, slug: str, student_id: str) -> bool:
+        owner = self.get_slug_owner(slug)
+        return owner is not None and owner != student_id
+
+    def _optional_attribute_queries(
+        self, student_id: str, attribute: str, value: Any
+    ) -> list[tuple[str, dict[str, Any] | None]]:
+        # attribute is a fixed internal literal (portfolioSummary/portfolioSlug/
+        # isPortfolioWorldPublic), never user input, so it is safe to interpolate directly. The
+        # value always flows through a ~param. Delete-first keeps re-setting an @card(0..1)
+        # attribute idempotent; a student without the attribute matches nothing, so the delete is a
+        # harmless no-op. Returned as (template, params) tuples so the caller runs the delete and
+        # the insert in one all-or-nothing transaction via Db.write_transact_many.
+        queries: list[tuple[str, dict[str, Any] | None]] = [
+            (
+                f"match $s isa student, has id ~student_id, has {attribute} $current; delete has $current of $s;",
+                {"student_id": student_id},
+            )
+        ]
+        if value is not None:
+            queries.append(
+                (
+                    f"match $s isa student, has id ~student_id; insert $s has {attribute} ~value;",
+                    {"student_id": student_id, "value": value},
+                )
+            )
+        return queries
+
+    def generate_unique_slug(self, full_name: str) -> str:
+        # Public: called at student account creation (UserRepository.create_user) to assign a
+        # stable portfolio slug up front, so no read path ever has to generate one. Derives a
+        # human-readable base from the name and appends a short random suffix, retrying on the
+        # (astronomically unlikely) @unique collision.
+        base = self._slugify(full_name)[:40] or "student"
+        for _ in range(10):
+            candidate = f"{base}-{generate_uuid().replace('-', '')[:6]}"
+            if self.get_slug_owner(candidate) is None:
+                return candidate
+        raise ValueError("Kon geen unieke portfolio-slug genereren.")
+
+    @staticmethod
+    def _slugify(value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
     def has_supervisor_relationship(self, student_id: str, business_id: str) -> bool:
+        # Portfolio-level gate: a supervisor's business relates to the student when the student
+        # has a currently open application (no acceptance decision yet) or has ever been accepted
+        # for a task in that business. A rejected-only application (isAccepted false) does not qualify.
         query = """
             match
                 $student isa student, has id ~student_id;
@@ -168,72 +427,33 @@ class PortfolioRepository:
                 $task isa task;
                 $hasProjects isa hasProjects(business: $business, project: $project);
                 $containsTask isa containsTask(project: $project, task: $task);
-                $registration isa registersForTask(student: $student, task: $task), has isAccepted true;
+                $registration isa registersForTask(student: $student, task: $task);
+                { $registration has acceptedAt $accepted_at; } or { not { $registration has isAccepted $decision; }; };
             fetch { 'student_id': $student.id };
         """
         return bool(Db.read_transact(query, {"student_id": student_id, "business_id": business_id}))
 
     def get_visible_items(self, student_id: str, viewer_role: str) -> list[dict[str, Any]]:
-        query = """
+        # Visibility-filtered list read: retired items, teacher-hidden items (isHidden), and
+        # student-hidden items (studentHidden) are excluded. studentHidden is optional and absent
+        # on most items, so it is filtered with a negation pattern rather than an equality match.
+        # The shared projection still requires every canonical attribute to exist, so the returned
+        # shape is identical to get_owned_item.
+        query = (
+            """
             match
                 $student isa student, has id ~student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
-                $item isa portfolioItem,
-                    has id $id,
-                    has createdAt $created_at,
-                    has completedAt $completed_at,
-                    has sourceRegistrationId $source_registration_id,
-                    has sourceTaskId $source_task_id,
-                    has sourceProjectId $source_project_id,
-                    has sourceBusinessId $source_business_id,
-                    has taskName $task_name,
-                    has projectName $project_name,
-                    has businessName $business_name,
-                    has isRetired false,
-                    has isHidden false,
-                    has isAuthenticatedPublicRetraction $is_authenticated_public_retraction,
-                    has isWorldVisible $is_world_visible;
+                $item isa portfolioItem, has isRetired false, has isHidden false;
+                not { $item has studentHidden true; };
                 $ownership isa hasPortfolio(student: $student, item: $item);
-            fetch {
-                'id': $id,
-                'created_at': $created_at,
-                'completed_at': $completed_at,
-                'owner_student_id': $student.id,
-                'owner_student_name': $owner_student_name,
-                'owner_student_image_path': $owner_student_image_path,
-                'source_student_id': [$item.sourceStudentId],
-                'source_registration_id': $source_registration_id,
-                'source_task_id': $source_task_id,
-                'source_project_id': $source_project_id,
-                'source_business_id': $source_business_id,
-                'student_name': [$item.studentName],
-                'student_image_path': [$item.studentImagePath],
-                'task_name': $task_name,
-                'task_description': [ $item.taskDescription ],
-                'project_name': $project_name,
-                'project_description': [ $item.projectDescription ],
-                'business_name': $business_name,
-                'business_location': [ $item.businessLocation ],
-                'skills': [
-                    match
-                        $item has skillName $skill_name;
-                    fetch { 'name': $skill_name };
-                ],
-                'timeline_start_date': [ $item.timelineStartDate ],
-                'timeline_end_date': [ $item.timelineEndDate ],
-                'retired_at': [ $item.retiredAt ],
-                'hidden_at': [ $item.hiddenAt ],
-                'hidden_by_role': [ $item.hiddenByRole ],
-                'hidden_by_user_id': [ $item.hiddenByUserId ],
-                'display_order': [ $item.displayOrder ],
-                'is_authenticated_public_retraction': $is_authenticated_public_retraction,
-                'is_world_visible': $is_world_visible,
-                'source_task_archived': [$item.sourceTaskArchived],
-                'source_project_archived': [$item.sourceProjectArchived],
-                'source_business_archived': [$item.sourceBusinessArchived]
-            };
-        """
+            """
+            + _PORTFOLIO_ITEM_FETCH_PROJECTION
+        )
         rows = Db.read_transact(query, {"student_id": student_id})
-        items = [self._map_item(row, viewer_role) for row in rows]
+        archived_projects, archived_businesses, existing_projects = self._source_state_sets(rows)
+        items = [
+            self._map_item(row, viewer_role, archived_projects, archived_businesses, existing_projects) for row in rows
+        ]
         return sorted(
             items,
             key=lambda item: (
@@ -245,6 +465,111 @@ class PortfolioRepository:
 
     def get_world_public_items(self, student_id: str) -> list[dict[str, Any]]:
         return [item for item in self.get_visible_items(student_id, "public") if item["curation"]["is_world_visible"]]
+
+    def get_owned_item(self, item_id: str, owner_student_id: str) -> dict[str, Any] | None:
+        # Ownership-scoped single-item read for the student's own curation endpoint. Unlike
+        # get_visible_items it does not filter retired/hidden items, so the owner always gets the
+        # canonical post-mutation state back. Returns None when the item does not belong to the caller.
+        query = (
+            """
+            match
+                $student isa student, has id ~owner_student_id, has fullName $owner_student_name, has imagePath $owner_student_image_path;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+            """
+            + _PORTFOLIO_ITEM_FETCH_PROJECTION
+        )
+        rows = Db.read_transact(query, {"item_id": item_id, "owner_student_id": owner_student_id})
+        if not rows:
+            return None
+        archived_projects, archived_businesses, existing_projects = self._source_state_sets(rows)
+        return self._map_item(rows[0], "student", archived_projects, archived_businesses, existing_projects)
+
+    def set_item_curation(self, item_id: str, owner_student_id: str, updates: dict[str, Any]) -> None:
+        # Owner-scoped student curation write (PF-task-011a). The match requires the caller to own
+        # the item via hasPortfolio, so no field can be changed on an item the student does not own
+        # even if a route-level guard were bypassed. Only the fields the caller actually sent are
+        # touched (the caller passes exactly the provided keys), and every touched field is written
+        # in a single all-or-nothing transaction so a multi-field PATCH can never half-apply.
+        #
+        # Student hide/show is a student-owned flag (studentHidden) that is independent from the
+        # teacher moderation channel (isHidden/hiddenByRole): clearing it never touches a teacher
+        # hide, so a teacher-hidden item stays hidden and the student's choice persists across
+        # teacher toggling. Setting isWorldVisible is unguarded here on purpose: get_world_public_items
+        # only returns non-hidden, non-retired items, so a hidden or retired item never leaks
+        # publicly regardless of the flag (PF-task-011a AC-4 default).
+        owner_match = (
+            "match "
+            "$student isa student, has id ~owner_student_id; "
+            "$item isa portfolioItem, has id ~item_id; "
+            "$ownership isa hasPortfolio(student: $student, item: $item); "
+        )
+        ids = {"item_id": item_id, "owner_student_id": owner_student_id}
+        queries: list[tuple[str, dict[str, Any] | None]] = []
+
+        # @card(1) booleans upsert cleanly through a single update stage.
+        upserts: list[str] = []
+        upsert_params = dict(ids)
+        if "is_world_visible" in updates:
+            upserts.append("$item has isWorldVisible ~is_world_visible;")
+            upsert_params["is_world_visible"] = updates["is_world_visible"]
+        if "is_authenticated_public_retraction" in updates:
+            upserts.append("$item has isAuthenticatedPublicRetraction ~retraction;")
+            upsert_params["retraction"] = updates["is_authenticated_public_retraction"]
+        if upserts:
+            queries.append((owner_match + "update " + " ".join(upserts), upsert_params))
+
+        # @card(0..1) attributes use the idempotent delete-then-insert pattern, since they may be
+        # absent (e.g. items created without a display order).
+        if "display_order" in updates:
+            queries += self._optional_item_attribute_queries(owner_match, ids, "displayOrder", updates["display_order"])
+        if "is_student_hidden" in updates:
+            queries += self._optional_item_attribute_queries(owner_match, ids, "studentHidden", updates["is_student_hidden"])
+
+        if queries:
+            Db.write_transact_many(queries)
+
+    def set_teacher_hidden(self, item_id: str, student_id: str, teacher_id: str) -> None:
+        # Teacher moderation soft-hide (PF-task-011b). The match is scoped to the item owned by
+        # student_id via hasPortfolio, so a teacher hide can only ever target an item that truly
+        # belongs to the named student (the route pre-checks the same ownership for a clean 404).
+        # isHidden is a @card(1) boolean that upserts through a single update stage; the moderation
+        # metadata (hiddenAt/hiddenByRole/hiddenByUserId) are @card(0..1) and reuse the idempotent
+        # delete-then-insert helper so a repeat hide overwrites stale metadata cleanly. Every write
+        # runs in one all-or-nothing transaction, and the item is only ever updated, never deleted,
+        # so completed-work evidence stays stored (AC-5). This is the teacher-owned counterpart to
+        # the student-owned studentHidden channel: it never touches studentHidden, and the student
+        # curation write never touches these fields, so neither role can lift the other's hide.
+        owner_match = (
+            "match "
+            "$student isa student, has id ~student_id; "
+            "$item isa portfolioItem, has id ~item_id; "
+            "$ownership isa hasPortfolio(student: $student, item: $item); "
+        )
+        ids = {"item_id": item_id, "student_id": student_id}
+        queries: list[tuple[str, dict[str, Any] | None]] = [
+            (owner_match + "update $item has isHidden true;", dict(ids)),
+        ]
+        queries += self._optional_item_attribute_queries(owner_match, ids, "hiddenAt", datetime.now(timezone.utc))
+        queries += self._optional_item_attribute_queries(owner_match, ids, "hiddenByRole", "teacher")
+        queries += self._optional_item_attribute_queries(owner_match, ids, "hiddenByUserId", teacher_id)
+        Db.write_transact_many(queries)
+
+    def _optional_item_attribute_queries(
+        self, owner_match: str, ids: dict[str, Any], attribute: str, value: Any
+    ) -> list[tuple[str, dict[str, Any] | None]]:
+        # attribute is a fixed internal literal (displayOrder/studentHidden/hiddenAt/hiddenByRole/
+        # hiddenByUserId), never user input, so it is safe to interpolate directly; the value always
+        # flows through a ~param. Delete-first keeps re-setting the @card(0..1) attribute idempotent,
+        # and an item without the attribute matches nothing so the delete is a harmless no-op. Both
+        # queries are owner-scoped and run together in one all-or-nothing transaction via the
+        # caller's Db.write_transact_many.
+        queries: list[tuple[str, dict[str, Any] | None]] = [
+            (owner_match + f"$item has {attribute} $current; delete has $current of $item;", dict(ids))
+        ]
+        if value is not None:
+            queries.append((owner_match + f"insert $item has {attribute} ~value;", {**ids, "value": value}))
+        return queries
 
     def get_reviews_for_items(self, item_ids: list[str]) -> list[dict[str, Any]]:
         if not item_ids:
@@ -284,6 +609,84 @@ class PortfolioRepository:
             [self._map_review(row, author_roles) for row in rows], key=lambda review: (review["item_id"], review["id"])
         )
 
+    def get_owned_review(self, item_id: str, review_id: str, owner_student_id: str) -> dict[str, Any] | None:
+        # Owner-scoped single-review read for the student's own review selection endpoint
+        # (PF-task-012a). The match requires the review to be linked to an item the caller owns via
+        # hasPortfolio + hasPortfolioReview, so a review on an item the student does not own, or a
+        # review not attached to the named item, resolves to None (reported as 404 by the route,
+        # without disclosing existence). Retirement/hidden state is not filtered here: the owner
+        # manages selection on their own reviews regardless, and the world-public OUTPUT is what
+        # actually gates public exposure on item state.
+        query = """
+            match
+                $student isa student, has id ~owner_student_id;
+                $item isa portfolioItem, has id ~item_id;
+                $ownership isa hasPortfolio(student: $student, item: $item);
+                $review isa portfolioReview,
+                    has id $id,
+                    has reviewText $review_text,
+                    has createdAt $created_at,
+                    has updatedAt $updated_at,
+                    has isWorldVisible $is_world_visible,
+                    has publicNoticeAcceptedAt $public_notice_accepted_at;
+                $review has id ~review_id;
+                $review_link isa hasPortfolioReview(item: $item, review: $review);
+                $author isa user, has id $author_id, has fullName $author_full_name;
+                $author_link isa portfolioReviewAuthor(review: $review, author: $author);
+            fetch {
+                'id': $id,
+                'item_id': $item.id,
+                'review_text': $review_text,
+                'rating': [ $review.rating ],
+                'created_at': $created_at,
+                'updated_at': $updated_at,
+                'is_world_visible': $is_world_visible,
+                'public_notice_accepted_at': $public_notice_accepted_at,
+                'author_id': $author_id,
+                'author_full_name': $author_full_name
+            };
+        """
+        rows = Db.read_transact(
+            query,
+            {"item_id": item_id, "review_id": review_id, "owner_student_id": owner_student_id},
+            sort_fields=False,
+        )
+        if not rows:
+            return None
+        author_roles = self._get_author_roles([self._one(rows[0].get("author_id"))])
+        return self._map_review(rows[0], author_roles)
+
+    def set_review_world_visible(
+        self, item_id: str, review_id: str, owner_student_id: str, is_world_visible: bool
+    ) -> dict[str, Any] | None:
+        # Owner-scoped review world-public selection write (PF-task-012a). The update match itself is
+        # owner-scoped (it requires the review to be attached, via hasPortfolioReview, to an item the
+        # caller owns via hasPortfolio), so for a non-owned or unknown review it binds nothing and the
+        # update is a harmless no-op; the single read-back below then returns None (route -> 404) and
+        # no unauthorized caller can ever change the flag (AC-4). isWorldVisible is a @card(1) boolean
+        # that upserts cleanly through a single update stage. Public exposure stays gated by the
+        # world-public OUTPUT (get_world_public_items excludes hidden/retired/non-world-visible
+        # items), so a world-visible review on a non-public item never leaks (AC-3). Every review
+        # carries publicNoticeAcceptedAt (schema @card(1)), so any exposed review is always under
+        # the reviewer notice contract (AC-5). Returns the persisted post-write review, or None when
+        # the review is not owned by the caller.
+        Db.write_transact(
+            "match "
+            "$student isa student, has id ~owner_student_id; "
+            "$item isa portfolioItem, has id ~item_id; "
+            "$ownership isa hasPortfolio(student: $student, item: $item); "
+            "$review isa portfolioReview, has id ~review_id; "
+            "$review_link isa hasPortfolioReview(item: $item, review: $review); "
+            "update $review has isWorldVisible ~is_world_visible;",
+            {
+                "item_id": item_id,
+                "review_id": review_id,
+                "owner_student_id": owner_student_id,
+                "is_world_visible": is_world_visible,
+            },
+        )
+        return self.get_owned_review(item_id, review_id, owner_student_id)
+
     def filter_items_for_viewer(
         self,
         items: list[dict[str, Any]],
@@ -317,13 +720,58 @@ class PortfolioRepository:
             reviews_by_item.setdefault(review["item_id"], []).append(review)
         return [{**item, "reviews": reviews_by_item.get(item["id"], [])} for item in items]
 
-    def _map_item(self, row: dict[str, Any], viewer_role: str) -> dict[str, Any]:
+    def _map_item(
+        self,
+        row: dict[str, Any],
+        viewer_role: str,
+        archived_projects: frozenset[str],
+        archived_businesses: frozenset[str],
+        existing_projects: frozenset[str],
+    ) -> dict[str, Any]:
         retracted = bool(self._one(row.get("is_authenticated_public_retraction"), False))
-        visibility_reason = "visible_to_authenticated_viewer"
-        if viewer_role == "public":
+        is_hidden = bool(self._one(row.get("is_hidden"), False))
+        is_retired = bool(self._one(row.get("is_retired"), False))
+        # viewer_can_see reflects whether the item appears in the viewer's NORMAL portfolio view.
+        # get_visible_items/get_world_public_items already drop retired and teacher-hidden items, so
+        # the two curation-moderation branches below only ever apply to the owner-scoped single read
+        # (get_owned_item), which intentionally returns such items for management; there the flag
+        # honestly reports that the item is excluded from normal views rather than claiming it is
+        # visible. Precedence: retirement, then teacher moderation, then viewer-role visibility.
+        if is_retired:
+            visibility_reason = "hidden_by_retirement"
+        elif is_hidden:
+            visibility_reason = "hidden_by_teacher_moderation"
+        elif viewer_role == "public":
             visibility_reason = "visible_to_world_public"
-        if viewer_role == "supervisor" and retracted:
+        elif viewer_role == "supervisor" and retracted:
             visibility_reason = "hidden_by_authenticated_public_retraction"
+        else:
+            visibility_reason = "visible_to_authenticated_viewer"
+
+        source_project_id = self._one(row.get("source_project_id"))
+        source_business_id = self._one(row.get("source_business_id"))
+        # Archived-source state is derived live from the current archive state of the source
+        # records, not from a stored snapshot, so it stays correct after archive and restore.
+        # Tasks have no archive state in the schema, so task is always False.
+        project_archived = source_project_id in archived_projects
+        business_archived = source_business_id in archived_businesses
+        # A hard-deleted source project is present on no archive nor existence lookup, so it must be
+        # detected separately: without this the missing project would fall through to "enabled" and
+        # clients would expose navigation to a project that no longer exists.
+        project_missing = source_project_id is not None and source_project_id not in existing_projects
+
+        # Source navigation targets the source project. An archived or deleted source project is not
+        # navigable for normal portfolio viewers; the reason is user-facing Dutch copy that states
+        # why the source is unavailable while the completed work stays visible.
+        if project_missing:
+            navigation_state = "disabled"
+            navigation_reason = "Het bronproject bestaat niet meer. Je voltooide werk blijft zichtbaar."
+        elif project_archived:
+            navigation_state = "disabled"
+            navigation_reason = "Het bronproject is gearchiveerd. Je voltooide werk blijft zichtbaar."
+        else:
+            navigation_state = "enabled"
+            navigation_reason = "De bron is beschikbaar."
 
         return {
             "id": self._one(row.get("id")),
@@ -332,8 +780,8 @@ class PortfolioRepository:
             "source_student_id": self._one(row.get("source_student_id"), self._one(row.get("owner_student_id"))),
             "source_registration_id": self._one(row.get("source_registration_id")),
             "source_task_id": self._one(row.get("source_task_id")),
-            "source_project_id": self._one(row.get("source_project_id")),
-            "source_business_id": self._one(row.get("source_business_id")),
+            "source_project_id": source_project_id,
+            "source_business_id": source_business_id,
             "student": {
                 "full_name": self._one(row.get("student_name"), self._one(row.get("owner_student_name"))),
                 "image_path": self._one(row.get("student_image_path"), self._one(row.get("owner_student_image_path"))),
@@ -354,20 +802,25 @@ class PortfolioRepository:
             "timeline_start_date": self._date(row.get("timeline_start_date")),
             "timeline_end_date": self._date(row.get("timeline_end_date")),
             "curation": {
-                "is_retired": bool(self._one(row.get("is_retired"), False)),
+                "is_retired": is_retired,
                 "retired_at": self._date(row.get("retired_at")),
-                "is_hidden": bool(self._one(row.get("is_hidden"), False)),
+                "is_hidden": is_hidden,
                 "hidden_at": self._date(row.get("hidden_at")),
                 "hidden_by_role": self._one(row.get("hidden_by_role")),
                 "hidden_by_user_id": self._one(row.get("hidden_by_user_id")),
+                "is_student_hidden": bool(self._one(row.get("is_student_hidden"), False)),
                 "display_order": self._one(row.get("display_order")),
                 "is_authenticated_public_retraction": retracted,
                 "is_world_visible": bool(self._one(row.get("is_world_visible"), False)),
             },
             "archived_source": {
-                "task": bool(self._one(row.get("source_task_archived"), False)),
-                "project": bool(self._one(row.get("source_project_archived"), False)),
-                "business": bool(self._one(row.get("source_business_archived"), False)),
+                "task": False,
+                "project": project_archived,
+                "business": business_archived,
+            },
+            "source_navigation": {
+                "state": navigation_state,
+                "reason": navigation_reason,
             },
             "visibility": {
                 "viewer_can_see": visibility_reason in {"visible_to_authenticated_viewer", "visible_to_world_public"},
@@ -411,6 +864,52 @@ class PortfolioRepository:
             for row in Db.read_transact(query, {"user_id_pattern": user_id_pattern}):
                 roles[self._one(row.get("id"))] = role
         return roles
+
+    def _source_state_sets(
+        self, rows: list[dict[str, Any]]
+    ) -> tuple[frozenset[str], frozenset[str], frozenset[str]]:
+        # Resolve, in one query per lookup, which source projects and businesses referenced by these
+        # portfolio items are currently archived, plus which source projects still exist at all.
+        # Returned as sets so _map_item can flag each item's archived-source and deleted-source state
+        # without re-querying per row.
+        project_ids = {self._one(row.get("source_project_id")) for row in rows}
+        business_ids = {self._one(row.get("source_business_id")) for row in rows}
+        return (
+            self._archived_ids("project", project_ids),
+            self._archived_ids("business", business_ids),
+            self._existing_ids("project", project_ids),
+        )
+
+    def _existing_ids(self, entity_type: str, ids: set[str]) -> frozenset[str]:
+        # entity_type is a fixed internal literal ("project"/"business"), never user input. Resolves
+        # which of the referenced ids still exist as live records; ids absent from the result have
+        # been hard-deleted.
+        filtered = [id_value for id_value in ids if id_value]
+        if not filtered:
+            return frozenset()
+        query = f"""
+            match
+                $entity isa {entity_type}, has id $id;
+                $id like ~id_pattern;
+            fetch {{ 'id': $id }};
+        """
+        rows = Db.read_transact(query, {"id_pattern": self._id_pattern(filtered)}, sort_fields=False)
+        return frozenset(self._one(row.get("id")) for row in rows)
+
+    def _archived_ids(self, entity_type: str, ids: set[str]) -> frozenset[str]:
+        # entity_type is a fixed internal literal ("project"/"business"), never user input. The
+        # literal `has isArchived true` keeps this a valid READ query (no None params).
+        filtered = [id_value for id_value in ids if id_value]
+        if not filtered:
+            return frozenset()
+        query = f"""
+            match
+                $entity isa {entity_type}, has id $id, has isArchived true;
+                $id like ~id_pattern;
+            fetch {{ 'id': $id }};
+        """
+        rows = Db.read_transact(query, {"id_pattern": self._id_pattern(filtered)}, sort_fields=False)
+        return frozenset(self._one(row.get("id")) for row in rows)
 
     def _id_pattern(self, ids: list[str]) -> str:
         for id_value in ids:

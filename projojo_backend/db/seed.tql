@@ -14,25 +14,29 @@ insert
         has imagePath "student_female.png",
         has description "Enthousiaste student **landbouwtechnologie** met passie voor _duurzame_ **landbouwpraktijken**.",
         has email "em.jansen@student.han.nl",
-        has cvPath "cv_emma_jansen.pdf";
+        has cvPath "cv_emma_jansen.pdf",
+        has portfolioSlug "emma-jansen";
 
     $u3 isa student,
         has id "b0d7e3ca-dad8-4b40-83dd-02a970aebce3",
         has fullName "Lucas de Vries",
         has imagePath "student_male.png",
-        has email "l.devries@student.han.nl";
+        has email "l.devries@student.han.nl",
+        has portfolioSlug "lucas-de-vries";
 
     $u4 isa student,
         has id "9c98b49c-5c99-4959-86d1-0d3d79b98902",
         has fullName "Sophie Bakker",
         has imagePath "student_female.png",
-        has email "sr.bakker@student.han.nl";
+        has email "sr.bakker@student.han.nl",
+        has portfolioSlug "sophie-bakker";
 
     $u5 isa student,
         has id "b3afaca3-f714-432e-ac97-c437600b163a",
         has fullName "Daan Vermeulen",
         has imagePath "student_male.png",
-        has email "d.vermeulen@student.han.nl";
+        has email "d.vermeulen@student.han.nl",
+        has portfolioSlug "daan-vermeulen";
 
     # Identity providers
     $op1 isa oauthProvider,

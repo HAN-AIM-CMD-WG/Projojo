@@ -29,6 +29,7 @@ import SupervisorDashboard from "./pages/SupervisorDashboard";
 import DesignDemoPage from "./pages/DesignDemoPage";
 import PublicDiscoveryPage from "./pages/PublicDiscoveryPage";
 import ThemePickerHarness from "./pages/ThemePickerHarness";
+import PublicPortfolioPage from "./pages/PublicPortfolioPage";
 
 /**
  * HomePage - Conditionally renders StudentDashboard or SupervisorDashboard based on user role
@@ -213,7 +214,7 @@ export default function App() {
   }, [location.pathname]);
 
   // Pages without navbar/footer (landing, login, auth callback, design demo, public discovery)
-  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname.startsWith("/publiek") || location.pathname.startsWith("/invite/");
+  const isPublicPage = location.pathname === "/" || location.pathname === "/login" || location.pathname === "/auth/callback" || location.pathname === "/email-not-found" || location.pathname === "/design-demo" || location.pathname.startsWith("/publiek") || location.pathname.startsWith("/portfolio/") || location.pathname.startsWith("/invite/");
 
   return (
     <ThemeProvider>
@@ -269,6 +270,7 @@ export default function App() {
                 {import.meta.env.DEV && <Route path="/dev/theme-picker" element={<ThemePickerHarness />} />}
                 <Route path="/publiek" element={<PublicDiscoveryPage />} />
                 <Route path="/publiek/:projectId" element={<PublicDiscoveryPage />} />
+                <Route path="/portfolio/:slug" element={<PublicPortfolioPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

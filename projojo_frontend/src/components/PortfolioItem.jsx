@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 /**
  * PortfolioItem - Displays a single portfolio item (completed task)
  * 
- * Handles both live items (from existing projects) and snapshot items
- * (preserved after project deletion).
+ * Completed work stays visible as evidence whether its source project is still
+ * active or has been archived.
  * 
  * @param {Object} props
  * @param {Object} props.item - The portfolio item data
