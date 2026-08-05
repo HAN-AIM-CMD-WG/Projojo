@@ -24,14 +24,19 @@ import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 export default function ThemePicker({ selected = [], onChange, readOnly = false }) {
     const [themes, setThemes] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasError, setHasError] = useState(false);
+    const [reloadCount, setReloadCount] = useState(0);
 
     useEffect(() => {
         let active = true;
+        setIsLoading(true);
+        setHasError(false);
         getThemes()
             .then((data) => { if (active) setThemes(Array.isArray(data) ? data : []); })
+            .catch(() => { if (active) setHasError(true); })
             .finally(() => { if (active) setIsLoading(false); });
         return () => { active = false; };
-    }, []);
+    }, [reloadCount]);
 
     // Report the next selection and let the parent own/apply it. Called directly
     // (not from an effect) so it fires exactly once per user toggle.
@@ -52,6 +57,23 @@ export default function ThemePicker({ selected = [], onChange, readOnly = false 
                         aria-hidden="true"
                     />
                 ))}
+            </div>
+        );
+    }
+
+    if (hasError) {
+        return (
+            <div data-testid="theme-picker">
+                <p data-testid="theme-picker-error" className="text-sm text-[var(--text-muted)]">
+                    {"Thema's konden niet worden geladen."}{' '}
+                    <button
+                        type="button"
+                        onClick={() => setReloadCount((c) => c + 1)}
+                        className="underline font-bold text-[var(--text-primary)] cursor-pointer focus:outline-none focus:shadow-[0_0_0_3px_var(--primary-color)]"
+                    >
+                        Opnieuw proberen
+                    </button>
+                </p>
             </div>
         );
     }
