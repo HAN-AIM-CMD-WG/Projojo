@@ -8,6 +8,7 @@ const {
   PROOF_SUPERVISOR_USER_ID,
 } = require('../support/test-data.cjs');
 const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
+const { hexToRgb } = require('../support/theme-color.cjs');
 const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
 const {
   THEME_SEED_BASELINE,
@@ -34,14 +35,6 @@ const SAMPLE_THEMES = THEME_SEED_BASELINE;
 // those scenarios still stub GET /themes/. The stub body needs stable ids for
 // React keys; the real-backend scenarios receive ids from the backend on create.
 const STUB_CATALOG = SAMPLE_THEMES.map((theme, index) => ({ id: `ts010-stub-${index}`, ...theme }));
-
-function hexToRgb(hex) {
-  const value = hex.replace('#', '');
-  const r = parseInt(value.slice(0, 2), 16);
-  const g = parseInt(value.slice(2, 4), 16);
-  const b = parseInt(value.slice(4, 6), 16);
-  return `rgb(${r}, ${g}, ${b})`;
-}
 
 async function readThemeRowsByName(world) {
   const rows = await page(world).getByTestId('theme-row').all();

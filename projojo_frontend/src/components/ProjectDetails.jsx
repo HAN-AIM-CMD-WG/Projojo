@@ -13,6 +13,7 @@ import SkillBadge from "./SkillBadge";
 import { filterVisibleSkillsForUser } from "../utils/skills";
 import Alert from "./Alert";
 import ProjectActionModal from "./ProjectActionModal";
+import ProjectThemeSection from "./ProjectThemeSection";
 import { getCountdownText, calculateProgress, formatDate } from "../utils/dates";
 
 export default function ProjectDetails({ project, tasks, businessId, refreshData }) {
@@ -242,21 +243,63 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
         <div className="bg-neu-bg">
             {/* Compact Header with Image and Key Info */}
             <div className="flex flex-col sm:flex-row">
-                {/* Project Image - Left side with neumorphic styling */}
-                <div className="sm:w-52 h-40 sm:h-auto sm:min-h-[220px] flex-shrink-0 relative m-4 sm:m-5 sm:mr-0 rounded-2xl overflow-hidden neu-pressed p-1">
-                    <div className="relative w-full h-full rounded-xl overflow-hidden">
-                        <img
-                            className="w-full h-full object-cover"
-                            src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
-                            alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
-                        />
-                        {/* Subtle vignette overlay for depth */}
-                        <div className="absolute inset-0 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]" />
-                        {/* Archived overlay - subtle dimming only */}
-                        {project.is_archived && (
-                            <div className="absolute inset-0 bg-black/30" />
-                        )}
+                {/* Left column: project image with the quick actions beneath it */}
+                <div className="flex flex-col gap-3 flex-shrink-0 sm:w-64 sm:self-start m-4 sm:m-5 sm:mr-0">
+                    {/* Project Image - neumorphic styling, fixed square so it never grows with the info column */}
+                    <div className="h-40 sm:h-64 relative rounded-2xl overflow-hidden neu-pressed p-1">
+                        <div className="relative w-full h-full rounded-xl overflow-hidden">
+                            <img
+                                className="w-full h-full object-cover"
+                                src={isLoading ? '/loading.gif' : `${IMAGE_BASE_URL}${project.image_path}`}
+                                alt={isLoading ? "Aan het laden" : "Projectafbeelding"}
+                            />
+                            {/* Subtle vignette overlay for depth */}
+                            <div className="absolute inset-0 shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)]" />
+                            {/* Archived overlay - subtle dimming only */}
+                            {project.is_archived && (
+                                <div className="absolute inset-0 bg-black/30" />
+                            )}
+                        </div>
                     </div>
+
+                    {/* Bookmark & Share actions - tucked under the image, for all authenticated users */}
+                    {!isLoading && project.id && (
+                        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                            <button
+                                onClick={() => toggleBookmark(project.id)}
+                                className={`
+                                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    whitespace-nowrap shrink-0
+                                    transition-all duration-200 border
+                                    ${isBookmarked(project.id)
+                                        ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
+                                        : 'bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30'
+                                    }
+                                `}
+                                title={isBookmarked(project.id) ? 'Verwijder uit opgeslagen' : 'Project opslaan'}
+                                aria-label={isBookmarked(project.id) ? 'Verwijder uit opgeslagen projecten' : 'Sla dit project op'}
+                            >
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                                    {isBookmarked(project.id) ? 'bookmark' : 'bookmark_border'}
+                                </span>
+                                {isBookmarked(project.id) ? 'Opgeslagen' : 'Opslaan'}
+                            </button>
+                            <button
+                                onClick={handleShareLink}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                    whitespace-nowrap shrink-0
+                                    transition-all duration-200 border
+                                    bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30"
+                                title="Kopieer project link"
+                                aria-label="Kopieer een link naar dit project"
+                            >
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                                    {shareCopied ? 'check' : 'share'}
+                                </span>
+                                {shareCopied ? 'Link gekopieerd!' : 'Deel project'}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Info - Right side */}
@@ -314,16 +357,6 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                                 </div>
                             )}
                         </div>
-
-                        {/* Add task button */}
-                        {isOwner && (
-                            <button className="neu-btn-primary !py-2 !px-3 text-sm flex-shrink-0" onClick={handleOpenModal}>
-                                <span className="flex items-center gap-1.5">
-                                    <span className="material-symbols-outlined text-base">add</span>
-                                    <span className="hidden sm:inline">Taak toevoegen</span>
-                                </span>
-                            </button>
-                        )}
                     </div>
 
                     {/* Timeline - compact inline */}
@@ -473,6 +506,16 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                             )}
                         </div>
                     )}
+
+                    {/* Linked themes near the project metadata - editable inline by the
+                        people who may manage the project, read-only for everyone else */}
+                    {!isLoading && project.id && (
+                        <ProjectThemeSection
+                            projectId={project.id}
+                            projectName={project.name}
+                            canEdit={canManageProject}
+                        />
+                    )}
                 </div>
             </div>
 
@@ -504,47 +547,32 @@ export default function ProjectDetails({ project, tasks, businessId, refreshData
                 )}
             </div>
 
-            {/* Bookmark & Share actions - visible for all authenticated users */}
-            {!isLoading && project.id && (
-                <div className="px-4 sm:px-5 pb-2 flex items-center gap-2">
-                    <button
-                        onClick={() => toggleBookmark(project.id)}
-                        className={`
-                            inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                            transition-all duration-200 border
-                            ${isBookmarked(project.id)
-                                ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
-                                : 'bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30'
-                            }
-                        `}
-                        title={isBookmarked(project.id) ? 'Verwijder uit opgeslagen' : 'Project opslaan'}
-                        aria-label={isBookmarked(project.id) ? 'Verwijder uit opgeslagen projecten' : 'Sla dit project op'}
-                    >
-                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                            {isBookmarked(project.id) ? 'bookmark' : 'bookmark_border'}
-                        </span>
-                        {isBookmarked(project.id) ? 'Opgeslagen' : 'Opslaan'}
-                    </button>
-                    <button
-                        onClick={handleShareLink}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-                            transition-all duration-200 border
-                            bg-[var(--neu-bg)] border-[var(--neu-border)] text-[var(--text-muted)] hover:text-primary hover:border-primary/30"
-                        title="Kopieer project link"
-                        aria-label="Kopieer een link naar dit project"
-                    >
-                        <span className="material-symbols-outlined text-sm" aria-hidden="true">
-                            {shareCopied ? 'check' : 'share'}
-                        </span>
-                        {shareCopied ? 'Link gekopieerd!' : 'Deel project'}
-                    </button>
-                </div>
-            )}
-
             {/* Project management - clean action bar */}
             {canManageProject && !isLoading && (
                 <div className="px-4 sm:px-5 pb-4 border-t border-[var(--neu-border)] pt-3 mt-2">
                     <div className="flex flex-wrap items-center gap-2">
+                        {/* Add task */}
+                        {isOwner && (
+                            <button
+                                onClick={handleOpenModal}
+                                className="neu-btn-primary !py-1.5 !px-3 text-xs flex items-center gap-1.5"
+                                title="Voeg een nieuwe taak toe aan dit project"
+                            >
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">add</span>
+                                Taak toevoegen
+                            </button>
+                        )}
+
+                        {/* Edit project */}
+                        <Link
+                            to={`/projects/${project.id}/update`}
+                            className="neu-btn !py-1.5 !px-3 text-xs flex items-center gap-1.5"
+                            title="Pas de gegevens en thema's van dit project aan"
+                        >
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
+                            Project aanpassen
+                        </Link>
+
                         {/* Visibility toggle - action-oriented button */}
                         <button
                             onClick={handleTogglePublic}

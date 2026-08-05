@@ -82,4 +82,64 @@ async function stubThemeDeleteEndpoint(page, { status = 500, detail = 'Verwijder
   });
 }
 
-module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, THEMES_ROUTE };
+// The project theme link resource: `/themes/project/{id}`, and deliberately NOT
+// the `/themes/` collection or a single `/themes/{id}` theme. A single route owns
+// this URL so a read stub and a write stub can share one page - two separate
+// page.route registrations on this same pattern would clobber each other.
+const PROJECT_THEME_LINK_ROUTE = /\/themes\/project\/[^/?]+$/;
+
+/**
+ * Control GET (read) and/or PUT (write) on /themes/project/{id} for a page through
+ * one route registration, leaving every other request alone. Pass only the
+ * method(s) a scenario needs; an unstaged method is passed straight through to the
+ * real backend, so a read stub never blocks writes (and vice-versa) on one page -
+ * which is what a read + write flow (TS-task-017) needs.
+ *
+ * Each of `get` / `put` stages a state a healthy backend will not produce on demand:
+ * - `status` set: fulfil that method with the status (and `body`, or `{ detail }`),
+ *   driving its failure branch (e.g. project created but themes not linked).
+ * - `delayMs` only: hold the call back, then pass it through to the real backend so
+ *   the in-flight window lasts long enough to observe. The call still really happens.
+ * - `onIntercept`: fires the moment the call is intercepted, before any delay, so a
+ *   caller can assert on that window without guessing when it opened.
+ *
+ * @param {import('playwright').Page} page
+ * @param {{ get?: ProjectThemeStub, put?: ProjectThemeStub }} [options]
+ *   ProjectThemeStub = { status?: number, body?: unknown, detail?: string, delayMs?: number, onIntercept?: () => void }
+ */
+async function stubProjectThemeEndpoint(page, { get, put } = {}) {
+  const byMethod = {
+    GET: get && { detail: "Kon thema's niet laden", ...get },
+    PUT: put && { detail: 'Koppelen is mislukt', ...put },
+  };
+  await page.unroute(PROJECT_THEME_LINK_ROUTE).catch(() => {});
+  await page.route(PROJECT_THEME_LINK_ROUTE, async (route) => {
+    const method = route.request().method();
+    // The frontend (:10121) calls the backend (:10122) cross-origin, so a call
+    // carrying an Authorization header is preflighted. Answer that preflight here;
+    // otherwise the browser blocks the request and the UI shows a generic network
+    // failure instead of the staged state.
+    if (method === 'OPTIONS') {
+      return route.fulfill({ status: 204, headers: CORS_HEADERS });
+    }
+    const stub = byMethod[method];
+    if (!stub) {
+      return route.continue();
+    }
+    stub.onIntercept?.();
+    if (stub.delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, stub.delayMs));
+    }
+    if (stub.status === undefined) {
+      return route.continue();
+    }
+    await route.fulfill({
+      status: stub.status,
+      contentType: 'application/json',
+      headers: CORS_HEADERS,
+      body: JSON.stringify(stub.body ?? { detail: stub.detail }),
+    });
+  });
+}
+
+module.exports = { stubThemesEndpoint, stubThemeDeleteEndpoint, stubProjectThemeEndpoint, THEMES_ROUTE };

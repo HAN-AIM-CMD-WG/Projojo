@@ -96,6 +96,21 @@ async function themeApi(pathname, token, options = {}) {
   return { status: response.status, body };
 }
 
+// The seeded teacher's token, resolved once per process. Every suite stages its
+// theme state as the same user, so re-logging in per call is pure latency.
+let cachedTeacherToken = null;
+
+/**
+ * Call the backend as the seeded teacher.
+ *
+ * The teacher is the account the theme suites stage with: it may write the whole
+ * catalog and any project's theme links, so staging never has to pick an owner.
+ */
+async function teacherApi(pathname, options) {
+  cachedTeacherToken ??= await loginToken(E2E_TEACHER_ID);
+  return themeApi(pathname, cachedTeacherToken, options);
+}
+
 /**
  * Reset the live theme catalog to exactly `baseline`: delete every existing
  * theme, then recreate the baseline set via the real teacher-authenticated API.
@@ -143,6 +158,21 @@ async function fetchThemes() {
   return result.body;
 }
 
+/**
+ * Resolve theme names to their catalog ids in a single catalog read.
+ *
+ * Fails naming the whole catalog, so a fixture that was renamed reads as "this name
+ * is not in the catalog" here rather than surfacing later as a missing link.
+ */
+async function themeIdsFor(names) {
+  const catalog = await fetchThemes();
+  return names.map((name) => {
+    const theme = catalog.find((candidate) => candidate?.name === name);
+    assert.ok(theme?.id, `Expected a theme named '${name}' in the catalog, got ${JSON.stringify(catalog.map((t) => t?.name))}`);
+    return theme.id;
+  });
+}
+
 /** Find a persisted theme by exact name, or null when it does not exist. */
 async function getThemeByName(name) {
   const themes = await fetchThemes();
@@ -169,8 +199,10 @@ module.exports = {
   LONG_DESCRIPTION,
   BASELINE_DUPLICATE_NAME,
   themeApi,
+  teacherApi,
   resetThemeCatalog,
   fetchThemes,
+  themeIdsFor,
   getThemeByName,
   waitForThemeByName,
 };

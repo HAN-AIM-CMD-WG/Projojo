@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { IMAGE_BASE_URL } from '../services';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
+import ProjectThemeBadge from "./ProjectThemeBadge";
 import RichTextViewer from "./RichTextViewer";
 import { getCountdownText, formatDateShort } from "../utils/dates";
 
@@ -122,21 +123,26 @@ export default function ProjectCard({ project, index = 0 }) {
           {/* Gradient overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-          {/* Active work badge - show if student is working on this project */}
-          {isWorkingOnProject(project.id) && (
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500 text-white shadow-sm flex items-center gap-1">
-              <span className="material-symbols-outlined text-xs">work</span>
-              Actief
-            </div>
-          )}
+          {/* Top-left badge stack - the student's own work status first, then the theme */}
+          <div className="absolute top-3 left-3 flex flex-col items-start gap-1.5">
+            {/* Active work badge - show if student is working on this project */}
+            {isWorkingOnProject(project.id) && (
+              <div data-testid="project-card-work-badge" className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-emerald-500 text-white shadow-sm flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">work</span>
+                Actief
+              </div>
+            )}
 
-          {/* Pending badge - show if student has pending registration (but not active) */}
-          {hasPendingOnProject(project.id) && !isWorkingOnProject(project.id) && (
-            <div className="absolute top-3 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-500 text-white shadow-sm flex items-center gap-1">
-              <span className="material-symbols-outlined text-xs">schedule</span>
-              Aangevraagd
-            </div>
-          )}
+            {/* Pending badge - show if student has pending registration (but not active) */}
+            {hasPendingOnProject(project.id) && !isWorkingOnProject(project.id) && (
+              <div className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-500 text-white shadow-sm flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">schedule</span>
+                Aangevraagd
+              </div>
+            )}
+
+            <ProjectThemeBadge themes={project.themes} />
+          </div>
 
           {/* Archief badge - prominent for archived projects */}
           {isArchived && (

@@ -203,6 +203,17 @@ class BusinessRepository(BaseRepository[Business]):
                     "location": $project.location,
                     "start_date": [$project.startDate],
                     "end_date": [$project.endDate],
+                    "themes": [
+                        match
+                            $hasTheme isa hasTheme(project: $project, theme: $theme);
+                            $theme has id $theme_id, has name $theme_name;
+                        fetch {
+                            "id": $theme_id,
+                            "name": $theme_name,
+                            "icon": [$theme.icon],
+                            "color": [$theme.color]
+                        };
+                    ],
                     "tasks": [
                         match
                             ($project, $task) isa containsTask;
@@ -265,7 +276,22 @@ class BusinessRepository(BaseRepository[Business]):
                 b for b in results 
                 if not (b.get("is_archived") and len(b.get("is_archived")) > 0 and b.get("is_archived")[0] == True)
             ]
-        
+
+        # TypeDB returns optional attributes as lists. Flatten the nested theme
+        # icon/color so a project's themes here are field-for-field identical to
+        # GET /themes/project/{id}, matching get_public_projects().
+        for business in results:
+            for project in business.get("projects", []):
+                project["themes"] = [
+                    {
+                        "id": theme.get("id", ""),
+                        "name": theme.get("name", ""),
+                        "icon": (theme.get("icon") or [None])[0],
+                        "color": (theme.get("color") or [None])[0],
+                    }
+                    for theme in project.get("themes", [])
+                ]
+
         return results
 
     def create(self, name: str, as_draft: bool = False) -> Business:

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { IMAGE_BASE_URL } from '../services';
 import { getCountdownText } from "../utils/dates";
+import ProjectThemeBadge from "./ProjectThemeBadge";
 
 /**
  * PublicProjectCard Component
@@ -53,22 +54,9 @@ export default function PublicProjectCard({ project, index = 0 }) {
                     )}
                     
                     {/* Theme badge - top left (max 1 for clean look) */}
-                    {project.themes && project.themes.length > 0 && (
-                        <div className="absolute top-2.5 left-2.5">
-                            <span 
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-white backdrop-blur-sm"
-                                style={{ backgroundColor: project.themes[0].color ? `${project.themes[0].color}CC` : 'rgba(0,0,0,0.45)' }}
-                            >
-                                {project.themes[0].icon && (
-                                    <span className="material-symbols-outlined text-[10px]" aria-hidden="true">{project.themes[0].icon}</span>
-                                )}
-                                {project.themes[0].name}
-                                {project.themes.length > 1 && (
-                                    <span className="opacity-70">+{project.themes.length - 1}</span>
-                                )}
-                            </span>
-                        </div>
-                    )}
+                    <div className="absolute top-2.5 left-2.5">
+                        <ProjectThemeBadge themes={project.themes} />
+                    </div>
 
                     {/* Title on image */}
                     <div className="absolute bottom-0 left-0 right-0 p-3.5">

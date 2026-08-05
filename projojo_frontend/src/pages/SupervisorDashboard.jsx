@@ -6,6 +6,12 @@ import SkillBadge from '../components/SkillBadge';
 import Alert from '../components/Alert';
 import Loading from '../components/Loading';
 import { IMAGE_BASE_URL } from '../services';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
+
+// At most this many theme pills fit the dashboard's compact project row; any
+// remaining themes are summarised as a "+N" count, the way the card's skill lists
+// elsewhere on this page summarise theirs.
+const MAX_THEME_PILLS = 2;
 
 /**
  * Supervisor Dashboard - Shows business projects, pending registrations and active students
@@ -534,15 +540,21 @@ function ActiveStudentCard({ student }) {
  */
 function ProjectCard({ project, pendingCount = 0 }) {
     const taskCount = project.tasks?.length || 0;
-    
+    // Supplied by the dashboard response itself (get_projects_by_business already
+    // nests them), so no extra request is needed to show them.
+    const themes = project.themes || [];
+    const hiddenThemeCount = themes.length - MAX_THEME_PILLS;
+
     return (
-        <Link 
+        <Link
             to={`/projects/${project.id}`}
-            className="neu-flat-interactive !p-0 !text-left block overflow-hidden group"
+            className="neu-flat-interactive !p-0 !text-left block overflow-hidden group h-full"
         >
-            <div className="flex">
-                {/* Project image */}
-                <div className="w-24 h-24 flex-shrink-0 relative">
+            {/* h-full down to the image column, so a card stretched to match a taller
+                neighbour in its grid row keeps the photo running the full height
+                instead of leaving a bare strip underneath it */}
+            <div className="flex h-full">
+                <div className="w-24 min-h-24 flex-shrink-0 relative">
                     <img 
                         src={`${IMAGE_BASE_URL}${project.image_path || 'project_technology.png'}`}
                         alt={project.name}
@@ -579,10 +591,51 @@ function ProjectCard({ project, pendingCount = 0 }) {
                             )}
                         </div>
                     </div>
-                    
-                    {/* Arrow indicator */}
-                    <div className="flex justify-end">
-                        <span className="material-symbols-outlined text-base text-[var(--text-muted)] group-hover:text-primary transition-colors">
+
+                    {/* Theme pills share the arrow's line, so a themed project is
+                        exactly as tall as an unthemed one. The row never wraps: the
+                        pills shrink and truncate their name instead, since a second
+                        line here would change the card's height. mt-2 is a floor on the
+                        gap to the task count, not the gap itself - justify-between hands
+                        this row any slack the card has left over. */}
+                    <div className="flex items-center gap-1 min-w-0 mt-2">
+                        {themes.slice(0, MAX_THEME_PILLS).map((theme) => (
+                            <span
+                                key={theme.id}
+                                data-testid="dashboard-theme-pill"
+                                data-theme-id={theme.id}
+                                aria-label={`Thema: ${theme.name}`}
+                                title={theme.name}
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none min-w-0"
+                                style={legibleFill(theme.color || COLORLESS_THEME_FILL)}
+                            >
+                                {theme.icon && (
+                                    // The Material Symbols stylesheet sets font-size: 24px
+                                    // unlayered, which outranks Tailwind's layered utilities -
+                                    // hence the important modifiers. Without them the glyph
+                                    // renders at 24px and single-handedly sets the row height.
+                                    <span
+                                        data-testid="dashboard-theme-pill-icon"
+                                        className="material-symbols-outlined !text-[12px] !leading-none shrink-0"
+                                        aria-hidden="true"
+                                    >
+                                        {theme.icon}
+                                    </span>
+                                )}
+                                <span data-testid="dashboard-theme-pill-name" className="truncate">{theme.name}</span>
+                            </span>
+                        ))}
+                        {hiddenThemeCount > 0 && (
+                            <span
+                                data-testid="dashboard-theme-pill-overflow"
+                                className="text-[9px] font-bold text-[var(--text-muted)] shrink-0"
+                            >
+                                +{hiddenThemeCount}
+                            </span>
+                        )}
+
+                        {/* Arrow indicator */}
+                        <span className="material-symbols-outlined text-base text-[var(--text-muted)] group-hover:text-primary transition-colors ml-auto shrink-0">
                             arrow_forward
                         </span>
                     </div>

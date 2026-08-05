@@ -5,6 +5,7 @@ import Alert from "./Alert";
 import DragDrop from "./DragDrop";
 import FormInput from "./FormInput";
 import RichTextEditor from "./RichTextEditor";
+import ThemePicker from "./ThemePicker";
 
 export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
     const [nameError, setNameError] = useState();
@@ -18,6 +19,7 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
     const [image, setImage] = useState(null);
     const [imageError, setImageError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [themeIds, setThemeIds] = useState([]);
 
     const handleImageChange = (file) => {
         setImage(file);
@@ -66,8 +68,8 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
             end_date: endDate
         };
 
-        // Submit both project data and image in a single call
-        onSubmit(projectData);
+        // Themes are linked in a second call, after the project exists and has an id.
+        Promise.resolve(onSubmit(projectData, themeIds)).finally(() => setIsSubmitting(false));
     }
 
     return (
@@ -159,6 +161,19 @@ export default function AddProjectForm({ onSubmit, serverErrorMessage }) {
                     </div>
                     <p className="text-xs text-[var(--text-muted)] mt-2">
                         Deze datums helpen studenten om de planning te begrijpen. Taken moeten binnen deze periode vallen.
+                    </p>
+                </div>
+
+                {/* Themes Section */}
+                <div className="neu-flat rounded-2xl p-6 mb-6" data-testid="project-theme-section">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary" aria-hidden="true">category</span>
+                        Thema&apos;s
+                        <span className="text-sm font-normal text-[var(--text-muted)] ml-2">(optioneel)</span>
+                    </h2>
+                    <ThemePicker selected={themeIds} onChange={setThemeIds} />
+                    <p className="text-xs text-[var(--text-muted)] mt-3">
+                        Thema&apos;s helpen studenten om je project te vinden op onderwerp.
                     </p>
                 </div>
 

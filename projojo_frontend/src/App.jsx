@@ -28,6 +28,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 import SupervisorDashboard from "./pages/SupervisorDashboard";
 import DesignDemoPage from "./pages/DesignDemoPage";
 import PublicDiscoveryPage from "./pages/PublicDiscoveryPage";
+import ThemePickerHarness from "./pages/ThemePickerHarness";
 import PublicPortfolioPage from "./pages/PublicPortfolioPage";
 
 /**
@@ -266,6 +267,7 @@ export default function App() {
                 </Route>
                 <Route path="/teacher" element={<TeacherPage />} />
                 <Route path="/design-demo" element={<DesignDemoPage />} />
+                {import.meta.env.DEV && <Route path="/dev/theme-picker" element={<ThemePickerHarness />} />}
                 <Route path="/publiek" element={<PublicDiscoveryPage />} />
                 <Route path="/publiek/:projectId" element={<PublicDiscoveryPage />} />
                 <Route path="/portfolio/:slug" element={<PublicPortfolioPage />} />
