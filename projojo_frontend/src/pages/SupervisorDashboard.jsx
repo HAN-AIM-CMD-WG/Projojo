@@ -110,9 +110,9 @@ export default function SupervisorDashboard() {
             {isLoading ? (
                 <Loading />
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     {/* Main content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="xl:col-span-2 space-y-6">
                         {/* Pending Registrations Section */}
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
@@ -220,8 +220,9 @@ export default function SupervisorDashboard() {
                         </section>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-6">
+                    {/* Sidebar - a row of cards under the main column until xl, where it
+                        becomes the actual right-hand sidebar */}
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 xl:content-start">
                         {/* Quick Stats */}
                         <section className="neu-flat p-5">
                             <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
