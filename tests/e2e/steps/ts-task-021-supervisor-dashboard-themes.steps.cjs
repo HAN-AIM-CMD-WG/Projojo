@@ -163,8 +163,10 @@ async function shownPillNames(world) {
  * Filtered on the heading element rather than on `hasText`: that option matches any
  * descendant text case-insensitively, so "Actieve Studenten" would also select the
  * sidebar's Statistieken section, which carries an "Actieve studenten" stat row.
- * The heading name is matched as a substring because each of these headings also
- * contains a Material Symbols ligature that folds into its accessible name.
+ * The heading name is matched as a substring, which is `getByRole`'s default: each of
+ * these headings also renders a Material Symbols glyph, and while that glyph is now
+ * `aria-hidden` and so stays out of the computed name, the substring match does not
+ * depend on it either way.
  */
 function sectionTitled(world, heading) {
   return page(world)
