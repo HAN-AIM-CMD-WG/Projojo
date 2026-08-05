@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getPublicProjects, getThemes, IMAGE_BASE_URL } from '../services';
 import PublicProjectCard from './PublicProjectCard';
 import SkeletonList from './SkeletonList';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 
 /**
  * DiscoverySection Component
@@ -176,13 +177,15 @@ export default function DiscoverySection() {
                         </div>
                     </div>
 
-                    {/* Theme pills - horizontal scroll */}
+                    {/* Theme pills - wraps so no pill is ever sliced off at the card edge */}
                     {themes.length > 0 && (
-                        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none mt-3 pt-3 border-t border-[var(--neu-border)] -mx-1 px-1">
+                        <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-3 border-t border-[var(--neu-border)]">
                             <span className="neu-label shrink-0 mr-0.5">Thema&apos;s</span>
                             <button
+                                type="button"
+                                aria-pressed={!selectedTheme}
                                 onClick={() => setSelectedTheme(null)}
-                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${!selectedTheme
+                                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${!selectedTheme
                                         ? 'bg-primary text-white'
                                         : 'text-[var(--text-muted)] hover:text-primary'
                                     }`}
@@ -192,15 +195,18 @@ export default function DiscoverySection() {
                             {themes.map(theme => {
                                 const count = projects.filter(p => p.themes?.some(t => t.id === theme.id)).length;
                                 if (count === 0) return null;
+                                const isSelected = selectedTheme === theme.id;
                                 return (
                                     <button
                                         key={theme.id}
-                                        onClick={() => setSelectedTheme(selectedTheme === theme.id ? null : theme.id)}
-                                        className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${selectedTheme === theme.id
-                                                ? 'text-white'
+                                        type="button"
+                                        aria-pressed={isSelected}
+                                        onClick={() => setSelectedTheme(isSelected ? null : theme.id)}
+                                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${isSelected
+                                                ? ''
                                                 : 'text-[var(--text-secondary)] hover:text-primary'
                                             }`}
-                                        style={selectedTheme === theme.id && theme.color ? { backgroundColor: theme.color } : {}}
+                                        style={isSelected ? legibleFill(theme.color || COLORLESS_THEME_FILL) : undefined}
                                     >
                                         {theme.icon && (
                                             <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{theme.icon}</span>
@@ -213,13 +219,15 @@ export default function DiscoverySection() {
                         </div>
                     )}
 
-                    {/* Location filter - horizontal scroll */}
+                    {/* Location filter - wraps, same reason as the theme row above */}
                     {locations.length > 0 && (
-                        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none mt-2 -mx-1 px-1">
+                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
                             <span className="material-symbols-outlined text-xs text-[var(--text-muted)] shrink-0" aria-hidden="true">location_on</span>
                             <button
+                                type="button"
+                                aria-pressed={!selectedLocation}
                                 onClick={() => setSelectedLocation('')}
-                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${!selectedLocation
+                                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${!selectedLocation
                                         ? 'bg-primary text-white'
                                         : 'text-[var(--text-muted)] hover:text-primary'
                                     }`}
@@ -229,8 +237,10 @@ export default function DiscoverySection() {
                             {locations.map(loc => (
                                 <button
                                     key={loc}
+                                    type="button"
+                                    aria-pressed={selectedLocation === loc}
                                     onClick={() => setSelectedLocation(selectedLocation === loc ? '' : loc)}
-                                    className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${selectedLocation === loc
+                                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer ${selectedLocation === loc
                                             ? 'bg-primary text-white'
                                             : 'text-[var(--text-muted)] hover:text-primary'
                                         }`}

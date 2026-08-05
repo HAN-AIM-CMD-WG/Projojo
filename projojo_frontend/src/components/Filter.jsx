@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { getSkills } from '../services';
 import { normalizeSkill } from '../utils/skills';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 import { useStudentSkills } from '../context/StudentSkillsContext';
 import { useStudentWork } from '../context/StudentWorkContext';
 import Alert from "./Alert";
@@ -439,13 +440,18 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                     </span>
                 </div>
 
-                {/* === Theme pills === */}
+                {/* === Theme pills ===
+                    The row wraps instead of scrolling horizontally: a hidden-scrollbar row
+                    sliced the last pill mid-word with nothing to hint at the overflow, and
+                    an overflow-x scroll box also clips the focus ring vertically. */}
                 {themes.length > 0 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 -mx-1 px-1 mb-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
                         <span className="neu-label shrink-0 mr-0.5">Thema&apos;s</span>
                         <button
+                            type="button"
+                            aria-pressed={!selectedTheme}
                             onClick={() => { setSelectedTheme(null); triggerFilter({ selectedTheme: null }); }}
-                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedTheme ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedTheme ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
                                 }`}
                         >
                             Alles
@@ -453,17 +459,20 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
                         {themes.map(theme => {
                             const count = themeCounts[theme.id] || 0;
                             if (count === 0) return null;
+                            const isSelected = selectedTheme === theme.id;
                             return (
                                 <button
                                     key={theme.id}
+                                    type="button"
+                                    aria-pressed={isSelected}
                                     onClick={() => {
-                                        const val = selectedTheme === theme.id ? null : theme.id;
+                                        const val = isSelected ? null : theme.id;
                                         setSelectedTheme(val);
                                         triggerFilter({ selectedTheme: val });
                                     }}
-                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${selectedTheme === theme.id ? 'text-white' : 'text-[var(--text-secondary)] hover:text-primary'
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${isSelected ? '' : 'text-[var(--text-secondary)] hover:text-primary'
                                         }`}
-                                    style={selectedTheme === theme.id && theme.color ? { backgroundColor: theme.color } : {}}
+                                    style={isSelected ? legibleFill(theme.color || COLORLESS_THEME_FILL) : undefined}
                                 >
                                     {theme.icon && <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{theme.icon}</span>}
                                     {theme.name}
@@ -476,26 +485,31 @@ export default function Filter({ onFilter, businesses = [], themes = [], allBusi
 
                 {/* === Sector pills === */}
                 {filterOptions.sectors.length > 0 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5 -mx-1 px-1 mb-1">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
                         <span className="neu-label shrink-0 mr-0.5">Sector</span>
                         <button
+                            type="button"
+                            aria-pressed={!selectedSector}
                             onClick={() => { setSelectedSector(null); triggerFilter({ sector: null }); }}
-                            className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedSector ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedSector ? 'bg-primary text-white' : 'text-[var(--text-muted)] hover:text-primary'
                                 }`}
                         >
                             Alles
                         </button>
                         {filterOptions.sectors.map(sector => {
                             const count = filterOptions.sectorCounts[sector] || 0;
+                            const isSelected = selectedSector === sector;
                             return (
                                 <button
                                     key={sector}
+                                    type="button"
+                                    aria-pressed={isSelected}
                                     onClick={() => {
-                                        const val = selectedSector === sector ? null : sector;
+                                        const val = isSelected ? null : sector;
                                         setSelectedSector(val);
                                         triggerFilter({ sector: val });
                                     }}
-                                    className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${selectedSector === sector
+                                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${isSelected
                                             ? 'bg-[var(--text-primary)] text-white'
                                             : 'text-[var(--text-secondary)] hover:text-primary'
                                         }`}
