@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getThemes } from "../services";
 import Alert from "./Alert";
 import Loading from "./Loading";
+import SdgBadge from "./SdgBadge";
 import ThemeCreateModal from "./ThemeCreateModal";
 import ThemeDeleteModal from "./ThemeDeleteModal";
 import ThemeEditModal from "./ThemeEditModal";
@@ -127,7 +128,11 @@ export default function ThemeManagement() {
                                         {theme.name}
                                     </th>
                                     <td data-testid="theme-sdg" className="px-4 md:px-6 py-4 text-[var(--text-secondary)]">
-                                        {theme.sdg_code || "—"}
+                                        {/* sdg_code goes to SdgBadge as-is, null included: the badge
+                                            renders nothing for a theme without an SDG, and the dash
+                                            keeps the column readable in that case (TS-task-012). */}
+                                        <SdgBadge sdgCode={theme.sdg_code} />
+                                        {!theme.sdg_code && "—"}
                                     </td>
                                     <td
                                         data-testid="theme-description"

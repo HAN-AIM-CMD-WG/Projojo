@@ -1,30 +1,15 @@
 import { useId, useRef } from "react";
+import { SDG_OPTIONS } from "../utils/sdg";
 
 export const DESCRIPTION_MAX_LENGTH = 500;
 export const DEFAULT_COLOR = "#4caf50";
 
 export const EMPTY_FORM = { name: "", description: "", sdgCodes: [], icon: "", color: DEFAULT_COLOR };
 
-// SDG1–SDG17 with their Dutch labels (THEME_SDG_IMPLEMENTATION_PLAN.md §3.1).
-export const SDG_OPTIONS = [
-    { code: "SDG1", label: "Geen armoede" },
-    { code: "SDG2", label: "Geen honger" },
-    { code: "SDG3", label: "Goede gezondheid en welzijn" },
-    { code: "SDG4", label: "Kwaliteitsonderwijs" },
-    { code: "SDG5", label: "Gendergelijkheid" },
-    { code: "SDG6", label: "Schoon water en sanitair" },
-    { code: "SDG7", label: "Betaalbare en duurzame energie" },
-    { code: "SDG8", label: "Waardig werk en economische groei" },
-    { code: "SDG9", label: "Industrie, innovatie en infrastructuur" },
-    { code: "SDG10", label: "Ongelijkheid verminderen" },
-    { code: "SDG11", label: "Duurzame steden en gemeenschappen" },
-    { code: "SDG12", label: "Verantwoorde consumptie en productie" },
-    { code: "SDG13", label: "Klimaatactie" },
-    { code: "SDG14", label: "Leven in het water" },
-    { code: "SDG15", label: "Leven op het land" },
-    { code: "SDG16", label: "Vrede, justitie en sterke instellingen" },
-    { code: "SDG17", label: "Partnerschap om doelstellingen te bereiken" },
-];
+// SDG1-SDG17 with their Dutch labels, and the code join/parse helpers, all live
+// in utils/sdg.js so the form and SdgBadge (TS-task-022) read one catalog.
+// Re-exported here because the create/edit modals import them from this form.
+export { SDG_OPTIONS, joinSdgCodes, parseSdgCodes } from "../utils/sdg";
 
 // Curated Material Symbols icons relevant to themes (sustainability, nature,
 // education, technology, society, economy, infrastructure).
@@ -45,16 +30,6 @@ export const ICON_OPTIONS = [
     "business_center", "factory", "storefront", "savings", "payments", "trending_up",
     "insights", "analytics", "workspace_premium", "verified", "emoji_events", "category",
 ];
-
-/** Join selected SDG codes into the canonical SDG1..SDG17 order, regardless of click order. */
-export function joinSdgCodes(sdgCodes) {
-    return SDG_OPTIONS.filter(option => sdgCodes.includes(option.code)).map(option => option.code).join(",");
-}
-
-/** Parse a stored "SDG2,SDG12" code string back into an array of codes. */
-export function parseSdgCodes(sdgCode) {
-    return sdgCode ? sdgCode.split(",").map(code => code.trim()).filter(Boolean) : [];
-}
 
 /**
  * Shared theme form used by both the create (TS-task-011) and edit (TS-task-012)
