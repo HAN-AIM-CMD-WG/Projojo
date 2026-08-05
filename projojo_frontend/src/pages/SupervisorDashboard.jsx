@@ -66,12 +66,12 @@ export default function SupervisorDashboard() {
                 </div>
                 
                 <div className="neu-flat p-8 text-center">
-                    <span className="material-symbols-outlined text-4xl text-gray-400 mb-3">business</span>
+                    <span className="material-symbols-outlined text-4xl text-gray-400 mb-3" aria-hidden="true">business</span>
                     <p className="text-[var(--text-secondary)] font-medium">
                         Dit dashboard is alleen beschikbaar voor supervisors.
                     </p>
                     <Link to="/ontdek" className="neu-btn-primary mt-4 inline-flex items-center gap-2">
-                        <span className="material-symbols-outlined">explore</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">explore</span>
                         Ontdek projecten
                     </Link>
                 </div>
@@ -100,7 +100,7 @@ export default function SupervisorDashboard() {
             {/* Quick Actions */}
             <div className="flex flex-wrap gap-3">
                 <Link to="/projects/add" className="neu-btn-primary inline-flex items-center gap-2">
-                    <span className="material-symbols-outlined">add</span>
+                    <span className="material-symbols-outlined" aria-hidden="true">add</span>
                     Nieuw Project
                 </Link>
             </div>
@@ -110,14 +110,14 @@ export default function SupervisorDashboard() {
             {isLoading ? (
                 <Loading />
             ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                     {/* Main content */}
-                    <div className="lg:col-span-2 space-y-6">
+                    <div className="xl:col-span-2 space-y-6">
                         {/* Pending Registrations Section */}
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
                                 <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
-                                    <span className="material-symbols-outlined text-primary">pending_actions</span>
+                                    <span className="material-symbols-outlined text-primary" aria-hidden="true">pending_actions</span>
                                     Openstaande Aanmeldingen
                                 </h2>
                                 {dashboardData?.pending_registrations?.length > 0 && (
@@ -127,7 +127,7 @@ export default function SupervisorDashboard() {
 
                             {(!dashboardData?.pending_registrations || dashboardData.pending_registrations.length === 0) ? (
                                 <div className="neu-pressed p-6 text-center">
-                                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">inbox</span>
+                                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2" aria-hidden="true">inbox</span>
                                     <p className="text-[var(--text-muted)] text-sm">
                                         Geen openstaande aanmeldingen
                                     </p>
@@ -149,7 +149,7 @@ export default function SupervisorDashboard() {
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
                                 <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
-                                    <span className="material-symbols-outlined text-primary">folder</span>
+                                    <span className="material-symbols-outlined text-primary" aria-hidden="true">folder</span>
                                     Mijn Projecten
                                 </h2>
                                 {dashboardData?.projects?.length > 0 && (
@@ -159,12 +159,12 @@ export default function SupervisorDashboard() {
 
                             {(!dashboardData?.projects || dashboardData.projects.length === 0) ? (
                                 <div className="neu-pressed p-6 text-center">
-                                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">folder_off</span>
+                                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2" aria-hidden="true">folder_off</span>
                                     <p className="text-[var(--text-muted)] text-sm mb-4">
                                         Nog geen projecten aangemaakt
                                     </p>
                                     <Link to="/projects/add" className="neu-btn-primary inline-flex items-center gap-2">
-                                        <span className="material-symbols-outlined">add</span>
+                                        <span className="material-symbols-outlined" aria-hidden="true">add</span>
                                         Maak je eerste project
                                     </Link>
                                 </div>
@@ -192,7 +192,7 @@ export default function SupervisorDashboard() {
                         <section className="neu-flat p-6">
                             <div className="flex items-center justify-between mb-5">
                                 <h2 className="flex items-center gap-2 text-lg font-bold text-[var(--text-primary)]">
-                                    <span className="material-symbols-outlined text-green-500">group</span>
+                                    <span className="material-symbols-outlined text-green-500" aria-hidden="true">group</span>
                                     Actieve Studenten
                                 </h2>
                                 {dashboardData?.active_students?.length > 0 && (
@@ -202,7 +202,7 @@ export default function SupervisorDashboard() {
 
                             {(!dashboardData?.active_students || dashboardData.active_students.length === 0) ? (
                                 <div className="neu-pressed p-6 text-center">
-                                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2">person_off</span>
+                                    <span className="material-symbols-outlined text-3xl text-gray-300 mb-2" aria-hidden="true">person_off</span>
                                     <p className="text-[var(--text-muted)] text-sm">
                                         Nog geen actieve studenten
                                     </p>
@@ -220,8 +220,9 @@ export default function SupervisorDashboard() {
                         </section>
                     </div>
 
-                    {/* Sidebar */}
-                    <div className="space-y-6">
+                    {/* Sidebar - a row of cards under the main column until xl, where it
+                        becomes the actual right-hand sidebar */}
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1 xl:content-start">
                         {/* Quick Stats */}
                         <section className="neu-flat p-5">
                             <h3 className="text-sm font-bold text-[var(--text-secondary)] uppercase tracking-wide mb-4">
@@ -262,15 +263,15 @@ export default function SupervisorDashboard() {
                             </h3>
                             <div className="space-y-2">
                                 <Link to="/projects/add" className="neu-btn w-full justify-start gap-3 !text-sm">
-                                    <span className="material-symbols-outlined text-primary">add_box</span>
+                                    <span className="material-symbols-outlined text-primary" aria-hidden="true">add_box</span>
                                     Nieuw project
                                 </Link>
                                 <Link to={`/business/${dashboardData?.business_id}`} className="neu-btn w-full justify-start gap-3 !text-sm">
-                                    <span className="material-symbols-outlined text-primary">business</span>
+                                    <span className="material-symbols-outlined text-primary" aria-hidden="true">business</span>
                                     Organisatiepagina
                                 </Link>
                                 <Link to="/ontdek" className="neu-btn w-full justify-start gap-3 !text-sm">
-                                    <span className="material-symbols-outlined text-primary">explore</span>
+                                    <span className="material-symbols-outlined text-primary" aria-hidden="true">explore</span>
                                     Ontdek platform
                                 </Link>
                             </div>
@@ -279,7 +280,7 @@ export default function SupervisorDashboard() {
                         {/* Tips section */}
                         <section className="neu-pressed p-5">
                             <div className="flex items-start gap-3">
-                                <span className="material-symbols-outlined text-primary">lightbulb</span>
+                                <span className="material-symbols-outlined text-primary" aria-hidden="true">lightbulb</span>
                                 <div>
                                     <h4 className="font-bold text-[var(--text-primary)] text-sm">Tip</h4>
                                     <p className="text-xs text-[var(--text-muted)] mt-1">
@@ -384,7 +385,7 @@ function RegistrationCard({ registration, onUpdate }) {
                 <div className="flex-1 lg:border-l lg:border-r lg:border-gray-100 lg:px-5">
                     <div className="neu-pressed p-4 rounded-lg">
                         <div className="flex items-start gap-3 mb-3">
-                            <span className="material-symbols-outlined text-primary text-lg">task</span>
+                            <span className="material-symbols-outlined text-primary text-lg" aria-hidden="true">task</span>
                             <div>
                                 <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Taak</p>
                                 <Link 
@@ -396,7 +397,7 @@ function RegistrationCard({ registration, onUpdate }) {
                             </div>
                         </div>
                         <div className="flex items-start gap-3">
-                            <span className="material-symbols-outlined text-gray-400 text-lg">folder</span>
+                            <span className="material-symbols-outlined text-gray-400 text-lg" aria-hidden="true">folder</span>
                             <div>
                                 <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Project</p>
                                 <p className="font-semibold text-[var(--text-secondary)]">{registration.project_name}</p>
@@ -420,7 +421,7 @@ function RegistrationCard({ registration, onUpdate }) {
                     {/* Error message */}
                     {localError && (
                         <p className="text-xs text-red-500 mb-2 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm">error</span>
+                            <span className="material-symbols-outlined text-sm" aria-hidden="true">error</span>
                             {localError}
                         </p>
                     )}
@@ -463,14 +464,14 @@ function RegistrationCard({ registration, onUpdate }) {
                                 onClick={() => handleAction('accept')}
                                 className="neu-btn-primary flex-1"
                             >
-                                <span className="material-symbols-outlined text-sm mr-1.5">check</span>
+                                <span className="material-symbols-outlined text-sm mr-1.5" aria-hidden="true">check</span>
                                 Accepteren
                             </button>
                             <button
                                 onClick={() => handleAction('reject')}
                                 className="neu-btn flex-1 !text-red-500 hover:!bg-red-50"
                             >
-                                <span className="material-symbols-outlined text-sm mr-1.5">close</span>
+                                <span className="material-symbols-outlined text-sm mr-1.5" aria-hidden="true">close</span>
                                 Afwijzen
                             </button>
                         </div>
@@ -511,14 +512,14 @@ function ActiveStudentCard({ student }) {
             {/* Project & Task info */}
             <div className="neu-pressed p-3 rounded-lg space-y-2">
                 <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-gray-400 text-sm mt-0.5">folder</span>
+                    <span className="material-symbols-outlined text-gray-400 text-sm mt-0.5" aria-hidden="true">folder</span>
                     <div>
                         <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Project</p>
                         <p className="text-sm font-semibold text-[var(--text-primary)]">{student.project_name}</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined text-primary text-sm mt-0.5">task</span>
+                    <span className="material-symbols-outlined text-primary text-sm mt-0.5" aria-hidden="true">task</span>
                     <div>
                         <p className="text-xs text-[var(--text-muted)] uppercase tracking-wide">Taak</p>
                         <p className="text-sm font-semibold text-[var(--text-primary)]">{student.task_name}</p>
@@ -529,7 +530,7 @@ function ActiveStudentCard({ student }) {
             {/* Footer */}
             <div className="flex items-center justify-end mt-3 text-xs text-primary font-medium">
                 Bekijk profiel
-                <span className="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                <span className="material-symbols-outlined text-sm ml-1" aria-hidden="true">arrow_forward</span>
             </div>
         </Link>
     );
@@ -566,8 +567,14 @@ function ProjectCard({ project, pendingCount = 0 }) {
                     {/* Pending badge overlay */}
                     {pendingCount > 0 && (
                         <span className="absolute top-1.5 left-1.5 bg-primary text-white text-xs font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                            <span className="material-symbols-outlined text-xs">person_add</span>
+                            <span className="material-symbols-outlined text-xs" aria-hidden="true">person_add</span>
                             {pendingCount}
+                            {/* The icon is what gives the bare count its meaning on screen, so
+                                hiding it from assistive tech would leave the card link's
+                                accessible name reading just a number. Name it in text instead. */}
+                            <span className="sr-only">
+                                {pendingCount === 1 ? 'openstaande aanmelding' : 'openstaande aanmeldingen'}
+                            </span>
                         </span>
                     )}
                 </div>
@@ -580,12 +587,12 @@ function ProjectCard({ project, pendingCount = 0 }) {
                         </h4>
                         <div className="flex items-center gap-3 mt-1.5">
                             <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
-                                <span className="material-symbols-outlined text-sm">task</span>
+                                <span className="material-symbols-outlined text-sm" aria-hidden="true">task</span>
                                 {taskCount} {taskCount === 1 ? 'taak' : 'taken'}
                             </span>
                             {pendingCount > 0 && (
                                 <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
-                                    <span className="material-symbols-outlined text-sm">notifications</span>
+                                    <span className="material-symbols-outlined text-sm" aria-hidden="true">notifications</span>
                                     Actie
                                 </span>
                             )}
@@ -635,7 +642,10 @@ function ProjectCard({ project, pendingCount = 0 }) {
                         )}
 
                         {/* Arrow indicator */}
-                        <span className="material-symbols-outlined text-base text-[var(--text-muted)] group-hover:text-primary transition-colors ml-auto shrink-0">
+                        <span
+                            className="material-symbols-outlined text-base text-[var(--text-muted)] group-hover:text-primary transition-colors ml-auto shrink-0"
+                            aria-hidden="true"
+                        >
                             arrow_forward
                         </span>
                     </div>
@@ -652,7 +662,7 @@ function StatItem({ icon, label, value, color }) {
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <span className={`material-symbols-outlined text-lg ${color}`}>{icon}</span>
+                <span className={`material-symbols-outlined text-lg ${color}`} aria-hidden="true">{icon}</span>
                 <span className="text-sm text-[var(--text-secondary)]">{label}</span>
             </div>
             <span className="font-bold text-[var(--text-primary)]">{value}</span>

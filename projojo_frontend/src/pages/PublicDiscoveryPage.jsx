@@ -8,6 +8,7 @@ import RichTextViewer from '../components/RichTextViewer';
 import LocationMap from '../components/LocationMap';
 import OverviewMap from '../components/OverviewMap';
 import { formatDate } from '../utils/dates';
+import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 
 /**
  * PublicDiscoveryPage
@@ -272,13 +273,15 @@ function PublicProjectList() {
                         </div>
                     </div>
 
-                    {/* Theme pills - compact single row with overflow */}
+                    {/* Theme pills - wraps so no pill is ever sliced off at the card edge */}
                     {themes.length > 0 && (
-                        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-1 pb-1 -mx-1 px-1">
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1 pb-1">
                             <span className="neu-label shrink-0 mr-0.5">Thema&apos;s</span>
                             <button
+                                type="button"
+                                aria-pressed={!selectedTheme}
                                 onClick={() => setSelectedTheme(null)}
-                                className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedTheme
+                                className={`px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${!selectedTheme
                                         ? 'bg-primary text-white'
                                         : 'text-[var(--text-muted)] hover:text-primary'
                                     }`}
@@ -288,15 +291,18 @@ function PublicProjectList() {
                             {themes.map(theme => {
                                 const count = projects.filter(p => p.themes?.some(t => t.id === theme.id)).length;
                                 if (count === 0) return null;
+                                const isSelected = selectedTheme === theme.id;
                                 return (
                                     <button
                                         key={theme.id}
-                                        onClick={() => setSelectedTheme(selectedTheme === theme.id ? null : theme.id)}
-                                        className={`shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${selectedTheme === theme.id
-                                                ? 'text-white'
+                                        type="button"
+                                        aria-pressed={isSelected}
+                                        onClick={() => setSelectedTheme(isSelected ? null : theme.id)}
+                                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all duration-200 cursor-pointer ${isSelected
+                                                ? ''
                                                 : 'text-[var(--text-secondary)] hover:text-primary'
                                             }`}
-                                        style={selectedTheme === theme.id && theme.color ? { backgroundColor: theme.color } : {}}
+                                        style={isSelected ? legibleFill(theme.color || COLORLESS_THEME_FILL) : undefined}
                                     >
                                         {theme.icon && (
                                             <span className="material-symbols-outlined text-[11px]" aria-hidden="true">{theme.icon}</span>
