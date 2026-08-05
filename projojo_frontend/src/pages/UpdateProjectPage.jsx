@@ -34,7 +34,7 @@ export default function UpdateProjectPage() {
 
     // Fetch project (complete)
     const { data: projectData, error: projectError, isLoading } = useFetch(() => getProject(projectId), [projectId]);
-    const { data: projectThemes, isLoading: areThemesLoading } = useFetch(() => getProjectThemes(projectId), [projectId]);
+    const { data: projectThemes, error: themesError, isLoading: areThemesLoading } = useFetch(() => getProjectThemes(projectId), [projectId]);
 
     useEffect(() => {
         if (projectData && description === undefined) {
@@ -51,6 +51,12 @@ export default function UpdateProjectPage() {
 
     if (projectError) {
         return <Alert text={projectError?.message} />;
+    }
+
+    // Without the saved themes there is no baseline: treating the failure as an
+    // empty selection would silently replace (and delete) existing theme links.
+    if (themesError) {
+        return <Alert text="De thema's van dit project konden niet worden geladen. Probeer het later opnieuw." />;
     }
 
     if (isLoading || areThemesLoading || !projectData) {
