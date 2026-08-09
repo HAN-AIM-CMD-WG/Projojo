@@ -63,6 +63,30 @@ async function badgeFor(world, themeName, code) {
  */
 const tooltipOf = (badge) => badge.locator('[role="tooltip"]');
 
+/**
+ * The tooltip's opacity once its fade has settled.
+ *
+ * Playwright's visibility check looks at visibility/display and box size, not at
+ * opacity, so a tooltip that flips to `visibility: visible` but never fades in
+ * still counts as visible to `waitFor`. The tooltip transitions opacity over
+ * 300ms, so reading it once catches it mid-fade; this settles on the final value
+ * instead, which is what "becomes visible" has to mean to be worth asserting.
+ */
+function settledOpacity(tooltip, timeoutMs = 2000) {
+  return tooltip.evaluate(
+    (element, budget) => new Promise((resolve) => {
+      const deadline = Date.now() + budget;
+      const read = () => {
+        const opacity = Number(getComputedStyle(element).opacity);
+        if (opacity >= 1 || Date.now() > deadline) resolve(opacity);
+        else requestAnimationFrame(read);
+      };
+      read();
+    }),
+    timeoutMs,
+  );
+}
+
 /** The badge's rendered fill and its number's rendered text colour. */
 async function renderedColours(badge) {
   const backgroundColor = await badge.evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -96,6 +120,10 @@ Given('the theme catalog contains only the TS-022 SDG fixtures', async function 
   await resetThemeCatalog(TS022_THEME_PAYLOADS);
 });
 
+// Deliberately a step rather than a hook: the Background's authentication already
+// renders the landing page, which logs a pre-existing React warning of its own.
+// Recording from here on means these scenarios answer for the theme page they are
+// about, instead of failing on noise made before it was ever opened.
 Given('I am recording browser errors', async function () {
   this.browserErrors = [];
   const current = page(this);
@@ -153,7 +181,7 @@ Then('the SDG badge for {string} on theme {string} should be filled with {string
   assert.equal(backgroundColor, hexToRgb(hex), `Expected the '${code}' badge to be filled with ${hex}`);
 });
 
-Then('every SDG badge on theme {string} should be filled with its official UN colour', async function (themeName) {
+Then('every SDG badge on theme {string} should show its goal number in its official UN colour', async function (themeName) {
   const badges = await badgesOn(this, themeName);
   await badges.first().waitFor({ state: 'visible' });
   const expectedCodes = expectedCodesFor(themeName);
@@ -168,6 +196,13 @@ Then('every SDG badge on theme {string} should be filled with its official UN co
       backgroundColor,
       hexToRgb(expectedColor(code)),
       `Expected ${code} to be filled with its official UN colour ${expectedColor(code)}`,
+    );
+    // The number is checked here too, not only for the one badge AC-1 names, so a
+    // goal that renders the wrong digit cannot hide behind the right fill colour.
+    assert.equal(
+      (await badge.getByTestId('sdg-badge-number').innerText()).trim(),
+      String(sdgNumber(code)),
+      `Expected the ${code} badge to show '${sdgNumber(code)}'`,
     );
   }
 });
@@ -191,6 +226,8 @@ Then('the tooltip {string} should become visible', async function (expectedText)
   assert.equal(expectedText, expectedName(this.hoveredCode), `Scenario tooltip must be the Dutch name of ${this.hoveredCode}`);
   const tooltip = tooltipOf(this.hoveredBadge);
   await tooltip.waitFor({ state: 'visible' });
+  const opacity = await settledOpacity(tooltip);
+  assert.ok(opacity >= 1, `Expected the tooltip to fade fully in, opacity settled at ${opacity}`);
   assert.equal((await tooltip.innerText()).trim(), expectedText, 'Expected the tooltip to show the Dutch SDG name');
 });
 

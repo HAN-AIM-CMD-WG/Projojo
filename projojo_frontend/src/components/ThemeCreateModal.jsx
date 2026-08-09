@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createTheme } from "../services";
 import Modal from "./Modal";
-import ThemeForm, { EMPTY_FORM, joinSdgCodes } from "./ThemeForm";
+import ThemeForm, { EMPTY_FORM } from "./ThemeForm";
+import { joinSdgCodes } from "../utils/sdg";
 
 /**
  * Teacher-facing "Nieuw thema" create form (TS-task-011).

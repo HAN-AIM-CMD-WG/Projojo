@@ -10,7 +10,7 @@
  * number, single ("SDG12") or comma-separated ("SDG2,SDG12"), which is exactly
  * what the backend validates.
  */
-export const SDG_GOALS = Object.freeze([
+const SDG_GOALS = Object.freeze([
     { number: 1, name: "Geen armoede", color: "#E5243B" },
     { number: 2, name: "Geen honger", color: "#DDA63A" },
     { number: 3, name: "Goede gezondheid en welzijn", color: "#4C9F38" },
@@ -46,13 +46,17 @@ export function parseSdgCodes(sdgCode) {
 }
 
 /**
- * The goals a stored sdg_code names, in stored order.
+ * The distinct goals a stored sdg_code names, in stored order.
  *
- * A null/empty code yields an empty list, and so does an unrecognised one: the
- * field is free text as far as the frontend is concerned, and a theme carrying
- * something the UN catalog does not define should render no badge rather than
- * an unlabelled, uncoloured one.
+ * The backend's pattern is SDG<n>(,SDG<n>)*, which accepts the same goal twice,
+ * so "SDG12,SDG12" is real data — and one goal is still one badge however often
+ * it is named. Deduplicating here is also what keeps the goal number usable as a
+ * React key.
+ *
+ * A null or empty code yields an empty list. So does an unrecognised one, which
+ * the backend's pattern already rules out; dropping it keeps this function total
+ * rather than handing a caller a hole where a goal should be.
  */
 export function parseSdgGoals(sdgCode) {
-    return parseSdgCodes(sdgCode).map(code => GOAL_BY_CODE.get(code)).filter(Boolean);
+    return [...new Set(parseSdgCodes(sdgCode))].map(code => GOAL_BY_CODE.get(code)).filter(Boolean);
 }

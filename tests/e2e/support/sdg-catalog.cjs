@@ -82,11 +82,15 @@ const expectedGoalUrl = (code) => `https://sdgs.un.org/goals/goal${sdgNumber(cod
 //   SDG Licht         light fill (SDG7)      AC-7
 //   SDG Alle          all 17 codes at once   AC-2, AC-7 (contrast sweep)
 //   SDG Geen          no sdg_code at all     AC-6
+//   SDG Dubbel        the same code twice    AC-5 (repeat)
 //
 // "SDG Enkel" carries display_order 1 so it renders in the first theme row: the
 // keyboard-focus scenario tabs to it from the top of the page, and a first row
 // keeps that walk short. Omitting sdg_code entirely on "SDG Geen" is what sends
 // a null sdgCode into the component, which is exactly what AC-6 is about.
+//
+// "SDG Dubbel" is not a typo: the backend's code pattern is SDG<n>(,SDG<n>)*,
+// which accepts a repeat, so 'SDG12,SDG12' is data the badge can really be handed.
 const TS022_THEME_FIXTURES = Object.freeze([
   Object.freeze({ name: 'SDG Enkel', sdg_code: 'SDG12', icon: 'eco', color: '#4CAF50', display_order: 1, description: 'Eén SDG-code.' }),
   Object.freeze({ name: 'SDG Samengesteld', sdg_code: 'SDG2,SDG12', icon: 'restaurant', color: '#FF9800', display_order: 2, description: 'Twee SDG-codes.' }),
@@ -94,6 +98,7 @@ const TS022_THEME_FIXTURES = Object.freeze([
   Object.freeze({ name: 'SDG Licht', sdg_code: 'SDG7', icon: 'bolt', color: '#FFC107', display_order: 4, description: 'Lichte SDG-kleur.' }),
   Object.freeze({ name: 'SDG Alle', sdg_code: ALL_SDG_CODES.join(','), icon: 'public', color: '#2196F3', display_order: 5, description: 'Alle zeventien SDG-codes.' }),
   Object.freeze({ name: 'SDG Geen', sdg_code: null, icon: 'category', color: '#9E9E9E', display_order: 6, description: 'Geen SDG-code.' }),
+  Object.freeze({ name: 'SDG Dubbel', sdg_code: 'SDG12,SDG12', icon: 'content_copy', color: '#795548', display_order: 7, description: 'Dezelfde SDG-code twee keer.' }),
 ]);
 
 /** The fixture themes as the theme API accepts them: a null sdg_code is omitted, not sent. */
@@ -101,18 +106,22 @@ const TS022_THEME_PAYLOADS = Object.freeze(
   TS022_THEME_FIXTURES.map(({ sdg_code: sdgCode, ...rest }) => Object.freeze(sdgCode ? { ...rest, sdg_code: sdgCode } : rest)),
 );
 
-/** The codes a fixture theme must render badges for, in order; [] when it has none. */
+/**
+ * The codes a fixture theme must render badges for, in order; [] when it has none.
+ *
+ * Distinct codes, because a badge stands for a goal: naming SDG12 twice is still
+ * one goal, so "SDG Dubbel" expects one badge and not two.
+ */
 function expectedCodesFor(themeName) {
   const fixture = TS022_THEME_FIXTURES.find((theme) => theme.name === themeName);
   assert.ok(fixture, `Expected a TS-task-022 fixture theme named '${themeName}'`);
-  return fixture.sdg_code ? fixture.sdg_code.split(',') : [];
+  return fixture.sdg_code ? [...new Set(fixture.sdg_code.split(','))] : [];
 }
 
+// Only what the steps actually consume. The colour/name tables and the fixture
+// list stay module-private: they are reached through the expected* helpers, which
+// fail loudly on a code the tables do not know.
 module.exports = {
-  SDG_COLORS,
-  SDG_NAMES_NL,
-  ALL_SDG_CODES,
-  TS022_THEME_FIXTURES,
   TS022_THEME_PAYLOADS,
   sdgNumber,
   expectedColor,

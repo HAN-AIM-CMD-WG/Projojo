@@ -1,15 +1,12 @@
 import { useId, useRef } from "react";
-import { SDG_OPTIONS } from "../utils/sdg";
+// SDG1-SDG17 with their Dutch labels, and the code join/parse helpers, all live
+// in utils/sdg.js so the form and SdgBadge (TS-task-022) read one catalog.
+import { SDG_OPTIONS, joinSdgCodes } from "../utils/sdg";
 
 export const DESCRIPTION_MAX_LENGTH = 500;
 export const DEFAULT_COLOR = "#4caf50";
 
 export const EMPTY_FORM = { name: "", description: "", sdgCodes: [], icon: "", color: DEFAULT_COLOR };
-
-// SDG1-SDG17 with their Dutch labels, and the code join/parse helpers, all live
-// in utils/sdg.js so the form and SdgBadge (TS-task-022) read one catalog.
-// Re-exported here because the create/edit modals import them from this form.
-export { SDG_OPTIONS, joinSdgCodes, parseSdgCodes } from "../utils/sdg";
 
 // Curated Material Symbols icons relevant to themes (sustainability, nature,
 // education, technology, society, economy, infrastructure).
@@ -64,8 +61,9 @@ export default function ThemeForm({ testId, form, onChange, error, isSaving, onS
         if (iconDetailsRef.current) iconDetailsRef.current.open = false;
     };
 
+    // Same canonical order the form saves in, spaced out for reading.
     const sdgSummary = form.sdgCodes.length
-        ? SDG_OPTIONS.filter(option => form.sdgCodes.includes(option.code)).map(option => option.code).join(", ")
+        ? joinSdgCodes(form.sdgCodes).replaceAll(",", ", ")
         : "Selecteer SDG('s)";
 
     return (

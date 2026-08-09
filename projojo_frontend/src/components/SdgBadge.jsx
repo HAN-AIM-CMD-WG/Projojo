@@ -24,7 +24,14 @@ const UN_GOAL_URL = "https://sdgs.un.org/goals/goal";
  *
  * The label colour is picked by legibleFill rather than by a fixed rule: the 17
  * official colours span very light (#FCC30B) to very dark (#19486A), and only a
- * contrast-based choice keeps every one of them readable.
+ * contrast-based choice keeps every one of them readable. Contrast is not hue
+ * consistent, so similar colours can end up with opposite labels — among the reds,
+ * SDG1 and SDG5 read black while SDG4, SDG8 and SDG10 read white. That is the
+ * choice, not a bug: every badge clears WCAG AA, which a per-hue rule would not.
+ *
+ * The link role is the native one an <a href> already carries, so no role
+ * attribute is set: spelling it out would be redundant ARIA on an element that
+ * means it natively.
  */
 export default function SdgBadge({ sdgCode }) {
     const goals = parseSdgGoals(sdgCode);
@@ -53,7 +60,9 @@ function SdgGoalBadge({ goal }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`SDG ${goal.number}: ${goal.name}`}
-            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300 transition-transform hover:scale-110"
+            // ring-offset keeps the focus ring off the fill: the primary ring against
+            // an orange goal colour (SDG9, SDG11) would otherwise barely read.
+            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 transition-transform hover:scale-110"
             style={legibleFill(goal.color)}
         >
             <span data-testid="sdg-badge-number" aria-hidden="true">{goal.number}</span>
