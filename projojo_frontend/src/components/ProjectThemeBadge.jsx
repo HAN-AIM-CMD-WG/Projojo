@@ -58,10 +58,14 @@ export default function ProjectThemeBadge({ themes }) {
                         {theme.icon}
                     </span>
                 )}
-                <span data-testid="project-theme-badge-name">{theme.name}</span>
+                {/* Cap the name (ch-based, so it bites only on genuinely long teacher-authored
+                    names) so a long name plus the SDG badges can't run the row across the
+                    opposite-corner status badge. innerText keeps the full name for the tests. */}
+                <span data-testid="project-theme-badge-name" className="max-w-[20ch] truncate">{theme.name}</span>
                 {hiddenThemeCount > 0 && (
                     <span
                         data-testid="project-theme-badge-overflow"
+                        role="img"
                         title={`nog ${hiddenThemeCount} thema${hiddenThemeCount === 1 ? '' : "'s"}`}
                         aria-label={`nog ${hiddenThemeCount} thema${hiddenThemeCount === 1 ? '' : "'s"}`}
                         className="opacity-70"
@@ -77,9 +81,12 @@ export default function ProjectThemeBadge({ themes }) {
                 // composites to at worst ~5.7:1 (over pure white) - clear of WCAG AA 4.5:1 for
                 // any project photo. Kept smaller and square-ish so it reads as a counter rather
                 // than a third goal, and labelled in Dutch so a screen reader hears
-                // "nog 15 SDG-doelen" rather than a bare "+15".
+                // "nog 15 SDG-doelen" rather than a bare "+15". role="img" makes it a named leaf
+                // so that aria-label is actually exposed (bare <span> is role=generic, which
+                // prohibits the attribute) - the same reason the passive SdgBadge sibling uses it.
                 <span
                     data-testid="sdg-badge-overflow"
+                    role="img"
                     title={`nog ${hiddenSdgCount} SDG-${hiddenSdgCount === 1 ? 'doel' : 'doelen'}`}
                     aria-label={`nog ${hiddenSdgCount} SDG-${hiddenSdgCount === 1 ? 'doel' : 'doelen'}`}
                     className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md text-[9px] font-bold bg-black/60 text-white ring-1 ring-white/40"

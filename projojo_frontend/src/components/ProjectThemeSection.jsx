@@ -149,8 +149,9 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                 loading/empty/error messages below, NOT on this row: the loaded pills carry
                 focusable SDG goal links (TS-task-023), which must not live inside a live
                 region, and re-announcing the whole theme row on every reload would be
-                noise. A screen reader is still told when the themes are loading, come back
-                empty, or fail. The editor below is a deliberate interaction, not a status. */}
+                noise. A screen reader is told when the themes come back empty or fail
+                (states swapped in after first paint; the first-paint loading state itself
+                has no mutation to announce). The editor is a deliberate action, not a status. */}
             <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs font-semibold text-[var(--text-muted)] mr-1">{"Thema's:"}</span>
 

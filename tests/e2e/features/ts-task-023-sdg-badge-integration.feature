@@ -117,8 +117,11 @@ Feature: TS-task-023 SDG badge integration across theme views
     And the project card SDG badges show no overflow count
 
   # Beyond two goals the card caps at the first two badges and collapses the rest into
-  # a "+N" count, the same way several themes collapse into the theme badge's own "+N" -
-  # so the badges never run across the status badge in the opposite corner.
+  # a "+N" count, the same way several themes collapse into the theme badge's own "+N",
+  # so the SDG badge row stays bounded rather than growing one badge per goal. (The cap
+  # bounds only the SDG contribution to the row width; it is not on its own a guarantee
+  # against meeting the opposite-corner status badge, which also depends on the theme
+  # name length - the name is truncated for that, and no scenario asserts the overlap.)
   @ui @theme @sdg @TS-task-023
   Scenario: AC-5 a project card whose primary theme has many SDG codes caps at two badges with a +N count
     Given the theme catalog contains only the TS-022 SDG fixtures
