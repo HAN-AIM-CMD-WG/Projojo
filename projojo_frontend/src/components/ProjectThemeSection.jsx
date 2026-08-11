@@ -145,12 +145,13 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
         <div data-testid="project-themes" className="mt-3">
             {/* One flat flex-wrap row so the "Thema's:" label shares the first line with
                 the first pills and any overflow wraps beneath them - exactly like the
-                Skills row. role="status" makes it a polite live region so a screen reader
-                is told when the themes finish loading, come back empty, or fail - the
-                content swaps in after first paint (matches SkeletonList / ThemeManagement
-                loading regions). The editor below sits outside it: it is a deliberate
-                interaction, not a status change to announce. */}
-            <div role="status" className="flex flex-wrap items-center gap-1.5">
+                Skills row. The polite live region (role="status") sits on the transient
+                loading/empty/error messages below, NOT on this row: the loaded pills carry
+                focusable SDG goal links (TS-task-023), which must not live inside a live
+                region, and re-announcing the whole theme row on every reload would be
+                noise. A screen reader is still told when the themes are loading, come back
+                empty, or fail. The editor below is a deliberate interaction, not a status. */}
+            <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs font-semibold text-[var(--text-muted)] mr-1">{"Thema's:"}</span>
 
                 {canEdit && status === 'ready' && !isEditing && (
@@ -169,7 +170,7 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                 )}
 
                 {isEditing ? null : status === 'loading' ? (
-                    <span data-testid="project-themes-loading" className="inline-flex items-center gap-1.5">
+                    <span data-testid="project-themes-loading" role="status" className="inline-flex items-center gap-1.5">
                         <span className="sr-only">{"Thema's laden..."}</span>
                         {[0, 1].map((i) => (
                             <span
@@ -180,11 +181,11 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                         ))}
                     </span>
                 ) : status === 'error' ? (
-                    <span data-testid="project-themes-error" className="text-xs text-[var(--text-muted)]">
+                    <span data-testid="project-themes-error" role="status" className="text-xs text-[var(--text-muted)]">
                         {"Thema's konden niet worden geladen"}
                     </span>
                 ) : themes.length === 0 ? (
-                    <span data-testid="project-themes-empty" className="text-xs text-[var(--text-muted)]">
+                    <span data-testid="project-themes-empty" role="status" className="text-xs text-[var(--text-muted)]">
                         {"Geen thema's gekoppeld"}
                     </span>
                 ) : (

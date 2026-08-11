@@ -295,18 +295,37 @@ Then('the theme section offers no theme editing control', async function () {
   await section(this).getByTestId('project-themes-loading').waitFor({ state: 'detached', timeout: 15_000 });
   // No editing affordance of any shape - a button, link, select, input, editable
   // region or role="button" would all count as an edit control a user who may not
-  // edit this project's themes must never be offered. The SDG badges (TS-task-023)
-  // are the one exemption: each themed pill carries an adjacent link to the goal's
-  // UN page, which is a read-only informational link, not an edit affordance. Each
-  // badge is a single <a> with no interactive descendants, so subtracting the badge
-  // count leaves exactly the count of genuine edit controls, which must be zero.
-  const interactiveCount = await section(this).locator(INTERACTIVE_SELECTOR).count();
-  const sdgBadgeCount = await section(this).getByTestId('sdg-badge').count();
-  assert.equal(
-    interactiveCount - sdgBadgeCount,
-    0,
-    'Expected the theme section to offer no editing control of any kind beyond the read-only SDG goal links',
+  // edit this project's themes must never be offered. The SDG goal links
+  // (TS-task-023) are the one exemption: each themed pill carries an adjacent,
+  // read-only link to the goal's UN page, not an edit affordance. They are excluded
+  // by test id rather than subtracted as a count, so the check stays structural: a
+  // leaked edit control can no longer be cancelled out by a missing badge, and the
+  // failure names the offending element instead of reporting a bare (or negative)
+  // number.
+  const editControlSelector = INTERACTIVE_SELECTOR
+    .split(', ')
+    .map((part) => `${part}:not([data-testid="sdg-badge"])`)
+    .join(', ');
+  const offenders = await section(this)
+    .locator(editControlSelector)
+    .evaluateAll((elements) => elements.map((element) => element.outerHTML));
+  assert.deepEqual(
+    offenders,
+    [],
+    `Expected the theme section to offer no editing control beyond the read-only SDG goal links, found: ${offenders.join(' | ')}`,
   );
+
+  // Earn the exemption inside this file: every element it waved through must really
+  // be an SDG goal link, not merely anything wearing the badge's test id.
+  for (const badge of await section(this).getByTestId('sdg-badge').all()) {
+    const [tag, href] = await badge.evaluate((element) => [element.tagName, element.getAttribute('href')]);
+    assert.equal(tag, 'A', 'Expected an exempted SDG badge to be a link');
+    assert.match(
+      href ?? '',
+      /^https:\/\/sdgs\.un\.org\/goals\/goal\d+$/,
+      `Expected an exempted SDG badge to link to a UN goal page, got '${href}'`,
+    );
+  }
 });
 
 // --- Then: graceful degradation --------------------------------------------------

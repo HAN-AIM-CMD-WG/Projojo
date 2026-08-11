@@ -31,10 +31,11 @@ const UN_GOAL_URL = "https://sdgs.un.org/goals/goal";
  *
  * `interactive` (default true) chooses the badge's element. Interactive renders an
  * <a href> to the goal's UN page, whose link role and focus ring are native. Passive
- * (`interactive={false}`) renders a <span role="img"> with the same fill, tooltip and
- * accessible name but no link: it is for surfaces where the badge sits inside another
- * anchor — the project cards are a single <Link>, and a nested <a> there is invalid
- * HTML — so the colour-and-tooltip indicator stands in for the goal link.
+ * (`interactive={false}`) renders a <span role="img"> with the same fill and accessible
+ * name, but a native `title` shown on hover instead of the hover-and-focus Tooltip, and
+ * no link: it is for surfaces where the badge sits inside another anchor — the project
+ * cards are a single <Link>, and a nested <a> there is invalid HTML — so the
+ * colour-and-title indicator stands in for the goal link.
  */
 export default function SdgBadge({ sdgCode, interactive = true }) {
     const goals = parseSdgGoals(sdgCode);
