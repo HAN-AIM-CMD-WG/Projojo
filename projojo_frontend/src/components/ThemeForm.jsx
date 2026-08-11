@@ -128,6 +128,14 @@ export default function ThemeForm({ testId, form, onChange, error, isSaving, onS
                                         checked={form.sdgCodes.includes(option.code)}
                                         onChange={() => toggleSdg(option.code)}
                                     />
+                                    {/* Official UN colour preview beside the label, so the code the badge
+                                        will show is recognisable while choosing (TS-task-023 AC-2). */}
+                                    <span
+                                        data-testid={`theme-sdg-swatch-${option.code}`}
+                                        className="w-4 h-4 rounded-sm shrink-0"
+                                        style={{ backgroundColor: option.color }}
+                                        aria-hidden="true"
+                                    />
                                     <span className="text-sm text-[var(--text-primary)]">{option.code} — {option.label}</span>
                                 </label>
                             </li>

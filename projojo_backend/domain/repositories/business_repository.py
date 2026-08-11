@@ -211,7 +211,8 @@ class BusinessRepository(BaseRepository[Business]):
                             "id": $theme_id,
                             "name": $theme_name,
                             "icon": [$theme.icon],
-                            "color": [$theme.color]
+                            "color": [$theme.color],
+                            "sdg_code": [$theme.sdgCode]
                         };
                     ],
                     "tasks": [
@@ -278,8 +279,8 @@ class BusinessRepository(BaseRepository[Business]):
             ]
 
         # TypeDB returns optional attributes as lists. Flatten the nested theme
-        # icon/color so a project's themes here are field-for-field identical to
-        # GET /themes/project/{id}, matching get_public_projects().
+        # icon/color/sdg_code so a project's themes here are field-for-field identical
+        # to GET /themes/project/{id}, matching get_public_projects().
         for business in results:
             for project in business.get("projects", []):
                 project["themes"] = [
@@ -288,6 +289,7 @@ class BusinessRepository(BaseRepository[Business]):
                         "name": theme.get("name", ""),
                         "icon": (theme.get("icon") or [None])[0],
                         "color": (theme.get("color") or [None])[0],
+                        "sdg_code": (theme.get("sdg_code") or [None])[0],
                     }
                     for theme in project.get("themes", [])
                 ]

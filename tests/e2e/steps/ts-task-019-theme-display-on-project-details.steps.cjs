@@ -295,11 +295,17 @@ Then('the theme section offers no theme editing control', async function () {
   await section(this).getByTestId('project-themes-loading').waitFor({ state: 'detached', timeout: 15_000 });
   // No editing affordance of any shape - a button, link, select, input, editable
   // region or role="button" would all count as an edit control a user who may not
-  // edit this project's themes must never be offered.
+  // edit this project's themes must never be offered. The SDG badges (TS-task-023)
+  // are the one exemption: each themed pill carries an adjacent link to the goal's
+  // UN page, which is a read-only informational link, not an edit affordance. Each
+  // badge is a single <a> with no interactive descendants, so subtracting the badge
+  // count leaves exactly the count of genuine edit controls, which must be zero.
+  const interactiveCount = await section(this).locator(INTERACTIVE_SELECTOR).count();
+  const sdgBadgeCount = await section(this).getByTestId('sdg-badge').count();
   assert.equal(
-    await section(this).locator(INTERACTIVE_SELECTOR).count(),
+    interactiveCount - sdgBadgeCount,
     0,
-    'Expected the theme section to offer no editing control of any kind',
+    'Expected the theme section to offer no editing control of any kind beyond the read-only SDG goal links',
   );
 });
 

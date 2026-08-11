@@ -29,17 +29,20 @@ const UN_GOAL_URL = "https://sdgs.un.org/goals/goal";
  * SDG1 and SDG5 read black while SDG4, SDG8 and SDG10 read white. That is the
  * choice, not a bug: every badge clears WCAG AA, which a per-hue rule would not.
  *
- * The link role is the native one an <a href> already carries, so no role
- * attribute is set: spelling it out would be redundant ARIA on an element that
- * means it natively.
+ * `interactive` (default true) chooses the badge's element. Interactive renders an
+ * <a href> to the goal's UN page, whose link role and focus ring are native. Passive
+ * (`interactive={false}`) renders a <span role="img"> with the same fill, tooltip and
+ * accessible name but no link: it is for surfaces where the badge sits inside another
+ * anchor — the project cards are a single <Link>, and a nested <a> there is invalid
+ * HTML — so the colour-and-tooltip indicator stands in for the goal link.
  */
-export default function SdgBadge({ sdgCode }) {
+export default function SdgBadge({ sdgCode, interactive = true }) {
     const goals = parseSdgGoals(sdgCode);
     if (!goals.length) return null;
 
     return (
         <span className="inline-flex flex-wrap items-center gap-1">
-            {goals.map(goal => <SdgGoalBadge key={goal.number} goal={goal} />)}
+            {goals.map(goal => <SdgGoalBadge key={goal.number} goal={goal} interactive={interactive} />)}
         </span>
     );
 }
@@ -48,25 +51,35 @@ export default function SdgBadge({ sdgCode }) {
  * One goal's badge. Split out because each badge needs its own ref for the
  * tooltip, and hooks cannot be called from inside the map above.
  */
-function SdgGoalBadge({ goal }) {
+function SdgGoalBadge({ goal, interactive }) {
     const badgeRef = useRef(null);
+    const Tag = interactive ? "a" : "span";
+
+    // The link carries the new-tab attributes and the focus ring. The passive span
+    // carries neither; it also swaps the custom Tooltip for a native `title`, because
+    // its only home is the project card, whose overflow-hidden frame would clip an
+    // absolutely-positioned tooltip to an unreadable sliver. A native title is drawn
+    // by the browser outside that frame. The span still needs an explicit role="img"
+    // so its aria-label is announced (an <a href> announces as a link natively).
+    // ring-offset keeps the focus ring off the fill: the primary ring against an
+    // orange goal colour (SDG9, SDG11) would otherwise barely read.
+    const roleProps = interactive
+        ? { href: `${UN_GOAL_URL}${goal.number}`, target: "_blank", rel: "noopener noreferrer" }
+        : { role: "img", title: goal.name };
+    const focusRing = interactive ? " focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50" : "";
 
     return (
-        <a
+        <Tag
             ref={badgeRef}
             data-testid="sdg-badge"
             data-sdg-code={`SDG${goal.number}`}
-            href={`${UN_GOAL_URL}${goal.number}`}
-            target="_blank"
-            rel="noopener noreferrer"
             aria-label={`SDG ${goal.number}: ${goal.name}`}
-            // ring-offset keeps the focus ring off the fill: the primary ring against
-            // an orange goal colour (SDG9, SDG11) would otherwise barely read.
-            className="inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 transition-transform hover:scale-110"
+            className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-bold transition-transform hover:scale-110${focusRing}`}
             style={legibleFill(goal.color)}
+            {...roleProps}
         >
             <span data-testid="sdg-badge-number" aria-hidden="true">{goal.number}</span>
-            <Tooltip parentRef={badgeRef}>{goal.name}</Tooltip>
-        </a>
+            {interactive && <Tooltip parentRef={badgeRef}>{goal.name}</Tooltip>}
+        </Tag>
     );
 }

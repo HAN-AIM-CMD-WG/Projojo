@@ -32,8 +32,8 @@ const SDG_GOALS = Object.freeze([
 
 const GOAL_BY_CODE = new Map(SDG_GOALS.map(goal => [`SDG${goal.number}`, goal]));
 
-/** SDG1–SDG17 with their Dutch labels, for the theme form's multi-select. */
-export const SDG_OPTIONS = SDG_GOALS.map(goal => ({ code: `SDG${goal.number}`, label: goal.name }));
+/** SDG1–SDG17 with their Dutch labels and official UN colours, for the theme form's multi-select. */
+export const SDG_OPTIONS = SDG_GOALS.map(goal => ({ code: `SDG${goal.number}`, label: goal.name, color: goal.color }));
 
 /** Join selected SDG codes into the canonical SDG1..SDG17 order, regardless of click order. */
 export function joinSdgCodes(sdgCodes) {

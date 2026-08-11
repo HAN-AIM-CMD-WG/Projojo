@@ -4,6 +4,7 @@ import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 import { sameIds } from '../utils/themeSelection';
 import ThemePicker from './ThemePicker';
 import ThemeRemovalConfirm from './ThemeRemovalConfirm';
+import SdgBadge from './SdgBadge';
 
 /**
  * ProjectThemeSection - the themes a project is linked to, with inline editing for
@@ -188,23 +189,34 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                     </span>
                 ) : (
                     themes.map((theme) => (
+                        // Pill and its SDG badge as siblings. The badge is the SdgBadge
+                        // default (a link to the goal's UN page), kept ADJACENT to the pill
+                        // rather than inside it so the read-only pill stays a plain <span>
+                        // and the link is never nested in another control (TS-task-023 AC-4).
                         <span
                             key={theme.id}
-                            data-testid="project-theme-pill"
+                            data-testid="project-theme"
                             data-theme-id={theme.id}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full cursor-default"
-                            style={legibleFill(theme.color || COLORLESS_THEME_FILL)}
+                            className="inline-flex items-center gap-1.5"
                         >
-                            {theme.icon && (
-                                <span
-                                    data-testid="project-theme-icon"
-                                    className="material-symbols-outlined text-sm leading-none"
-                                    aria-hidden="true"
-                                >
-                                    {theme.icon}
-                                </span>
-                            )}
-                            <span data-testid="project-theme-name">{theme.name}</span>
+                            <span
+                                data-testid="project-theme-pill"
+                                data-theme-id={theme.id}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full cursor-default"
+                                style={legibleFill(theme.color || COLORLESS_THEME_FILL)}
+                            >
+                                {theme.icon && (
+                                    <span
+                                        data-testid="project-theme-icon"
+                                        className="material-symbols-outlined text-sm leading-none"
+                                        aria-hidden="true"
+                                    >
+                                        {theme.icon}
+                                    </span>
+                                )}
+                                <span data-testid="project-theme-name">{theme.name}</span>
+                            </span>
+                            <SdgBadge sdgCode={theme.sdg_code} />
                         </span>
                     ))
                 )}

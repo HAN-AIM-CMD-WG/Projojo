@@ -108,7 +108,8 @@ class ProjectRepository(BaseRepository[Project]):
                         'id': $theme_id,
                         'name': $theme_name,
                         'icon': [$theme.icon],
-                        'color': [$theme.color]
+                        'color': [$theme.color],
+                        'sdg_code': [$theme.sdgCode]
                     };
                 ],
                 'tasks': [
@@ -164,11 +165,13 @@ class ProjectRepository(BaseRepository[Project]):
             for t in themes_data:
                 icon_list = t.get("icon", [])
                 color_list = t.get("color", [])
+                sdg_code_list = t.get("sdg_code", [])
                 themes.append({
                     "id": t.get("id", ""),
                     "name": t.get("name", ""),
                     "icon": icon_list[0] if icon_list else None,
-                    "color": color_list[0] if color_list else None
+                    "color": color_list[0] if color_list else None,
+                    "sdg_code": sdg_code_list[0] if sdg_code_list else None
                 })
             
             public_projects.append({
@@ -268,7 +271,8 @@ class ProjectRepository(BaseRepository[Project]):
                         'id': $theme_id,
                         'name': $theme_name,
                         'icon': [$theme.icon],
-                        'color': [$theme.color]
+                        'color': [$theme.color],
+                        'sdg_code': [$theme.sdgCode]
                     };
                 ],
                 'tasks': [
@@ -356,8 +360,8 @@ class ProjectRepository(BaseRepository[Project]):
             ]
 
         # Map themes if the query fetched them. TypeDB returns optional attributes
-        # as lists, so icon and color are flattened the same way the nested themes
-        # of get_all_with_full_nesting() and get_public_projects() are.
+        # as lists, so icon, color and sdg_code are flattened the same way the nested
+        # themes of get_all_with_full_nesting() and get_public_projects() are.
         themes_data = result.get("themes")
         themes = None
         if themes_data is not None:
@@ -368,6 +372,7 @@ class ProjectRepository(BaseRepository[Project]):
                     name=t.get("name", ""),
                     icon=(t.get("icon") or [None])[0],
                     color=(t.get("color") or [None])[0],
+                    sdg_code=(t.get("sdg_code") or [None])[0],
                 )
                 for t in themes_data
             ]
