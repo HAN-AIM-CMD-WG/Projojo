@@ -114,7 +114,17 @@ Then('every theme row should show its color swatch, icon, name, SDG code and des
     assert.equal(backgroundColor, hexToRgb(theme.color), `Expected swatch for '${theme.name}' to use color ${theme.color}`);
 
     assert.equal((await row.getByTestId('theme-icon').innerText()).trim(), theme.icon, `Expected icon '${theme.icon}' for '${theme.name}'`);
-    assert.equal((await row.getByTestId('theme-sdg').innerText()).trim(), theme.sdg_code, `Expected SDG '${theme.sdg_code}' for '${theme.name}'`);
+
+    // Since TS-task-022 the SDG cell renders SdgBadge rather than the raw code, so
+    // a code now shows as its goal number inside a badge. Still the same assertion -
+    // the row shows this theme's SDG - read off what the teacher actually sees.
+    const renderedSdgNumbers = (await row.getByTestId('theme-sdg').getByTestId('sdg-badge-number').allInnerTexts())
+      .map((number) => number.trim());
+    assert.deepEqual(
+      renderedSdgNumbers,
+      theme.sdg_code.split(',').map((code) => code.replace('SDG', '')),
+      `Expected SDG '${theme.sdg_code}' for '${theme.name}'`,
+    );
 
     const description = (await row.getByTestId('theme-description').innerText()).trim();
     assert.ok(description.length > 0, `Expected a visible description for '${theme.name}'`);

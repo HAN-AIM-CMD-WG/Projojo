@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getThemes } from '../services';
 import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
+import SdgBadge from './SdgBadge';
 
 /**
  * ThemePicker - reusable visual theme selector (controlled).
@@ -97,24 +98,18 @@ export default function ThemePicker({ selected = [], onChange, readOnly = false 
                 const color = theme.color || COLORLESS_THEME_FILL;
                 const fillStyle = legibleFill(color);
 
-                if (readOnly) {
-                    return (
-                        <span
-                            key={theme.id}
-                            data-testid="theme-pill"
-                            data-theme-id={theme.id}
-                            data-readonly="true"
-                            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full border border-transparent cursor-default"
-                            style={fillStyle}
-                        >
-                            {theme.name}
-                        </span>
-                    );
-                }
-
-                return (
+                const pill = readOnly ? (
+                    <span
+                        data-testid="theme-pill"
+                        data-theme-id={theme.id}
+                        data-readonly="true"
+                        className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-full border border-transparent cursor-default"
+                        style={fillStyle}
+                    >
+                        {theme.name}
+                    </span>
+                ) : (
                     <button
-                        key={theme.id}
                         type="button"
                         data-testid="theme-pill"
                         data-theme-id={theme.id}
@@ -136,6 +131,21 @@ export default function ThemePicker({ selected = [], onChange, readOnly = false 
                         )}
                         {theme.name}
                     </button>
+                );
+
+                // Pill and its SDG badge as siblings. The badge is the SdgBadge
+                // default (a link to the goal's UN page), safe here because it sits
+                // ADJACENT to the pill, never nested inside the toggle (TS-task-023 AC-3).
+                return (
+                    <span
+                        key={theme.id}
+                        data-testid="theme-pill-group"
+                        data-theme-id={theme.id}
+                        className="inline-flex items-center gap-1.5"
+                    >
+                        {pill}
+                        <SdgBadge sdgCode={theme.sdg_code} />
+                    </span>
                 );
             })}
         </div>

@@ -4,6 +4,7 @@ import { legibleFill, COLORLESS_THEME_FILL } from '../utils/themeColor';
 import { sameIds } from '../utils/themeSelection';
 import ThemePicker from './ThemePicker';
 import ThemeRemovalConfirm from './ThemeRemovalConfirm';
+import SdgBadge from './SdgBadge';
 
 /**
  * ProjectThemeSection - the themes a project is linked to, with inline editing for
@@ -144,12 +145,14 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
         <div data-testid="project-themes" className="mt-3">
             {/* One flat flex-wrap row so the "Thema's:" label shares the first line with
                 the first pills and any overflow wraps beneath them - exactly like the
-                Skills row. role="status" makes it a polite live region so a screen reader
-                is told when the themes finish loading, come back empty, or fail - the
-                content swaps in after first paint (matches SkeletonList / ThemeManagement
-                loading regions). The editor below sits outside it: it is a deliberate
-                interaction, not a status change to announce. */}
-            <div role="status" className="flex flex-wrap items-center gap-1.5">
+                Skills row. The polite live region (role="status") sits on the transient
+                loading/empty/error messages below, NOT on this row: the loaded pills carry
+                focusable SDG goal links (TS-task-023), which must not live inside a live
+                region, and re-announcing the whole theme row on every reload would be
+                noise. A screen reader is told when the themes come back empty or fail
+                (states swapped in after first paint; the first-paint loading state itself
+                has no mutation to announce). The editor is a deliberate action, not a status. */}
+            <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs font-semibold text-[var(--text-muted)] mr-1">{"Thema's:"}</span>
 
                 {canEdit && status === 'ready' && !isEditing && (
@@ -168,7 +171,7 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                 )}
 
                 {isEditing ? null : status === 'loading' ? (
-                    <span data-testid="project-themes-loading" className="inline-flex items-center gap-1.5">
+                    <span data-testid="project-themes-loading" role="status" className="inline-flex items-center gap-1.5">
                         <span className="sr-only">{"Thema's laden..."}</span>
                         {[0, 1].map((i) => (
                             <span
@@ -179,32 +182,43 @@ export default function ProjectThemeSection({ projectId, projectName, canEdit = 
                         ))}
                     </span>
                 ) : status === 'error' ? (
-                    <span data-testid="project-themes-error" className="text-xs text-[var(--text-muted)]">
+                    <span data-testid="project-themes-error" role="status" className="text-xs text-[var(--text-muted)]">
                         {"Thema's konden niet worden geladen"}
                     </span>
                 ) : themes.length === 0 ? (
-                    <span data-testid="project-themes-empty" className="text-xs text-[var(--text-muted)]">
+                    <span data-testid="project-themes-empty" role="status" className="text-xs text-[var(--text-muted)]">
                         {"Geen thema's gekoppeld"}
                     </span>
                 ) : (
                     themes.map((theme) => (
+                        // Pill and its SDG badge as siblings. The badge is the SdgBadge
+                        // default (a link to the goal's UN page), kept ADJACENT to the pill
+                        // rather than inside it so the read-only pill stays a plain <span>
+                        // and the link is never nested in another control (TS-task-023 AC-4).
                         <span
                             key={theme.id}
-                            data-testid="project-theme-pill"
+                            data-testid="project-theme"
                             data-theme-id={theme.id}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full cursor-default"
-                            style={legibleFill(theme.color || COLORLESS_THEME_FILL)}
+                            className="inline-flex items-center gap-1.5"
                         >
-                            {theme.icon && (
-                                <span
-                                    data-testid="project-theme-icon"
-                                    className="material-symbols-outlined text-sm leading-none"
-                                    aria-hidden="true"
-                                >
-                                    {theme.icon}
-                                </span>
-                            )}
-                            <span data-testid="project-theme-name">{theme.name}</span>
+                            <span
+                                data-testid="project-theme-pill"
+                                data-theme-id={theme.id}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full cursor-default"
+                                style={legibleFill(theme.color || COLORLESS_THEME_FILL)}
+                            >
+                                {theme.icon && (
+                                    <span
+                                        data-testid="project-theme-icon"
+                                        className="material-symbols-outlined text-sm leading-none"
+                                        aria-hidden="true"
+                                    >
+                                        {theme.icon}
+                                    </span>
+                                )}
+                                <span data-testid="project-theme-name">{theme.name}</span>
+                            </span>
+                            <SdgBadge sdgCode={theme.sdg_code} />
                         </span>
                     ))
                 )}

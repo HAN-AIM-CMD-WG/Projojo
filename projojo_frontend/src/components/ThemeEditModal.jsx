@@ -2,7 +2,8 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { updateTheme } from "../services";
 import Modal from "./Modal";
 import { notification } from "./notifications/NotifySystem";
-import ThemeForm, { DEFAULT_COLOR, EMPTY_FORM, joinSdgCodes, parseSdgCodes } from "./ThemeForm";
+import ThemeForm, { DEFAULT_COLOR, EMPTY_FORM } from "./ThemeForm";
+import { joinSdgCodes, parseSdgCodes } from "../utils/sdg";
 
 /** Map a persisted theme record onto the shared form shape. */
 function themeToForm(theme) {
