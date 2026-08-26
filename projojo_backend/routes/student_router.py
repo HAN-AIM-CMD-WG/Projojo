@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Path, Body, HTTPException, Request, UploadFile, File, Form
 from auth.permissions import auth
 
-from domain.repositories import SkillRepository, UserRepository
+from domain.repositories import SkillRepository, UserRepository, ThemeRepository
 from domain.models.skill import StudentSkill
 from service.image_service import save_image, delete_image
 
 skill_repo = SkillRepository()
 user_repo = UserRepository()
+theme_repo = ThemeRepository()
 
 router = APIRouter(prefix="/students", tags=["Student Endpoints"])
 
@@ -79,6 +80,38 @@ async def update_student_skill_description(
             status_code=500,
             detail="Er is iets misgegaan bij het opslaan van de beschrijving",
         )
+
+
+@router.get("/{student_id}/interests")
+@auth(role="authenticated")
+async def get_student_interests(student_id: str = Path(..., description="Student ID")):
+    """
+    Get the themes a student is interested in.
+
+    Reading interests is open to every authenticated user (TS-task-024 AC-8).
+    """
+    if not user_repo.get_student_by_id(student_id):
+        raise HTTPException(status_code=404, detail="Student niet gevonden")
+
+    return theme_repo.get_student_interests(student_id)
+
+
+@router.put("/{student_id}/interests")
+@auth(role="student", owner_id_key="student_id")
+async def update_student_interests(
+    student_id: str = Path(..., description="Student ID"),
+    theme_ids: list[str] = Body(..., embed=True),
+):
+    """
+    Replace a student's theme interests with `theme_ids`.
+
+    Only the student themselves may write their own interests, and the number of
+    interests is not capped here (the soft limit of 5 is UI-only).
+    """
+    try:
+        return theme_repo.update_student_interests(student_id, theme_ids)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/registrations")
