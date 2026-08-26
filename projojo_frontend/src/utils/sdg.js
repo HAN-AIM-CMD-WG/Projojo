@@ -48,10 +48,11 @@ export function parseSdgCodes(sdgCode) {
 /**
  * The distinct goals a stored sdg_code names, in stored order.
  *
- * The backend's pattern is SDG<n>(,SDG<n>)*, which accepts the same goal twice,
- * so "SDG12,SDG12" is real data — and one goal is still one badge however often
- * it is named. Deduplicating here is also what keeps the goal number usable as a
- * React key.
+ * One goal is one badge however often it is named, so a repeated code collapses
+ * rather than rendering twice. TS-task-028 rejects repeats on write, making this
+ * defensive rather than load-bearing; it stays because a display component should
+ * not duplicate on data it is handed, and because deduplicating is what keeps the
+ * goal number usable as a React key.
  *
  * A null or empty code yields an empty list. So does an unrecognised one, which
  * the backend's pattern already rules out; dropping it keeps this function total

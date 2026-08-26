@@ -2,6 +2,7 @@ import re
 
 THEME_NAME_VALIDATION_ERROR = "Naam is verplicht en mag maximaal 100 tekens zijn"
 THEME_SDG_CODE_VALIDATION_ERROR = "Ongeldig SDG-code formaat. Gebruik bijv. 'SDG1' of 'SDG12,SDG4'"
+THEME_SDG_CODE_DUPLICATE_ERROR = "SDG-codes mogen niet dubbel voorkomen"
 THEME_COLOR_VALIDATION_ERROR = "Ongeldige kleurcode. Gebruik hex-formaat zoals '#4CAF50'"
 THEME_ICON_VALIDATION_ERROR = "Icoon naam mag maximaal 50 tekens zijn"
 THEME_DESCRIPTION_VALIDATION_ERROR = "Beschrijving mag maximaal 500 tekens zijn"
@@ -65,6 +66,16 @@ def validate_theme(theme, require_name: bool = False) -> None:
     if "sdg_code" in fields_set and theme.sdg_code:
         if not re.fullmatch(r"SDG([1-9]|1[0-7])(,SDG([1-9]|1[0-7]))*", theme.sdg_code):
             raise ValueError(THEME_SDG_CODE_VALIDATION_ERROR)
+
+        # A theme's SDG codes are a set: naming the same goal twice says nothing
+        # extra, so "SDG12,SDG12" is rejected rather than stored as a second way
+        # of writing "SDG12". "No repeated group" is not expressible in the
+        # pattern above without enumerating every pair, hence a separate check -
+        # and a separate message, so a repeat is not reported as a format error.
+        # Order stays untouched: it is plausibly meaningful (primary SDG first).
+        codes = theme.sdg_code.split(",")
+        if len(set(codes)) != len(codes):
+            raise ValueError(THEME_SDG_CODE_DUPLICATE_ERROR)
 
     if "color" in fields_set and theme.color is not None:
         if not re.fullmatch(r"#[0-9A-Fa-f]{6}", theme.color):

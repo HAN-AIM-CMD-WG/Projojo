@@ -49,16 +49,6 @@ Feature: TS-task-022 SDG badge component with official UN colours
     And the SDG badges on theme "SDG Samengesteld" should be "SDG2" and "SDG12" in that order
     And each SDG badge on theme "SDG Samengesteld" should carry its own colour, tooltip and goal link
 
-  # The stored code is free to repeat a goal - the backend pattern SDG<n>(,SDG<n>)*
-  # accepts 'SDG12,SDG12' - and one goal is one badge however often it is named.
-  @ui @theme @sdg @TS-task-022
-  Scenario: AC-5 a repeated SDG code still renders a single badge
-    Given I am recording browser errors
-    When I open the TeacherPage
-    Then the theme "SDG Dubbel" should show exactly 1 SDG badge
-    And the SDG badge for "SDG12" on theme "SDG Dubbel" should be filled with "#BF8B2E"
-    And no browser error should have been recorded
-
   # The "SDG Enkel" line is the positive control: without it every step here also
   # passes for a component that renders nothing at all, whatever it is given.
   @ui @theme @sdg @TS-task-022
