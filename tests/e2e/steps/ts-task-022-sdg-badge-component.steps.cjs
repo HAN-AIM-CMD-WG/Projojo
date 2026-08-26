@@ -13,6 +13,7 @@ const { Given, When, Then } = require('@qavajs/core');
 const { E2E_TEACHER_ID } = require('../support/test-data.cjs');
 const { page, authenticateInBrowser } = require('../support/e2e-session.cjs');
 const { resetThemeCatalog } = require('../support/theme-catalog.cjs');
+const { stubThemesEndpoint } = require('../support/theme-stub.cjs');
 const { hexToRgb, parseCssColor, contrastRatio, MINIMUM_CONTRAST_RATIO } = require('../support/theme-color.cjs');
 const {
   TS022_THEME_PAYLOADS,
@@ -118,6 +119,28 @@ Given('I am authenticated in the browser as the TS-task-022 teacher', async func
 
 Given('the theme catalog contains only the TS-022 SDG fixtures', async function () {
   await resetThemeCatalog(TS022_THEME_PAYLOADS);
+});
+
+// The one badge state the real backend will no longer serve: TS-task-028 rejects a
+// repeated goal on POST/PUT /themes/, so this cannot be staged through the API the
+// way the other fixtures are. It is still data the component can be handed - the
+// seeds write sdgCode as raw TypeQL and schema.tql puts no uniqueness constraint on
+// it - which is exactly what theme-stub.cjs reserves stubbing for. A stable id is
+// included because the row keys on it.
+const REPEATED_SDG_STUB_CATALOG = Object.freeze([
+  Object.freeze({
+    id: 'ts022-stub-repeated-sdg',
+    name: 'SDG Dubbel',
+    sdg_code: 'SDG12,SDG12',
+    icon: 'content_copy',
+    color: '#795548',
+    display_order: 1,
+    description: 'Dezelfde SDG-code twee keer.',
+  }),
+]);
+
+Given('the themes endpoint returns a theme whose SDG code repeats a goal', async function () {
+  await stubThemesEndpoint(page(this), { status: 200, body: REPEATED_SDG_STUB_CATALOG });
 });
 
 // Deliberately a step rather than a hook: the Background's authentication already

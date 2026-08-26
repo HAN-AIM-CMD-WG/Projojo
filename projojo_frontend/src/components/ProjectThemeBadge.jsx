@@ -38,8 +38,7 @@ export default function ProjectThemeBadge({ themes }) {
     //
     // Counts are taken from parseSdgGoals - the deduped, valid-only list SdgBadge itself
     // renders - so the badge count and the "+N" count can never disagree. A repeated code
-    // (e.g. "SDG12,SDG12", still accepted by the backend until TS-task-028) is one goal,
-    // one badge, and is not miscounted into the overflow.
+    // is one goal and one badge, and is not miscounted into the overflow.
     const goals = parseSdgGoals(theme.sdg_code);
     const shownSdgCodes = goals.slice(0, CARD_SDG_BADGE_LIMIT).map((goal) => `SDG${goal.number}`);
     const hiddenSdgCount = goals.length - shownSdgCodes.length;
