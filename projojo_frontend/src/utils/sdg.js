@@ -49,10 +49,10 @@ export function parseSdgCodes(sdgCode) {
  * The distinct goals a stored sdg_code names, in stored order.
  *
  * One goal is one badge however often it is named, so a repeated code collapses
- * rather than rendering twice. TS-task-028 rejects repeats on write, making this
- * defensive rather than load-bearing; it stays because a display component should
- * not duplicate on data it is handed, and because deduplicating is what keeps the
- * goal number usable as a React key.
+ * rather than rendering twice, and deduplicating is what keeps the goal number
+ * usable as a React key. TS-task-028 rejects repeats on write, but the seeds write
+ * sdgCode as raw TypeQL past that validation and the schema constrains nothing, so
+ * a repeated code is still data this can be handed.
  *
  * A null or empty code yields an empty list. So does an unrecognised one, which
  * the backend's pattern already rules out; dropping it keeps this function total

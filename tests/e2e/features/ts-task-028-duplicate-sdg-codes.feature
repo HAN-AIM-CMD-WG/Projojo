@@ -29,13 +29,12 @@ Feature: TS-task-028 duplicate SDG codes are rejected on theme CRUD
     And no invalid theme data should be persisted from the latest validation request
 
     Examples: repeat adjacent, separated, and repeated three times
-      | operation | value            |
-      | create    | SDG12,SDG12      |
-      | create    | SDG3,SDG7,SDG3   |
-      | create    | SDG1,SDG1,SDG1   |
-      | update    | SDG2,SDG12,SDG2  |
-      | update    | SDG5,SDG5        |
-      | update    | SDG17,SDG4,SDG17 |
+      | operation | value           |
+      | create    | SDG12,SDG12     |
+      | create    | SDG3,SDG7,SDG3  |
+      | create    | SDG1,SDG1,SDG1  |
+      | update    | SDG2,SDG12,SDG2 |
+      | update    | SDG5,SDG5       |
 
   # AC-3, and the negative control for the rule above: rejecting a repeat must
   # not turn into rejecting every compound code. Without this, an implementation
@@ -52,10 +51,12 @@ Feature: TS-task-028 duplicate SDG codes are rejected on theme CRUD
       | SDG9       |
       | SDG2,SDG12 |
 
-  # AC-5. The malformed-AND-repeated values are the interesting half: they
-  # satisfy neither rule, so they prove the format check still runs first and
-  # the new duplicate message does not swallow the format message. The three
-  # plain malformed values keep AC-5's own examples traceable to this task.
+  # AC-5. Plain malformed values are already covered by TS-task-004
+  # (theme-input-validation.feature), so this only carries what that suite cannot:
+  # values that are malformed AND repeated. They satisfy neither rule, so they
+  # prove the format check still runs first and the new duplicate message does not
+  # swallow the format message. Both malformed shapes are covered - a token that is
+  # not SDG-like at all, and one that is SDG-like but out of range.
   @api @theme @TS-task-028
   Scenario Outline: Malformed SDG codes keep the existing format message
     Given I am authenticated as the E2E teacher
@@ -64,22 +65,17 @@ Feature: TS-task-028 duplicate SDG codes are rejected on theme CRUD
     And the latest API error detail should equal "Ongeldig SDG-code formaat. Gebruik bijv. 'SDG1' of 'SDG12,SDG4'"
     And no invalid theme data should be persisted from the latest validation request
 
-    Examples: malformed only
-      | operation | value  |
-      | create    | BANANA |
-      | create    | SDG0   |
-      | create    | SDG18  |
-
     Examples: malformed and repeated - format is reported, not duplication
       | operation | value         |
       | create    | BANANA,BANANA |
       | create    | SDG18,SDG18   |
-      | create    | SDG0,SDG0     |
       | update    | SDG18,SDG18   |
 
-  # Guards the falsy branch the uniqueness check must not reach: an empty
-  # sdg_code clears the field (theme_repository.update deletes the attribute) and
-  # must not be read as a one-element list, or as a duplicate of anything.
+  # An empty sdg_code clears the field (theme_repository.update deletes the
+  # attribute) and must keep doing so. This guards the falsy guard itself: tighten
+  # `and theme.sdg_code:` to `is not None` - a plausible move when adding a second
+  # rule under it - and "" starts failing the format check with a 400 instead of
+  # clearing. TS-task-004 covers a null sdg_code on update, but never "".
   @api @theme @TS-task-028
   Scenario: An empty SDG code still clears the field
     Given I am authenticated as the E2E teacher

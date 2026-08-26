@@ -67,12 +67,10 @@ def validate_theme(theme, require_name: bool = False) -> None:
         if not re.fullmatch(r"SDG([1-9]|1[0-7])(,SDG([1-9]|1[0-7]))*", theme.sdg_code):
             raise ValueError(THEME_SDG_CODE_VALIDATION_ERROR)
 
-        # A theme's SDG codes are a set: naming the same goal twice says nothing
-        # extra, so "SDG12,SDG12" is rejected rather than stored as a second way
-        # of writing "SDG12". "No repeated group" is not expressible in the
-        # pattern above without enumerating every pair, hence a separate check -
-        # and a separate message, so a repeat is not reported as a format error.
-        # Order stays untouched: it is plausibly meaningful (primary SDG first).
+        # "No repeated group" is not expressible in the pattern above without
+        # enumerating every pair, so uniqueness is a separate check - with its own
+        # message, so a repeat is not reported as a format error. The value is
+        # stored verbatim; nothing here reorders it.
         codes = theme.sdg_code.split(",")
         if len(set(codes)) != len(codes):
             raise ValueError(THEME_SDG_CODE_DUPLICATE_ERROR)

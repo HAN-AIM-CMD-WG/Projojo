@@ -49,6 +49,21 @@ Feature: TS-task-022 SDG badge component with official UN colours
     And the SDG badges on theme "SDG Samengesteld" should be "SDG2" and "SDG12" in that order
     And each SDG badge on theme "SDG Samengesteld" should carry its own colour, tooltip and goal link
 
+  # One goal is one badge however often it is named, and that dedupe is what keeps
+  # the goal number usable as a React key. Since TS-task-028 the theme API rejects a
+  # repeated code, so unlike every other scenario here this one cannot stage its
+  # theme through the API - but the seeds write sdgCode as raw TypeQL and the schema
+  # holds no uniqueness constraint, so the database can still hand the component
+  # this. Hence the stub: it is the state a healthy backend will no longer serve.
+  @ui @theme @sdg @TS-task-022
+  Scenario: AC-5 a repeated SDG code still renders a single badge
+    Given the themes endpoint returns a theme whose SDG code repeats a goal
+    And I am recording browser errors
+    When I open the TeacherPage
+    Then the theme "SDG Dubbel" should show exactly 1 SDG badge
+    And the SDG badge for "SDG12" on theme "SDG Dubbel" should be filled with "#BF8B2E"
+    And no browser error should have been recorded
+
   # The "SDG Enkel" line is the positive control: without it every step here also
   # passes for a component that renders nothing at all, whatever it is given.
   @ui @theme @sdg @TS-task-022
