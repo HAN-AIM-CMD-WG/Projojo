@@ -390,8 +390,13 @@ def build_query(template: str, params: dict[str, Any], allow_none: bool = False)
     # Then substitute regular params
     for key, value in regular_params.items():
         formatted_value = format_value(value)
-        # Use word boundary to avoid partial replacements (e.g., ~id vs ~id_name)
-        result = re.sub(rf'~{re.escape(key)}(?![a-zA-Z0-9_])', formatted_value, result)
+        # Use word boundary to avoid partial replacements (e.g., ~id vs ~id_name).
+        # The replacement MUST be a callback: re.sub reinterprets backslash escapes
+        # in a plain replacement string, which silently undid sanitize_string's
+        # backslash doubling. A value of `a\b` was emitted as "a\b" (TypeQL then
+        # decodes \b as a backspace, i.e. the wrong value) and `a\` produced an
+        # unterminated TypeQL literal. A callback's return value is inserted as-is.
+        result = re.sub(rf'~{re.escape(key)}(?![a-zA-Z0-9_])', lambda _: formatted_value, result)
 
     return result
 

@@ -253,7 +253,11 @@ When('I inspect the TypeDB schema for the theme entity', async function () {
 });
 
 Then('the theme name attribute should be required and unique', function () {
-  const themeBlock = themeState(this).inspectedText.match(/entity\s+theme,[\s\S]*?plays\s+hasTheme:theme\s+@card\(0\.\.\);/)?.[0] ?? '';
+  // Match the entity declaration up to its terminating semicolon. Anchoring on a
+  // particular last clause instead would make the theme entity's clause ORDER
+  // load-bearing, and adding any clause would fail here with a message about
+  // `owns name` that is nowhere near the real cause.
+  const themeBlock = themeState(this).inspectedText.match(/entity\s+theme,[\s\S]*?;/)?.[0] ?? '';
 
   assert.match(
     themeBlock,
@@ -305,6 +309,9 @@ Given('theme {string} exists', async function (name) {
   await ensureTheme(this, name);
 });
 
+// Also consumed by ts-task-024-student-interest-api.steps.cjs, which stages its
+// theme fixtures through this step rather than adding a second creation path.
+// Renaming it breaks that suite with an "undefined step" far from the cause.
 Given('the E2E theme catalog contains themes {string}', async function (names) {
   await authenticateAs(this, PROOF_TEACHER_USER_ID, 'teacher');
   for (const name of parseThemeNames(names)) {

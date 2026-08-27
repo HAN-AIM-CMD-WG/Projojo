@@ -27,7 +27,7 @@ const {
   PROOF_SUPERVISOR_USER_ID,
   PORTFOLIO_SEED_ALIASES,
 } = require('../support/test-data.cjs');
-const { fetchThemes, teacherApi } = require('../support/theme-catalog.cjs');
+const { fetchThemes, teacherApi, themeApi, themeIdsFor } = require('../support/theme-catalog.cjs');
 
 const execFileAsync = promisify(execFile);
 
@@ -48,12 +48,19 @@ const DOCKER_COMPOSE_ARGS = [
 // AC-7 and AC-8 need. "other student" is a second seeded student account; only
 // its id matters here.
 const INTEREST_STUDENT_ID = E2E_STUDENT_ID;
+const OTHER_STUDENT_ID = PORTFOLIO_SEED_ALIASES.actors.privateStudent.id;
 const ROLE_ACTORS = Object.freeze({
   'interest student': Object.freeze({ id: INTEREST_STUDENT_ID, type: 'student' }),
-  'other student': Object.freeze({ id: PORTFOLIO_SEED_ALIASES.actors.privateStudent.id, type: 'student' }),
+  'other student': Object.freeze({ id: OTHER_STUDENT_ID, type: 'student' }),
   teacher: Object.freeze({ id: E2E_TEACHER_ID, type: 'teacher' }),
   supervisor: Object.freeze({ id: PROOF_SUPERVISOR_USER_ID, type: 'supervisor' }),
 });
+
+// A theme id ending in a backslash. This is the input class that made build_query
+// emit unparseable TypeQL (HTTP 500) instead of the clean AC-6 miss, and a single
+// trailing backslash cannot be written inside a Gherkin {string}, so the value
+// lives here and the feature refers to its shape.
+const BACKSLASH_THEME_ID = 'ts-task-024-missing-theme\\';
 
 Before(function () {
   this.tsTask024 = { token: null, status: null, payload: null, schemaText: '', probe: null, themeDeletion: null };
@@ -64,34 +71,10 @@ function interestState(world) {
   return world.tsTask024;
 }
 
-/** Call the backend with an explicit token and return {status, body}. */
-async function backendApi(pathname, token, options = {}) {
-  const response = await fetch(`${BACKEND_URL}${pathname}`, {
-    ...options,
-    headers: {
-      Accept: 'application/json',
-      ...(options.body === undefined ? {} : { 'Content-Type': 'application/json' }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  const text = await response.text();
-  let body = null;
-  if (text) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      // Keep raw text so an unexpected non-JSON body fails on the status
-      // assertion with a readable message instead of a JSON.parse crash.
-      body = text;
-    }
-  }
-  return { status: response.status, body };
-}
-
 /** Call the interest API as the scenario's current caller and record the result. */
 async function interestApi(world, pathname, options = {}) {
   const state = interestState(world);
-  const result = await backendApi(pathname, state.token, options);
+  const result = await themeApi(pathname, state.token, options);
   state.status = result.status;
   state.payload = result.body;
   return result;
@@ -117,37 +100,30 @@ function parseNames(names) {
   return names.split(',').map((name) => name.trim()).filter(Boolean);
 }
 
-/** Resolve theme names to catalog ids, failing loudly on a name that is absent. */
-async function themeIdsForNames(names) {
-  const catalog = await fetchThemes();
-  return parseNames(names).map((name) => {
-    const theme = catalog.find((candidate) => candidate?.name === name);
-    assert.ok(theme?.id, `Expected theme '${name}' in the catalog, found ${JSON.stringify(catalog.map((entry) => entry?.name))}`);
-    return theme.id;
-  });
-}
+/** Resolve a comma-separated list of theme names to catalog ids. */
+const themeIdsForNames = (names) => themeIdsFor(parseNames(names));
 
 /**
- * The interest theme names the backend currently has stored for the interest student.
+ * The interest theme names the backend currently has stored for a student.
  *
  * Deliberately NOT de-duplicated: the duplicate-id scenario asserts a theme is
  * returned exactly once, which only means something on the raw response.
  */
-async function persistedInterestNames() {
-  const result = await teacherApi(`/students/${INTEREST_STUDENT_ID}/interests`);
+async function persistedInterestNames(studentId) {
+  const result = await teacherApi(`/students/${studentId}/interests`);
   assert.equal(
     result.status,
     200,
-    `Expected GET /students/${INTEREST_STUDENT_ID}/interests to return 200, received ${result.status}: ${JSON.stringify(result.body)}`,
+    `Expected GET /students/${studentId}/interests to return 200, received ${result.status}: ${JSON.stringify(result.body)}`,
   );
   assert.ok(Array.isArray(result.body), `Expected stored interests to be a list, received ${JSON.stringify(result.body)}`);
   return result.body.map((theme) => theme?.name);
 }
 
-/** Save `names` as the interest student's interests through the real endpoint, as that student. */
-async function stageInterests(names) {
-  const token = await loginAs('interest student');
-  const result = await backendApi(`/students/${INTEREST_STUDENT_ID}/interests`, token, {
+/** Save `names` as a student's interests through the real endpoint, as that student. */
+async function stageInterests(role, names) {
+  const studentId = ROLE_ACTORS[role].id;
+  const result = await themeApi(`/students/${studentId}/interests`, await loginAs(role), {
     method: 'PUT',
     body: JSON.stringify({ theme_ids: await themeIdsForNames(names) }),
   });
@@ -159,7 +135,7 @@ async function stageInterests(names) {
 
   // Staging must not silently under-deliver: read back what the backend stored.
   assert.deepEqual(
-    [...await persistedInterestNames()].sort(),
+    [...await persistedInterestNames(studentId)].sort(),
     parseNames(names).sort(),
     `Expected interest staging to store exactly '${names}'`,
   );
@@ -268,11 +244,11 @@ Given('I call the interest API without a JWT token', function () {
 // --- Staging -----------------------------------------------------------------
 
 Given('the E2E interest student has interests {string}', async function (names) {
-  await stageInterests(names);
+  await stageInterests('interest student', names);
 });
 
 Given('the E2E interest student has no interests', async function () {
-  await stageInterests('');
+  await stageInterests('interest student', '');
 });
 
 // --- Requests ----------------------------------------------------------------
@@ -294,6 +270,14 @@ async function putInterests(world, studentId, themeIds) {
 
 When("I replace the E2E interest student's interests with themes {string}", async function (names) {
   await putInterests(this, INTEREST_STUDENT_ID, await themeIdsForNames(names));
+});
+
+When("I replace the E2E other student's interests with themes {string}", async function (names) {
+  await putInterests(this, OTHER_STUDENT_ID, await themeIdsForNames(names));
+});
+
+When("I replace the E2E interest student's interests with a theme id ending in a backslash", async function () {
+  await putInterests(this, INTEREST_STUDENT_ID, [BACKSLASH_THEME_ID]);
 });
 
 When("I replace the E2E interest student's interests with no themes", async function () {
@@ -355,6 +339,14 @@ Then('the latest interest API error detail should contain {string}', function (e
   );
 });
 
+Then('the latest interest API error detail should list the backslash theme id in full', function () {
+  const detail = interestState(this).payload?.detail;
+  assert.ok(
+    typeof detail === 'string' && detail.includes(BACKSLASH_THEME_ID),
+    `Expected the error detail to list ${JSON.stringify(BACKSLASH_THEME_ID)} verbatim, received ${JSON.stringify(detail)}`,
+  );
+});
+
 Then('the latest interest API response should list themes {string}', function (names) {
   const payload = interestState(this).payload;
   assert.ok(Array.isArray(payload), `Expected the latest interest API response to be a list, received ${JSON.stringify(payload)}`);
@@ -403,20 +395,24 @@ Then('the theme deletion should have succeeded', function () {
 // --- Persisted-state assertions ---------------------------------------------
 
 Then('the persisted interests of the E2E interest student should be exactly {string}', async function (names) {
-  assert.deepEqual([...await persistedInterestNames()].sort(), parseNames(names).sort());
+  assert.deepEqual([...await persistedInterestNames(INTEREST_STUDENT_ID)].sort(), parseNames(names).sort());
+});
+
+Then('the persisted interests of the E2E other student should be exactly {string}', async function (names) {
+  assert.deepEqual([...await persistedInterestNames(OTHER_STUDENT_ID)].sort(), parseNames(names).sort());
 });
 
 Then('the persisted interests of the E2E interest student should be empty', async function () {
-  assert.deepEqual(await persistedInterestNames(), []);
+  assert.deepEqual(await persistedInterestNames(INTEREST_STUDENT_ID), []);
 });
 
 Then('the persisted interests of the E2E interest student should contain {string} exactly once', async function (name) {
-  const storedNames = await persistedInterestNames();
+  const storedNames = await persistedInterestNames(INTEREST_STUDENT_ID);
   const occurrences = storedNames.filter((stored) => stored === name).length;
   assert.equal(occurrences, 1, `Expected '${name}' to be stored exactly once, found ${occurrences} in ${JSON.stringify(storedNames)}`);
 });
 
 Then('the persisted interests of the E2E interest student should not contain {string}', async function (name) {
-  const storedNames = await persistedInterestNames();
+  const storedNames = await persistedInterestNames(INTEREST_STUDENT_ID);
   assert.ok(!storedNames.includes(name), `Expected '${name}' not to be stored, found ${JSON.stringify(storedNames)}`);
 });

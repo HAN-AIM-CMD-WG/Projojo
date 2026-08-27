@@ -405,6 +405,9 @@ class ThemeRepository(BaseRepository[Theme]):
         ]
 
         def validate(results: list[list]) -> None:
+            # Unreachable through the API: @auth(role="student", owner_id_key="student_id")
+            # only admits a student whose own id came from a valid JWT. Kept as a
+            # backstop for a token that outlives its account.
             if not results[0]:
                 raise ValueError(f"Student met ID '{student_id}' niet gevonden.")
             invalid = [theme_id for theme_id, rows in zip(theme_ids, results[2:]) if not rows]

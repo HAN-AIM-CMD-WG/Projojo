@@ -136,6 +136,30 @@ class TestBuildQueryReadMode:
             build_query(template, {'id': None}, allow_none=False)
 
 
+class TestBuildQueryEscaping:
+    """build_query must emit sanitize_string's escaping unchanged.
+
+    re.sub reinterprets backslash escapes in a plain replacement string, so a
+    naive substitution undoes the doubling and produces the wrong value or
+    unparseable TypeQL.
+    """
+
+    def test_interior_backslash_stays_doubled(self):
+        template = 'match $x isa theme, has id ~id;'
+        result = build_query(template, {'id': 'a\\b'}, allow_none=False)
+        assert result == 'match $x isa theme, has id "a\\\\b";'
+
+    def test_trailing_backslash_does_not_break_the_literal(self):
+        template = 'match $x isa theme, has id ~id;'
+        result = build_query(template, {'id': 'end\\'}, allow_none=False)
+        assert result == 'match $x isa theme, has id "end\\\\";'
+
+    def test_quote_stays_escaped(self):
+        template = 'match $x isa theme, has name ~name;'
+        result = build_query(template, {'name': 'say "hi"'}, allow_none=False)
+        assert result == 'match $x isa theme, has name "say \\"hi\\"";'
+
+
 class TestBuildQueryWriteMode:
     """Tests for build_query with allow_none=True (write transactions)"""
 

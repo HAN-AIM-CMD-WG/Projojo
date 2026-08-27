@@ -20,6 +20,16 @@ Feature: TS-task-024 student interest schema and backend endpoints
       When I probe the live database for the E2E interest student's hasInterest relations
       Then the probe should report interest themes "Duurzaamheid"
 
+    @api @theme @schema @ts-task-024
+    Scenario: Two students can save the same theme as an interest
+      Given the E2E theme catalog contains themes "Duurzaamheid,Klimaat & Milieu"
+      And the E2E interest student has interests "Duurzaamheid,Klimaat & Milieu"
+      And I call the interest API as the E2E other student
+      When I replace the E2E other student's interests with themes "Duurzaamheid"
+      Then the latest interest API response status should be 200
+      And the persisted interests of the E2E other student should be exactly "Duurzaamheid"
+      And the persisted interests of the E2E interest student should be exactly "Duurzaamheid,Klimaat & Milieu"
+
   Rule: Any authenticated user can read a student's interests (AC-2, AC-3, AC-8)
 
     @api @theme @ts-task-024
@@ -100,6 +110,17 @@ Feature: TS-task-024 student interest schema and backend endpoints
       And the persisted interests of the E2E interest student should be exactly "Duurzaamheid,Klimaat & Milieu,Innovatie & Technologie,Water & Biodiversiteit,Voedselzekerheid,Kennisdeling,Onderwijs"
 
     @api @theme @ts-task-024
+    Scenario: A selection that overlaps the previous one keeps the shared theme once
+      Given the E2E theme catalog contains themes "Duurzaamheid,Klimaat & Milieu,Innovatie & Technologie"
+      And the E2E interest student has interests "Duurzaamheid,Klimaat & Milieu"
+      And I call the interest API as the E2E interest student
+      When I replace the E2E interest student's interests with themes "Klimaat & Milieu,Innovatie & Technologie"
+      Then the latest interest API response status should be 200
+      And the persisted interests of the E2E interest student should be exactly "Klimaat & Milieu,Innovatie & Technologie"
+      And the persisted interests of the E2E interest student should contain "Klimaat & Milieu" exactly once
+      And the persisted interests of the E2E interest student should not contain "Duurzaamheid"
+
+    @api @theme @ts-task-024
     Scenario: A theme sent twice is saved once
       Given the E2E theme catalog contains themes "Duurzaamheid"
       And I call the interest API as the E2E interest student
@@ -135,6 +156,16 @@ Feature: TS-task-024 student interest schema and backend endpoints
       Then the latest interest API response status should be 400
       And the latest interest API error detail should contain "ts-task-024-missing-a"
       And the latest interest API error detail should contain "ts-task-024-missing-b"
+      And the persisted interests of the E2E interest student should be exactly "Duurzaamheid"
+
+    @api @theme @integrity @ts-task-024
+    Scenario: A theme id ending in a backslash is rejected like any other unknown id
+      Given the E2E theme catalog contains themes "Duurzaamheid"
+      And the E2E interest student has interests "Duurzaamheid"
+      And I call the interest API as the E2E interest student
+      When I replace the E2E interest student's interests with a theme id ending in a backslash
+      Then the latest interest API response status should be 400
+      And the latest interest API error detail should list the backslash theme id in full
       And the persisted interests of the E2E interest student should be exactly "Duurzaamheid"
 
   Rule: Only the student themselves may change their interests (AC-7)
