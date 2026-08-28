@@ -265,6 +265,16 @@ class ThemeRepository(BaseRepository[Theme]):
             delete
                 $hasTheme;
         """
+        # hasInterest requires a theme player (@card(1)), so a student's saved
+        # interest must go with the theme; a removed theme simply disappears
+        # from every student's interests (TS-task-024).
+        delete_interests = """
+            match
+                $theme isa theme, has id ~theme_id;
+                $hasInterest isa hasInterest(theme: $theme);
+            delete
+                $hasInterest;
+        """
         delete_theme = """
             match
                 $theme isa theme, has id ~theme_id;
@@ -273,6 +283,7 @@ class ThemeRepository(BaseRepository[Theme]):
         """
         Db.write_transact_many([
             (delete_relations, {"theme_id": theme_id}),
+            (delete_interests, {"theme_id": theme_id}),
             (delete_theme, {"theme_id": theme_id}),
         ])
 
@@ -337,3 +348,71 @@ class ThemeRepository(BaseRepository[Theme]):
 
         Db.write_transact_atomic([project_query, delete_query, *insert_queries], validate=validate)
         return len(theme_ids)
+
+    def get_student_interests(self, student_id: str) -> list[Theme]:
+        query = """
+            match
+                $student isa student, has id ~student_id;
+                $hasInterest isa hasInterest(student: $student, theme: $theme);
+                $theme has id $id, has name $name;
+            fetch {
+                'id': $id,
+                'name': $name,
+                'sdg_code': [$theme.sdgCode],
+                'icon': [$theme.icon],
+                'description': [$theme.themeDescription],
+                'color': [$theme.color],
+                'display_order': [$theme.displayOrder]
+            };
+        """
+        # No project counts here, for the same reason as get_themes_by_project:
+        # nothing renders them for a student's own interests.
+        results = Db.read_transact(query, {"student_id": student_id})
+        return [self._map_to_model(result) for result in results]
+
+    def update_student_interests(self, student_id: str, theme_ids: list[str]) -> list[Theme]:
+        """Atomically replace a student's theme interests: all changes succeed or none are applied.
+
+        Duplicate theme ids are ignored. Returns the interests as stored afterwards.
+
+        Same shape as link_project_to_themes: probe the owner, drop the old links
+        and insert the new ones inside one transaction, and let validate() reject
+        before commit so a bad theme id leaves the previous selection intact.
+        """
+        theme_ids = list(dict.fromkeys(theme_ids))
+        student_query = build_query("""
+            match
+                $student isa student, has id ~student_id;
+        """, {"student_id": student_id})
+        delete_query = build_query("""
+            match
+                $student isa student, has id ~student_id;
+                $hasInterest isa hasInterest(student: $student);
+            delete
+                $hasInterest;
+        """, {"student_id": student_id})
+        insert_template = """
+            match
+                $student isa student, has id ~student_id;
+                $theme isa theme, has id ~theme_id;
+            insert
+                $hasInterest isa hasInterest($student, $theme);
+        """
+
+        insert_queries = [
+            build_query(insert_template, {"student_id": student_id, "theme_id": theme_id})
+            for theme_id in theme_ids
+        ]
+
+        def validate(results: list[list]) -> None:
+            # Unreachable through the API: @auth(role="student", owner_id_key="student_id")
+            # only admits a student whose own id came from a valid JWT. Kept as a
+            # backstop for a token that outlives its account.
+            if not results[0]:
+                raise ValueError(f"Student met ID '{student_id}' niet gevonden.")
+            invalid = [theme_id for theme_id, rows in zip(theme_ids, results[2:]) if not rows]
+            if invalid:
+                raise ValueError(f"Thema's niet gevonden: {', '.join(invalid)}")
+
+        Db.write_transact_atomic([student_query, delete_query, *insert_queries], validate=validate)
+        return self.get_student_interests(student_id)
