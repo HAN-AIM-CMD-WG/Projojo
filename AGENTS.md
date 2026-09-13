@@ -40,6 +40,7 @@ task docker:reset    # rebuild with volumes removed (full DB reset)
 task docker:stop     # stop without removing volumes
 task docker:logs     # stream backend + frontend logs
 task test:e2e        # full isolated E2E workflow
+task test:e2e:parallel # same suite across 4 isolated instances (~3x faster)
 ```
 
 Frontend lint: `npm run lint` (in `projojo_frontend/`). Backend tests: `uv run pytest` (in `projojo_backend/`). Env files live in the **repo root** and are shared by every service.
@@ -324,7 +325,7 @@ There is **no i18n framework**. All user-facing strings are hardcoded **Dutch** 
 
 ## Testing
 
-- **E2E** (`tests/e2e/`): Qavajs + Playwright on an isolated Docker stack with a deterministic seed. Run `task test:e2e` (full) or `task test:e2e:run:selective -- --tags @smoke` (filtered). See `docs/TESTING_INFRASTRUCTURE.md`.
+- **E2E** (`tests/e2e/`): Qavajs + Playwright on an isolated Docker stack with a deterministic seed. Run `task test:e2e` (full) or `task test:e2e:run:selective -- --tags @smoke` (filtered). `task test:e2e:parallel` runs the same suite across 4 isolated instances (shared TypeDB, one database each); feature files are assigned to instances in `tests/e2e/support/parallel-groups.cjs` and a new feature file must be added there. See `docs/TESTING_INFRASTRUCTURE.md`.
 - **Backend unit**: `uv run pytest` in `projojo_backend/`.
 - **Frontend**: no unit-test runner; `src/tests/` holds Storybook stories. Storybook: `npm run storybook`.
 

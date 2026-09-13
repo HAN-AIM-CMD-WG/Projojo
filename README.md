@@ -278,6 +278,25 @@ task test:e2e:focus
 task test:e2e:report
 ```
 
+### Parallel E2E run
+
+```bash
+task test:e2e:parallel
+```
+
+Runs the same suite split across four isolated instances on a separate stack ([`docker-compose.parallel.yml`](docker-compose.parallel.yml)): one shared TypeDB with one database per instance, one shared MailHog, and a backend/frontend pair per instance on ports `1021x`-`1024x`. Measured at roughly 3.3x faster than the serial run on the full suite.
+
+Each instance runs its own feature files serially, because the suite is not order-independent. The file-to-instance assignment lives in [`tests/e2e/support/parallel-groups.cjs`](tests/e2e/support/parallel-groups.cjs) and the run fails fast if a feature file is unassigned.
+
+```bash
+task test:e2e:parallel:run -- --groups=1,3   # only instances 1 and 3
+task test:e2e:parallel:run -- --no-build     # skip image builds
+task test:e2e:parallel:logs -- backend3
+task test:e2e:parallel:down
+```
+
+See [`docs/TESTING_INFRASTRUCTURE.md`](docs/TESTING_INFRASTRUCTURE.md) for the topology, the grouping rules and the trade-offs.
+
 ### Selective E2E runs
 
 [`test:e2e:run:selective`](Taskfile.yml:100) uses the stable direct [`@qavajs/core`](tests/e2e/package.json:15) runner with the [`selective`](tests/e2e/qavajs.config.cjs:52) profile from [`tests/e2e/qavajs.config.cjs`](tests/e2e/qavajs.config.cjs:1).

@@ -28,21 +28,11 @@ const {
   PORTFOLIO_SEED_ALIASES,
 } = require('../support/test-data.cjs');
 const { fetchThemes, teacherApi, themeApi, themeIdsFor } = require('../support/theme-catalog.cjs');
+const { BACKEND_SERVICE, DOCKER_COMPOSE_ARGS } = require('../support/compose.cjs');
 
 const execFileAsync = promisify(execFile);
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
-const DOCKER_COMPOSE_ARGS = [
-  'compose',
-  '--env-file',
-  '.env.test',
-  '-p',
-  'projojo-e2e',
-  '-f',
-  'docker-compose.base.yml',
-  '-f',
-  'docker-compose.test.yml',
-];
 
 // The student whose interests this suite reads and writes, plus the other actors
 // AC-7 and AC-8 need. "other student" is a second seeded student account; only
@@ -215,7 +205,7 @@ main()
 When("I probe the live database for the E2E interest student's hasInterest relations", async function () {
   const { stdout, stderr } = await execFileAsync(
     'docker',
-    [...DOCKER_COMPOSE_ARGS, 'exec', '-T', 'backend', 'uv', 'run', 'python', '-c', hasInterestProbeSource(INTEREST_STUDENT_ID)],
+    [...DOCKER_COMPOSE_ARGS, 'exec', '-T', BACKEND_SERVICE, 'uv', 'run', 'python', '-c', hasInterestProbeSource(INTEREST_STUDENT_ID)],
     { cwd: REPO_ROOT, maxBuffer: 1024 * 1024 * 10 },
   );
 

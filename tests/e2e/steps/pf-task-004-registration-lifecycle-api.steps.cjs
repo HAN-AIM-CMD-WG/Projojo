@@ -6,20 +6,10 @@ const { promisify } = require('node:util');
 const { Given, Then, When } = require('@qavajs/core');
 
 const { BACKEND_URL, PORTFOLIO_SEED_ALIASES } = require('../support/test-data.cjs');
+const { BACKEND_SERVICE, DOCKER_COMPOSE_ARGS } = require('../support/compose.cjs');
 
 const execFileAsync = promisify(execFile);
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const DOCKER_COMPOSE_ARGS = [
-  'compose',
-  '--env-file',
-  '.env.test',
-  '-p',
-  'projojo-e2e',
-  '-f',
-  'docker-compose.base.yml',
-  '-f',
-  'docker-compose.test.yml',
-];
 
 const actors = PORTFOLIO_SEED_ALIASES.actors;
 const lifecycle = PORTFOLIO_SEED_ALIASES.lifecycle;
@@ -375,7 +365,7 @@ async function readLifecycleState(fixtureName) {
       '-T',
       '-e',
       `PF_TASK_004_FIXTURE=${JSON.stringify({ ...fixture, studentId })}`,
-      'backend',
+      BACKEND_SERVICE,
       'uv',
       'run',
       'python',
@@ -409,7 +399,7 @@ async function resetLifecycleFixtures() {
       ...DOCKER_COMPOSE_ARGS,
       'exec',
       '-T',
-      'backend',
+      BACKEND_SERVICE,
       'uv',
       'run',
       'python',

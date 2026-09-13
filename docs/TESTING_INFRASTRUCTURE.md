@@ -30,13 +30,17 @@ Explicitly deferred:
 
 - `[Taskfile.yml](../Taskfile.yml)`
 - `[docker-compose.test.yml](../docker-compose.test.yml)`
+- `[docker-compose.parallel.yml](../docker-compose.parallel.yml)`
 - `[../.env.test](../.env.test)`
 - `[tests/e2e/package.json](../tests/e2e/package.json)`
 - `[tests/e2e/qavajs.config.cjs](../tests/e2e/qavajs.config.cjs)`
 - `[tests/e2e/features/](../tests/e2e/features/)`
 - `[tests/e2e/steps/](../tests/e2e/steps/)`
 - `[tests/e2e/support/](../tests/e2e/support/)`
+- `[tests/e2e/support/compose.cjs](../tests/e2e/support/compose.cjs)`
+- `[tests/e2e/support/parallel-groups.cjs](../tests/e2e/support/parallel-groups.cjs)`
 - `[tests/e2e/scripts/preflight.cjs](../tests/e2e/scripts/preflight.cjs)`
+- `[tests/e2e/scripts/run-parallel.cjs](../tests/e2e/scripts/run-parallel.cjs)`
 - generated HTML report output at `[tests/e2e/reports/report.html](../tests/e2e/reports/report.html)`
 - `[projojo_backend/db/test_seed.tql](../projojo_backend/db/test_seed.tql)`
 
@@ -85,6 +89,10 @@ Default host ports for the isolated test stack:
 - MailHog web UI: `10126`
 
 This allows the normal development stack and the test stack to run at the same time without host-port conflicts.
+
+### Frontend file watching in test stacks
+
+Both E2E stacks set `VITE_WATCH_POLLING=false` on the frontend services. The development stack keeps polling on (it is needed for HMR in Docker on Windows), but polling makes Vite spuriously detect a `vite.config.ts` change roughly ten seconds after boot and restart the dev server. The restart closes the HTTP listener, so a navigation that lands in that window fails with `net::ERR_CONNECTION_RESET`. Tests never edit source files, so the watcher has no purpose there. See `server.watch.usePolling` in `[projojo_frontend/vite.config.ts](../projojo_frontend/vite.config.ts)`.
 
 ## Root Task workflow
 
@@ -180,6 +188,102 @@ The saved reviewer-facing artifact is written to:
 - `[tests/e2e/reports/report.html](../tests/e2e/reports/report.html)`
 
 That file is produced after a successful run. Before the first run, the repository only guarantees the directory via `[tests/e2e/reports/.gitkeep](../tests/e2e/reports/.gitkeep)`.
+
+The report path is overridable through `E2E_REPORT_PATH`, which is how the parallel workflow gives every instance its own artifact.
+
+## Parallel execution
+
+```bash
+task test:e2e:parallel
+```
+
+This is a separate command from `task test:e2e`. The serial workflow is unchanged and stays the reference path; the parallel workflow is the faster one for local full-suite feedback.
+
+Measured on the full suite (530 test cases, 48 feature files): **3m29s wall time against 11m25s of summed execution**, i.e. roughly a 3.3x speedup at the cost of running four application instances at once.
+
+### Topology
+
+The parallel stack lives in `[docker-compose.parallel.yml](../docker-compose.parallel.yml)`, in its own compose project (`projojo-e2e-parallel`) and its own host-port range, so it can run next to both the development stack (`1010x`) and the serial test stack (`1012x`).
+
+- **one** TypeDB container, holding **one database per instance** (`projojo_db_p1` … `projojo_db_p4`). TypeDB 3.x serves many databases from one process, so this is where the resource sharing pays off: a second TypeDB container would double the storage engine for nothing. Database isolation is what makes the instances independent, and it is already env-driven through `TYPEDB_NAME`, so no backend code changed.
+- **one** MailHog container. No scenario asserts on delivered mail.
+- **four** backend containers and **four** frontend containers, one pair per instance.
+
+Co-locating the four backends in a single container was considered and rejected. The cost is the uvicorn process, not the container around it, so the saving would be a few MB while per-instance logs, restarts and the `docker compose exec` targeting that ten step files rely on would all get worse.
+
+Port map:
+
+| instance | frontend | backend | database |
+| -------- | -------- | ------- | -------------- |
+| 1        | `10211`  | `10212` | `projojo_db_p1` |
+| 2        | `10221`  | `10222` | `projojo_db_p2` |
+| 3        | `10231`  | `10232` | `projojo_db_p3` |
+| 4        | `10241`  | `10242` | `projojo_db_p4` |
+
+Shared: TypeDB `10203`, TypeDB Studio `10204`, MailHog SMTP `10205`, MailHog web UI `10206`.
+
+### How the work is split
+
+The suite is **not** order-independent, so `--shard` (which splits round-robin over individual scenarios) is not usable. Instead `[tests/e2e/support/parallel-groups.cjs](../tests/e2e/support/parallel-groups.cjs)` assigns whole feature files to instances, and each instance still runs its own files serially (`parallel: 1` stays in `[tests/e2e/qavajs.config.cjs](../tests/e2e/qavajs.config.cjs)`).
+
+Two invariants hold by construction:
+
+1. a feature file is never split across instances
+2. every group lists its files in the same alphabetical order the serial run uses, so two files that land in the same instance keep their relative order; two files that land in different instances get different databases, which is stricter isolation than the serial run gives them
+
+The groups therefore keep coupled suites together, for example all theme-integrity API features (they share `theme-integrity.steps.cjs` and create themes without per-scenario cleanup) and `TS-task-015` with its consumers `016` and `017` (015 creates projects that cannot be deleted).
+
+The orchestrator fails fast if a feature file is in no group or in more than one, so a newly added feature file cannot silently be skipped. Add it to a group in `[tests/e2e/support/parallel-groups.cjs](../tests/e2e/support/parallel-groups.cjs)`.
+
+Groups are balanced on weighted cost rather than scenario count, because a `@ui` scenario launches a fresh Chromium and costs roughly 3x an `@api` scenario. Rebalancing means moving a feature file between the lists in that one file; the orchestrator prints the wall time of every instance so the effect is directly visible.
+
+### Individual commands
+
+```bash
+task test:e2e:parallel              # install deps, then the full parallel run
+task test:e2e:parallel:run          # run on the parallel stack, forwarding flags after `--`
+task test:e2e:parallel:logs -- backend3
+task test:e2e:parallel:down         # tear down including the TypeDB volume
+```
+
+Orchestrator flags:
+
+```bash
+# only bring up and run instances 1 and 3
+task test:e2e:parallel:run -- --groups=1,3
+
+# skip image builds when nothing changed
+task test:e2e:parallel:run -- --no-build
+
+# tear the stack down when the run finishes
+task test:e2e:parallel:run -- --down
+```
+
+Reports are written per instance to `tests/e2e/reports/report-parallel-<n>.html`.
+
+### Targeting one instance by hand
+
+Once a parallel stack is up, a single instance can be driven directly. The harness reads the instance under test from the environment, with the serial stack as the default, through `[tests/e2e/support/compose.cjs](../tests/e2e/support/compose.cjs)` and `[tests/e2e/support/test-data.cjs](../tests/e2e/support/test-data.cjs)`:
+
+```bash
+cd tests/e2e
+PROJOJO_FRONTEND_URL=http://localhost:10231 \
+PROJOJO_BACKEND_URL=http://localhost:10232 \
+PROJOJO_COMPOSE_PROJECT=projojo-e2e-parallel \
+PROJOJO_COMPOSE_FILES=docker-compose.parallel.yml \
+PROJOJO_BACKEND_SERVICE=backend3 \
+node ./node_modules/@qavajs/core/bin/qavajs.js run --config ./qavajs.config.cjs \
+  --profile selective --paths features/theme-name-uniqueness.feature
+```
+
+`--profile parallel3` runs exactly the group 3 file set instead.
+
+### Known trade-offs
+
+1. Four application instances cost roughly four times the CPU and memory of the serial stack. The shared TypeDB and MailHog take the edge off, but this is still the price of the speedup.
+2. Uploads are not isolated. All four backends bind-mount `projojo_backend/static/images` and `static/pdf`. Filenames are UUIDs and each instance only reads paths recorded in its own database, so cross-talk is not observable, but the directory accumulates files from every instance.
+3. Balance is static. If the group weights drift as features are added, the slowest instance sets the wall time until the lists are adjusted.
+4. The instance count is fixed at four. Making it configurable means generating compose services, which is deliberately deferred until this approach has proven itself.
 
 ## Important limitations
 

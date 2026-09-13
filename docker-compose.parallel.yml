@@ -1,0 +1,193 @@
+# ============================================================================
+# Parallel E2E test stack (task test:e2e:parallel)
+# ============================================================================
+#
+# Four independent application instances that share one TypeDB server and one
+# MailHog. Isolation between instances comes from a dedicated TypeDB database
+# per instance (TYPEDB_NAME), not from separate database servers: TypeDB 3.x
+# hosts many databases in one process, so one container is enough and the
+# per-instance cost is only a uvicorn plus a Vite dev server.
+#
+# Multiple backends inside a single container was considered and rejected: the
+# expensive part is the uvicorn process, not the container, so co-locating them
+# would save almost nothing while breaking per-instance logs, restarts and
+# `docker compose exec` targeting that the step definitions rely on.
+#
+# Everything runs in one compose project so `down -v` cleans up the whole set
+# and `docker compose logs backend3` works. Container names are suffixed per
+# instance because Docker requires them to be globally unique.
+#
+# Port map (fixed, must stay in sync with tests/e2e/support/parallel-groups.cjs):
+#   typedb        10203 -> 1729     typedb studio 10204 -> 8000
+#   mailhog       10205 -> 1025     mailhog web   10206 -> 8025
+#   instance 1    frontend 10211    backend 10212    db projojo_db_p1
+#   instance 2    frontend 10221    backend 10222    db projojo_db_p2
+#   instance 3    frontend 10231    backend 10232    db projojo_db_p3
+#   instance 4    frontend 10241    backend 10242    db projojo_db_p4
+#
+# The 1021x-1024x range is deliberately disjoint from the serial test stack
+# (1012x) and the development stack (1010x), so all three can run at once.
+#
+# Shared, deliberately not isolated:
+#   - projojo_backend/static/images and /pdf (uploads land in the bind mount).
+#     Filenames are UUIDs and every instance only reads paths recorded in its
+#     own database, so cross-talk is not observable.
+#   - MailHog. No scenario asserts on delivered mail.
+
+x-backend-base: &backend-base
+  build:
+    context: ./projojo_backend
+    target: development
+  image: projojo-e2e-parallel-backend
+  restart: unless-stopped
+  depends_on:
+    - typedb
+    - mailhog
+  env_file:
+    - .env.test
+  volumes:
+    - ./projojo_backend:/app
+    - /app/__pycache__
+    - /app/.venv
+  networks:
+    - projojo-parallel-network
+
+x-frontend-base: &frontend-base
+  build:
+    context: ./projojo_frontend
+    target: development
+  image: projojo-e2e-parallel-frontend
+  restart: unless-stopped
+  env_file:
+    - .env.test
+  volumes:
+    - ./projojo_frontend:/app
+    - /app/node_modules
+  networks:
+    - projojo-parallel-network
+
+x-backend-env: &backend-env
+  PYTHONUNBUFFERED: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+  PYTHONPATH: /app
+  EMAIL_SMTP_PORT: '1025'
+
+services:
+  typedb:
+    image: typedb/typedb:3.4.0
+    container_name: projojo_parallel_typedb
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "10203:1729"
+      - "10204:8000"
+    volumes:
+      - typedb-parallel-data:/opt/typedb-all-linux-x86_64/server/data
+    networks:
+      - projojo-parallel-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: projojo_parallel_mailhog
+    platform: linux/amd64
+    restart: unless-stopped
+    ports:
+      - "10205:1025"
+      - "10206:8025"
+    networks:
+      - projojo-parallel-network
+
+  backend1:
+    <<: *backend-base
+    container_name: projojo_parallel_backend1
+    ports:
+      - "10212:10212"
+    environment:
+      <<: *backend-env
+      BACKEND_PORT: '10212'
+      TYPEDB_NAME: projojo_db_p1
+      FRONTEND_URL: http://localhost:10211
+
+  backend2:
+    <<: *backend-base
+    container_name: projojo_parallel_backend2
+    ports:
+      - "10222:10222"
+    environment:
+      <<: *backend-env
+      BACKEND_PORT: '10222'
+      TYPEDB_NAME: projojo_db_p2
+      FRONTEND_URL: http://localhost:10221
+
+  backend3:
+    <<: *backend-base
+    container_name: projojo_parallel_backend3
+    ports:
+      - "10232:10232"
+    environment:
+      <<: *backend-env
+      BACKEND_PORT: '10232'
+      TYPEDB_NAME: projojo_db_p3
+      FRONTEND_URL: http://localhost:10231
+
+  backend4:
+    <<: *backend-base
+    container_name: projojo_parallel_backend4
+    ports:
+      - "10242:10242"
+    environment:
+      <<: *backend-env
+      BACKEND_PORT: '10242'
+      TYPEDB_NAME: projojo_db_p4
+      FRONTEND_URL: http://localhost:10241
+
+  frontend1:
+    <<: *frontend-base
+    container_name: projojo_parallel_frontend1
+    ports:
+      - "10211:10211"
+    environment:
+      FRONTEND_PORT: '10211'
+      VITE_BACKEND_HOST: ''
+      VITE_BACKEND_PORT: '10212'
+      VITE_WATCH_POLLING: 'false'
+
+  frontend2:
+    <<: *frontend-base
+    container_name: projojo_parallel_frontend2
+    ports:
+      - "10221:10221"
+    environment:
+      FRONTEND_PORT: '10221'
+      VITE_BACKEND_HOST: ''
+      VITE_BACKEND_PORT: '10222'
+      VITE_WATCH_POLLING: 'false'
+
+  frontend3:
+    <<: *frontend-base
+    container_name: projojo_parallel_frontend3
+    ports:
+      - "10231:10231"
+    environment:
+      FRONTEND_PORT: '10231'
+      VITE_BACKEND_HOST: ''
+      VITE_BACKEND_PORT: '10232'
+      VITE_WATCH_POLLING: 'false'
+
+  frontend4:
+    <<: *frontend-base
+    container_name: projojo_parallel_frontend4
+    ports:
+      - "10241:10241"
+    environment:
+      FRONTEND_PORT: '10241'
+      VITE_BACKEND_HOST: ''
+      VITE_BACKEND_PORT: '10242'
+      VITE_WATCH_POLLING: 'false'
+
+volumes:
+  typedb-parallel-data:
+
+networks:
+  projojo-parallel-network:
+    driver: bridge

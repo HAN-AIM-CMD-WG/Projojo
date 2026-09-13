@@ -7,7 +7,7 @@ Feature: API and memory proof
     And I remember the proof project name as 'proofProjectName'
     And I remember the proof business name as 'proofBusinessName'
     Then memory key 'proofProjectId' should not be empty
-    When I open browser url 'http://localhost:10121/publiek'
+    When I open browser url '/publiek'
     Then 'Main Heading' text should equal 'Ontdek Projecten'
     And 'Page Body' should contain remembered value 'proofProjectName'
     And 'Page Body' should contain remembered value 'proofBusinessName'

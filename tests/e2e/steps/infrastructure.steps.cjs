@@ -6,6 +6,7 @@ const { query } = require('@qavajs/steps-playwright/lib/pageObject.js');
 
 const {
   BACKEND_URL,
+  FRONTEND_URL,
   LOGIN_URL,
   PROOF_BUSINESS_NAME,
   PROOF_PROJECT_NAME,
@@ -159,8 +160,13 @@ Then('memory key {string} should not be empty', function (memoryKey) {
   assert.notEqual(String(value).trim(), '', `Expected memory key '${memoryKey}' not to be blank`);
 });
 
+// Accepts either an absolute URL or a frontend-relative path such as '/login'.
+// Relative paths are resolved against the frontend of the instance under test,
+// which is what makes these scenarios usable on a parallel stack where every
+// instance listens on its own port.
 When('I open browser url {string}', async function (url) {
-  await this.playwright.page.goto(url);
+  const target = /^https?:\/\//u.test(url) ? url : `${FRONTEND_URL}${url.startsWith('/') ? url : `/${url}`}`;
+  await this.playwright.page.goto(target);
 });
 
 When('I click named element {string}', async function (alias) {

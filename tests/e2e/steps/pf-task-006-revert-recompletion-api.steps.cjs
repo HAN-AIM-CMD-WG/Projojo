@@ -6,20 +6,10 @@ const { promisify } = require('node:util');
 const { Given, Then, When } = require('@qavajs/core');
 
 const { BACKEND_URL, PORTFOLIO_SEED_ALIASES } = require('../support/test-data.cjs');
+const { BACKEND_SERVICE, DOCKER_COMPOSE_ARGS } = require('../support/compose.cjs');
 
 const execFileAsync = promisify(execFile);
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const DOCKER_COMPOSE_ARGS = [
-  'compose',
-  '--env-file',
-  '.env.test',
-  '-p',
-  'projojo-e2e',
-  '-f',
-  'docker-compose.base.yml',
-  '-f',
-  'docker-compose.test.yml',
-];
 
 const actors = PORTFOLIO_SEED_ALIASES.actors;
 const lifecycle = PORTFOLIO_SEED_ALIASES.lifecycle;
@@ -289,7 +279,7 @@ async function runBackend(script, env = {}) {
       'exec',
       '-T',
       ...Object.entries(env).flatMap(([key, value]) => ['-e', `${key}=${value}`]),
-      'backend',
+      BACKEND_SERVICE,
       'uv',
       'run',
       'python',
@@ -307,7 +297,7 @@ async function runBackend(script, env = {}) {
 async function resetFixtures() {
   await execFileAsync(
     'docker',
-    [...DOCKER_COMPOSE_ARGS, 'exec', '-T', 'backend', 'uv', 'run', 'python', '-c', RESET_FIXTURES],
+    [...DOCKER_COMPOSE_ARGS, 'exec', '-T', BACKEND_SERVICE, 'uv', 'run', 'python', '-c', RESET_FIXTURES],
     { cwd: REPO_ROOT, env: process.env, maxBuffer: 1024 * 1024 * 10 },
   );
 }

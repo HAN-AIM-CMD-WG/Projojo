@@ -6,23 +6,13 @@ const { promisify } = require('node:util');
 
 const { Given, Then } = require('@qavajs/core');
 const { PORTFOLIO_SEED_ALIASES } = require('../support/test-data.cjs');
+const { BACKEND_SERVICE, DOCKER_COMPOSE_ARGS } = require('../support/compose.cjs');
 
 const execFileAsync = promisify(execFile);
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const TEST_SEED_PATH = path.join(REPO_ROOT, 'projojo_backend', 'db', 'test_seed.tql');
 const TASKFILE_PATH = path.join(REPO_ROOT, 'Taskfile.yml');
-const DOCKER_COMPOSE_ARGS = [
-  'compose',
-  '--env-file',
-  '.env.test',
-  '-p',
-  'projojo-e2e',
-  '-f',
-  'docker-compose.base.yml',
-  '-f',
-  'docker-compose.test.yml',
-];
 
 const PORTFOLIO_SEED_PROBE = String.raw`
 import json
@@ -369,7 +359,7 @@ async function runPortfolioSeedProbe() {
       '-T',
       '-e',
       `PORTFOLIO_SEED_ALIASES=${JSON.stringify(PORTFOLIO_SEED_ALIASES)}`,
-      'backend',
+      BACKEND_SERVICE,
       'uv',
       'run',
       'python',

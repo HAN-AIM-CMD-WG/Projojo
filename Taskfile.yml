@@ -4,6 +4,10 @@ vars:
   E2E_ENV_FILE: .env.test
   E2E_COMPOSE_PROJECT: projojo-e2e
   E2E_COMPOSE_ARGS: --env-file .env.test -p projojo-e2e -f docker-compose.base.yml -f docker-compose.test.yml
+  # Parallel E2E stack: one shared TypeDB (one database per instance) plus four
+  # backend/frontend pairs. Kept in a separate compose project and port range so
+  # it can run next to the serial test stack and the development stack.
+  E2E_PARALLEL_COMPOSE_ARGS: --env-file .env.test -p projojo-e2e-parallel -f docker-compose.parallel.yml
 
 tasks:
   docker:start:
@@ -129,3 +133,26 @@ tasks:
       - task: test:e2e:reset
       - task: test:e2e:preflight
       - task: test:e2e:run
+
+  test:e2e:parallel:
+    desc: Full E2E workflow split across 4 isolated instances on the shared parallel stack
+    cmds:
+      - task: test:e2e:install
+      - task: test:e2e:browsers
+      - task: test:e2e:parallel:run
+
+  test:e2e:parallel:run:
+    desc: Run the 4 parallel E2E instances; forward orchestrator flags after `--`
+    dir: tests/e2e
+    cmds:
+      - node ./scripts/run-parallel.cjs {{.CLI_ARGS}}
+
+  test:e2e:parallel:logs:
+    desc: Stream logs from the parallel E2E stack; pass service names after `--`
+    cmds:
+      - docker compose {{.E2E_PARALLEL_COMPOSE_ARGS}} logs -f --tail 20 {{.CLI_ARGS}}
+
+  test:e2e:parallel:down:
+    desc: Tear down the parallel E2E stack including its TypeDB volume
+    cmds:
+      - docker compose {{.E2E_PARALLEL_COMPOSE_ARGS}} down -v --remove-orphans

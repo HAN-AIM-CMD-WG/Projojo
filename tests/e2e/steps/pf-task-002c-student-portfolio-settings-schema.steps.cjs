@@ -4,21 +4,11 @@ const { execFile } = require('node:child_process');
 const { promisify } = require('node:util');
 
 const { Then, When } = require('@qavajs/core');
+const { BACKEND_SERVICE, DOCKER_COMPOSE_ARGS } = require('../support/compose.cjs');
 
 const execFileAsync = promisify(execFile);
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
-const DOCKER_COMPOSE_ARGS = [
-  'compose',
-  '--env-file',
-  '.env.test',
-  '-p',
-  'projojo-e2e',
-  '-f',
-  'docker-compose.base.yml',
-  '-f',
-  'docker-compose.test.yml',
-];
 
 const STUDENT_PORTFOLIO_SETTINGS_SCHEMA_PROBE = String.raw`
 import json
@@ -163,7 +153,7 @@ async function runStudentPortfolioSettingsSchemaProbe() {
       ...DOCKER_COMPOSE_ARGS,
       'exec',
       '-T',
-      'backend',
+      BACKEND_SERVICE,
       'uv',
       'run',
       'python',
