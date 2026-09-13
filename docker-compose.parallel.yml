@@ -14,8 +14,9 @@
 # `docker compose exec` targeting that the step definitions rely on.
 #
 # Everything runs in one compose project so `down -v` cleans up the whole set
-# and `docker compose logs backend3` works. Container names are suffixed per
-# instance because Docker requires them to be globally unique.
+# and `docker compose logs backend3` works. The orchestrator holds a global lock
+# while it owns this fixed project and port range, preventing concurrent runs
+# from tearing down each other's containers.
 #
 # Port map (fixed, must stay in sync with tests/e2e/support/parallel-groups.cjs):
 #   typedb        10203 -> 1729     typedb studio 10204 -> 8000
@@ -41,8 +42,10 @@ x-backend-base: &backend-base
   image: projojo-e2e-parallel-backend
   restart: unless-stopped
   depends_on:
-    - typedb
-    - mailhog
+    typedb:
+      condition: service_healthy
+    mailhog:
+      condition: service_healthy
   env_file:
     - .env.test
   volumes:
@@ -83,6 +86,12 @@ services:
       - "10204:8000"
     volumes:
       - typedb-parallel-data:/opt/typedb-all-linux-x86_64/server/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/1729'"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+      start_period: 5s
     networks:
       - projojo-parallel-network
 
@@ -94,6 +103,12 @@ services:
     ports:
       - "10205:1025"
       - "10206:8025"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "1025"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 2s
     networks:
       - projojo-parallel-network
 

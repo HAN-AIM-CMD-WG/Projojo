@@ -284,9 +284,9 @@ task test:e2e:report
 task test:e2e:parallel
 ```
 
-Runs the same suite split across four isolated instances on a separate stack ([`docker-compose.parallel.yml`](docker-compose.parallel.yml)): one shared TypeDB with one database per instance, one shared MailHog, and a backend/frontend pair per instance on ports `1021x`-`1024x`. Measured at roughly 3.3x faster than the serial run on the full suite.
+Runs the same suite split across four isolated instances on a separate stack ([`docker-compose.parallel.yml`](docker-compose.parallel.yml)): one shared TypeDB with one database per instance, one shared MailHog, and a backend/frontend pair per instance on ports `1021x`-`1024x`. Measured at roughly 3.3x faster than the serial run on the full suite. The fixed stack is protected by a cross-worktree lock, so a second parallel run fails instead of tearing down an active run.
 
-Each instance runs its own feature files serially, because the suite is not order-independent. The file-to-instance assignment lives in [`tests/e2e/support/parallel-groups.cjs`](tests/e2e/support/parallel-groups.cjs) and the run fails fast if a feature file is unassigned.
+Each instance runs its own feature files serially, because the suite is not order-independent. The file-to-instance assignment lives in [`tests/e2e/support/parallel-groups.cjs`](tests/e2e/support/parallel-groups.cjs) and the run fails fast if a feature file at any depth is unassigned or an unknown group ID is requested.
 
 ```bash
 task test:e2e:parallel:run -- --groups=1,3   # only instances 1 and 3
